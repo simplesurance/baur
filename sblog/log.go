@@ -1,19 +1,19 @@
-package log
+package sblog
 
 import (
-	golog "log"
+	"log"
 	"os"
 )
 
 var (
-	stdoutLogger *golog.Logger
-	stderrLogger *golog.Logger
+	stdoutLogger *log.Logger
+	stderrLogger *log.Logger
 	debug        bool
 )
 
 func init() {
-	stdoutLogger = golog.New(os.Stdout, "", 0)
-	stderrLogger = golog.New(os.Stderr, "", 0)
+	stdoutLogger = log.New(os.Stdout, "", 0)
+	stderrLogger = log.New(os.Stderr, "", 0)
 }
 
 // EnableDebug enables or dsisables logging of debug messages
