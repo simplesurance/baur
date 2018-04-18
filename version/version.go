@@ -11,6 +11,7 @@ var (
 	Version = "0.0.0"
 )
 
+// FullVerNr returns a string containing Version and GitDescribe
 func FullVerNr() string {
 	return fmt.Sprintf("%s (git ref: %s)", Version, GitDescribe)
 }
