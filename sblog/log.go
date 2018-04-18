@@ -38,35 +38,35 @@ func Debugf(format string, v ...interface{}) {
 		return
 	}
 
-	stdoutLogger.Printf(format, v)
+	stdoutLogger.Printf(format, v...)
 }
 
 // Fatal logs a message to stderr and terminates the application with an error
 func Fatal(v ...interface{}) {
-	stderrLogger.Fatal(v)
+	stderrLogger.Fatal(v...)
 }
 
 // Fatalf logs a message to stderr and terminates the application with an error
 func Fatalf(format string, v ...interface{}) {
-	stderrLogger.Fatalf(format, v)
+	stderrLogger.Fatalf(format, v...)
 }
 
 // Error logs a message to stderr
 func Error(v ...interface{}) {
-	stderrLogger.Print(v)
+	stderrLogger.Print(v...)
 }
 
 // Errorf logs a message to stderr
 func Errorf(format string, v ...interface{}) {
-	stderrLogger.Printf(format, v)
+	stderrLogger.Printf(format, v...)
 }
 
 // Info logs a message to stdout
 func Info(v ...interface{}) {
-	stdoutLogger.Print(v)
+	stdoutLogger.Print(v...)
 }
 
 // Infof logs a message to stdout
 func Infof(format string, v ...interface{}) {
-	stdoutLogger.Printf(format, v)
+	stdoutLogger.Printf(format, v...)
 }
