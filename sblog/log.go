@@ -41,6 +41,16 @@ func Debugf(format string, v ...interface{}) {
 	stdoutLogger.Printf(format, v)
 }
 
+// Fatal logs a message to stderr and terminates the application with an error
+func Fatal(v ...interface{}) {
+	stderrLogger.Fatal(v)
+}
+
+// Fatalf logs a message to stderr and terminates the application with an error
+func Fatalf(format string, v ...interface{}) {
+	stderrLogger.Fatalf(format, v)
+}
+
 // Error logs a message to stderr
 func Error(v ...interface{}) {
 	stderrLogger.Print(v)
