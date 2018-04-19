@@ -8,7 +8,7 @@ var (
 	GitDescribe = ""
 
 	// Version contains a semantic version number, must follow https://semver.org/
-	Version = "0.0.0"
+	Version = ""
 )
 
 // FullVerNr returns a string containing Version and GitDescribe
