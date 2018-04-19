@@ -1,10 +1,11 @@
 package cfg
 
 import (
-	"errors"
 	"io/ioutil"
+	"os"
 
 	toml "github.com/pelletier/go-toml"
+	"github.com/pkg/errors"
 )
 
 // ApplicationFile contains the name of application configuration files
@@ -39,4 +40,22 @@ func (a *Application) Validate() error {
 	}
 
 	return nil
+}
+
+// NewApplicationFile writes an exemplary Application configuration file to
+// filepath. The name setting is set to appName
+func NewApplicationFile(appName, filepath string) error {
+	data, err := toml.Marshal(Application{Name: appName})
+	if err != nil {
+		return errors.Wrapf(err, "marshalling Application failed")
+	}
+
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(data)
+
+	return err
 }

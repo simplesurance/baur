@@ -16,12 +16,8 @@ type ctx struct {
 	RepositoryCfgPath string
 }
 
-// InitCtx returns an initialized Ctx. It terminates the application on errors.
-func mustInitCtx() *ctx {
-	var err error
-	var ctx ctx
-
-	ctx.RepositoryRoot, err = discover.RepositoryRoot(cfg.RepositoryFile)
+func mustFindRepositoryRoot() string {
+	root, err := discover.RepositoryRoot(cfg.RepositoryFile)
 	if err != nil {
 		if os.IsNotExist(err) {
 			sblog.Fatalf("could not find repository root config file "+
@@ -31,8 +27,17 @@ func mustInitCtx() *ctx {
 		sblog.Fatal("finding repository root config file failed: ", err)
 	}
 
-	sblog.Debugf("repository root found: %v", ctx.RepositoryRoot)
+	sblog.Debugf("repository root found: %v", root)
 
+	return root
+}
+
+// InitCtx returns an initialized Ctx. It terminates the application on errors.
+func mustInitCtx() *ctx {
+	var err error
+	var ctx ctx
+
+	ctx.RepositoryRoot = mustFindRepositoryRoot()
 	ctx.RepositoryCfgPath = path.Join(ctx.RepositoryRoot, cfg.RepositoryFile)
 
 	ctx.RepositoryCfg, err = cfg.RepositoryFromFile(ctx.RepositoryCfgPath)
