@@ -3,15 +3,16 @@ package version
 import "fmt"
 
 var (
-	// GitDescribe contains the git describe string of this version.
+	// GitCommit contains the git commit of this version.
 	// It's set by make.
-	GitDescribe = ""
+	GitCommit = ""
 
-	// Version contains a semantic version number, must follow https://semver.org/
+	// Version contains a semantic version number, must follow // https://semver.org/.
+	// It's set by make.
 	Version = ""
 )
 
 // FullVerNr returns a string containing Version and GitDescribe
 func FullVerNr() string {
-	return fmt.Sprintf("%s (git ref: %s)", Version, GitDescribe)
+	return fmt.Sprintf("%s (%s)", Version, GitCommit)
 }
