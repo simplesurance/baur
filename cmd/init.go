@@ -16,7 +16,7 @@ func init() {
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "creates a new repository config in the current directory",
+	Short: "creates a repository config in the current directory",
 	Run:   initRepositoryCfg,
 }
 
