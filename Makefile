@@ -1,14 +1,14 @@
 # vi:set tabstop=8 sts=8 shiftwidth=8 noexpandtab tw=80:
 #
 GIT_DESCRIBE := $(shell git describe --always --dirty --abbrev)
-LDFLAGS := "-X github.com/simplesurance/sisubuild/version.GitDescribe=$(GIT_DESCRIBE)"
+LDFLAGS := "-X github.com/simplesurance/baur/version.GitDescribe=$(GIT_DESCRIBE)"
 
 default: all
 
-all: sb
+all: baur
 
-.PHONY: sb
-sb:
+.PHONY: baur
+baur:
 	@echo "* building $@"
 	@CGO_ENABLED=0 go build -ldflags=$(LDFLAGS) -o "$@"
 

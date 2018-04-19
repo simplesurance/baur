@@ -1,5 +1,5 @@
 # Binaries for programs and plugins
-sb
+baur
 *.exe
 *.dll
 *.so

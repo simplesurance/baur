@@ -1,6 +1,6 @@
 package main
 
-import "github.com/simplesurance/sisubuild/cmd"
+import "github.com/simplesurance/baur/cmd"
 
 func main() {
 	cmd.Execute()

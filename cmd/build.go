@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/simplesurance/sisubuild/sblog"
+	"github.com/simplesurance/baur/sblog"
 	"github.com/spf13/cobra"
 )
 

@@ -5,10 +5,10 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/simplesurance/sisubuild/app"
-	"github.com/simplesurance/sisubuild/cfg"
-	"github.com/simplesurance/sisubuild/discover"
-	"github.com/simplesurance/sisubuild/sblog"
+	"github.com/simplesurance/baur/app"
+	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/discover"
+	"github.com/simplesurance/baur/sblog"
 	"github.com/spf13/cobra"
 )
 

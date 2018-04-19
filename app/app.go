@@ -4,7 +4,7 @@ import (
 	"path"
 
 	"github.com/pkg/errors"
-	"github.com/simplesurance/sisubuild/cfg"
+	"github.com/simplesurance/baur/cfg"
 )
 
 type App struct {

@@ -7,11 +7,11 @@ import (
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
-	"github.com/simplesurance/sisubuild/fs"
+	"github.com/simplesurance/baur/fs"
 )
 
 // RepositoryFile contains the name of the repository configuration file.
-const RepositoryFile = ".sisubuild.toml"
+const RepositoryFile = ".baur.toml"
 
 const (
 	MinSearchDepth = 1

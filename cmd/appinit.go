@@ -5,8 +5,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/simplesurance/sisubuild/cfg"
-	"github.com/simplesurance/sisubuild/sblog"
+	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/sblog"
 	"github.com/spf13/cobra"
 )
 

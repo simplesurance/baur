@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/simplesurance/sisubuild/sblog"
-	"github.com/simplesurance/sisubuild/version"
+	"github.com/simplesurance/baur/sblog"
+	"github.com/simplesurance/baur/version"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:              "sb",
-	Short:            "sisubuild manages builds and artifacts in mono repositories.",
+	Use:              "baur",
+	Short:            "baur manages builds and artifacts in mono repositories.",
 	Version:          version.FullVerNr(),
 	PersistentPreRun: initSb,
 }
