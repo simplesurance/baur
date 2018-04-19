@@ -22,13 +22,12 @@ sisubuild will implement:
 To build the application run `make`
 
 ## Configuration
-1. Create a `sisubuild.toml` file in the root of your repository. Example:
+1. Create a `sisubuild.toml` file in the root of your repository by running 
+   `sb init` in the repository root.
+   Adapt the configuration files to your needs. Add paths containing your
+   applications to the `application_dirs` parameter.
 
-   ```
-   [Discover]
-   application_dirs = ["go/code/", "application/"]
-   search_depth = 1
-   ```
+
 
 2. Create `.app.toml` files in all directories that contain applications. The
    file must have a `name` parameter. Example:
