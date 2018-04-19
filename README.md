@@ -20,3 +20,24 @@ sisubuild will implement:
 
 ## Build
 To build the application run `make`
+
+## Configuration
+1. Create a `sisubuild.toml` file in the root of your repository. Example:
+
+   ```
+   [Discover]
+   application_dirs = ["go/code/", "application/"]
+   search_depth = 1
+   ```
+
+2. Create `.app.toml` files in all directories that contain applications. The
+   file must have a `name` parameter. Example:
+
+   ```
+   name = "i18n-service
+   ```
+
+
+## Examples
+- List all applications in the repository:
+  `sb ls`

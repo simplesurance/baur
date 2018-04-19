@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/simplesurance/sisubuild/sblog"
 	"github.com/simplesurance/sisubuild/version"
 	"github.com/spf13/cobra"
@@ -16,18 +13,16 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: initSb,
 }
 
-var VerboseFlag bool
+var verboseFlag bool
 
 func initSb(_ *cobra.Command, _ []string) {
-	sblog.EnableDebug(VerboseFlag)
-
+	sblog.EnableDebug(verboseFlag)
 }
 
 func Execute() {
-	rootCmd.PersistentFlags().BoolVarP(&VerboseFlag, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		sblog.Fatal(err)
 	}
 }
