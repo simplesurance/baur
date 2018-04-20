@@ -13,9 +13,9 @@ type App struct {
 }
 
 func New(appPath string) (*App, error) {
-	cfgPath := path.Join(appPath, cfg.ApplicationFile)
+	cfgPath := path.Join(appPath, cfg.AppFile)
 
-	cfg, err := cfg.ApplicationFromFile(cfgPath)
+	cfg, err := cfg.AppFromFile(cfgPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "reading %s failed", cfgPath)
 	}

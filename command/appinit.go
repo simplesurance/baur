@@ -34,15 +34,17 @@ func appInit(cmd *cobra.Command, args []string) {
 	}
 	appName := path.Base(cwd)
 
-	err = cfg.NewApplicationFile(appName, path.Join(cwd, cfg.ApplicationFile))
+	appCfg := cfg.App{Name: appName}
+
+	err = appCfg.ToFile(path.Join(cwd, cfg.AppFile))
 	if err != nil {
 		if os.IsExist(err) {
-			sblog.Fatalf("%s already exist", cfg.ApplicationFile)
+			sblog.Fatalf("%s already exist", cfg.AppFile)
 		}
 
 		sblog.Fatal(err)
 	}
 
 	sblog.Infof("written application configuration file to %s",
-		cfg.ApplicationFile)
+		cfg.AppFile)
 }

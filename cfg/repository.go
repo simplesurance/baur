@@ -10,13 +10,13 @@ import (
 	"github.com/simplesurance/baur/fs"
 )
 
-// RepositoryFile contains the name of the repository configuration file.
-const RepositoryFile = ".baur.toml"
-
 const (
 	MinSearchDepth = 1
 	MaxSearchDepth = 10
 )
+
+//  RepositoryFile contains the name of the repository configuration file.
+const RepositoryFile = ".baur.toml"
 
 // Repository contains the repository configuration.
 type Repository struct {
@@ -27,28 +27,6 @@ type Repository struct {
 type Discover struct {
 	Dirs        []string `toml:"application_dirs" comment:"list of directories containing applications, example: ['go/code', 'shop/']"`
 	SearchDepth int      `toml:"search_depth" comment:"specifies the max. directory the application search recurses into subdirectories"`
-}
-
-// NewRepositoryFile writes an exemplary Repository configuration file to
-// filepath
-func NewRepositoryFile(filepath string) error {
-	data, err := toml.Marshal(
-		Repository{Discover: &Discover{
-			SearchDepth: 1,
-		},
-		})
-	if err != nil {
-		return errors.Wrapf(err, "marshalling Repository config failed")
-	}
-
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(data)
-
-	return err
 }
 
 // RepositoryFromFile reads the repository config from a file and returns it.
@@ -66,6 +44,32 @@ func RepositoryFromFile(path string) (*Repository, error) {
 	}
 
 	return &config, err
+}
+
+// ExampleRepository returns an exemplary Repository config
+func ExampleRepository() *Repository {
+	return &Repository{
+		Discover: &Discover{
+			SearchDepth: 1,
+		},
+	}
+}
+
+// ToFile writes an Repository configuration file to filepath
+func (r *Repository) ToFile(filepath string) error {
+	data, err := toml.Marshal(r)
+	if err != nil {
+		return errors.Wrapf(err, "marshalling config failed")
+	}
+
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(data)
+
+	return err
 }
 
 // Validate validates a repository configuration

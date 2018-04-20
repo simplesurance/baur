@@ -26,7 +26,7 @@ func ls(cmd *cobra.Command, args []string) {
 	ctx := mustInitCtx()
 
 	dirs, err := discover.ApplicationDirs(ctx.RepositoryCfg.Discover.Dirs,
-		cfg.ApplicationFile, ctx.RepositoryCfg.Discover.SearchDepth)
+		cfg.AppFile, ctx.RepositoryCfg.Discover.SearchDepth)
 	if err != nil {
 		sblog.Fatal("discovering applications failed: ", err)
 	}
@@ -36,7 +36,7 @@ func ls(cmd *cobra.Command, args []string) {
 			"- ensure the [Discover] is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",
-			ctx.RepositoryCfgPath, cfg.ApplicationFile)
+			ctx.RepositoryCfgPath, cfg.AppFile)
 	}
 
 	apps := make([]*app.App, 0, len(dirs))

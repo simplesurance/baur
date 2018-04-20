@@ -27,7 +27,8 @@ func initRepositoryCfg(cmd *cobra.Command, args []string) {
 			path.Join(repoRoot, cfg.RepositoryFile))
 	}
 
-	err = cfg.NewRepositoryFile(path.Join(repoRoot, cfg.RepositoryFile))
+	repCfg := cfg.ExampleRepository()
+	err = repCfg.ToFile(path.Join(repoRoot, cfg.RepositoryFile))
 	if err != nil {
 		if os.IsExist(err) {
 			sblog.Fatalf("%s already exist", cfg.RepositoryFile)
