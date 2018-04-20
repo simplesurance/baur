@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"github.com/simplesurance/baur/sblog"

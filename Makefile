@@ -12,9 +12,9 @@ default: all
 all: baur
 
 .PHONY: baur
-baur:
+baur: cmd/baur/main.go
 	$(info * building $@)
-	@CGO_ENABLED=0 go build -ldflags=$(LDFLAGS) -o "$@"
+	@CGO_ENABLED=0 go build -ldflags=$(LDFLAGS) -o "$@"  $<
 
 .PHONY: dist/darwin_amd64/baur
 dist/darwin_amd64/baur:
