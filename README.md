@@ -36,3 +36,5 @@ To build the application run `make`
 ## Examples
 - List all applications in the repository:
   `baur ls`
+- Build all applications in the repository:
+  `baur build all`

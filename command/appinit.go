@@ -15,8 +15,7 @@ func init() {
 	rootCmd.AddCommand(appInitCmd)
 }
 
-const appInitLongHelp = `
-Create an application config file in the current directory.
+const appInitLongHelp = `Create an application config file in the current directory.
 The name parameter is set to the current directory name.`
 
 var appInitCmd = &cobra.Command{
@@ -27,7 +26,7 @@ var appInitCmd = &cobra.Command{
 }
 
 func appInit(cmd *cobra.Command, args []string) {
-	mustFindRepositoryRoot()
+	mustFindRepository()
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -35,7 +34,7 @@ func appInit(cmd *cobra.Command, args []string) {
 	}
 	appName := path.Base(cwd)
 
-	appCfg := cfg.NewApp(appName)
+	appCfg := cfg.ExampleApp(appName)
 
 	err = appCfg.ToFile(path.Join(cwd, baur.AppCfgFile))
 	if err != nil {

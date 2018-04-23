@@ -21,6 +21,11 @@ func EnableDebug(activated bool) {
 	debug = activated
 }
 
+// DebugEnabled returns true if debugging is enabled
+func DebugEnabled() bool {
+	return debug
+}
+
 // Debug logs a debug message to stdout.
 // It's only shown if debugging is enabled.
 func Debug(v ...interface{}) {
@@ -28,7 +33,7 @@ func Debug(v ...interface{}) {
 		return
 	}
 
-	stdoutLogger.Print(v)
+	stdoutLogger.Print(v...)
 }
 
 // Debugf logs a debug message to stdout.

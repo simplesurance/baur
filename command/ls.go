@@ -3,12 +3,9 @@ package command
 import (
 	"fmt"
 	"os"
-	"sort"
 	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/discover"
 	"github.com/simplesurance/baur/sblog"
 	"github.com/spf13/cobra"
 )
@@ -24,13 +21,11 @@ var lsCmd = &cobra.Command{
 }
 
 func ls(cmd *cobra.Command, args []string) {
-	ctx := mustInitCtx()
+	rep := mustFindRepository()
 
-	discover := discover.New(&cfg.AppFileReader{})
-	apps, err := discover.Applications(ctx.RepositoryCfg.Discover.Dirs,
-		baur.AppCfgFile, ctx.RepositoryCfg.Discover.SearchDepth)
+	apps, err := rep.FindApps()
 	if err != nil {
-		sblog.Fatal("discovering applications failed: ", err)
+		sblog.Fatal(err)
 	}
 
 	if len(apps) == 0 {
@@ -38,12 +33,10 @@ func ls(cmd *cobra.Command, args []string) {
 			"- ensure the [Discover] is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",
-			ctx.RepositoryCfgPath, baur.AppCfgFile)
+			rep.CfgPath, baur.AppCfgFile)
 	}
 
-	sort.Slice(apps, func(i int, j int) bool {
-		return apps[i].Name < apps[j].Name
-	})
+	baur.SortAppsByName(apps)
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintf(tw, "# Name\tDirectory\n")

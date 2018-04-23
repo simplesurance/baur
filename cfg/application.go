@@ -6,24 +6,33 @@ import (
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
-	"github.com/simplesurance/baur"
 )
 
 // App stores an application configuration.
 type App struct {
-	Name string `toml:"name", comment:"name of the application"`
+	Name  string   `toml:"name",comment:"name of the application"`
+	Build AppBuild `comment:"build configuration"`
 }
 
-// AppFileReader implements the discover.AppCfgReader interface
-type AppFileReader struct{}
-
-// NewApp returns a new app cfg struct with the name set to the given value
-func NewApp(name string) *App {
-	return &App{Name: name}
+// AppBuild contains application specific build settings
+type AppBuild struct {
+	BuildCmd string `toml:"build_command" commented:"true" comment:"command to build the application, if not set the BuildCommand from the repository config file is used. The command is run in the application diretory."`
 }
 
-// AppFromFile reads a application configuration file and returns it
-func (a *AppFileReader) AppFromFile(path string) (baur.AppCfg, error) {
+// NewApp returns an exemplary app cfg struct with the name set to the given value
+func ExampleApp(name string) *App {
+	return &App{
+		Name: name,
+		Build: AppBuild{
+			BuildCmd: "make",
+		},
+	}
+}
+
+// AppFromFile reads a application configuration file and returns it.
+// If the buildCmd is not set in the App configuration it's set to
+// defaultBuildCmd
+func AppFromFile(path string, defaultBuildCmd string) (*App, error) {
 	config := App{}
 
 	content, err := ioutil.ReadFile(path)
@@ -34,6 +43,10 @@ func (a *AppFileReader) AppFromFile(path string) (baur.AppCfg, error) {
 	err = toml.Unmarshal(content, &config)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(config.Build.BuildCmd) == 0 {
+		config.Build.BuildCmd = defaultBuildCmd
 	}
 
 	return &config, err
@@ -63,10 +76,19 @@ func (a *App) Validate() error {
 		return errors.New("name parameter can not be empty")
 	}
 
+	err := a.Build.Validate()
+	if err != nil {
+		return errors.Wrap(err, "[Build] section contains errors")
+	}
+
 	return nil
 }
 
-// Name returns the name parameter of the app cfg
-func (a *App) GetName() string {
-	return a.Name
+// Validate validates the [Build] section of an application config file
+func (b *AppBuild) Validate() error {
+	if len(b.BuildCmd) == 0 {
+		return errors.New("build_command parameter can not be empty")
+	}
+
+	return nil
 }

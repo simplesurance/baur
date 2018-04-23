@@ -6,7 +6,6 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/discover"
 	"github.com/simplesurance/baur/sblog"
 	"github.com/spf13/cobra"
 )
@@ -22,14 +21,20 @@ var initCmd = &cobra.Command{
 }
 
 func initRepositoryCfg(cmd *cobra.Command, args []string) {
-	repoRoot, err := discover.RepositoryRoot(baur.RepositoryCfgFile)
+	rep, err := baur.FindRepository()
 	if err == nil {
 		sblog.Fatalf("repository configuration %s already exist",
-			path.Join(repoRoot, baur.RepositoryCfgFile))
+			path.Join(rep.Path, baur.RepositoryCfgFile))
 	}
 
 	repCfg := cfg.ExampleRepository()
-	err = repCfg.ToFile(path.Join(repoRoot, baur.RepositoryCfgFile))
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		sblog.Fatal(err)
+	}
+
+	err = repCfg.ToFile(path.Join(cwd, baur.RepositoryCfgFile))
 	if err != nil {
 		if os.IsExist(err) {
 			sblog.Fatalf("%s already exist", baur.RepositoryCfgFile)
