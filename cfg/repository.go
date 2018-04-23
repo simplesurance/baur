@@ -54,7 +54,7 @@ func ExampleRepository() *Repository {
 
 // ToFile writes an Repository configuration file to filepath
 func (r *Repository) ToFile(filepath string) error {
-	data, err := toml.Marshal(r)
+	data, err := toml.Marshal(*r)
 	if err != nil {
 		return errors.Wrapf(err, "marshalling config failed")
 	}

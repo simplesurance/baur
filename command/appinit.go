@@ -35,7 +35,7 @@ func appInit(cmd *cobra.Command, args []string) {
 	}
 	appName := path.Base(cwd)
 
-	appCfg := cfg.App{Name: appName}
+	appCfg := cfg.NewApp(appName)
 
 	err = appCfg.ToFile(path.Join(cwd, baur.AppCfgFile))
 	if err != nil {

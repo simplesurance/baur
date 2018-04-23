@@ -6,7 +6,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/app"
+	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/discover"
 	"github.com/simplesurance/baur/sblog"
 	"github.com/spf13/cobra"
@@ -25,27 +25,19 @@ var lsCmd = &cobra.Command{
 func ls(cmd *cobra.Command, args []string) {
 	ctx := mustInitCtx()
 
-	dirs, err := discover.ApplicationDirs(ctx.RepositoryCfg.Discover.Dirs,
+	discover := discover.New(&cfg.AppFileReader{})
+	apps, err := discover.Applications(ctx.RepositoryCfg.Discover.Dirs,
 		baur.AppCfgFile, ctx.RepositoryCfg.Discover.SearchDepth)
 	if err != nil {
 		sblog.Fatal("discovering applications failed: ", err)
 	}
 
-	if len(dirs) == 0 {
+	if len(apps) == 0 {
 		sblog.Fatalf("could not find any applications\n"+
 			"- ensure the [Discover] is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",
 			ctx.RepositoryCfgPath, baur.AppCfgFile)
-	}
-
-	apps := make([]*app.App, 0, len(dirs))
-	for _, d := range dirs {
-		a, err := app.New(d)
-		if err != nil {
-			sblog.Fatalf("could not get application informations: %s", err)
-		}
-		apps = append(apps, a)
 	}
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)

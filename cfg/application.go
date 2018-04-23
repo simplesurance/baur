@@ -6,6 +6,7 @@ import (
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
+	"github.com/simplesurance/baur"
 )
 
 // App stores an application configuration.
@@ -13,8 +14,16 @@ type App struct {
 	Name string `comment:"name of the application"`
 }
 
+// AppFileReader implements the discover.AppCfgReader interface
+type AppFileReader struct{}
+
+// NewApp returns a new app cfg struct with the name set to the given value
+func NewApp(name string) *App {
+	return &App{Name: name}
+}
+
 // AppFromFile reads a application configuration file and returns it
-func AppFromFile(path string) (*App, error) {
+func (a *AppFileReader) AppFromFile(path string) (baur.AppCfg, error) {
 	config := App{}
 
 	content, err := ioutil.ReadFile(path)
@@ -33,7 +42,7 @@ func AppFromFile(path string) (*App, error) {
 // NewAppFile writes an exemplary Application configuration file to
 // filepath. The name setting is set to appName
 func (a *App) ToFile(filepath string) error {
-	data, err := toml.Marshal(a)
+	data, err := toml.Marshal(*a)
 	if err != nil {
 		return errors.Wrapf(err, "marshalling failed")
 	}
@@ -55,4 +64,9 @@ func (a *App) Validate() error {
 	}
 
 	return nil
+}
+
+// Name returns the name parameter of the app cfg
+func (a *App) GetName() string {
+	return a.Name
 }

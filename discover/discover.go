@@ -8,7 +8,17 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/simplesurance/baur"
 )
+
+type Discover struct {
+	appCfgReader baur.AppCfgReader
+}
+
+// New returns a new Discover object
+func New(appCfgReader baur.AppCfgReader) *Discover {
+	return &Discover{appCfgReader: appCfgReader}
+}
 
 // RepositoryRoot searches for a file with the given name in the current
 // directory and in it's sparent directories.
@@ -48,11 +58,14 @@ func RepositoryRoot(filename string) (string, error) {
 	}
 }
 
-// ApplicationDirs returns all directories containing fname. The function
+// Applications finds applications in the repository.
+// It searches for directories containing a file named fname. The function
 // searches through all basedirs up to lvl directories deep.
 // If lvl is 0 only the basedir is searched.
-func ApplicationDirs(basedirs []string, fname string, lvl int) ([]string, error) {
-	var found []string
+// When it finds the file it reads and parses the configuration and adds it to
+// the result slice.
+func (d *Discover) Applications(basedirs []string, fname string, lvl int) ([]*baur.App, error) {
+	var found []*baur.App
 
 	for _, basedir := range basedirs {
 		glob := "/"
@@ -66,7 +79,15 @@ func ApplicationDirs(basedirs []string, fname string, lvl int) ([]string, error)
 			}
 
 			for _, m := range matches {
-				found = append(found, path.Dir(m))
+				appCfg, err := d.appCfgReader.AppFromFile(m)
+				if err != nil {
+					return nil, errors.Wrapf(err, "reading application config '%s' failed")
+				}
+				found = append(found,
+					&baur.App{
+						Name: appCfg.GetName(),
+						Dir:  path.Dir(m),
+					})
 			}
 
 			glob += "*/"
