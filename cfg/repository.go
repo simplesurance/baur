@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
@@ -27,10 +28,10 @@ type Discover struct {
 }
 
 // RepositoryFromFile reads the repository config from a file and returns it.
-func RepositoryFromFile(path string) (*Repository, error) {
+func RepositoryFromFile(cfgPath string) (*Repository, error) {
 	config := Repository{}
 
-	content, err := ioutil.ReadFile(path)
+	content, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,23 @@ func RepositoryFromFile(path string) (*Repository, error) {
 		return nil, err
 	}
 
+	rootPath := path.Dir(cfgPath)
+
+	config.Discover.absDirs(rootPath)
+
 	return &config, err
+}
+
+// absDirs converts the path in Dirs to absolute Paths
+func (d *Discover) absDirs(rootPath string) {
+	absDiscoveryDirs := make([]string, 0, len(d.Dirs))
+
+	for _, d := range d.Dirs {
+		absDir := path.Clean(path.Join(rootPath, d))
+		absDiscoveryDirs = append(absDiscoveryDirs, absDir)
+	}
+
+	d.Dirs = absDiscoveryDirs
 }
 
 // ExampleRepository returns an exemplary Repository config
