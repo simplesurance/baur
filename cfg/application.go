@@ -11,7 +11,7 @@ import (
 
 // App stores an application configuration.
 type App struct {
-	Name string `comment:"name of the application"`
+	Name string `toml:"name", comment:"name of the application"`
 }
 
 // AppFileReader implements the discover.AppCfgReader interface
