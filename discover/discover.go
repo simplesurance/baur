@@ -34,12 +34,10 @@ func RepositoryRoot(filename string) (string, error) {
 
 		_, err = os.Stat(p)
 		if err == nil {
-			dir := path.Dir(filename)
-
-			abs, err := filepath.Abs(dir)
+			abs, err := filepath.Abs(path.Dir(p))
 			if err != nil {
 				return "", errors.Wrapf(err,
-					"could not get absolute path of %v", dir)
+					"could not get absolute path of %v", p)
 			}
 
 			return abs, nil
