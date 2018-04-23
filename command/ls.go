@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
@@ -39,6 +40,10 @@ func ls(cmd *cobra.Command, args []string) {
 			"containing a %s file",
 			ctx.RepositoryCfgPath, baur.AppCfgFile)
 	}
+
+	sort.Slice(apps, func(i int, j int) bool {
+		return apps[i].Name < apps[j].Name
+	})
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintf(tw, "# Name\tDirectory\n")
