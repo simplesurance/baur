@@ -28,13 +28,9 @@ To build the application run `make`
    applications to the `application_dirs` parameter.
 
 
-
-2. Create `.app.toml` files in all directories that contain applications. The
-   file must have a `name` parameter. Example:
-
-   ```
-   name = "i18n-service
-   ```
+2. Run `baur appinit` in your application directories to create an `.app.toml`
+   file. Every application that is build via `baur` must have an `.app.toml`
+   file.
 
 
 ## Examples
