@@ -8,9 +8,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//  AppFile contains the name of application configuration files
-const AppFile = ".app.toml"
-
 // App stores an application configuration.
 type App struct {
 	Name string `comment:"name of the application"`

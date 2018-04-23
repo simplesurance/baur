@@ -4,6 +4,7 @@ import (
 	"path"
 
 	"github.com/pkg/errors"
+	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
 )
 
@@ -13,7 +14,7 @@ type App struct {
 }
 
 func New(appPath string) (*App, error) {
-	cfgPath := path.Join(appPath, cfg.AppFile)
+	cfgPath := path.Join(appPath, baur.AppCfgFile)
 
 	cfg, err := cfg.AppFromFile(cfgPath)
 	if err != nil {

@@ -5,8 +5,8 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/app"
-	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/discover"
 	"github.com/simplesurance/baur/sblog"
 	"github.com/spf13/cobra"
@@ -26,7 +26,7 @@ func ls(cmd *cobra.Command, args []string) {
 	ctx := mustInitCtx()
 
 	dirs, err := discover.ApplicationDirs(ctx.RepositoryCfg.Discover.Dirs,
-		cfg.AppFile, ctx.RepositoryCfg.Discover.SearchDepth)
+		baur.AppCfgFile, ctx.RepositoryCfg.Discover.SearchDepth)
 	if err != nil {
 		sblog.Fatal("discovering applications failed: ", err)
 	}
@@ -36,7 +36,7 @@ func ls(cmd *cobra.Command, args []string) {
 			"- ensure the [Discover] is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",
-			ctx.RepositoryCfgPath, cfg.AppFile)
+			ctx.RepositoryCfgPath, baur.AppCfgFile)
 	}
 
 	apps := make([]*app.App, 0, len(dirs))

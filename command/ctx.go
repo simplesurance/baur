@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/discover"
 	"github.com/simplesurance/baur/sblog"
@@ -17,12 +18,12 @@ type ctx struct {
 }
 
 func mustFindRepositoryRoot() string {
-	root, err := discover.RepositoryRoot(cfg.RepositoryFile)
+	root, err := discover.RepositoryRoot(baur.RepositoryCfgFile)
 	if err != nil {
 		if os.IsNotExist(err) {
 			sblog.Fatalf("could not find repository root config file "+
 				"ensure the file '%s' exist in the root",
-				cfg.RepositoryFile)
+				baur.RepositoryCfgFile)
 		}
 		sblog.Fatal("finding repository root config file failed: ", err)
 	}
@@ -38,7 +39,7 @@ func mustInitCtx() *ctx {
 	var ctx ctx
 
 	ctx.RepositoryRoot = mustFindRepositoryRoot()
-	ctx.RepositoryCfgPath = path.Join(ctx.RepositoryRoot, cfg.RepositoryFile)
+	ctx.RepositoryCfgPath = path.Join(ctx.RepositoryRoot, baur.RepositoryCfgFile)
 
 	ctx.RepositoryCfg, err = cfg.RepositoryFromFile(ctx.RepositoryCfgPath)
 	if err != nil {

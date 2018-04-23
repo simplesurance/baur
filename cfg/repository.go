@@ -15,9 +15,6 @@ const (
 	MaxSearchDepth = 10
 )
 
-//  RepositoryFile contains the name of the repository configuration file.
-const RepositoryFile = ".baur.toml"
-
 // Repository contains the repository configuration.
 type Repository struct {
 	Discover *Discover `comment:"application discovery settings"`
