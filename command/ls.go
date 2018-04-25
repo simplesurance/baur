@@ -30,7 +30,7 @@ func ls(cmd *cobra.Command, args []string) {
 
 	if len(apps) == 0 {
 		sblog.Fatalf("could not find any applications\n"+
-			"- ensure the [Discover] is correct in %s\n"+
+			"- ensure the [Discover] section is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",
 			rep.CfgPath, baur.AppCfgFile)
