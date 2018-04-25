@@ -15,7 +15,8 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 }
 
-const buildLongHelp = `Builds applications
+const buildLongHelp = `
+Builds applications.
 If no argument is the application in the current directory is build.
 If the current directory does not contain an application, all applications are build.`
 
@@ -27,9 +28,9 @@ baur build ui/shop	      build the application in the directory ui/shop`
 var buildCmd = &cobra.Command{
 	Use:     "build [<PATH>|<APP-NAME>|all]",
 	Short:   "builds an application",
-	Long:    buildLongHelp,
+	Long:    strings.TrimSpace(buildLongHelp),
 	Run:     build,
-	Example: buildExampleHelp,
+	Example: strings.TrimSpace(buildExampleHelp),
 	Args:    cobra.MaximumNArgs(1),
 }
 
