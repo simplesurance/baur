@@ -30,7 +30,7 @@ type Discover struct {
 
 // RepositoryBuild contains the build section of the repository
 type RepositoryBuild struct {
-	BuildCmd string `toml:"build_command" comment:"command to build the application, can be overwritten in the application specific config files"`
+	BuildCmd string `toml:"build_command" comment:"command to build the application, can be overwritten in the application config files"`
 }
 
 // RepositoryFromFile reads the repository config from a file and returns it.

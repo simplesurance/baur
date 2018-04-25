@@ -16,7 +16,7 @@ type App struct {
 
 // AppBuild contains application specific build settings
 type AppBuild struct {
-	BuildCmd string `toml:"build_command" commented:"true" comment:"command to build the application, if not set the BuildCommand from the repository config file is used. The command is run in the application diretory."`
+	BuildCmd string `toml:"build_command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
 }
 
 // NewApp returns an exemplary app cfg struct with the name set to the given value
