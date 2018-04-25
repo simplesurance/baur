@@ -15,24 +15,36 @@ func init() {
 	rootCmd.AddCommand(appInitCmd)
 }
 
-const appInitLongHelp = `Create an application config file in the current directory.
-The name parameter is set to the current directory name.`
+const appInitLongHelp = `
+Create an application config file in the current directory.
+If no name is passed, the application name will be the name of the current directory.`
+
+const appInitExample = `
+baur appinit shop-ui    create a new application config with the app name set to shop-ui`
 
 var appInitCmd = &cobra.Command{
-	Use:   "appinit",
-	Short: "creates an application config file in the current directory",
-	Long:  strings.TrimSpace(appInitLongHelp),
-	Run:   appInit,
+	Use:     "appinit [APP-NAME]",
+	Short:   "creates an application config file in the current directory",
+	Long:    strings.TrimSpace(appInitLongHelp),
+	Example: strings.TrimSpace(appInitExample),
+	Run:     appInit,
+	Args:    cobra.MaximumNArgs(1),
 }
 
 func appInit(cmd *cobra.Command, args []string) {
+	var appName string
 	mustFindRepository()
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		sblog.Fatal(err)
 	}
-	appName := path.Base(cwd)
+
+	if len(args) > 0 {
+		appName = args[0]
+	} else {
+		appName = path.Base(cwd)
+	}
 
 	appCfg := cfg.ExampleApp(appName)
 
@@ -45,6 +57,6 @@ func appInit(cmd *cobra.Command, args []string) {
 		sblog.Fatal(err)
 	}
 
-	sblog.Infof("written application configuration file to %s",
-		baur.AppCfgFile)
+	sblog.Infof("configuration file for %s was written to %s",
+		appName, baur.AppCfgFile)
 }
