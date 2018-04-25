@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/sblog"
@@ -84,6 +85,8 @@ func longestAppName(apps []*baur.App) int {
 
 func build(cmd *cobra.Command, args []string) {
 	var apps []*baur.App
+	var totalBuilDuration time.Duration
+
 	repo := mustFindRepository()
 
 	if len(args) > 0 {
@@ -129,10 +132,14 @@ func build(cmd *cobra.Command, args []string) {
 
 			fmt.Printf("%-*s\t", colLen, "success")
 			fmt.Printf("%-*s\n", colLen, res.Duration)
+
+			totalBuilDuration += res.Duration
 		}
 
+		fmt.Printf("\ntotal build duration: %s\n", totalBuilDuration)
 		os.Exit(0)
 	}
+
 	for _, app := range apps {
 		fmt.Printf("building %s\n", app.Name)
 
@@ -146,5 +153,8 @@ func build(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Printf("build finished successfully in %s\n\n", res.Duration)
+		totalBuilDuration += res.Duration
 	}
+
+	fmt.Printf("total build duration: %s\n", totalBuilDuration)
 }
