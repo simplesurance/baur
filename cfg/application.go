@@ -24,7 +24,7 @@ func ExampleApp(name string) *App {
 	return &App{
 		Name: name,
 		Build: AppBuild{
-			BuildCmd: "make",
+			BuildCmd: "make docker_dist",
 		},
 	}
 }
