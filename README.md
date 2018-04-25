@@ -16,7 +16,12 @@ baur will implement:
   need to be build
 
 
-[modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en : )
+Baur makes certain Assumptions:
+- an application directory only contains one application,
+- an application can be build by running a single command,
+  a build has to produce 1 or more build artifacts
+
+
 
 ## Build
 To build the application run `make`
@@ -24,9 +29,12 @@ To build the application run `make`
 ## Configuration
 1. Create a `baur.toml` file in the root of your repository by running
    `baur init` in the repository root.
-   Adapt the configuration files to your needs. Add paths containing your
-   applications to the `application_dirs` parameter.
+   Adapt the configuration files to your needs:
 
+   - Add paths containing your applications to the `application_dirs` parameter.
+   - set the build_command to a command that when it's run in your application
+	 directories, produces build artifacts like a docker container or a tar
+	 archives.
 
 2. Run `baur appinit` in your application directories to create an `.app.toml`
    file. Every application that is build via `baur` must have an `.app.toml`
@@ -38,3 +46,5 @@ To build the application run `make`
   `baur ls`
 - Build all applications in the repository:
   `baur build all`
+
+[modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en : )
