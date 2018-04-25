@@ -20,7 +20,7 @@ baur: cmd/baur/main.go
 dist/darwin_amd64/baur:
 	$(info * building $@)
 	@CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
-		-ldflags=$(LDFLAGS) -o "$@"
+		-ldflags=$(LDFLAGS) -o "$@" cmd/baur/main.go
 	$(info * creating $(@D)/baur-darwin_amd64-$(VERSION).tar.xz)
 	@tar $(TARFLAGS) -C $(@D) -cJf $(@D)/baur-darwin_amd64-$(VERSION).tar.xz $(@F)
 
@@ -28,7 +28,7 @@ dist/darwin_amd64/baur:
 dist/linux_amd64/baur:
 	$(info * building $@)
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-		-ldflags=$(LDFLAGS) -o "$@"
+		-ldflags=$(LDFLAGS) -o "$@" cmd/baur/main.go
 	$(info * creating $(@D)/baur-linux_amd64-$(VERSION).tar.xz)
 	@tar $(TARFLAGS) -C $(@D) -cJf $(@D)/baur-linux_amd64-$(VERSION).tar.xz $(@F)
 
