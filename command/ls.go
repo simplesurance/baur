@@ -7,6 +7,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/sblog"
+	"github.com/simplesurance/baur/term"
 	"github.com/spf13/cobra"
 )
 
@@ -44,4 +45,7 @@ func ls(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(tw, "%s\t%s\n", a.Name, a.Dir)
 	}
 	tw.Flush()
+
+	term.PrintSep()
+	fmt.Printf("Total: %v\n", len(apps))
 }
