@@ -10,15 +10,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var showPrintPathOnly bool
+
 func init() {
-	rootCmd.AddCommand(ShowCmd)
+	showCmd.Flags().BoolVar(&showPrintPathOnly, "path-only", false, "only print the path of the application")
+	rootCmd.AddCommand(showCmd)
 }
 
 const showExampleHelp = `
-baur show claim-service    shows informations about the appliation with the name claim-service
+baur show claim-service		       show informations about the claim-service application
+baur show --path-only claim-service    show the path of the directory of the claim-service application
 `
 
-var ShowCmd = &cobra.Command{
+var showCmd = &cobra.Command{
 	Use:     "show <APP-NAME>",
 	Short:   "shows informations about applications in the repository",
 	Example: strings.TrimSpace(showExampleHelp),
@@ -36,6 +40,12 @@ func show(cmd *cobra.Command, args []string) {
 		}
 		log.Fatalln(err)
 	}
+
+	if showPrintPathOnly {
+		fmt.Println(app.Dir)
+		os.Exit(0)
+	}
+
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(tw, "Name:\t%s\n", app.Name)
