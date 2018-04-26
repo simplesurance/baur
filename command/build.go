@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/sblog"
+	"github.com/simplesurance/baur/log"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +49,7 @@ func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
 	if strings.ToLower(arg) == "all" {
 		apps, err := repo.FindApps()
 		if err != nil {
-			sblog.Fatal(err)
+			log.Fatalln(err)
 		}
 
 		return apps
@@ -58,7 +58,7 @@ func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
 	if isAppDir(arg) {
 		app, err := repo.AppByDir(arg)
 		if err != nil {
-			sblog.Fatalf("could not find application in dir '%s': %s", arg, err)
+			log.Fatalf("could not find application in dir '%s': %s\n", arg, err)
 		}
 
 		return []*baur.App{app}
@@ -66,7 +66,7 @@ func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
 
 	app, err := repo.AppByName(arg)
 	if err != nil {
-		sblog.Fatalf("could not find application with name '%s': %s", arg, err)
+		log.Fatalf("could not find application with name '%s': %s\n", arg, err)
 	}
 
 	return []*baur.App{app}
@@ -121,12 +121,12 @@ func build(cmd *cobra.Command, args []string) {
 			err, res := app.Build()
 			if err != nil {
 				fmt.Printf("%-*s\n\n", colLen, "error")
-				sblog.Fatal(err)
+				log.Fatalln(err)
 			}
 
 			if !res.Success {
 				fmt.Printf("%-*s\n\n", colLen, "failed")
-				sblog.Fatalf("build command (%s) exited with code: %d, Output:\n%s",
+				log.Fatalf("build command (%s) exited with code: %d, Output:\n%s\n",
 					app.BuildCmd, res.ExitCode, res.Output)
 			}
 
@@ -136,25 +136,25 @@ func build(cmd *cobra.Command, args []string) {
 			totalBuilDuration += res.Duration
 		}
 
-		fmt.Printf("\ntotal build duration: %s\n", totalBuilDuration)
+		log.Infof("\ntotal build duration: %s\n", totalBuilDuration)
 		os.Exit(0)
 	}
 
 	for _, app := range apps {
-		fmt.Printf("building %s\n", app.Name)
+		log.Infof("building %s\n", app.Name)
 
 		err, res := app.Build()
 		if err != nil {
-			sblog.Fatal(err)
+			log.Fatalln(err)
 		}
 		if !res.Success {
-			sblog.Fatalf("build failed, command (%s) exited with code: %d\n",
+			log.Fatalf("build failed, command (%s) exited with code: %d\n",
 				app.BuildCmd, res.ExitCode)
 		}
 
-		fmt.Printf("build finished successfully in %s\n\n", res.Duration)
+		log.Infof("build finished successfully in %s\n\n", res.Duration)
 		totalBuilDuration += res.Duration
 	}
 
-	fmt.Printf("total build duration: %s\n", totalBuilDuration)
+	log.Infof("total build duration: %s\n", totalBuilDuration)
 }

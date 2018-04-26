@@ -6,7 +6,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/sblog"
+	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/term"
 	"github.com/spf13/cobra"
 )
@@ -26,11 +26,11 @@ func ls(cmd *cobra.Command, args []string) {
 
 	apps, err := rep.FindApps()
 	if err != nil {
-		sblog.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	if len(apps) == 0 {
-		sblog.Fatalf("could not find any applications\n"+
+		log.Fatalf("could not find any applications\n"+
 			"- ensure the [Discover] section is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",

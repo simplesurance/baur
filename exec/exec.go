@@ -6,7 +6,7 @@ import (
 	"syscall"
 
 	"github.com/pkg/errors"
-	"github.com/simplesurance/baur/sblog"
+	"github.com/simplesurance/baur/log"
 )
 
 // Command runs the passed command in a shell in the passed dir.
@@ -14,7 +14,7 @@ import (
 func Command(dir, command string) (output string, exitCode int, err error) {
 
 	cmd := exec.Command("sh", "-c", command)
-	sblog.Debugf("running %v %v", cmd.Path, cmd.Args)
+	log.Debugf("running %v %v", cmd.Path, cmd.Args)
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
@@ -33,7 +33,7 @@ func Command(dir, command string) (output string, exitCode int, err error) {
 	in := bufio.NewScanner(outReader)
 	for in.Scan() {
 		o := in.Text()
-		sblog.Debug(o)
+		log.Debugln(o)
 		output += o + "\n"
 	}
 

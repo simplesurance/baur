@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/sblog"
+	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/version"
 	"github.com/spf13/cobra"
 )
@@ -19,32 +19,32 @@ var rootCmd = &cobra.Command{
 var verboseFlag bool
 
 func mustFindRepository() *baur.Repository {
-	sblog.Debug("searching for repository root...")
+	log.Debugln("searching for repository root...")
 
 	rep, err := baur.FindRepository()
 	if err != nil {
 		if os.IsNotExist(err) {
-			sblog.Fatalf("could not find repository root config file "+
+			log.Fatalf("could not find repository root config file "+
 				"ensure the file '%s' exist in the root",
 				baur.RepositoryCfgFile)
 		}
 
-		sblog.Fatal(err)
+		log.Fatalln(err)
 	}
 
-	sblog.Debugf("repository root found: %v", rep.Path)
+	log.Debugf("repository root found: %v", rep.Path)
 
 	return rep
 }
 
 func initSb(_ *cobra.Command, _ []string) {
-	sblog.EnableDebug(verboseFlag)
+	log.DebugEnabled = verboseFlag
 }
 
 func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
 
 	if err := rootCmd.Execute(); err != nil {
-		sblog.Fatal(err)
+		log.Fatalln(err)
 	}
 }

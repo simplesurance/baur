@@ -7,7 +7,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/sblog"
+	"github.com/simplesurance/baur/log"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ func appInit(cmd *cobra.Command, args []string) {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		sblog.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	if len(args) > 0 {
@@ -51,12 +51,12 @@ func appInit(cmd *cobra.Command, args []string) {
 	err = appCfg.ToFile(path.Join(cwd, baur.AppCfgFile))
 	if err != nil {
 		if os.IsExist(err) {
-			sblog.Fatalf("%s already exist", baur.AppCfgFile)
+			log.Fatalf("%s already exist\n", baur.AppCfgFile)
 		}
 
-		sblog.Fatal(err)
+		log.Fatalln(err)
 	}
 
-	sblog.Infof("configuration file for %s was written to %s",
+	log.Infof("configuration file for %s was written to %s\n",
 		appName, baur.AppCfgFile)
 }
