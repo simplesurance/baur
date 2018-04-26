@@ -66,7 +66,10 @@ func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
 
 	app, err := repo.AppByName(arg)
 	if err != nil {
-		log.Fatalf("could not find application with name '%s': %s\n", arg, err)
+		if os.IsNotExist(err) {
+			log.Fatalf("could not find application with name '%s'\n", arg)
+		}
+		log.Fatalln(err)
 	}
 
 	return []*baur.App{app}
