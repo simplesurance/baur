@@ -5,23 +5,24 @@ import (
 	"os"
 )
 
+// DebugEnabled set to true to print debug message otherwise they are suppressed
 var DebugEnabled bool
 
-const ActionPrefix = "* "
+const actionPrefix = "* "
 
-// Action prints something with the ActionPrefix preprended
+// Actionln prints something with the ActionPrefix preprended
 func Actionln(v ...interface{}) {
-	v = append([]interface{}{ActionPrefix}, v)
+	v = append([]interface{}{actionPrefix}, v)
 	fmt.Println(v...)
 
 }
 
 // Actionf prints something with the ActionPrefix preprended
 func Actionf(format string, v ...interface{}) {
-	fmt.Printf(ActionPrefix+format, v...)
+	fmt.Printf(actionPrefix+format, v...)
 }
 
-// Debug logs a debug message to stdout.
+// Debugln logs a debug message to stdout.
 // It's only shown if debugging is enabled.
 func Debugln(v ...interface{}) {
 	if !DebugEnabled {
@@ -41,7 +42,7 @@ func Debugf(format string, v ...interface{}) {
 	fmt.Printf(format, v...)
 }
 
-// Fatal logs a message to stderr and terminates the application with an error
+// Fatalln logs a message to stderr and terminates the application with an error
 func Fatalln(v ...interface{}) {
 	fmt.Fprintln(os.Stderr, v...)
 	os.Exit(1)
@@ -53,7 +54,7 @@ func Fatalf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
-// Error logs a message to stderr
+// Errorln logs a message to stderr
 func Errorln(v ...interface{}) {
 	fmt.Fprintln(os.Stderr, v...)
 }
@@ -63,7 +64,7 @@ func Errorf(format string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, v...)
 }
 
-// Info logs a message to stdout
+// Infoln logs a message to stdout
 func Infoln(v ...interface{}) {
 	fmt.Println(v...)
 }

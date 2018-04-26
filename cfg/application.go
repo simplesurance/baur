@@ -19,7 +19,7 @@ type AppBuild struct {
 	BuildCmd string `toml:"build_command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
 }
 
-// NewApp returns an exemplary app cfg struct with the name set to the given value
+// ExampleApp returns an exemplary app cfg struct with the name set to the given value
 func ExampleApp(name string) *App {
 	return &App{
 		Name: name,
@@ -52,7 +52,7 @@ func AppFromFile(path string, defaultBuildCmd string) (*App, error) {
 	return &config, err
 }
 
-// NewAppFile writes an exemplary Application configuration file to
+// ToFile writes an exemplary Application configuration file to
 // filepath. The name setting is set to appName
 func (a *App) ToFile(filepath string) error {
 	data, err := toml.Marshal(*a)

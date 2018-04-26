@@ -38,7 +38,7 @@ func DirExists(path string) error {
 	return fmt.Errorf("'%s' is not a directory", path)
 }
 
-// FindDirByFileInParents finds a directory that contains filename. The function
+// FindFileInParentDirs finds a directory that contains filename. The function
 // starts searching in startPath and then checks recursively each parent
 // directory for the file. It returns the absolute path to the first found
 // directory contains the file.

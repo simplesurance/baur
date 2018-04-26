@@ -41,6 +41,7 @@ func initSb(_ *cobra.Command, _ []string) {
 	log.DebugEnabled = verboseFlag
 }
 
+// Execute parses commandline flags and execute their actions
 func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
 

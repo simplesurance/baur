@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	MinSearchDepth = 1
-	MaxSearchDepth = 10
+	minSearchDepth = 1
+	maxSearchDepth = 10
 )
 
 // Repository contains the repository configuration.
@@ -121,9 +121,9 @@ func (d *Discover) Validate() error {
 		return errors.Wrap(err, "application_dirs parameter is invalid")
 	}
 
-	if d.SearchDepth < MinSearchDepth || d.SearchDepth > MaxSearchDepth {
+	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {
 		return fmt.Errorf("search_depth parameter must be in range (%d, %d]",
-			MinSearchDepth, MaxSearchDepth)
+			minSearchDepth, maxSearchDepth)
 	}
 
 	return nil

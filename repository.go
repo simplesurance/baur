@@ -84,7 +84,7 @@ func (r *Repository) FindApps() ([]*App, error) {
 	return result, nil
 }
 
-// Repository reads an application config file from the direcory and returns an
+// AppByDir reads an application config file from the direcory and returns an
 // App
 func (r *Repository) AppByDir(appDir string) (*App, error) {
 	cfgPath := path.Join(appDir, AppCfgFile)
@@ -97,7 +97,7 @@ func (r *Repository) AppByDir(appDir string) (*App, error) {
 	return NewApp(cfgPath, r.DefaultBuildCmd)
 }
 
-// Repository searches for an App with the given name in the repository and
+// AppByName searches for an App with the given name in the repository and
 // returns it. If none is found os.ErrNotExist is returned.
 func (r *Repository) AppByName(name string) (*App, error) {
 	for _, searchDir := range r.AppSearchDirs {
