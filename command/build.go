@@ -118,7 +118,7 @@ func build(cmd *cobra.Command, args []string) {
 		for _, app := range apps {
 			fmt.Printf("%-*s\t", colLen, app.Name)
 
-			err, res := app.Build()
+			res, err := app.Build()
 			if err != nil {
 				fmt.Printf("%-*s\n\n", colLen, "error")
 				log.Fatalln(err)
@@ -143,7 +143,7 @@ func build(cmd *cobra.Command, args []string) {
 	for _, app := range apps {
 		log.Infof("building %s\n", app.Name)
 
-		err, res := app.Build()
+		res, err := app.Build()
 		if err != nil {
 			log.Fatalln(err)
 		}

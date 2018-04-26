@@ -49,20 +49,20 @@ type BuildResult struct {
 
 // Build builds an application by executing it's BuildCmd in the application
 // directory
-func (a *App) Build() (error, *BuildResult) {
+func (a *App) Build() (*BuildResult, error) {
 	startTime := time.Now()
 
 	out, exitCode, err := exec.Command(a.Dir, a.BuildCmd)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, &BuildResult{
+	return &BuildResult{
 		Duration: time.Since(startTime),
 		Output:   out,
 		ExitCode: exitCode,
 		Success:  exitCode == 0,
-	}
+	}, nil
 }
 
 // SortAppsByName sorts the apps in the slice by Name
