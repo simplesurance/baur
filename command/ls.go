@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/csv"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -11,7 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var lsCSVFmt bool
+
 func init() {
+	lsCmd.Flags().BoolVar(&lsCSVFmt, "csv", false, "list applications in RFC4180 csv format")
 	rootCmd.AddCommand(lsCmd)
 }
 
@@ -19,6 +23,15 @@ var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "list all applications in the repository",
 	Run:   ls,
+}
+
+func lsCSV(apps []*baur.App) {
+	csvw := csv.NewWriter(os.Stdout)
+
+	for _, a := range apps {
+		csvw.Write([]string{a.Name, a.Dir})
+	}
+	csvw.Flush()
 }
 
 func ls(cmd *cobra.Command, args []string) {
@@ -35,6 +48,11 @@ func ls(cmd *cobra.Command, args []string) {
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",
 			rep.CfgPath, baur.AppCfgFile)
+	}
+
+	if lsCSVFmt {
+		lsCSV(apps)
+		os.Exit(0)
 	}
 
 	baur.SortAppsByName(apps)
