@@ -2,9 +2,9 @@ package term
 
 import "fmt"
 
-const Seperator = "------------------------------------------------------------------------------"
+const Separator = "------------------------------------------------------------------------------"
 
-// PrintSep prints a seperator line
+// PrintSep prints a separator line
 func PrintSep() {
-	fmt.Println(Seperator)
+	fmt.Println(Separator)
 }
