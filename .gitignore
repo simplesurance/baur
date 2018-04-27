@@ -19,3 +19,6 @@ dist/**
 *~
 *.swp
 *.swo
+
+# jetbrains
+.idea
