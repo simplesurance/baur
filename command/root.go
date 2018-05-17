@@ -25,14 +25,14 @@ func mustFindRepository() *baur.Repository {
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Fatalf("could not find repository root config file "+
-				"ensure the file '%s' exist in the root",
+				"ensure the file '%s' exist in the root\n",
 				baur.RepositoryCfgFile)
 		}
 
 		log.Fatalln(err)
 	}
 
-	log.Debugf("repository root found: %v", rep.Path)
+	log.Debugf("repository root found: %v\n", rep.Path)
 
 	return rep
 }
