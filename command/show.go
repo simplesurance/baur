@@ -20,7 +20,7 @@ func init() {
 const showExampleHelp = `
 baur show claim-service		        show informations about the claim-service application
 baur show --path-only claim-service	show the path of the directory of the claim-service application
-baur show		                show repository root
+baur show		                show informations about the repository
 `
 
 var showCmd = &cobra.Command{
@@ -34,10 +34,17 @@ var showCmd = &cobra.Command{
 func show(cmd *cobra.Command, args []string) {
 	rep := mustFindRepository()
 
+	// Show repository informations
 	if len(args) == 0 {
-		fmt.Println(rep.Path)
+		if showPrintPathOnly {
+			fmt.Println(rep.Path)
+		} else {
+			fmt.Printf("Root:\t%s\n", rep.Path)
+		}
 		os.Exit(0)
 	}
+
+	// Show application informations
 	app, err := rep.AppByName(args[0])
 	if err != nil {
 		if os.IsNotExist(err) {
