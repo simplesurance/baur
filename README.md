@@ -52,7 +52,7 @@ To build the application run `make`
 
 ## Development
 
-# Create new Release
+### Create new Release
 1. Update the version number in the `ver` file and commit the change.
 2. Run `make release` to create the release `tar.xz` archives.
 3. Create a new git tag (follow the instructions printed by `make release`).
