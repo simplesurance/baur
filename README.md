@@ -48,3 +48,13 @@ To build the application run `make`
   `baur build all`
 
 [modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en : )
+
+
+## Development
+
+# Create new Release
+1. Update the version number in the `ver` file and commit the change.
+2. Run `make release` to create the release `tar.xz` archives.
+3. Create a new git tag (follow the instructions printed by `make release`).
+4. Push the `ver` file change to the remote git repository.
+5. Create a new release on github.com and upload the binaries.
