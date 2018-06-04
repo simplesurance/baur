@@ -12,6 +12,7 @@ var lock = sync.Mutex{}
 var DebugEnabled bool
 
 const actionPrefix = "* "
+const errorPrefix = "! "
 
 // Actionln prints something with the ActionPrefix preprended
 func Actionln(v ...interface{}) {
@@ -20,7 +21,6 @@ func Actionln(v ...interface{}) {
 
 	v = append([]interface{}{actionPrefix}, v)
 	fmt.Println(v...)
-
 }
 
 // Actionf prints something with the ActionPrefix preprended
@@ -62,7 +62,9 @@ func Fatalln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
+	v = append([]interface{}{errorPrefix}, v)
 	fmt.Fprintln(os.Stderr, v...)
+
 	os.Exit(1)
 }
 
@@ -72,6 +74,7 @@ func Fatalf(format string, v ...interface{}) {
 	defer lock.Unlock()
 
 	fmt.Fprintf(os.Stderr, format, v...)
+	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
 	os.Exit(1)
 }
 
@@ -80,6 +83,7 @@ func Errorln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
+	v = append([]interface{}{errorPrefix}, v)
 	fmt.Fprintln(os.Stderr, v...)
 }
 
@@ -89,6 +93,7 @@ func Errorf(format string, v ...interface{}) {
 	defer lock.Unlock()
 
 	fmt.Fprintf(os.Stderr, format, v...)
+	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
 }
 
 // Infoln logs a message to stdout
