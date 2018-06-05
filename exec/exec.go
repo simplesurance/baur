@@ -14,7 +14,7 @@ import (
 func Command(dir, command string) (output string, exitCode int, err error) {
 
 	cmd := exec.Command("sh", "-c", command)
-	log.Debugf("running %v %v", cmd.Path, cmd.Args)
+	log.Debugf("running %v %v\n", cmd.Path, cmd.Args)
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
