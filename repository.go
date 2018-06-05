@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/fs"
+	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/version"
 )
 
 // Repository represents an repository containing applications
@@ -36,12 +38,32 @@ func FindRepository() (*Repository, error) {
 	return NewRepository(rootPath)
 }
 
-// NewRepository reads the configuration file and returns a Reposiotry
+func ensureRepositoryCFGHasVersion(cfg *cfg.Repository, cfgPath string) error {
+	if cfg.BaurVersion == "" {
+		cfg.BaurVersion = version.Version
+
+		err := cfg.ToFile(cfgPath, true)
+		if err != nil {
+			return err
+		}
+
+		log.Debugf("written baur version to repository config %s\n", cfgPath)
+	}
+
+	return nil
+}
+
+// NewRepository reads the configuration file and returns a Repository
 func NewRepository(cfgPath string) (*Repository, error) {
 	cfg, err := cfg.RepositoryFromFile(cfgPath)
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"reading repository config %s failed", cfgPath)
+	}
+
+	err = ensureRepositoryCFGHasVersion(cfg, cfgPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "updating baur_version in %s failed", cfgPath)
 	}
 
 	err = cfg.Validate()

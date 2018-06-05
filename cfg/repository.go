@@ -7,8 +7,10 @@ import (
 	"path"
 
 	toml "github.com/pelletier/go-toml"
+
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/fs"
+	"github.com/simplesurance/baur/version"
 )
 
 const (
@@ -18,8 +20,9 @@ const (
 
 // Repository contains the repository configuration.
 type Repository struct {
-	Discover Discover        `comment:"application discovery settings"`
-	Build    RepositoryBuild `comment:"build configuration"`
+	Discover    Discover        `comment:"application discovery settings"`
+	Build       RepositoryBuild `comment:"build configuration"`
+	BaurVersion string          `toml:"baur_version" comment:"version of baur"`
 }
 
 // Discover stores the [Discover] section of the repository configuration.
@@ -58,7 +61,9 @@ func (d *Discover) absDirs(rootPath string) {
 	absDiscoveryDirs := make([]string, 0, len(d.Dirs))
 
 	for _, d := range d.Dirs {
+		fmt.Println(d)
 		absDir := path.Clean(path.Join(rootPath, d))
+		fmt.Println(absDir)
 		absDiscoveryDirs = append(absDiscoveryDirs, absDir)
 	}
 
@@ -68,6 +73,7 @@ func (d *Discover) absDirs(rootPath string) {
 // ExampleRepository returns an exemplary Repository config
 func ExampleRepository() *Repository {
 	return &Repository{
+		BaurVersion: version.Version,
 		Discover: Discover{
 			Dirs:        []string{"."},
 			SearchDepth: 1,
@@ -78,14 +84,21 @@ func ExampleRepository() *Repository {
 	}
 }
 
-// ToFile writes an Repository configuration file to filepath
-func (r *Repository) ToFile(filepath string) error {
+// ToFile writes an Repository configuration file to filepath.
+// If overwrite is true an existent file will be overwriten. If it's false the
+// function returns an error if the file exist.
+func (r *Repository) ToFile(filepath string, overwrite bool) error {
 	data, err := toml.Marshal(*r)
 	if err != nil {
 		return errors.Wrapf(err, "marshalling config failed")
 	}
 
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	openFlags := os.O_WRONLY | os.O_CREATE
+	if !overwrite {
+		openFlags |= os.O_EXCL
+	}
+
+	f, err := os.OpenFile(filepath, openFlags, 0666)
 	if err != nil {
 		return err
 	}

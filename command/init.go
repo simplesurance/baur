@@ -34,7 +34,7 @@ func initRepositoryCfg(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	err = repCfg.ToFile(path.Join(cwd, baur.RepositoryCfgFile))
+	err = repCfg.ToFile(path.Join(cwd, baur.RepositoryCfgFile), false)
 	if err != nil {
 		if os.IsExist(err) {
 			log.Fatalf("%s already exist\n", baur.RepositoryCfgFile)
