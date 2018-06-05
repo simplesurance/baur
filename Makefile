@@ -75,3 +75,7 @@ check:
 .PHONY: clean
 clean:
 	@rm -rf baur dist/
+
+.PHONY: test
+test:
+	go test -v ./...
