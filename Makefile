@@ -1,10 +1,11 @@
 # vi:set tabstop=8 sts=8 shiftwidth=8 noexpandtab tw=80:
 
 GIT_COMMIT := $(shell git rev-parse HEAD)
-GIT_DIRTY := $(if $(shell git diff-files),-wip)
-VERSION := $(shell cat ver)$(GIT_DIRTY)
-LDFLAGS := "-X github.com/simplesurance/baur/version.GitCommit=$(GIT_COMMIT)\
-	    -X github.com/simplesurance/baur/version.Version=$(VERSION)"
+GIT_DIRTY := $(if $(shell git diff-files),wip)
+VERSION := $(shell cat ver)
+LDFLAGS := "-X github.com/simplesurance/baur/version.GitCommit=$(GIT_COMMIT) \
+	    -X github.com/simplesurance/baur/version.Version=$(VERSION) \
+	    -X github.com/simplesurance/baur/version.Appendix=$(GIT_DIRTY)"
 TARFLAGS := --sort=name --mtime='1970-01-01 00:00:00' --owner=0 --group=0 --numeric-owner
 
 default: all
