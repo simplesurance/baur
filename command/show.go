@@ -39,6 +39,7 @@ func show(cmd *cobra.Command, args []string) {
 		if showPrintPathOnly {
 			fmt.Println(rep.Path)
 		} else {
+			fmt.Printf("# Repository Information\n")
 			fmt.Printf("Root:\t%s\n", rep.Path)
 		}
 		os.Exit(0)
@@ -58,6 +59,7 @@ func show(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
+	fmt.Printf("# Application Information\n")
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(tw, "Name:\t%s\n", app.Name)
