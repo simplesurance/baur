@@ -69,6 +69,7 @@ func (d *Discover) absDirs(rootPath string) {
 func ExampleRepository() *Repository {
 	return &Repository{
 		Discover: Discover{
+			Dirs:        []string{"."},
 			SearchDepth: 1,
 		},
 		Build: RepositoryBuild{
