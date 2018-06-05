@@ -77,7 +77,7 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		CfgPath:         cfgPath,
 		DefaultBuildCmd: cfg.Build.BuildCmd,
 		Path:            path.Dir(cfgPath),
-		AppSearchDirs:   cfg.Discover.Dirs,
+		AppSearchDirs:   fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
 		SearchDepth:     cfg.Discover.SearchDepth,
 	}, nil
 }

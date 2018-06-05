@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 
 	toml "github.com/pelletier/go-toml"
 
@@ -50,24 +49,7 @@ func RepositoryFromFile(cfgPath string) (*Repository, error) {
 		return nil, err
 	}
 
-	rootPath := path.Dir(cfgPath)
-	config.Discover.absDirs(rootPath)
-
 	return &config, err
-}
-
-// absDirs converts the path in Dirs to absolute Paths
-func (d *Discover) absDirs(rootPath string) {
-	absDiscoveryDirs := make([]string, 0, len(d.Dirs))
-
-	for _, d := range d.Dirs {
-		fmt.Println(d)
-		absDir := path.Clean(path.Join(rootPath, d))
-		fmt.Println(absDir)
-		absDiscoveryDirs = append(absDiscoveryDirs, absDir)
-	}
-
-	d.Dirs = absDiscoveryDirs
 }
 
 // ExampleRepository returns an exemplary Repository config

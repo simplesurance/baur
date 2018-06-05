@@ -103,3 +103,16 @@ func FindFilesInSubDir(searchDir, filename string, maxdepth int) ([]string, erro
 
 	return result, nil
 }
+
+// PathsJoin returns a list where all paths in relPaths are prefixed with
+// rootPath
+func PathsJoin(rootPath string, relPaths []string) []string {
+	absPaths := make([]string, 0, len(relPaths))
+
+	for _, d := range relPaths {
+		abs := path.Clean(path.Join(rootPath, d))
+		absPaths = append(absPaths, abs)
+	}
+
+	return absPaths
+}
