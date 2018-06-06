@@ -16,7 +16,7 @@ type App struct {
 
 // AppBuild contains application specific build settings
 type AppBuild struct {
-	BuildCmd string `toml:"build_command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
+	Command string `toml:"command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
 }
 
 // ExampleApp returns an exemplary app cfg struct with the name set to the given value
@@ -24,15 +24,15 @@ func ExampleApp(name string) *App {
 	return &App{
 		Name: name,
 		Build: AppBuild{
-			BuildCmd: "make docker_dist",
+			Command: "make docker_dist",
 		},
 	}
 }
 
 // AppFromFile reads a application configuration file and returns it.
 // If the buildCmd is not set in the App configuration it's set to
-// defaultBuildCmd
-func AppFromFile(path string, defaultBuildCmd string) (*App, error) {
+// defaultBuildCommand
+func AppFromFile(path string, defaultBuildCommand string) (*App, error) {
 	config := App{}
 
 	content, err := ioutil.ReadFile(path)
@@ -45,8 +45,8 @@ func AppFromFile(path string, defaultBuildCmd string) (*App, error) {
 		return nil, err
 	}
 
-	if len(config.Build.BuildCmd) == 0 {
-		config.Build.BuildCmd = defaultBuildCmd
+	if len(config.Build.Command) == 0 {
+		config.Build.Command = defaultBuildCommand
 	}
 
 	return &config, err
@@ -86,7 +86,7 @@ func (a *App) Validate() error {
 
 // Validate validates the [Build] section of an application config file
 func (b *AppBuild) Validate() error {
-	if len(b.BuildCmd) == 0 {
+	if len(b.Command) == 0 {
 		return errors.New("build_command parameter can not be empty")
 	}
 

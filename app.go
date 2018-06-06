@@ -35,7 +35,7 @@ func NewApp(cfgPath, defaultBuildCmd string) (*App, error) {
 	return &App{
 		Dir:      path.Dir(cfgPath),
 		Name:     cfg.Name,
-		BuildCmd: cfg.Build.BuildCmd,
+		BuildCmd: cfg.Build.Command,
 	}, nil
 }
 
