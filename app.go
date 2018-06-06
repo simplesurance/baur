@@ -3,22 +3,67 @@ package baur
 import (
 	"path"
 	"sort"
-	"time"
+	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
+
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/exec"
 )
 
 // App represents an application
 type App struct {
-	Dir      string
-	Name     string
-	BuildCmd string
+	Dir        string
+	Name       string
+	BuildCmd   string
+	Repository *Repository
+	Artifacts  []Artifact
+}
+
+func replaceUUIDvar(in string) string {
+	return strings.Replace(in, "$UUID", xid.New().String(), -1)
+}
+
+func replaceAppNameVar(in, appName string) string {
+	return strings.Replace(in, "$APPNAME", appName, -1)
+}
+
+func dockerArtifactsFromCFG(appDir, appName string, cfg *cfg.App) []Artifact {
+	res := make([]Artifact, 0, len(cfg.DockerArtifact))
+
+	for _, ar := range cfg.DockerArtifact {
+		tag := replaceUUIDvar(ar.Tag)
+
+		res = append(res, &DockerArtifact{
+			ImageIDFile: path.Join(appDir, ar.IDFile),
+			Tag:         tag,
+			Repository:  ar.Repository,
+		})
+	}
+
+	return res
+}
+
+func s3ArtifactsFromCFG(appDir, appName string, cfg *cfg.App) []Artifact {
+	res := make([]Artifact, 0, len(cfg.S3Artifact))
+
+	for _, ar := range cfg.S3Artifact {
+		destFile := replaceUUIDvar(replaceAppNameVar(ar.DestFile, appName))
+
+		url := "s3://" + ar.Bucket + "/" + destFile
+
+		res = append(res, &FileArtifact{
+			Path:      path.Join(appDir, ar.Path),
+			DestFile:  destFile,
+			UploadURL: url,
+		})
+	}
+
+	return res
 }
 
 // NewApp reads the configuration file and returns a new App
-func NewApp(cfgPath, defaultBuildCmd string) (*App, error) {
+func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	cfg, err := cfg.AppFromFile(cfgPath)
 	if err != nil {
 		return nil, errors.Wrapf(err,
@@ -33,42 +78,20 @@ func NewApp(cfgPath, defaultBuildCmd string) (*App, error) {
 	}
 
 	app := App{
-		Dir:      path.Dir(cfgPath),
-		Name:     cfg.Name,
-		BuildCmd: cfg.Build.Command,
+		Repository: repository,
+		Dir:        path.Dir(cfgPath),
+		Name:       cfg.Name,
+		BuildCmd:   cfg.BuildCommand,
 	}
 
 	if len(app.BuildCmd) == 0 {
-		app.BuildCmd = defaultBuildCmd
+		app.BuildCmd = repository.DefaultBuildCmd
 	}
+
+	app.Artifacts = append(dockerArtifactsFromCFG(app.Dir, app.Name, cfg),
+		s3ArtifactsFromCFG(app.Dir, app.Name, cfg)...)
 
 	return &app, nil
-}
-
-// BuildResult contains the result of build
-type BuildResult struct {
-	Duration time.Duration
-	ExitCode int
-	Output   string
-	Success  bool
-}
-
-// Build builds an application by executing it's BuildCmd in the application
-// directory
-func (a *App) Build() (*BuildResult, error) {
-	startTime := time.Now()
-
-	out, exitCode, err := exec.Command(a.Dir, a.BuildCmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return &BuildResult{
-		Duration: time.Since(startTime),
-		Output:   out,
-		ExitCode: exitCode,
-		Success:  exitCode == 0,
-	}, nil
 }
 
 // SortAppsByName sorts the apps in the slice by Name
@@ -76,4 +99,8 @@ func SortAppsByName(apps []*App) {
 	sort.Slice(apps, func(i int, j int) bool {
 		return apps[i].Name < apps[j].Name
 	})
+}
+
+func (a *App) String() string {
+	return a.Name
 }

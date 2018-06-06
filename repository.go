@@ -101,7 +101,7 @@ func (r *Repository) FindApps() ([]*App, error) {
 		}
 
 		for _, appCfgPath := range appsCfgPaths {
-			a, err := NewApp(appCfgPath, r.DefaultBuildCmd)
+			a, err := NewApp(r, appCfgPath)
 			if err != nil {
 				return nil, err
 			}
@@ -123,7 +123,7 @@ func (r *Repository) AppByDir(appDir string) (*App, error) {
 		return nil, err
 	}
 
-	return NewApp(cfgPath, r.DefaultBuildCmd)
+	return NewApp(r, cfgPath)
 }
 
 // AppByName searches for an App with the given name in the repository and
@@ -136,7 +136,7 @@ func (r *Repository) AppByName(name string) (*App, error) {
 		}
 
 		for _, appCfgPath := range appsCfgPaths {
-			a, err := NewApp(appCfgPath, r.DefaultBuildCmd)
+			a, err := NewApp(r, appCfgPath)
 			if err != nil {
 				return nil, err
 			}

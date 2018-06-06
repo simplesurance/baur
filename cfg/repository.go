@@ -107,8 +107,7 @@ func (r *Repository) Validate() error {
 // Validate validates the Discover section and sets defaults.
 func (d *Discover) Validate() error {
 	if len(d.Dirs) == 0 {
-		return fmt.Errorf("application_dirs parameter " +
-			"is empty")
+		return fmt.Errorf("application_dirs parameter is empty")
 	}
 
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {

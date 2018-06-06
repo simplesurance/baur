@@ -3,6 +3,7 @@ package exec
 import (
 	"bufio"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -14,7 +15,7 @@ import (
 func Command(dir, command string) (output string, exitCode int, err error) {
 
 	cmd := exec.Command("sh", "-c", command)
-	log.Debugf("running %v %v\n", cmd.Path, cmd.Args)
+	log.Debugf("running in %q \"%s %s\"\n", dir, cmd.Path, strings.Join(cmd.Args, " "))
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {

@@ -1,13 +1,29 @@
 package fs
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 )
+
+// FileExists returns true if path exist and is a file
+func FileExists(path string) bool {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	if fi.IsDir() {
+		return false
+	}
+
+	return true
+}
 
 // DirsExist runs DirExists for multiple paths.
 func DirsExist(paths []string) error {
@@ -115,4 +131,21 @@ func PathsJoin(rootPath string, relPaths []string) []string {
 	}
 
 	return absPaths
+}
+
+// FileReadLine reads the first line from a file
+func FileReadLine(path string) (string, error) {
+	fd, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer fd.Close()
+
+	r := bufio.NewReader(fd)
+	content, err := r.ReadString('\n')
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	return content, nil
 }

@@ -37,17 +37,29 @@ To build the application run `make`
 	 archives.
 
 2. Run `baur appinit` in your application directories to create an `.app.toml`
-   file. Every application that is build via `baur` must have an `.app.toml`
    file.
+   Every application that is build via `baur` must have an `.app.toml` file.
+
+3. Specify in your `.app.toml` files the artifacts that are produced by builds
+   and where they should be uploaded to.
+   Baur supports uploading artifacts to S3 and docker containers to
+   hub.docker.com.
+   Authentication information for artifact repositories are read from
+   environment variables. S3 configuration parameters are the same
+   then for the aws CLI tool. See
+   https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
+
+   The credentials for the hub.docker.com registry can be specified by setting
+   the `DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
+   `DOCKER_PASSWORD` can be the cleartext password or a valid authentication
+   token.
 
 
 ## Examples
 - List all applications in the repository:
   `baur ls`
-- Build all applications in the repository:
-  `baur build all`
-
-[modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en : )
+- Build all applications and upload their artifacts:
+  `baur build --upload all`
 
 
 ## Development
@@ -58,3 +70,5 @@ To build the application run `make`
 3. Create a new git tag (follow the instructions printed by `make release`).
 4. Push the `ver` file change to the remote git repository.
 5. Create a new release on github.com and upload the binaries.
+
+[modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en : )
