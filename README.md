@@ -2,24 +2,22 @@
 
 baur manages builds and artifacts in mono repositories.
 
-When Git repositories contain only a single applications the CI/CD jobs can be
+When Git repositories contain multiple single apps, the CI/CD jobs can be
 triggered on every new commit.
 Monorepositories can contain hundreds of apps and it becomes inefficient and
-slow to building, test and deploy all applications on every commit.
-A solution is required to detect which applications have changed and run CI/CD
-tasks only for those.
+slow to build, test and deploy all applications on every commit.
+The solution is to detect app changes and run CI/CD only where needed.
 
-baur will implement:
+baur implements:
 - discovery of applications in a repository,
-- management to store and retrieve build artifacts for applications,
-- detect if build artifacts for an application version already exist or if it's
-  need to be build
+- storage and retrieval of build artifacts for individual applications,
+- existing artifact detection per app state (or is it time for a new build?)
 
 
-Baur makes certain Assumptions:
+baur makes the following assumptions:
 - an application directory only contains one application,
 - an application can be build by running a single command,
-  a build has to produce 1 or more build artifacts
+- a build produces 1 or more build artifacts
 
 
 
@@ -31,12 +29,12 @@ To build the application run `make`
    `baur init` in the repository root.
    Adapt the configuration files to your needs:
 
-   - Add paths containing your applications to the `application_dirs` parameter.
-   - set the build_command to a command that when it's run in your application
-	 directories, produces build artifacts like a docker container or a tar
-	 archives.
+   - add paths containing your applications to the `application_dirs` parameter.
+   - set `build_command` to the command that, when it's run in your application
+	 directories, produces build artifacts (like a docker container or a tar
+	 archive).
 
-2. Run `baur appinit` in your application directories to create an `.app.toml`
+2. Run `baur appinit` in your application directories to create a `.app.toml`
    file. Every application that is build via `baur` must have an `.app.toml`
    file.
 
