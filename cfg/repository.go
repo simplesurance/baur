@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	minSearchDepth = 1
+	minSearchDepth = 0
 	maxSearchDepth = 10
 )
 
