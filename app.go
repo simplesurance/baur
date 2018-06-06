@@ -19,7 +19,7 @@ type App struct {
 
 // NewApp reads the configuration file and returns a new App
 func NewApp(cfgPath, defaultBuildCmd string) (*App, error) {
-	cfg, err := cfg.AppFromFile(cfgPath, defaultBuildCmd)
+	cfg, err := cfg.AppFromFile(cfgPath)
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"reading application config %s failed", cfgPath)
@@ -32,11 +32,17 @@ func NewApp(cfgPath, defaultBuildCmd string) (*App, error) {
 			cfgPath)
 	}
 
-	return &App{
+	app := App{
 		Dir:      path.Dir(cfgPath),
 		Name:     cfg.Name,
 		BuildCmd: cfg.Build.Command,
-	}, nil
+	}
+
+	if len(app.BuildCmd) == 0 {
+		app.BuildCmd = defaultBuildCmd
+	}
+
+	return &app, nil
 }
 
 // BuildResult contains the result of build

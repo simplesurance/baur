@@ -32,7 +32,7 @@ func ExampleApp(name string) *App {
 // AppFromFile reads a application configuration file and returns it.
 // If the buildCmd is not set in the App configuration it's set to
 // defaultBuildCommand
-func AppFromFile(path string, defaultBuildCommand string) (*App, error) {
+func AppFromFile(path string) (*App, error) {
 	config := App{}
 
 	content, err := ioutil.ReadFile(path)
@@ -43,10 +43,6 @@ func AppFromFile(path string, defaultBuildCommand string) (*App, error) {
 	err = toml.Unmarshal(content, &config)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(config.Build.Command) == 0 {
-		config.Build.Command = defaultBuildCommand
 	}
 
 	return &config, err
@@ -74,20 +70,6 @@ func (a *App) ToFile(filepath string) error {
 func (a *App) Validate() error {
 	if len(a.Name) == 0 {
 		return errors.New("name parameter can not be empty")
-	}
-
-	err := a.Build.Validate()
-	if err != nil {
-		return errors.Wrap(err, "[Build] section contains errors")
-	}
-
-	return nil
-}
-
-// Validate validates the [Build] section of an application config file
-func (b *AppBuild) Validate() error {
-	if len(b.Command) == 0 {
-		return errors.New("build_command parameter can not be empty")
 	}
 
 	return nil
