@@ -67,7 +67,6 @@ check:
 		--enable ineffassign \
 		--enable structcheck \
 		--enable unconvert \
-		--enable gofmt \
 		--enable golint \
 		--enable unused \
 		./...
