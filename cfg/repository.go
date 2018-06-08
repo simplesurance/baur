@@ -8,7 +8,6 @@ import (
 	toml "github.com/pelletier/go-toml"
 
 	"github.com/pkg/errors"
-	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/version"
 )
 
@@ -110,11 +109,6 @@ func (d *Discover) Validate() error {
 	if len(d.Dirs) == 0 {
 		return fmt.Errorf("application_dirs parameter " +
 			"is empty")
-	}
-
-	err := fs.DirsExist(d.Dirs)
-	if err != nil {
-		return errors.Wrap(err, "application_dirs parameter is invalid")
 	}
 
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {

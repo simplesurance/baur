@@ -73,13 +73,20 @@ func NewRepository(cfgPath string) (*Repository, error) {
 			cfgPath)
 	}
 
-	return &Repository{
+	r := Repository{
 		CfgPath:         cfgPath,
 		DefaultBuildCmd: cfg.Build.BuildCmd,
 		Path:            path.Dir(cfgPath),
 		AppSearchDirs:   fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
 		SearchDepth:     cfg.Discover.SearchDepth,
-	}, nil
+	}
+
+	err = fs.DirsExist(r.AppSearchDirs)
+	if err != nil {
+		return nil, errors.Wrap(err, "application_dirs parameter is invalid")
+	}
+
+	return &r, nil
 }
 
 // FindApps searches for application config files in the AppSearchDirs of the
