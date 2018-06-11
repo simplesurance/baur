@@ -65,5 +65,15 @@ func show(cmd *cobra.Command, args []string) {
 	fmt.Fprintf(tw, "Name:\t%s\n", app.Name)
 	fmt.Fprintf(tw, "Directory:\t%s\n", app.Dir)
 	fmt.Fprintf(tw, "Build Command:\t%s\n", app.BuildCmd)
+
+	if len(app.Artifacts) == 0 {
+		fmt.Fprintf(tw, "Artifacts:-None-\n")
+	} else {
+		fmt.Fprintf(tw, "Artifacts:\t\n")
+		for _, art := range app.Artifacts {
+			fmt.Fprintf(tw, "\t%s\n", art)
+		}
+	}
+
 	tw.Flush()
 }
