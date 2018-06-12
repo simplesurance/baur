@@ -19,7 +19,7 @@ func Actionln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	v = append([]interface{}{actionPrefix}, v)
+	v = append([]interface{}{actionPrefix}, v...)
 	fmt.Println(v...)
 }
 
@@ -62,7 +62,7 @@ func Fatalln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	v = append([]interface{}{errorPrefix}, v)
+	v = append([]interface{}{errorPrefix}, v...)
 	fmt.Fprintln(os.Stderr, v...)
 
 	os.Exit(1)
@@ -73,7 +73,6 @@ func Fatalf(format string, v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	fmt.Fprintf(os.Stderr, format, v...)
 	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
 	os.Exit(1)
 }
@@ -83,7 +82,7 @@ func Errorln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	v = append([]interface{}{errorPrefix}, v)
+	v = append([]interface{}{errorPrefix}, v...)
 	fmt.Fprintln(os.Stderr, v...)
 }
 

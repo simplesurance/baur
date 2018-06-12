@@ -10,6 +10,13 @@ import (
 )
 
 func Test_ensureRepositoryCFGHasVersion(t *testing.T) {
+	version.Version = "0.0.0"
+	sver, err := version.SemVerFromString(version.Version)
+	if err != nil {
+		t.Fatal("setting version failed")
+	}
+	version.CurSemVer = *sver
+
 	tmpfileFD, err := ioutil.TempFile("", "example")
 	if err != nil {
 		t.Fatal("opening tmpfile failed: ", err)
@@ -22,7 +29,7 @@ func Test_ensureRepositoryCFGHasVersion(t *testing.T) {
 	r := cfg.ExampleRepository()
 	r.BaurVersion = ""
 
-	err = ensureRepositoryCFGHasVersion(r, tmpfileName)
+	err = checkCfgVersion(r, tmpfileName)
 	if err != nil {
 		t.Fatal(err)
 	}

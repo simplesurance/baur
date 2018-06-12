@@ -9,7 +9,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:              "baur",
 	Short:            "baur manages builds and artifacts in mono repositories.",
-	Version:          version.FullVerNr(),
+	Version:          version.CurSemVer.String(),
 	PersistentPreRun: initSb,
 }
 
