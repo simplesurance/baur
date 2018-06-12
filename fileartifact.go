@@ -29,3 +29,13 @@ func (f *FileArtifact) UploadJob() (upload.Job, error) {
 		FilePath: f.Path,
 	}, nil
 }
+
+// LocalPath returns the local path to the artifact
+func (f *FileArtifact) LocalPath() string {
+	return f.Path
+}
+
+// UploadDestination returns the upload destination
+func (f *FileArtifact) UploadDestination() string {
+	return f.UploadURL
+}

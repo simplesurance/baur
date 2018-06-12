@@ -2,6 +2,7 @@ package baur
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/upload"
@@ -50,4 +51,14 @@ func (d *DockerArtifact) UploadJob() (upload.Job, error) {
 // String returns the string representation of the artifact
 func (d *DockerArtifact) String() string {
 	return d.ImageIDFile
+}
+
+// LocalPath returns the local path to the artifact
+func (d *DockerArtifact) LocalPath() string {
+	return d.ImageIDFile
+}
+
+// UploadDestination returns the upload destination
+func (d *DockerArtifact) UploadDestination() string {
+	return fmt.Sprintf("docker: %s:%s", d.Repository, d.Tag)
 }

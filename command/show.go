@@ -70,8 +70,12 @@ func show(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(tw, "Artifacts:-None-\n")
 	} else {
 		fmt.Fprintf(tw, "Artifacts:\t\n")
-		for _, art := range app.Artifacts {
-			fmt.Fprintf(tw, "\t%s\n", art)
+		for i, art := range app.Artifacts {
+			fmt.Fprintf(tw, "\tLocal:\t%s\n", art.LocalPath())
+			fmt.Fprintf(tw, "\tRemote:\t%s\n", art.UploadDestination())
+			if i < len(app.Artifacts)-1 {
+				fmt.Fprintf(tw, "\t\t\n")
+			}
 		}
 	}
 

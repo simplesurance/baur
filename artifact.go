@@ -9,4 +9,6 @@ type Artifact interface {
 	Exists() bool
 	UploadJob() (upload.Job, error)
 	String() string
+	LocalPath() string
+	UploadDestination() string
 }
