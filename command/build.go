@@ -44,6 +44,7 @@ The following environment variables configure credentials for artifact repositor
 `
 
 const buildExampleHelp = `
+baur build 		       build the applications in the current directory
 baur build all		       build all applications in the repository
 baur build payment-service     build the application with the name payment-service
 baur build --verbose ui/shop   build the application in the directory ui/shop with verbose output
