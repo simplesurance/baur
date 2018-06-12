@@ -28,38 +28,52 @@ func replaceAppNameVar(in, appName string) string {
 	return strings.Replace(in, "$APPNAME", appName, -1)
 }
 
-func dockerArtifactsFromCFG(appDir, appName string, cfg *cfg.App) []Artifact {
-	res := make([]Artifact, 0, len(cfg.DockerArtifact))
+func replaceGitCommitVar(in string, r *Repository) (string, error) {
+	commitID, err := r.GitCommitID()
+	if err != nil {
+		return "", err
+	}
 
+	return strings.Replace(in, "$GITCOMMIT", commitID, -1), nil
+}
+
+func (a *App) setDockerArtifactsFromCfg(cfg *cfg.App) error {
 	for _, ar := range cfg.DockerArtifact {
-		tag := replaceUUIDvar(ar.Tag)
+		tag, err := replaceGitCommitVar(ar.Tag, a.Repository)
+		if err != nil {
+			return errors.Wrap(err, "replacing $GITCOMMIT in tag failed")
+		}
 
-		res = append(res, &DockerArtifact{
-			ImageIDFile: path.Join(appDir, ar.IDFile),
+		tag = replaceUUIDvar(tag)
+
+		a.Artifacts = append(a.Artifacts, &DockerArtifact{
+			ImageIDFile: path.Join(a.Dir, ar.IDFile),
 			Tag:         tag,
 			Repository:  ar.Repository,
 		})
 	}
 
-	return res
+	return nil
 }
 
-func s3ArtifactsFromCFG(appDir, appName string, cfg *cfg.App) []Artifact {
-	res := make([]Artifact, 0, len(cfg.S3Artifact))
-
+func (a *App) setS3ArtifactsFromCFG(cfg *cfg.App) error {
 	for _, ar := range cfg.S3Artifact {
-		destFile := replaceUUIDvar(replaceAppNameVar(ar.DestFile, appName))
+		destFile, err := replaceGitCommitVar(ar.DestFile, a.Repository)
+		if err != nil {
+			return errors.Wrap(err, "replacing $GITCOMMIT in dest_file failed")
+		}
+		destFile = replaceUUIDvar(replaceAppNameVar(destFile, a.Name))
 
 		url := "s3://" + ar.Bucket + "/" + destFile
 
-		res = append(res, &FileArtifact{
-			Path:      path.Join(appDir, ar.Path),
+		a.Artifacts = append(a.Artifacts, &FileArtifact{
+			Path:      path.Join(a.Dir, ar.Path),
 			DestFile:  destFile,
 			UploadURL: url,
 		})
 	}
 
-	return res
+	return nil
 }
 
 // NewApp reads the configuration file and returns a new App
@@ -88,8 +102,13 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		app.BuildCmd = repository.DefaultBuildCmd
 	}
 
-	app.Artifacts = append(dockerArtifactsFromCFG(app.Dir, app.Name, cfg),
-		s3ArtifactsFromCFG(app.Dir, app.Name, cfg)...)
+	if err := app.setDockerArtifactsFromCfg(cfg); err != nil {
+		return nil, errors.Wrap(err, "processing docker artifact declarations failed")
+	}
+
+	if err := app.setS3ArtifactsFromCFG(cfg); err != nil {
+		return nil, errors.Wrap(err, "processing S3 artifact declarations failed")
+	}
 
 	return &app, nil
 }

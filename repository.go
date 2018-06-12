@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/fs"
+	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/version"
 )
@@ -19,6 +20,7 @@ type Repository struct {
 	AppSearchDirs   []string
 	SearchDepth     int
 	DefaultBuildCmd string
+	gitCommitID     string
 }
 
 // FindRepository searches for a repository config file in the current directory
@@ -147,4 +149,23 @@ func (r *Repository) AppByName(name string) (*App, error) {
 	}
 
 	return nil, os.ErrNotExist
+}
+
+// GitCommitID returns the Git commit ID in the baur repository root
+func (r *Repository) GitCommitID() (string, error) {
+	if len(r.gitCommitID) != 0 {
+		return r.gitCommitID, nil
+	}
+
+	commit, err := git.CommitID(r.Path)
+	if err != nil {
+		return "", errors.Wrap(err, "determining Git commit ID failed, "+
+			"ensure that the git command is in a directory in $PATH and "+
+			"that the .baur.toml file is part of a git repository")
+	}
+
+	r.gitCommitID = commit
+
+	return commit, nil
+
 }

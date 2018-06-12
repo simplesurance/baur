@@ -54,6 +54,19 @@ To build the application run `make`
    `DOCKER_PASSWORD` can be the cleartext password or a valid authentication
    token.
 
+### Application configs (`app.toml`)
+The `dest_file` parameter in the `[[DockerArtifact]] sections and the `tags`
+parameter of `[[S3Artifact]]` sections support variables in their values.
+The variables are replaced by baur during a run.
+
+The following variables are supported:
+- `$APPNAME` - is replaced with the name of the application
+- `$UUID` - is replaced with a generated UUID
+- `$GITCOMMIT` - is replaced with the current Git commit ID.
+                 The `.baur.toml` file must be part of a git repository and the
+                 `git` command must be in one of the directories in the `$PATH`
+                 environment variable.
+
 
 ## Examples
 - List all applications in the repository:

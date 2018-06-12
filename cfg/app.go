@@ -21,14 +21,14 @@ type App struct {
 type S3Artifact struct {
 	Path     string `toml:"path" comment:"path of the artifact" commented:"true"`
 	Bucket   string `toml:"bucket" comment:"name of the S3 bucket where the file is stored" commented:"true"`
-	DestFile string `toml:"dest_file" comment:"name of the uploaded file in the repository, valid variables: $APPNAME (name of the application), $UUID (generated UUID)" commented:"true"`
+	DestFile string `toml:"dest_file" comment:"name of the uploaded file in the repository, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
 }
 
 // DockerArtifact describes where a docker container is uploaded to
 type DockerArtifact struct {
 	IDFile     string `toml:"idfile" comment:"path to a text file that exist after the build and contains the docker image id (docker build --iidfile)" commented:"true"`
 	Repository string `toml:"repository" comment:"name of the docker repository, e.g: simplesurance/pdfrender" commented:"true"`
-	Tag        string `toml:"tag" comment:"tag that should be applied to the image, valid variables: $APPNAME, $UUID" commented:"true"`
+	Tag        string `toml:"tag" comment:"tag that should be applied to the image, valid variables: $APPNAME, $UUID, $GITCOMMIT"  commented:"true"`
 }
 
 // ExampleApp returns an exemplary app cfg struct with the name set to the given value

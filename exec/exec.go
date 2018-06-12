@@ -13,7 +13,6 @@ import (
 // Command runs the passed command in a shell in the passed dir.
 // If the command exits with a code != 0, err is nil
 func Command(dir, command string) (output string, exitCode int, err error) {
-
 	cmd := exec.Command("sh", "-c", command)
 	log.Debugf("running in %q \"%s %s\"\n", dir, cmd.Path, strings.Join(cmd.Args, " "))
 
