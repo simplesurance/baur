@@ -7,7 +7,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/log"
 	"github.com/spf13/cobra"
 )
 
@@ -21,11 +20,12 @@ func init() {
 const showExampleHelp = `
 baur show claim-service		        show informations about the claim-service application
 baur show --path-only claim-service	show the path of the directory of the claim-service application
+baur show .		                show informations about the application in the current directory
 baur show		                show informations about the repository
 `
 
 var showCmd = &cobra.Command{
-	Use:     "show [<APP-NAME>]",
+	Use:     "show [<APP-NAME>|<PATH>]",
 	Short:   "shows informations about applications in the repository",
 	Example: strings.TrimSpace(showExampleHelp),
 	Run:     show,
@@ -80,13 +80,7 @@ func show(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	app, err := rep.AppByName(args[0])
-	if err != nil {
-		if os.IsNotExist(err) {
-			log.Fatalf("could not find application with name '%s'\n", args[0])
-		}
-		log.Fatalln(err)
-	}
+	app := mustArgToApp(rep, args[0])
 
 	showApplicationInformation(app)
 

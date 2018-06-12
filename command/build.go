@@ -2,7 +2,6 @@ package command
 
 import (
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -59,16 +58,6 @@ var buildCmd = &cobra.Command{
 	Args:    cobra.MaximumNArgs(1),
 }
 
-func isAppDir(arg string) bool {
-	cfgPath := path.Join(arg, baur.AppCfgFile)
-	_, err := os.Stat(cfgPath)
-	if err == nil {
-		return true
-	}
-
-	return false
-}
-
 func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
 	if strings.ToLower(arg) == "all" {
 		apps, err := repo.FindApps()
@@ -79,24 +68,7 @@ func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
 		return apps
 	}
 
-	if isAppDir(arg) {
-		app, err := repo.AppByDir(arg)
-		if err != nil {
-			log.Fatalf("could not find application in dir '%s': %s\n", arg, err)
-		}
-
-		return []*baur.App{app}
-	}
-
-	app, err := repo.AppByName(arg)
-	if err != nil {
-		if os.IsNotExist(err) {
-			log.Fatalf("could not find application with name '%s'\n", arg)
-		}
-		log.Fatalln(err)
-	}
-
-	return []*baur.App{app}
+	return []*baur.App{mustArgToApp(repo, arg)}
 }
 
 func artifactCount(apps []*baur.App) int {
