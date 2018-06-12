@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
 	"github.com/spf13/cobra"
 )
@@ -31,32 +32,20 @@ var showCmd = &cobra.Command{
 	Args:    cobra.MaximumNArgs(1),
 }
 
-func show(cmd *cobra.Command, args []string) {
-	rep := mustFindRepository()
-
-	// Show repository informations
-	if len(args) == 0 {
-		if showPrintPathOnly {
-			fmt.Println(rep.Path)
-		} else {
-			fmt.Printf("# Repository Information\n")
-			fmt.Printf("Root:\t%s\n", rep.Path)
-		}
-		os.Exit(0)
+func showRepositoryInformation(rep *baur.Repository) {
+	if showPrintPathOnly {
+		fmt.Println(rep.Path)
+		return
 	}
 
-	// Show application informations
-	app, err := rep.AppByName(args[0])
-	if err != nil {
-		if os.IsNotExist(err) {
-			log.Fatalf("could not find application with name '%s'\n", args[0])
-		}
-		log.Fatalln(err)
-	}
+	fmt.Printf("# Repository Information\n")
+	fmt.Printf("Root:\t%s\n", rep.Path)
+}
 
+func showApplicationInformation(app *baur.App) {
 	if showPrintPathOnly {
 		fmt.Println(app.Dir)
-		os.Exit(0)
+		return
 	}
 
 	fmt.Printf("# Application Information\n")
@@ -80,4 +69,25 @@ func show(cmd *cobra.Command, args []string) {
 	}
 
 	tw.Flush()
+}
+
+func show(cmd *cobra.Command, args []string) {
+	rep := mustFindRepository()
+
+	if len(args) == 0 {
+		showRepositoryInformation(rep)
+
+		os.Exit(0)
+	}
+
+	app, err := rep.AppByName(args[0])
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Fatalf("could not find application with name '%s'\n", args[0])
+		}
+		log.Fatalln(err)
+	}
+
+	showApplicationInformation(app)
+
 }
