@@ -114,6 +114,15 @@ func (a *App) Validate() error {
 
 // Validate validates a [[S3Artifact]] section
 func (f *S3Artifact) Validate() error {
+	// woraround for https://github.com/pelletier/go-toml/issues/216
+	// we can not comment it out in example config, ignore them during
+	// validation to prevent negative validations
+	if len(f.Bucket) == 0 &&
+		len(f.DestFile) == 0 &&
+		len(f.Path) == 0 {
+		return nil
+	}
+
 	if len(f.DestFile) == 0 {
 		return errors.New("destfile parameter can not be unset or empty")
 	}
@@ -131,6 +140,15 @@ func (f *S3Artifact) Validate() error {
 
 // Validate validates a [[DockerArtifact]] section
 func (d *DockerArtifact) Validate() error {
+	// woraround for https://github.com/pelletier/go-toml/issues/216
+	// we can not comment it out in example config, ignore them during
+	// validation to prevent negative validations
+	if len(d.IDFile) == 0 &&
+		len(d.Repository) == 0 &&
+		len(d.Tag) == 0 {
+		return nil
+	}
+
 	if len(d.IDFile) == 0 {
 		return errors.New("idfile parameter can not be unset or empty")
 	}
