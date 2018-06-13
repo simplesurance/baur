@@ -148,8 +148,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 		}
 
 		if res.Err != nil {
-			log.Fatalln("upload of %q failed: %s\n", res.Err,
-				ar)
+			log.Fatalf("upload of %q failed: %s\n", ar, res.Err)
 		}
 
 		log.Actionf("%s uploaded to %s (%.3fs)\n",
