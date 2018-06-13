@@ -12,7 +12,7 @@ var lock = sync.Mutex{}
 var DebugEnabled bool
 
 const actionPrefix = "* "
-const errorPrefix = "ERROR:"
+const errorPrefix = "ERROR: "
 
 // Actionln prints something with the ActionPrefix preprended
 func Actionln(v ...interface{}) {
@@ -91,7 +91,6 @@ func Errorf(format string, v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	fmt.Fprintf(os.Stderr, format, v...)
 	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
 }
 
