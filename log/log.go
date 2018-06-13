@@ -12,7 +12,7 @@ var lock = sync.Mutex{}
 var DebugEnabled bool
 
 const actionPrefix = "* "
-const errorPrefix = "! "
+const errorPrefix = "ERROR:"
 
 // Actionln prints something with the ActionPrefix preprended
 func Actionln(v ...interface{}) {
