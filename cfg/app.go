@@ -27,7 +27,7 @@ type S3Artifact struct {
 // DockerArtifact describes where a docker container is uploaded to
 type DockerArtifact struct {
 	IDFile     string `toml:"idfile" comment:"path to a text file that exist after the build and contains the docker image id (docker build --iidfile)" commented:"true"`
-	Repository string `toml:"repository" comment:"name of the docker repository, e.g: simplesurance/pdfrender" commented:"true"`
+	Repository string `toml:"repository" comment:"name of the docker repository" commented:"true"`
 	Tag        string `toml:"tag" comment:"tag that should be applied to the image, valid variables: $APPNAME, $UUID, $GITCOMMIT"  commented:"true"`
 }
 
@@ -40,15 +40,15 @@ func ExampleApp(name string) *App {
 		S3Artifact: []*S3Artifact{
 			&S3Artifact{
 				Path:     fmt.Sprintf("dist/%s.tar.xz", name),
-				Bucket:   "fho-baur-test",
-				DestFile: "$APPNAME-$UUID.tar.xz",
+				Bucket:   "sisu-resources",
+				DestFile: "$APPNAME-$GITCOMMIT.tar.xz",
 			},
 		},
 		DockerArtifact: []*DockerArtifact{
 			&DockerArtifact{
-				IDFile:     fmt.Sprintf("dist/%s-container.id", name),
-				Repository: "dockerhub",
-				Tag:        "$APPNAME:$UUID",
+				IDFile:     fmt.Sprintf("%s-container.id", name),
+				Repository: fmt.Sprintf("simplesurance/%s", name),
+				Tag:        "$GITCOMMIT",
 			},
 		},
 	}
