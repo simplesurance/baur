@@ -70,7 +70,45 @@ func AppFromFile(path string) (*App, error) {
 		return nil, err
 	}
 
+	removeEmptyRepositories(&config)
+
 	return &config, err
+}
+
+// removeEmptyRepositories removes artifacts with only empty values.
+// This is a woraround for https://github.com/pelletier/go-toml/issues/216
+// It prevents that slices are commented in created Example configurations.
+// Our validation function would fail for those and we would have to do
+// exceptions for Artifacts with only empty values.
+// Workaround: remove them from the config
+func removeEmptyRepositories(a *App) {
+	s3Arts := make([]*S3Artifact, 0, len(a.S3Artifact))
+	dockerArts := make([]*DockerArtifact, 0, len(a.DockerArtifact))
+
+	for _, s := range a.S3Artifact {
+		if len(s.Bucket) == 0 &&
+			len(s.DestFile) == 0 &&
+			len(s.Path) == 0 {
+
+			continue
+		}
+
+		s3Arts = append(s3Arts, s)
+	}
+
+	for _, d := range a.DockerArtifact {
+		if len(d.IDFile) == 0 &&
+			len(d.Repository) == 0 &&
+			len(d.Tag) == 0 {
+
+			continue
+		}
+
+		dockerArts = append(dockerArts, d)
+	}
+
+	a.S3Artifact = s3Arts
+	a.DockerArtifact = dockerArts
 }
 
 // ToFile writes an exemplary Application configuration file to
@@ -114,15 +152,6 @@ func (a *App) Validate() error {
 
 // Validate validates a [[S3Artifact]] section
 func (f *S3Artifact) Validate() error {
-	// woraround for https://github.com/pelletier/go-toml/issues/216
-	// we can not comment it out in example config, ignore them during
-	// validation to prevent negative validations
-	if len(f.Bucket) == 0 &&
-		len(f.DestFile) == 0 &&
-		len(f.Path) == 0 {
-		return nil
-	}
-
 	if len(f.DestFile) == 0 {
 		return errors.New("destfile parameter can not be unset or empty")
 	}
@@ -140,15 +169,6 @@ func (f *S3Artifact) Validate() error {
 
 // Validate validates a [[DockerArtifact]] section
 func (d *DockerArtifact) Validate() error {
-	// woraround for https://github.com/pelletier/go-toml/issues/216
-	// we can not comment it out in example config, ignore them during
-	// validation to prevent negative validations
-	if len(d.IDFile) == 0 &&
-		len(d.Repository) == 0 &&
-		len(d.Tag) == 0 {
-		return nil
-	}
-
 	if len(d.IDFile) == 0 {
 		return errors.New("idfile parameter can not be unset or empty")
 	}
