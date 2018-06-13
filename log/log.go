@@ -11,15 +11,18 @@ var lock = sync.Mutex{}
 // DebugEnabled set to true to print debug message otherwise they are suppressed
 var DebugEnabled bool
 
-const actionPrefix = "* "
-const errorPrefix = "ERROR: "
+const actionPrefix = "*"
+const errorPrefix = "ERROR"
 
 // Actionln prints something with the ActionPrefix preprended
 func Actionln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	v = append([]interface{}{actionPrefix}, v...)
+	if len(v) != 0 {
+		v[0] = fmt.Sprintf("%s %s", actionPrefix, v[0])
+	}
+
 	fmt.Println(v...)
 }
 
@@ -28,7 +31,7 @@ func Actionf(format string, v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	fmt.Printf(actionPrefix+format, v...)
+	fmt.Printf(actionPrefix+" "+format, v...)
 }
 
 // Debugln logs a debug message to stdout.
@@ -62,7 +65,10 @@ func Fatalln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	v = append([]interface{}{errorPrefix}, v...)
+	if len(v) != 0 {
+		v[0] = fmt.Sprintf("%s: %s", errorPrefix, v[0])
+	}
+
 	fmt.Fprintln(os.Stderr, v...)
 
 	os.Exit(1)
@@ -73,7 +79,7 @@ func Fatalf(format string, v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
+	fmt.Fprintf(os.Stderr, errorPrefix+": "+format, v...)
 	os.Exit(1)
 }
 
@@ -82,7 +88,10 @@ func Errorln(v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	v = append([]interface{}{errorPrefix}, v...)
+	if len(v) != 0 {
+		v[0] = fmt.Sprintf("%s: %s", errorPrefix, v[0])
+	}
+
 	fmt.Fprintln(os.Stderr, v...)
 }
 
@@ -91,7 +100,7 @@ func Errorf(format string, v ...interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
+	fmt.Fprintf(os.Stderr, errorPrefix+": "+format, v...)
 }
 
 // Infoln logs a message to stdout
