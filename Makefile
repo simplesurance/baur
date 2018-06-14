@@ -6,7 +6,7 @@ VERSION := $(shell cat ver)
 LDFLAGS := "-X github.com/simplesurance/baur/version.GitCommit=$(GIT_COMMIT) \
 	    -X github.com/simplesurance/baur/version.Version=$(VERSION) \
 	    -X github.com/simplesurance/baur/version.Appendix=$(GIT_DIRTY)"
-TARFLAGS := --sort=name --mtime='1970-01-01 00:00:00' --owner=0 --group=0 --numeric-owner
+TARFLAGS := --sort=name --mtime='2018-01-01 00:00:00' --owner=0 --group=0 --numeric-owner
 
 default: all
 
