@@ -35,7 +35,7 @@ dist/linux_amd64/baur:
 
 .PHONY: dirty_worktree_check
 dirty_worktree_check:
-	@if ! git diff-files --quiet; then \
+	@if ! git diff-files --quiet || git ls-files --other --directory --exclude-standard | grep ".*" > /dev/null ; then \
 		echo "remove untracked files and changed files in repository before creating a release, see 'git status'"; \
 		exit 1; \
 		fi
