@@ -1,32 +1,51 @@
-DB Scheme Idea
---------------
+## DB Scheme
+
+### build table
 ```
 |Field              |Comment                                    |
 |-------------------|-------------------------------------------|
 |ID                 |                                           |
-|jenkins_job_url    |                                           |
-|commit_id          |                                           |
-|application_name   |hash of the docker image or tar.xz archive |
-|build_start_ts     |                                           |
-|build_duration_sec |                                           |
+|application_name   |                                           |
+|start_timestamp    |                                           |
+|build_duration_msec| or end timestamp?                         |
 |total_src_hash     |combined hash of all source files          |
+|-------------------|-------------------------------------------|
+```
 
-#### sources table
+### artifact table
+```
+|Field               |Comment                                    |
+|--------------------|-------------------------------------------|
+|ID                  |                                           |
+|name                |                                           |
+|build_id            |                                           |
+|type                |Docker or File                             |
+|url                 |                                           |
+|hash                |format: <type>:<sum>, not normalized       |
+|size_kb             |                                           |
+|upload_duration_msec|                                           |
+---------------------|-------------------------------------------|
+```
+
+### artifact_src table
+```
+|Field      |Comment                                    |
+|-----------|-------------------------------------------|
+|artifact_id|                                           |
+|source_id  |relative to workspace root directory       |
+|total_hash |format: <type>:<sum>, not normalized       |
+|-----------|-------------------------------------------|
+```
+
+### sources table
+```
 |Field      |Comment                                    |
 |-----------|-------------------------------------------|
 |ID         |                                           |
-|build_id   |                                           |
-|filepath   |relative to workspace root directory       |
-|hash       |                                           |
-
-#### artifacts table
-|Field     |Comment                                    |
-|----------|-------------------------------------------|
-|ID        |                                           |
-|build_id  |                                           |
-|url       |                                           |
-|hash      |hash of the docker image or tar.xz archive |
-|size_kb   |                                           |
+|rel_path   |relative to workspace root directory       |
+|hash       |format: <type>:<sum>, not normalized       |
+|-----------|-------------------------------------------|
 ```
+
 
 [modeline]: # ( vi:set tabstop=4 ft=markdown shiftwidth=4 tw=80 expandtab spell spl=en : )
