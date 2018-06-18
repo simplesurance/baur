@@ -11,6 +11,8 @@ import (
 	"github.com/simplesurance/baur/docker"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/s3"
+	"github.com/simplesurance/baur/storage"
+	"github.com/simplesurance/baur/storage/postgres"
 	"github.com/simplesurance/baur/term"
 	"github.com/simplesurance/baur/upload"
 	sequploader "github.com/simplesurance/baur/upload/seq"
@@ -169,6 +171,7 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	var apps []*baur.App
 	var uploadWatchFin chan struct{}
 	var uploader upload.Manager
+	var storage storage.Storer
 
 	repo := mustFindRepository()
 	startTs := time.Now()
@@ -189,6 +192,13 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	artifactCnt := artifactCount(apps)
 
 	if buildUpload {
+		var err error
+		storage, err = postgres.New(repo.PSQLURL)
+		if err != nil {
+			log.Fatalf("could not establish connection to postgreSQL db: %s", err)
+		}
+		storage.ListBuildsPerApp("hello", 3) //TODO
+
 		uploadChan := make(chan *upload.Result, artifactCnt)
 		uploader = startBGUploader(artifactCnt, uploadChan)
 		uploadWatchFin = make(chan struct{}, 1)

@@ -44,3 +44,7 @@
 [[constraint]]
   name = "docker.io/go-docker"
   version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lib/pq"

@@ -118,6 +118,15 @@
   revision = "0b12d6b5"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
+
+[[projects]]
   name = "github.com/opencontainers/go-digest"
   packages = ["."]
   revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
@@ -185,6 +194,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1273da04380c3b28e5b17d83e27ec252902192feb3cf64fe5551266624345efc"
+  inputs-digest = "fca76ef37b7577866380579840d346a85fb13b573037686df6cb4651f7eea25a"
   solver-name = "gps-cdcl"
   solver-version = 1

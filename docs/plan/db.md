@@ -33,7 +33,6 @@
 |-----------|-------------------------------------------|
 |artifact_id|                                           |
 |source_id  |relative to workspace root directory       |
-|total_hash |format: <type>:<sum>, not normalized       |
 |-----------|-------------------------------------------|
 ```
 
