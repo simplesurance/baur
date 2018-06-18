@@ -39,7 +39,8 @@ func showRepositoryInformation(rep *baur.Repository) {
 	}
 
 	fmt.Printf("# Repository Information\n")
-	fmt.Printf("Root:\t%s\n", rep.Path)
+	fmt.Printf("Root:\t\t%s\n", rep.Path)
+	fmt.Printf("PostgreSQL URL:\t%s\n", rep.PSQLURL)
 }
 
 func showApplicationInformation(app *baur.App) {
