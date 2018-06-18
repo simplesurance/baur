@@ -21,6 +21,12 @@ type Repository struct {
 	Discover    Discover        `comment:"application discovery settings"`
 	Build       RepositoryBuild `comment:"build configuration"`
 	BaurVersion string          `toml:"baur_version" comment:"version of baur"`
+	Database    Database        `toml:"Database" comment:"configures the database in which build informations are stored" commented:"true"`
+}
+
+// Database contains database configuration
+type Database struct {
+	PGSQLURL string `toml:"postgresql_url" comment:"connection string to the PostgreSQL database, see https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING" commented:"true"`
 }
 
 // Discover stores the [Discover] section of the repository configuration.
@@ -62,6 +68,10 @@ func ExampleRepository() *Repository {
 		Build: RepositoryBuild{
 			BuildCmd: "make docker_dist",
 		},
+
+		Database: Database{
+			PGSQLURL: "postgresql://guest:guest@jenkins.sisu.sh:5432/baur",
+		},
 	}
 }
 
@@ -101,6 +111,11 @@ func (r *Repository) Validate() error {
 		return errors.Wrapf(err, "[Build] section contains errors")
 	}
 
+	err = r.Database.Validate()
+	if err != nil {
+		return errors.Wrap(err, "[Database] section contains errors")
+	}
+
 	return nil
 }
 
@@ -125,4 +140,14 @@ func (b *RepositoryBuild) Validate() error {
 	}
 
 	return nil
+}
+
+// Validate validates the [Database] section of a repository config file
+func (d *Database) Validate() error {
+	if len(d.PGSQLURL) == 0 {
+		return errors.New("postgresql_url can not be empty")
+	}
+
+	return nil
+
 }

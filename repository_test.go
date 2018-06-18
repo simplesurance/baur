@@ -27,6 +27,7 @@ func Test_ensureRepositoryCFGHasVersion(t *testing.T) {
 	defer os.Remove(tmpfileName)
 
 	r := cfg.ExampleRepository()
+	r.Database.PGSQLURL = "xyz"
 	r.BaurVersion = ""
 
 	err = checkCfgVersion(r, tmpfileName)

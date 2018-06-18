@@ -22,6 +22,7 @@ type Repository struct {
 	SearchDepth     int
 	DefaultBuildCmd string
 	gitCommitID     string
+	PSQLURL         string
 }
 
 // FindRepository searches for a repository config file in the current directory
@@ -99,6 +100,7 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		Path:            path.Dir(cfgPath),
 		AppSearchDirs:   fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
 		SearchDepth:     cfg.Discover.SearchDepth,
+		PSQLURL:         cfg.Database.PGSQLURL,
 	}
 
 	err = fs.DirsExist(r.AppSearchDirs)
