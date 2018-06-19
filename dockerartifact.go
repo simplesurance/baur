@@ -48,14 +48,19 @@ func (d *DockerArtifact) UploadJob() (upload.Job, error) {
 	}, nil
 }
 
-// String returns the string representation of the artifact
+// String returns the absolute path to the ImageID file
 func (d *DockerArtifact) String() string {
-	return d.ImageIDFile
+	return d.LocalPath()
 }
 
 // LocalPath returns the local path to the artifact
 func (d *DockerArtifact) LocalPath() string {
 	return d.ImageIDFile
+}
+
+// Name returns the docker repository name
+func (d *DockerArtifact) Name() string {
+	return d.Repository
 }
 
 // UploadDestination returns the upload destination

@@ -7,6 +7,7 @@ import (
 
 // FileArtifact is a file build artifact
 type FileArtifact struct {
+	RelPath   string
 	Path      string
 	DestFile  string
 	UploadURL string
@@ -19,7 +20,7 @@ func (f *FileArtifact) Exists() bool {
 
 // String returns the String representation
 func (f *FileArtifact) String() string {
-	return f.Path
+	return f.Name()
 }
 
 // UploadJob returns a upload.DockerJob for the artifact
@@ -33,6 +34,11 @@ func (f *FileArtifact) UploadJob() (upload.Job, error) {
 // LocalPath returns the local path to the artifact
 func (f *FileArtifact) LocalPath() string {
 	return f.Path
+}
+
+// Name returns the path to the artifact relatively to application dir
+func (f *FileArtifact) Name() string {
+	return f.RelPath
 }
 
 // UploadDestination returns the upload destination

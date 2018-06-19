@@ -67,6 +67,7 @@ func (a *App) setS3ArtifactsFromCFG(cfg *cfg.App) error {
 		url := "s3://" + ar.Bucket + "/" + destFile
 
 		a.Artifacts = append(a.Artifacts, &FileArtifact{
+			RelPath:   ar.Path,
 			Path:      path.Join(a.Dir, ar.Path),
 			DestFile:  destFile,
 			UploadURL: url,

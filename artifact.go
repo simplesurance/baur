@@ -8,6 +8,7 @@ import (
 type Artifact interface {
 	Exists() bool
 	UploadJob() (upload.Job, error)
+	Name() string
 	String() string
 	LocalPath() string
 	UploadDestination() string
