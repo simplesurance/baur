@@ -1,8 +1,10 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/simplesurance/baur"
@@ -10,6 +12,7 @@ import (
 	"github.com/simplesurance/baur/build/seq"
 	"github.com/simplesurance/baur/docker"
 	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/prettyprint"
 	"github.com/simplesurance/baur/s3"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
@@ -20,6 +23,75 @@ import (
 )
 
 var buildUpload bool
+
+type uploadUserData struct {
+	App      *baur.App
+	Artifact baur.Artifact
+}
+
+var result = map[string]*storage.Build{}
+var resultLock = sync.Mutex{}
+
+var store storage.Storer
+
+func resultAddBuildResult(app *baur.App, r *build.Result) {
+	resultLock.Lock()
+	defer resultLock.Unlock()
+
+	b := storage.Build{
+		AppName:        app.Name,
+		StartTimeStamp: r.StartTs,
+		StopTimeStamp:  r.StopTs,
+		// Sources: // TODO
+		//TotalSrcHash: // TODO
+	}
+
+	result[app.Name] = &b
+
+}
+
+func resultAddUploadResult(appName string, ar baur.Artifact, r *upload.Result) {
+	var arType storage.ArtifactType
+
+	resultLock.Lock()
+	defer resultLock.Unlock()
+
+	b, exist := result[appName]
+	if !exist {
+		panic(fmt.Sprintf("resultAddUploadResult: %q does not exist in build result map", appName))
+	}
+
+	if r.Job.Type() == upload.JobDocker {
+		arType = storage.DockerArtifact
+	} else if r.Job.Type() == upload.JobS3 {
+		arType = storage.S3Artifact
+	}
+
+	b.Artifacts = append(b.Artifacts, &storage.Artifact{
+		Name: ar.Name(),
+		// SizeBytes, // TODO implement it
+		Type:           arType,
+		URL:            r.URL,
+		UploadDuration: r.Duration,
+	})
+}
+
+func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
+	resultLock.Lock()
+	defer resultLock.Unlock()
+
+	b, exist := result[app.Name]
+	if !exist {
+		panic(fmt.Sprintf("recordResultIfComplete: %q does not exist in build result map", app.Name))
+	}
+
+	if len(app.Artifacts) == len(b.Artifacts) {
+		return true, b
+	}
+
+	return false, nil
+
+}
 
 func init() {
 	buildCmd.Flags().BoolVar(&buildUpload, "upload", false,
@@ -144,17 +216,28 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 	var resultCnt int
 
 	for res := range uploadChan {
-		ar, ok := res.Job.GetUserData().(baur.Artifact)
+		ud, ok := res.Job.GetUserData().(*uploadUserData)
 		if !ok {
 			panic("upload result user data has unexpected type")
 		}
 
 		if res.Err != nil {
-			log.Fatalf("upload of %q failed: %s\n", ar, res.Err)
+			log.Fatalf("upload of %q failed: %s\n", ud.Artifact, res.Err)
 		}
 
-		log.Actionf("%s uploaded to %s (%.3fs)\n",
-			ar, res.URL, res.Duration.Seconds())
+		log.Actionf("%s: artifact %s uploaded to %s (%.3fs)\n",
+			ud.App.Name, ud.Artifact.LocalPath(), res.URL, res.Duration.Seconds())
+
+		resultAddUploadResult(ud.App.Name, ud.Artifact, res)
+
+		complete, build := recordResultIsComplete(ud.App)
+		if complete {
+			if err := store.Save(build); err != nil {
+				log.Fatalf("storing build information about %q failed: %s", ud.App.Name, err)
+			}
+
+			log.Debugf("stored the following build information: %s\n", prettyprint.AsString(build))
+		}
 
 		resultCnt++
 		if resultCnt == artifactCnt {
@@ -171,7 +254,6 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	var apps []*baur.App
 	var uploadWatchFin chan struct{}
 	var uploader upload.Manager
-	var storage storage.Storer
 
 	repo := mustFindRepository()
 	startTs := time.Now()
@@ -193,11 +275,10 @@ func buildCMD(cmd *cobra.Command, args []string) {
 
 	if buildUpload {
 		var err error
-		storage, err = postgres.New(repo.PSQLURL)
+		store, err = postgres.New(repo.PSQLURL)
 		if err != nil {
 			log.Fatalf("could not establish connection to postgreSQL db: %s", err)
 		}
-		storage.ListBuildsPerApp("hello", 3) //TODO
 
 		uploadChan := make(chan *upload.Result, artifactCnt)
 		uploader = startBGUploader(artifactCnt, uploadChan)
@@ -228,7 +309,8 @@ func buildCMD(cmd *cobra.Command, args []string) {
 				app.Name, status.Job.Command, status.ExitCode, status.Output)
 		}
 
-		log.Actionf("%s: build successful (%.3fs)\n", app.Name, status.Duration.Seconds())
+		log.Actionf("%s: build successful (%.3fs)\n", app.Name, status.StopTs.Sub(status.StartTs).Seconds())
+		resultAddBuildResult(app, status)
 
 		for _, ar := range app.Artifacts {
 			if !ar.Exists() {
@@ -242,7 +324,10 @@ func buildCMD(cmd *cobra.Command, args []string) {
 					log.Fatalf("could not get upload job for artifact %s: %s", ar, err)
 				}
 
-				uj.SetUserData(ar)
+				uj.SetUserData(&uploadUserData{
+					App:      app,
+					Artifact: ar,
+				})
 
 				uploader.Add(uj)
 
@@ -259,4 +344,5 @@ func buildCMD(cmd *cobra.Command, args []string) {
 
 	term.PrintSep()
 	log.Infof("finished in %s\n", time.Since(startTs))
+
 }

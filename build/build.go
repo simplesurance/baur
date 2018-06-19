@@ -9,7 +9,8 @@ type Result struct {
 	Job   *Job
 	Error error
 
-	Duration time.Duration
+	StartTs  time.Time
+	StopTs   time.Time
 	ExitCode int
 	Output   string
 }

@@ -33,7 +33,8 @@ func (b *Builder) Start() {
 		res := build.Result{
 			Job:      j,
 			Error:    err,
-			Duration: time.Since(startTime),
+			StartTs:  startTime,
+			StopTs:   time.Now(),
 			ExitCode: exitCode,
 			Output:   out,
 		}

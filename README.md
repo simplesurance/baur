@@ -35,6 +35,15 @@ To build the application run `make`
    - set the build_command to a command that when it's run in your application
 	 directories, produces build artifacts like a docker container or a tar
 	 archives.
+   - set the postgresql_url to a valid connection string to a database that will
+    store informations about builds and aritfacts.
+    If you do not want to store the password of your database user in the
+    `baur.toml` file. You can also put in your `.pgpass` file
+    (https://www.postgresql.org/docs/9.3/static/libpq-pgpass.html).
+
+
+   - create the tables in the database by running the SQL-script
+     `storage/postgres/migrations/0001.up.sql`
 
 2. Run `baur appinit` in your application directories to create an `.app.toml`
    file.
