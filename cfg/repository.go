@@ -81,7 +81,7 @@ func ExampleRepository() *Repository {
 func (r *Repository) ToFile(filepath string, overwrite bool) error {
 	data, err := toml.Marshal(*r)
 	if err != nil {
-		return errors.Wrapf(err, "marshalling config failed")
+		return errors.Wrap(err, "marshalling config failed")
 	}
 
 	openFlags := os.O_WRONLY | os.O_CREATE
@@ -103,12 +103,12 @@ func (r *Repository) ToFile(filepath string, overwrite bool) error {
 func (r *Repository) Validate() error {
 	err := r.Discover.Validate()
 	if err != nil {
-		return errors.Wrapf(err, "[Discover] section contains errors")
+		return errors.Wrap(err, "[Discover] section contains errors")
 	}
 
 	err = r.Build.Validate()
 	if err != nil {
-		return errors.Wrapf(err, "[Build] section contains errors")
+		return errors.Wrap(err, "[Build] section contains errors")
 	}
 
 	err = r.Database.Validate()
@@ -122,7 +122,7 @@ func (r *Repository) Validate() error {
 // Validate validates the Discover section and sets defaults.
 func (d *Discover) Validate() error {
 	if len(d.Dirs) == 0 {
-		return fmt.Errorf("application_dirs parameter is empty")
+		return errors.New("application_dirs parameter is empty")
 	}
 
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {
