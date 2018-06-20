@@ -1,9 +1,10 @@
 package baur
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/pkg/errors"
+	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/upload"
 )
@@ -66,4 +67,19 @@ func (d *DockerArtifact) Name() string {
 // UploadDestination returns the upload destination
 func (d *DockerArtifact) UploadDestination() string {
 	return fmt.Sprintf("docker: %s:%s", d.Repository, d.Tag)
+}
+
+// Digest returns the image ID as Digest object
+func (d *DockerArtifact) Digest() (*digest.Digest, error) {
+	id, err := d.ImageID()
+	if err != nil {
+		return nil, errors.Wrap(err, "reading imageID from file failed")
+	}
+
+	digest, err := digest.FromString(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "converting imageID to digest failed")
+	}
+
+	return digest, nil
 }

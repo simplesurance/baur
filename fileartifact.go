@@ -1,6 +1,8 @@
 package baur
 
 import (
+	"github.com/simplesurance/baur/digest"
+	"github.com/simplesurance/baur/digest/file"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/upload"
 )
@@ -44,4 +46,9 @@ func (f *FileArtifact) Name() string {
 // UploadDestination returns the upload destination
 func (f *FileArtifact) UploadDestination() string {
 	return f.UploadURL
+}
+
+// Digest returns the file digest
+func (f *FileArtifact) Digest() (*digest.Digest, error) {
+	return file.SHA256Digest(f.LocalPath())
 }

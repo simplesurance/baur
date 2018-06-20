@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/upload"
 )
 
@@ -12,4 +13,5 @@ type Artifact interface {
 	String() string
 	LocalPath() string
 	UploadDestination() string
+	Digest() (*digest.Digest, error)
 }
