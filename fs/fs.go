@@ -149,3 +149,13 @@ func FileReadLine(path string) (string, error) {
 
 	return content, nil
 }
+
+// FileSize returns the size of a file in Bytes
+func FileSize(path string) (int64, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return -1, err
+	}
+
+	return stat.Size(), nil
+}

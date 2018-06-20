@@ -14,4 +14,5 @@ type Artifact interface {
 	LocalPath() string
 	UploadDestination() string
 	Digest() (*digest.Digest, error)
+	Size(*ArtifactBackends) (int64, error)
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/rs/xid"
+	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/storage"
 )
 
@@ -64,7 +65,7 @@ func TestSave(t *testing.T) {
 				Name:           "baur-unittest/dist/artifact.tar.xz",
 				Type:           storage.S3Artifact,
 				URI:            "http://test.de",
-				Digest:         "5678",
+				Digest:         digest.Digest{Type: digest.SHA256, Sum: "123"},
 				SizeBytes:      64,
 				UploadDuration: time.Duration(5 * time.Second),
 			},

@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -82,4 +83,14 @@ func (d *DockerArtifact) Digest() (*digest.Digest, error) {
 	}
 
 	return digest, nil
+}
+
+// Size returns the size of the docker image in bytes
+func (d *DockerArtifact) Size(b *ArtifactBackends) (int64, error) {
+	id, err := d.ImageID()
+	if err != nil {
+		return -1, errors.Wrap(err, "reading imageID from file failed")
+	}
+
+	return b.DockerClt.Size(context.Background(), id)
 }

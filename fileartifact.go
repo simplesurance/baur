@@ -52,3 +52,8 @@ func (f *FileArtifact) UploadDestination() string {
 func (f *FileArtifact) Digest() (*digest.Digest, error) {
 	return file.SHA256Digest(f.LocalPath())
 }
+
+// Size returns the size of the file in bytes
+func (f *FileArtifact) Size(_ *ArtifactBackends) (int64, error) {
+	return fs.FileSize(f.LocalPath())
+}

@@ -34,6 +34,8 @@ var resultLock = sync.Mutex{}
 
 var store storage.Storer
 
+var artifactBackends baur.ArtifactBackends
+
 func resultAddBuildResult(app *baur.App, r *build.Result) {
 	resultLock.Lock()
 	defer resultLock.Unlock()
@@ -67,12 +69,23 @@ func resultAddUploadResult(appName string, ar baur.Artifact, r *upload.Result) {
 		arType = storage.S3Artifact
 	}
 
+	artDigest, err := ar.Digest()
+	if err != nil {
+		panic(fmt.Sprintf("getting digest for artifact %q failed: %s", ar, err))
+	}
+
+	arSize, err := ar.Size(&artifactBackends)
+	if err != nil {
+		panic(fmt.Sprintf("getting size of artifact %q failed: %s", ar, err))
+	}
+
 	b.Artifacts = append(b.Artifacts, &storage.Artifact{
-		Name: ar.Name(),
-		// SizeBytes, // TODO implement it
+		Name:           ar.Name(),
+		SizeBytes:      arSize,
 		Type:           arType,
 		URI:            r.URL,
 		UploadDuration: r.Duration,
+		Digest:         *artDigest,
 	})
 }
 
@@ -188,6 +201,8 @@ func startBGUploader(artifactCnt int, uploadChan chan *upload.Result) upload.Man
 	}
 
 	uploader := sequploader.New(s3Uploader, dockerUploader, uploadChan)
+
+	artifactBackends.DockerClt = dockerUploader
 
 	go uploader.Start()
 
@@ -344,5 +359,4 @@ func buildCMD(cmd *cobra.Command, args []string) {
 
 	term.PrintSep()
 	log.Infof("finished in %s\n", time.Since(startTs))
-
 }

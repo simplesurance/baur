@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 
 	docker "docker.io/go-docker"
 	"docker.io/go-docker/api/types"
@@ -110,4 +111,23 @@ func (c *Client) Upload(ctx context.Context, image, dest string) (string, error)
 	}
 
 	return dest, nil
+}
+
+// Size returns the size of an image in Bytes
+func (c *Client) Size(ctx context.Context, imageID string) (int64, error) {
+	summaries, err := c.clt.ImageList(ctx, types.ImageListOptions{})
+	if err != nil {
+		return -1, errors.Wrap(err, "fetching imagelist failed")
+	}
+
+	for _, sum := range summaries {
+		if sum.ID == imageID {
+			if sum.VirtualSize <= 0 {
+				return -1, fmt.Errorf("docker returned invalid image size %q", sum.VirtualSize)
+			}
+			return sum.VirtualSize, nil
+		}
+	}
+
+	return -1, os.ErrNotExist
 }

@@ -75,8 +75,8 @@ func insertArtifactIfNotExist(tx *sql.Tx, a *storage.Artifact) (int, error) {
 	`
 
 	return insertIfNotExist(tx,
-		insertStmt, []interface{}{a.Name, a.Type, a.Digest, a.SizeBytes},
-		selectStmt, []interface{}{a.Name, a.Digest, a.SizeBytes})
+		insertStmt, []interface{}{a.Name, a.Type, a.Digest.String(), a.SizeBytes},
+		selectStmt, []interface{}{a.Name, a.Digest.String(), a.SizeBytes})
 }
 
 func insertSourceBuild(tx *sql.Tx, buildID, sourceID int) error {

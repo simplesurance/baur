@@ -3,6 +3,8 @@ package storage
 import (
 	"strings"
 	"time"
+
+	"github.com/simplesurance/baur/digest"
 )
 
 // ArtifactType describes the type of an artifact
@@ -35,8 +37,8 @@ type Artifact struct {
 	Name           string
 	Type           ArtifactType
 	URI            string
-	Digest         string
-	SizeBytes      int
+	Digest         digest.Digest
+	SizeBytes      int64
 	UploadDuration time.Duration
 }
 
