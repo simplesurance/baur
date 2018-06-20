@@ -21,7 +21,7 @@ type Build struct {
 	StartTimeStamp time.Time
 	StopTimeStamp  time.Time
 	Artifacts      []*Artifact
-	TotalSrcHash   string
+	TotalSrcDigest string
 	Sources        []*Source
 }
 
@@ -35,7 +35,7 @@ type Artifact struct {
 	Name           string
 	Type           ArtifactType
 	URI            string
-	Hash           string
+	Digest         string
 	SizeBytes      int
 	UploadDuration time.Duration
 }
@@ -43,7 +43,7 @@ type Artifact struct {
 // Source represents a source of an artifact
 type Source struct {
 	RelativePath string
-	Hash         string
+	Digest       string
 }
 
 // Storer is an interface for persisting informations about builds

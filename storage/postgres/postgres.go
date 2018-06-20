@@ -46,13 +46,13 @@ func (c *Client) ListBuildsPerApp(appName string, maxResults int) ([]*storage.Bu
 func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 	const stmt = `
 	INSERT INTO build
-	(application_id, start_timestamp, stop_timestamp, total_src_hash)
+	(application_id, start_timestamp, stop_timestamp, total_src_digest)
 	VALUES($1, $2, $3, $4)
 	RETURNING id;`
 
 	var id int
 
-	r := tx.QueryRow(stmt, appID, b.StartTimeStamp, b.StopTimeStamp, b.TotalSrcHash)
+	r := tx.QueryRow(stmt, appID, b.StartTimeStamp, b.StopTimeStamp, b.TotalSrcDigest)
 
 	if err := r.Scan(&id); err != nil {
 		return -1, err
@@ -64,19 +64,19 @@ func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 func insertArtifactIfNotExist(tx *sql.Tx, a *storage.Artifact) (int, error) {
 	const insertStmt = `
 	INSERT INTO artifact
-	(name, type, hash, size_bytes)
+	(name, type, digest, size_bytes)
 	VALUES($1, $2, $3, $4)
 	RETURNING id;
 	`
 
 	const selectStmt = `
 	SELECT id FROM artifact 
-	WHERE name = $1 AND hash = $2 AND size_bytes = $3;
+	WHERE name = $1 AND digest = $2 AND size_bytes = $3;
 	`
 
 	return insertIfNotExist(tx,
-		insertStmt, []interface{}{a.Name, a.Type, a.Hash, a.SizeBytes},
-		selectStmt, []interface{}{a.Name, a.Hash, a.SizeBytes})
+		insertStmt, []interface{}{a.Name, a.Type, a.Digest, a.SizeBytes},
+		selectStmt, []interface{}{a.Name, a.Digest, a.SizeBytes})
 }
 
 func insertSourceBuild(tx *sql.Tx, buildID, sourceID int) error {
@@ -126,19 +126,19 @@ func insertIfNotExist(
 func insertSourceIfNotExist(tx *sql.Tx, s *storage.Source) (int, error) {
 	const insertStmt = `
 	INSERT INTO source
-	(relative_path, hash)
+	(relative_path, digest)
 	VALUES($1, $2)
 	RETURNING id;
 	`
 
 	const selectStmt = `
 	SELECT id FROM source
-	WHERE relative_path = $1 AND hash = $2;
+	WHERE relative_path = $1 AND digest = $2;
 	`
 
 	return insertIfNotExist(tx,
-		insertStmt, []interface{}{s.RelativePath, s.Hash},
-		selectStmt, []interface{}{s.RelativePath, s.Hash})
+		insertStmt, []interface{}{s.RelativePath, s.Digest},
+		selectStmt, []interface{}{s.RelativePath, s.Digest})
 }
 
 func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {

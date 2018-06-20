@@ -64,23 +64,23 @@ func TestSave(t *testing.T) {
 				Name:           "baur-unittest/dist/artifact.tar.xz",
 				Type:           storage.S3Artifact,
 				URI:            "http://test.de",
-				Hash:           "5678",
+				Digest:         "5678",
 				SizeBytes:      64,
 				UploadDuration: time.Duration(5 * time.Second),
 			},
 		},
 		Sources: []*storage.Source{
 			&storage.Source{
-				Hash:         "890",
+				Digest:       "890",
 				RelativePath: "baur-unittest/file1.xyz",
 			},
 
 			&storage.Source{
-				Hash:         "a3",
+				Digest:       "a3",
 				RelativePath: "baur-unittest/file2.xyz",
 			},
 		},
-		TotalSrcHash: "123",
+		TotalSrcDigest: "123",
 	}
 
 	err = c.Save(&b)

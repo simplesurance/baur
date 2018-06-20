@@ -8,16 +8,16 @@ CREATE TABLE build (
 	application_id integer REFERENCES application (id),
 	start_timestamp timestamp with time zone,
 	stop_timestamp timestamp with time zone,
-	total_src_hash TEXT
+	total_src_digest TEXT
 );
 
 CREATE TABLE artifact (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
 	type TEXT,
-	hash TEXT,
+	digest TEXT,
 	size_bytes integer,
-	CONSTRAINT artifact_uniq UNIQUE(name, hash, size_bytes)
+	CONSTRAINT artifact_uniq UNIQUE(name, digest, size_bytes)
 );
 
 CREATE TABLE artifact_build (
@@ -35,8 +35,8 @@ CREATE TABLE upload (
 CREATE TABLE source (
 	id SERIAL PRIMARY KEY,
 	relative_path TEXT NOT NULL,
-	hash TEXT NOT NULL,
-	CONSTRAINT source_uniq UNIQUE(relative_path, hash)
+	digest TEXT NOT NULL,
+	CONSTRAINT source_uniq UNIQUE(relative_path, digest)
 );
 
 CREATE TABLE source_build (
