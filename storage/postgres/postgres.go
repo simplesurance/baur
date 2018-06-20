@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	_ "github.com/lib/pq" // postgresql
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
 
 	"github.com/simplesurance/baur/storage"
 )
@@ -59,32 +61,66 @@ func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 	return id, nil
 }
 
-func insertArtifact(tx *sql.Tx, buildID int, a *storage.Artifact) (int, error) {
-	const stmt = `
+func insertArtifactIfNotExist(tx *sql.Tx, a *storage.Artifact) (int, error) {
+	const insertStmt = `
 	INSERT INTO artifact
-	(build_id, name, type, url, hash, size_bytes, upload_duration_msec)
-	VALUES($1, $2, $3, $4, $5, $6, $7)
+	(name, type, hash, size_bytes)
+	VALUES($1, $2, $3, $4)
 	RETURNING id;
 	`
 
-	var id int
+	const selectStmt = `
+	SELECT id FROM artifact 
+	WHERE name = $1 AND hash = $2 AND size_bytes = $3;
+	`
 
-	r := tx.QueryRow(stmt, buildID, a.Name, a.Type, a.URL, a.Hash, a.SizeBytes, a.UploadDuration/time.Millisecond)
-	if err := r.Scan(&id); err != nil {
-		return -1, err
-	}
-
-	return id, nil
+	return insertIfNotExist(tx,
+		insertStmt, []interface{}{a.Name, a.Type, a.Hash, a.SizeBytes},
+		selectStmt, []interface{}{a.Name, a.Hash, a.SizeBytes})
 }
 
-// TODO can we use the lastinsertedId function from the result that tx.Exec()
-// returns instead of using QueryRow()??
 func insertSourceBuild(tx *sql.Tx, buildID, sourceID int) error {
 	const stmt = "INSERT into source_build VALUES($1, $2)"
 
 	_, err := tx.Exec(stmt, buildID, sourceID)
 
 	return err
+}
+
+func insertIfNotExist(
+	tx *sql.Tx,
+	insertStmt string,
+	insertArgs []interface{},
+	selectStmt string,
+	selectArgs []interface{},
+) (int, error) {
+	var id int
+	savepointName := xid.New().String()
+
+	_, err := tx.Exec(fmt.Sprintf("SAVEPOINT %s", savepointName))
+	if err != nil {
+		return -1, errors.Wrapf(err, "creating savepoint %q failed", savepointName)
+	}
+
+	r := tx.QueryRow(insertStmt, insertArgs...)
+	insertErr := r.Scan(&id)
+	if insertErr == nil {
+		return id, nil
+	}
+
+	// row already exist, TODO: only rollback and continue if it's
+	// an already exist error
+	_, err = tx.Exec(fmt.Sprintf("ROLLBACK TO %s", savepointName))
+	if err != nil {
+		return -1, errors.Wrapf(err, "rolling back transaction after insert error %q failed", insertErr)
+	}
+
+	r = tx.QueryRow(selectStmt, selectArgs...)
+	if err := r.Scan(&id); err != nil {
+		return -1, errors.Wrapf(err, "selecting source record failed after insert failed: %s", insertErr)
+	}
+
+	return id, nil
 }
 
 func insertSourceIfNotExist(tx *sql.Tx, s *storage.Source) (int, error) {
@@ -100,33 +136,9 @@ func insertSourceIfNotExist(tx *sql.Tx, s *storage.Source) (int, error) {
 	WHERE relative_path = $1 AND hash = $2;
 	`
 
-	var id int
-
-	_, err := tx.Exec("SAVEPOINT ssp")
-	if err != nil {
-		return -1, errors.Wrap(err, "creating savepoint failed")
-	}
-
-	r := tx.QueryRow(insertStmt, s.RelativePath, s.Hash)
-	insertErr := r.Scan(&id)
-	if insertErr == nil {
-		return id, nil
-	}
-
-	// row already exist, TODO: only rollback and continue if it's
-	// an already exist error
-	_, err = tx.Exec("ROLLBACK TO ssp")
-	if err != nil {
-		return -1, errors.Wrapf(err, "rolling back transaction after insert error %q failed", insertErr)
-	}
-
-	r = tx.QueryRow(selectStmt, s.RelativePath, s.Hash)
-	if err := r.Scan(&id); err != nil {
-		return -1, errors.Wrapf(err, "selecting source record failed after insert failed: %s", insertErr)
-	}
-
-	return id, nil
-
+	return insertIfNotExist(tx,
+		insertStmt, []interface{}{s.RelativePath, s.Hash},
+		selectStmt, []interface{}{s.RelativePath, s.Hash})
 }
 
 func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
@@ -138,30 +150,48 @@ func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 	`
 	const selectStmt = "SELECT id FROM application WHERE application_name = $1;"
 
-	var id int
+	return insertIfNotExist(tx,
+		insertStmt, []interface{}{appName},
+		selectStmt, []interface{}{appName})
+}
 
-	_, err := tx.Exec("SAVEPOINT asp;")
+func insertArtifactBuild(tx *sql.Tx, buildID, artifactID int) error {
+	const stmt = "INSERT into artifact_build VALUES($1, $2)"
+
+	_, err := tx.Exec(stmt, buildID, artifactID)
+
+	return err
+}
+
+func insertUpload(tx *sql.Tx, artifactID int, url string, uploadDuration time.Duration) error {
+	const stmt = `
+	INSERT into upload
+	(artifact_id, url, upload_duration_msec)
+	VALUES($1, $2, $3)
+	RETURNING id
+	`
+
+	_, err := tx.Exec(stmt, artifactID, url, uploadDuration/time.Millisecond)
+	return err
+}
+
+func saveArtifact(tx *sql.Tx, buildID int, a *storage.Artifact) error {
+	artifactID, err := insertArtifactIfNotExist(tx, a)
 	if err != nil {
-		return -1, errors.Wrap(err, "creating savepoint failed")
+		return errors.Wrap(err, "storing artifact record failed")
 	}
 
-	r := tx.QueryRow(insertStmt, appName)
-	insertErr := r.Scan(&id)
-	if insertErr == nil {
-		return id, nil
-	}
-
-	_, err = tx.Exec("ROLLBACK TO asp")
+	err = insertArtifactBuild(tx, buildID, artifactID)
 	if err != nil {
-		return -1, errors.Wrapf(err, "rolling back transaction after insert error %q failed", insertErr)
+		return errors.Wrap(err, "storing artifact_build record failed")
 	}
 
-	r = tx.QueryRow(selectStmt, appName)
-	if err := r.Scan(&id); err != nil {
-		return -1, errors.Wrap(err, "selecting application record failed")
+	err = insertUpload(tx, artifactID, a.URL, a.UploadDuration)
+	if err != nil {
+		return errors.Wrap(err, "storing upload record failed")
 	}
 
-	return id, nil
+	return nil
 }
 
 // Save stores a build
@@ -186,20 +216,19 @@ func (c *Client) Save(b *storage.Build) error {
 
 	buildID, err := insertBuild(tx, appID, b)
 	if err != nil {
-		return errors.Wrap(err, "storing build failed")
+		return errors.Wrap(err, "storing build record failed")
 	}
 
 	for _, a := range b.Artifacts {
-		_, err := insertArtifact(tx, buildID, a)
-		if err != nil {
-			return errors.Wrap(err, "storing artifact failed")
+		if err := saveArtifact(tx, buildID, a); err != nil {
+			return err
 		}
 	}
 
 	for _, s := range b.Sources {
 		sourceID, err := insertSourceIfNotExist(tx, s)
 		if err != nil {
-			return errors.Wrap(err, "storing source failed")
+			return errors.Wrap(err, "storing source record failed")
 		}
 
 		err = insertSourceBuild(tx, buildID, sourceID)

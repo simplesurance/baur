@@ -13,12 +13,22 @@ CREATE TABLE build (
 
 CREATE TABLE artifact (
 	id SERIAL PRIMARY KEY,
-	build_id integer REFERENCES build (id) NOT NULL,
 	name TEXT NOT NULL,
 	type TEXT,
-	url TEXT,
 	hash TEXT,
 	size_bytes integer,
+	CONSTRAINT artifact_uniq UNIQUE(name, hash, size_bytes)
+);
+
+CREATE TABLE artifact_build (
+	build_id integer REFERENCES build (id) NOT NULL,
+	artifact_id integer REFERENCES artifact (id) NOT NULL
+);
+
+CREATE TABLE upload (
+	id SERIAL PRIMARY KEY,
+	artifact_id integer REFERENCES artifact (id) NOT NULL,
+	url TEXT, /* TODO: should this be unique? */
 	upload_duration_msec integer
 );
 
