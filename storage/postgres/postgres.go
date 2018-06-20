@@ -166,7 +166,7 @@ func insertArtifactBuild(tx *sql.Tx, buildID, artifactID int) error {
 func insertUpload(tx *sql.Tx, artifactID int, url string, uploadDuration time.Duration) error {
 	const stmt = `
 	INSERT into upload
-	(artifact_id, url, upload_duration_msec)
+	(artifact_id, uri, upload_duration_msec)
 	VALUES($1, $2, $3)
 	RETURNING id
 	`
@@ -186,7 +186,7 @@ func saveArtifact(tx *sql.Tx, buildID int, a *storage.Artifact) error {
 		return errors.Wrap(err, "storing artifact_build record failed")
 	}
 
-	err = insertUpload(tx, artifactID, a.URL, a.UploadDuration)
+	err = insertUpload(tx, artifactID, a.URI, a.UploadDuration)
 	if err != nil {
 		return errors.Wrap(err, "storing upload record failed")
 	}

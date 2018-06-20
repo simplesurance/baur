@@ -71,7 +71,7 @@ func resultAddUploadResult(appName string, ar baur.Artifact, r *upload.Result) {
 		Name: ar.Name(),
 		// SizeBytes, // TODO implement it
 		Type:           arType,
-		URL:            r.URL,
+		URI:            r.URL,
 		UploadDuration: r.Duration,
 	})
 }

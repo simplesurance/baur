@@ -34,7 +34,7 @@ func (b *Build) AppNameLower() string {
 type Artifact struct {
 	Name           string
 	Type           ArtifactType
-	URL            string
+	URI            string
 	Hash           string
 	SizeBytes      int
 	UploadDuration time.Duration

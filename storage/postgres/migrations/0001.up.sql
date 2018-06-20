@@ -28,7 +28,7 @@ CREATE TABLE artifact_build (
 CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
 	artifact_id integer REFERENCES artifact (id) NOT NULL,
-	url TEXT, /* TODO: should this be unique? */
+	uri TEXT, /* TODO: should this be unique? */
 	upload_duration_msec integer
 );
 

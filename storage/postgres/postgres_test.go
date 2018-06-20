@@ -63,7 +63,7 @@ func TestSave(t *testing.T) {
 			&storage.Artifact{
 				Name:           "baur-unittest/dist/artifact.tar.xz",
 				Type:           storage.S3Artifact,
-				URL:            "http://test.de",
+				URI:            "http://test.de",
 				Hash:           "5678",
 				SizeBytes:      64,
 				UploadDuration: time.Duration(5 * time.Second),
