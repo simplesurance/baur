@@ -1,5 +1,4 @@
 # baur
-
 baur manages builds and artifacts in mono repositories.
 
 When Git repositories contain only a single applications the CI/CD jobs can be
@@ -22,26 +21,24 @@ Baur makes certain Assumptions:
   a build has to produce 1 or more build artifacts
 
 
-
 ## Build
 To build the application run `make`
 
 ## Configuration
+1. Setup your PostgreSQL baur database
 1. Create a `baur.toml` file in the root of your repository by running
    `baur init` in the repository root.
-   Adapt the configuration files to your needs:
 
+2. Adapt the configuration files to your needs:
    - Add paths containing your applications to the `application_dirs` parameter.
    - set the build_command to a command that when it's run in your application
 	 directories, produces build artifacts like a docker container or a tar
 	 archives.
-   - set the postgresql_url to a valid connection string to a database that will
+   - set the `postgresql_url` to a valid connection string to a database that will
     store informations about builds and aritfacts.
     If you do not want to store the password of your database user in the
     `baur.toml` file. You can also put in your `.pgpass` file
     (https://www.postgresql.org/docs/9.3/static/libpq-pgpass.html).
-
-
    - create the tables in the database by running the SQL-script
      `storage/postgres/migrations/0001.up.sql`
 
@@ -64,7 +61,7 @@ To build the application run `make`
    token.
 
 ### Application configs (`app.toml`)
-The `dest_file` parameter in the `[[DockerArtifact]] sections and the `tags`
+The `dest_file` parameter in the `[[DockerArtifact]]` sections and the `tags`
 parameter of `[[S3Artifact]]` sections support variables in their values.
 The variables are replaced by baur during a run.
 
@@ -76,16 +73,15 @@ The following variables are supported:
                  `git` command must be in one of the directories in the `$PATH`
                  environment variable.
 
-
 ## Examples
 - List all applications in the repository:
   `baur ls`
-- Build all applications and upload their artifacts:
+- Show informations about an application called `currency-service`:
+  `baur show currency-service`
+- Build all applications, upload their artifacts and records the results:
   `baur build --upload all`
 
-
 ## Development
-
 ### Create new Release
 1. Update the version number in the `ver` file and commit the change.
 2. Run `make release` to create the release `tar.xz` archives.
