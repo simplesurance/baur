@@ -73,6 +73,28 @@ The following variables are supported:
                  `git` command must be in one of the directories in the `$PATH`
                  environment variable.
 
+### Application Sources
+To enable baur to reliably detect if an application needs to be rebuild, it
+tracks all influencing factor of a build. This can be:
+The artifacts that an application build produces change when:
+- build flags change
+- the source files change,
+- the build tools change (e.g. update to a newer gcc version).
+
+It's important that the list is complete. Otherwise it happens that baur won't
+rebuild an application despite it changed.
+
+Those sources must be configured per application in the `app.toml` file.
+Currently only the `[SourceFiles]` directive is supported. It's `paths`
+parameter accepts a list of glob paths to source files.
+
+To make it easier to track changes in the build environment it's advised to
+build application in docker containers and define the docker image as Source
+(not supported yet).
+
+(depending if an application needs to be rebuild because it sources changed is
+not implemented yet)
+
 ## Examples
 - List all applications in the repository:
   `baur ls`

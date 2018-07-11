@@ -18,6 +18,7 @@ type App struct {
 	BuildCmd   string
 	Repository *Repository
 	Artifacts  []Artifact
+	Sources    []SrcResolver
 }
 
 func replaceUUIDvar(in string) string {
@@ -35,6 +36,16 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 	}
 
 	return strings.Replace(in, "$GITCOMMIT", commitID, -1), nil
+}
+
+func (a *App) setSourcesFromCfg(cfg *cfg.App) error {
+	a.Sources = make([]SrcResolver, 0, len(cfg.SourceFiles.Paths))
+
+	for _, p := range cfg.SourceFiles.Paths {
+		a.Sources = append(a.Sources, NewFileSrc(a.Dir, p))
+	}
+
+	return nil
 }
 
 func (a *App) setDockerArtifactsFromCfg(cfg *cfg.App) error {
@@ -109,6 +120,10 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 
 	if err := app.setS3ArtifactsFromCFG(cfg); err != nil {
 		return nil, errors.Wrap(err, "processing S3 artifact declarations failed")
+	}
+
+	if err := app.setSourcesFromCfg(cfg); err != nil {
+		return nil, errors.Wrap(err, "processing Sources declarations failed")
 	}
 
 	return &app, nil

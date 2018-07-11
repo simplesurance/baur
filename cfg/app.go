@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
@@ -14,7 +15,13 @@ type App struct {
 	Name           string `toml:"name" comment:"name of the application"`
 	S3Artifact     []*S3Artifact
 	DockerArtifact []*DockerArtifact
-	BuildCommand   string `toml:"build_command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
+	BuildCommand   string      `toml:"build_command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
+	SourceFiles    FileSources `comment:"paths to file that affect the produces build artifacts, e.g: source files, the used compiler binary "`
+}
+
+// FileSources describes a file source
+type FileSources struct {
+	Paths []string `toml:"paths" commented:"true" comment:"relative path to source files,  supports Golang Glob syntax (https://golang.org/pkg/path/filepath/#Match) and ** to match files recursively"`
 }
 
 // S3Artifact describes where a file artifact should be uploaded to
@@ -37,6 +44,9 @@ func ExampleApp(name string) *App {
 		Name:         name,
 		BuildCommand: "make docker_dist",
 
+		SourceFiles: FileSources{
+			Paths: []string{"Makefile", "src/**", "../../protos/src/pb/certificate.proto"},
+		},
 		S3Artifact: []*S3Artifact{
 			&S3Artifact{
 				Path:     fmt.Sprintf("dist/%s.tar.xz", name),
@@ -147,6 +157,10 @@ func (a *App) Validate() error {
 		}
 	}
 
+	if err := a.SourceFiles.Validate(); err != nil {
+		return errors.Wrap(err, "[[Sources.Files]] section contains errors")
+	}
+
 	return nil
 }
 
@@ -179,6 +193,20 @@ func (d *DockerArtifact) Validate() error {
 
 	if len(d.Tag) == 0 {
 		return errors.New("tag parameter can not be unset or empty")
+	}
+
+	return nil
+}
+
+// Validate validates a [[Sources.Files]] section
+func (f *FileSources) Validate() error {
+	for _, path := range f.Paths {
+		if len(path) == 0 {
+			return errors.New("path can not be empty")
+		}
+		if strings.Count(path, "**") > 1 {
+			return errors.New("'**' can only appear one time in a path")
+		}
 	}
 
 	return nil
