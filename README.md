@@ -24,6 +24,11 @@ Baur makes certain Assumptions:
 ## Build
 To build the application run `make`
 
+## Dependencies
+- To make use of git specify functionality like using the `$GITCOMMIT` variable
+    and `[GitSourceFiles]` directive in config files,  the git commandline tools
+    must be installed and findable via the `$PATH` environment variable.
+
 ## Configuration
 1. Setup your PostgreSQL baur database
 1. Create a `baur.toml` file in the root of your repository by running
@@ -73,7 +78,7 @@ The following variables are supported:
                  `git` command must be in one of the directories in the `$PATH`
                  environment variable.
 
-### Application Sources
+#### Application Sources
 To enable baur to reliably detect if an application needs to be rebuild, it
 tracks all influencing factor of a build. This can be:
 The artifacts that an application build produces change when:
@@ -84,9 +89,24 @@ The artifacts that an application build produces change when:
 It's important that the list is complete. Otherwise it happens that baur won't
 rebuild an application despite it changed.
 
-Those sources must be configured per application in the `app.toml` file.
-Currently only the `[SourceFiles]` directive is supported. It's `paths`
-parameter accepts a list of glob paths to source files.
+Those sources must be configured per application in the `app.toml` file with the
+following directives
+
+##### `[GitSourceFiles]`
+It's the preferred way to specify sources by files:
+- it's faster for large directories then `[SourceFiles]`,
+- it ignores untracked files like temporary build files that are in the
+    repository and probably not affect the build result,
+
+The baur repository has to be part of a checked out git repository to work.
+
+It's `paths` parameter accepts a list git path patterns that are relative to the
+application directory.
+It only matches files that are tracked by the git repository. Untracked files
+are ignored. Modified tracked files are considered.
+
+##### `[SourceFiles]`
+Has a `paths` parameter thats accepts a list of glob paths to source files.
 
 To make it easier to track changes in the build environment it's advised to
 build application in docker containers and define the docker image as Source

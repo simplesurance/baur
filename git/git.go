@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -26,4 +27,21 @@ func CommitID(dir string) (string, error) {
 	}
 
 	return commitID, err
+}
+
+// LsFiles runs git ls-files in dir, passes args as argument and returns the
+// output
+func LsFiles(dir, args string) (string, error) {
+	cmd := "git ls-files " + args
+
+	out, exitCode, err := exec.Command(dir, cmd)
+	if err != nil {
+		return "", errors.Wrapf(err, "executing %q failed", cmd)
+	}
+
+	if exitCode != 0 {
+		return "", fmt.Errorf("%q exited with code %d, output: %q", cmd, exitCode, out)
+	}
+
+	return out, nil
 }

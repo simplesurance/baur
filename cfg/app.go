@@ -15,13 +15,21 @@ type App struct {
 	Name           string `toml:"name" comment:"name of the application"`
 	S3Artifact     []*S3Artifact
 	DockerArtifact []*DockerArtifact
-	BuildCommand   string      `toml:"build_command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
-	SourceFiles    FileSources `comment:"paths to file that affect the produces build artifacts, e.g: source files, the used compiler binary "`
+	BuildCommand   string         `toml:"build_command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
+	SourceFiles    FileSources    `comment:"paths to file that affect the produces build artifacts, e.g: source files, the used compiler binary "`
+	GitSourceFiles GitSourceFiles `comment:"If the baur repository is part of a git repository, this option can be used to specify source files tracked by git."`
 }
 
 // FileSources describes a file source
 type FileSources struct {
 	Paths []string `toml:"paths" commented:"true" comment:"relative path to source files,  supports Golang Glob syntax (https://golang.org/pkg/path/filepath/#Match) and ** to match files recursively"`
+}
+
+// GitSourceFiles describes source files that are in the git repository by git
+// pathnames
+type GitSourceFiles struct {
+	// TODO: improve description
+	Paths []string `toml:"paths" commented:"true" comment:"Specifies relative paths to source files that are tracked in the git repository.\n All paths must be inside the git repository.\n All patterns in pathnames are supported that git commands support.\n Files that are not tracked by the git repository are ignored. Tracked but modified files are matched."`
 }
 
 // S3Artifact describes where a file artifact should be uploaded to
@@ -43,9 +51,11 @@ func ExampleApp(name string) *App {
 	return &App{
 		Name:         name,
 		BuildCommand: "make docker_dist",
-
 		SourceFiles: FileSources{
 			Paths: []string{"Makefile", "src/**", "../../protos/src/pb/certificate.proto"},
+		},
+		GitSourceFiles: GitSourceFiles{
+			Paths: []string{".", "../components/", "../../makeincludes/*.mk", "../../makeincludes/ui"},
 		},
 		S3Artifact: []*S3Artifact{
 			&S3Artifact{

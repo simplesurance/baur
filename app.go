@@ -39,10 +39,19 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 }
 
 func (a *App) setSourcesFromCfg(cfg *cfg.App) error {
-	a.Sources = make([]SrcResolver, 0, len(cfg.SourceFiles.Paths))
+	sliceLen := len(cfg.SourceFiles.Paths)
+	if len(cfg.GitSourceFiles.Paths) > 0 {
+		sliceLen++
+	}
+
+	a.Sources = make([]SrcResolver, 0, sliceLen)
 
 	for _, p := range cfg.SourceFiles.Paths {
 		a.Sources = append(a.Sources, NewFileSrc(a.Dir, p))
+	}
+
+	if len(cfg.GitSourceFiles.Paths) > 0 {
+		a.Sources = append(a.Sources, NewGitPaths(a.Dir, cfg.GitSourceFiles.Paths))
 	}
 
 	return nil
