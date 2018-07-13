@@ -118,10 +118,12 @@ not implemented yet)
 ## Examples
 - List all applications in the repository:
   `baur ls`
-- Show informations about an application called `currency-service`:
-  `baur show currency-service`
 - Build all applications, upload their artifacts and records the results:
   `baur build --upload all`
+- Show informations about an application called `currency-service`:
+  `baur show currency-service`
+- Show source files of an application called `claim-service`:
+  `baur sources claim-server`
 
 ## Development
 ### Create new Release
