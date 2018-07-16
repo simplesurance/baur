@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -60,7 +59,7 @@ func resultAddUploadResult(appName string, ar baur.Artifact, r *upload.Result) {
 
 	b, exist := result[appName]
 	if !exist {
-		panic(fmt.Sprintf("resultAddUploadResult: %q does not exist in build result map", appName))
+		log.Fatalf("resultAddUploadResult: %q does not exist in build result map\n", appName)
 	}
 
 	if r.Job.Type() == upload.JobDocker {
@@ -71,12 +70,12 @@ func resultAddUploadResult(appName string, ar baur.Artifact, r *upload.Result) {
 
 	artDigest, err := ar.Digest()
 	if err != nil {
-		panic(fmt.Sprintf("getting digest for artifact %q failed: %s", ar, err))
+		log.Fatalf("getting digest for artifact %q failed: %s\n", ar, err)
 	}
 
 	arSize, err := ar.Size(&artifactBackends)
 	if err != nil {
-		panic(fmt.Sprintf("getting size of artifact %q failed: %s", ar, err))
+		log.Fatalf("getting size of artifact %q failed: %s\n", ar, err)
 	}
 
 	b.Artifacts = append(b.Artifacts, &storage.Artifact{
@@ -95,7 +94,7 @@ func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
 
 	b, exist := result[app.Name]
 	if !exist {
-		panic(fmt.Sprintf("recordResultIfComplete: %q does not exist in build result map", app.Name))
+		log.Fatalf("recordResultIfComplete: %q does not exist in build result map\n", app.Name)
 	}
 
 	if len(app.Artifacts) == len(b.Artifacts) {
@@ -233,7 +232,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 	for res := range uploadChan {
 		ud, ok := res.Job.GetUserData().(*uploadUserData)
 		if !ok {
-			panic("upload result user data has unexpected type")
+			log.Fatalln("upload result user data has unexpected type")
 		}
 
 		if res.Err != nil {
