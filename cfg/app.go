@@ -168,7 +168,7 @@ func (a *App) Validate() error {
 	}
 
 	if err := a.SourceFiles.Validate(); err != nil {
-		return errors.Wrap(err, "[[Sources.Files]] section contains errors")
+		return errors.Wrap(err, "[SourceFiles] section contains errors")
 	}
 
 	return nil
