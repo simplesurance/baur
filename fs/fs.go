@@ -271,7 +271,7 @@ func Glob(path string) ([]string, error) {
 		}
 
 		if path == nil {
-			return nil, fmt.Errorf("no file exist that matches %q", globPath)
+			continue
 		}
 
 		paths = append(paths, path...)

@@ -31,6 +31,10 @@ func (f *FileSrc) Resolve() ([]*File, error) {
 		return nil, err
 	}
 
+	if len(paths) == 0 {
+		return nil, errors.New("glob matched 0 files")
+	}
+
 	res := make([]*File, 0, len(paths))
 	for _, p := range paths {
 		relPath, err := filepath.Rel(f.baseDir, p)
