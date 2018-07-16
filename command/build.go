@@ -28,6 +28,11 @@ type uploadUserData struct {
 	Artifact baur.Artifact
 }
 
+type buildUserData struct {
+	App     *baur.App
+	Sources []*storage.Source
+}
+
 var result = map[string]*storage.Build{}
 var resultLock = sync.Mutex{}
 
@@ -35,19 +40,19 @@ var store storage.Storer
 
 var artifactBackends baur.ArtifactBackends
 
-func resultAddBuildResult(app *baur.App, r *build.Result) {
+func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 	resultLock.Lock()
 	defer resultLock.Unlock()
 
 	b := storage.Build{
-		AppName:        app.Name,
+		AppName:        bud.App.Name,
 		StartTimeStamp: r.StartTs,
 		StopTimeStamp:  r.StopTs,
-		// Sources: // TODO
+		Sources:        bud.Sources,
 		//TotalSrcHash: // TODO
 	}
 
-	result[app.Name] = &b
+	result[bud.App.Name] = &b
 
 }
 
@@ -176,15 +181,39 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 	buildJobs := make([]*build.Job, 0, len(apps))
 
 	for _, app := range apps {
+		buildSources := []*storage.Source{}
+
+		log.Debugf("%q: resolving sources and calculating digests...\n", app)
+		for _, srcres := range app.Sources {
+			sources, err := srcres.Resolve()
+			if err != nil {
+				log.Fatalf("%q: resolving sources failed: %s\n", app, err)
+			}
+
+			for _, s := range sources {
+				d, err := s.Digest()
+				if err != nil {
+					log.Fatalf("%q: calculating source digest failed: %s\n", app, err)
+				}
+
+				buildSources = append(buildSources, &storage.Source{
+					Digest:       d.String(),
+					RelativePath: s.RelPath(),
+				})
+			}
+		}
+
 		buildJobs = append(buildJobs, &build.Job{
 			Directory: app.Dir,
 			Command:   app.BuildCmd,
-			UserData:  app,
+			UserData: &buildUserData{
+				App:     app,
+				Sources: buildSources,
+			},
 		})
 	}
 
 	return buildJobs
-
 }
 
 func startBGUploader(artifactCnt int, uploadChan chan *upload.Result) upload.Manager {
@@ -246,6 +275,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 
 		complete, build := recordResultIsComplete(ud.App)
 		if complete {
+			log.Debugf("%q: storing build information in database\n", ud.App)
 			if err := store.Save(build); err != nil {
 				log.Fatalf("storing build information about %q failed: %s", ud.App.Name, err)
 			}
@@ -311,7 +341,8 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	go builder.Start()
 
 	for status := range buildChan {
-		app := status.Job.UserData.(*baur.App)
+		bud := status.Job.UserData.(*buildUserData)
+		app := bud.App
 
 		if status.Error != nil {
 			log.Fatalf("%s: build failed: %s\n", app.Name, status.Error)
@@ -324,7 +355,7 @@ func buildCMD(cmd *cobra.Command, args []string) {
 		}
 
 		log.Actionf("%s: build successful (%.3fs)\n", app.Name, status.StopTs.Sub(status.StartTs).Seconds())
-		resultAddBuildResult(app, status)
+		resultAddBuildResult(bud, status)
 
 		for _, ar := range app.Artifacts {
 			if !ar.Exists() {
