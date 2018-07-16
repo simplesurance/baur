@@ -2,15 +2,21 @@ package command
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
 	"github.com/spf13/cobra"
 )
 
+var sourcesShowDigest bool
+
 func init() {
+	sourcesCmd.Flags().BoolVar(&sourcesShowDigest, "digest", false,
+		"show file digests")
 	rootCmd.AddCommand(sourcesCmd)
 }
 
@@ -43,18 +49,28 @@ func sources(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatalln("resolving source paths failed:", err)
 		}
-		alLFiles = append(alLFiles, paths...)
-	}
 
-	if len(alLFiles) == 0 {
-		log.Fatalln("configured source file paths resolved to 0 files, ensure the configuration is correct")
+		alLFiles = append(alLFiles, paths...)
 	}
 
 	sort.Slice(alLFiles, func(i, j int) bool {
 		return alLFiles[i].RelPath() < alLFiles[j].RelPath()
 	})
 
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	for _, p := range alLFiles {
-		fmt.Printf("%s\t%s\n", p.RelPath(), "")
+		if !sourcesShowDigest {
+			fmt.Fprintf(tw, "%s\n", p.Path())
+			continue
+		}
+
+		d, err := p.Digest()
+		if err != nil {
+			log.Fatalln("creating digest failed:", err)
+		}
+
+		fmt.Fprintf(tw, "%s\t%s\n", p.Path(), d)
 	}
+
+	tw.Flush()
 }
