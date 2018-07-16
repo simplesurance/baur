@@ -156,7 +156,7 @@ func findAllDirsNoDups(result map[string]struct{}, path string) error {
 	}
 
 	if _, exist := result[path]; exist {
-		return fmt.Errorf("(symlink?) loop in filesystem, found %q 2 times", path)
+		return nil
 	}
 	result[path] = struct{}{}
 
