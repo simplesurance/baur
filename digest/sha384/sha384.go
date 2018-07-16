@@ -25,7 +25,7 @@ func File(path string) (*digest.Digest, error) {
 	}
 
 	return &digest.Digest{
-		Algorithm: digest.SHA256,
+		Algorithm: digest.SHA384,
 		Sum:       fmt.Sprintf("%x", (h.Sum(nil))),
 	}, nil
 }
