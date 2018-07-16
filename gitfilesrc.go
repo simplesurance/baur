@@ -1,8 +1,11 @@
 package baur
 
 import (
+	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
+	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/git"
 )
 
@@ -32,7 +35,14 @@ func (g *GitPaths) Resolve() ([]*File, error) {
 	res := make([]*File, 0, len(paths))
 
 	for _, p := range paths {
-		res = append(res, NewFile(g.baseDir, p))
+		isFile, err := fs.IsFile(filepath.Join(g.baseDir, p))
+		if err != nil {
+			return nil, errors.Wrapf(err, "resolved path %q does not exist", p)
+		}
+
+		if isFile {
+			res = append(res, NewFile(g.baseDir, p))
+		}
 	}
 
 	return res, nil
