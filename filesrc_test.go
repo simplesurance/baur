@@ -21,7 +21,12 @@ func createFiles(t *testing.T, basedir string, paths []string) {
 	}
 }
 
-func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []*File, tc *testcase) {
+func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedBuildInput []BuildInput, tc *testcase) {
+	resolvedFiles := []*File{}
+	for _, i := range resolvedBuildInput {
+		resolvedFiles = append(resolvedFiles, i.(*File))
+	}
+
 	if len(resolvedFiles) != len(tc.expectedMatches) {
 		t.Errorf("resolved to %d files (%v), expected %d (%+v)",
 			len(resolvedFiles), resolvedFiles,

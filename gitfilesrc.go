@@ -24,7 +24,7 @@ func NewGitPaths(baseDir string, paths []string) *GitPaths {
 }
 
 // Resolve returns a list of files that are matching it's path
-func (g *GitPaths) Resolve() ([]*File, error) {
+func (g *GitPaths) Resolve() ([]BuildInput, error) {
 	arg := strings.Join(g.paths, " ")
 	out, err := git.LsFiles(g.baseDir, arg)
 	if err != nil {
@@ -32,7 +32,7 @@ func (g *GitPaths) Resolve() ([]*File, error) {
 	}
 
 	paths := strings.Split(out, "\n")
-	res := make([]*File, 0, len(paths))
+	res := make([]BuildInput, 0, len(paths))
 
 	for _, p := range paths {
 		isFile, err := fs.IsFile(filepath.Join(g.baseDir, p))

@@ -13,12 +13,12 @@ import (
 
 // App represents an application
 type App struct {
-	Dir        string
-	Name       string
-	BuildCmd   string
-	Repository *Repository
-	Artifacts  []Artifact
-	Sources    []SrcResolver
+	Dir         string
+	Name        string
+	BuildCmd    string
+	Repository  *Repository
+	Artifacts   []Artifact
+	SourcePaths []SrcResolver
 }
 
 func replaceUUIDvar(in string) string {
@@ -39,19 +39,23 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 }
 
 func (a *App) setSourcesFromCfg(cfg *cfg.App) error {
-	sliceLen := len(cfg.SourceFiles.Paths)
+	sliceLen := len(cfg.SourceFiles.Paths) + len(cfg.DockerSource)
 	if len(cfg.GitSourceFiles.Paths) > 0 {
 		sliceLen++
 	}
 
-	a.Sources = make([]SrcResolver, 0, sliceLen)
+	a.SourcePaths = make([]SrcResolver, 0, sliceLen)
 
 	for _, p := range cfg.SourceFiles.Paths {
-		a.Sources = append(a.Sources, NewFileSrc(a.Dir, p))
+		a.SourcePaths = append(a.SourcePaths, NewFileSrc(a.Dir, p))
 	}
 
 	if len(cfg.GitSourceFiles.Paths) > 0 {
-		a.Sources = append(a.Sources, NewGitPaths(a.Dir, cfg.GitSourceFiles.Paths))
+		a.SourcePaths = append(a.SourcePaths, NewGitPaths(a.Dir, cfg.GitSourceFiles.Paths))
+	}
+
+	for _, d := range cfg.DockerSource {
+		a.SourcePaths = append(a.SourcePaths, &DockerSrc{Repository: d.Repository, Digest: d.Digest})
 	}
 
 	return nil

@@ -106,7 +106,7 @@ It only matches files that are tracked by the git repository. Untracked files
 are ignored. Modified tracked files are considered.
 
 ##### `[SourceFiles]`
-Has a `paths` parameter thats accepts a list of glob paths to source files.
+Has a `paths` parameter that accepts a list of glob paths to source files.
 
 To make it easier to track changes in the build environment it's advised to
 build application in docker containers and define the docker image as Source
@@ -114,6 +114,13 @@ build application in docker containers and define the docker image as Source
 
 (depending if an application needs to be rebuild because it sources changed is
 not implemented yet)
+
+##### `[[DockerSource]]`
+Specifies a docker image as build input. This can be for example the docker
+image in that the application is build.
+It's identified by manifest digest to ensure that it is unambiguous.
+The digest for a docker image can be retrieved by e.g.
+`docker images --digests`.
 
 ## Examples
 - List all applications in the repository:

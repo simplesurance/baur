@@ -72,13 +72,13 @@ func TestSave(t *testing.T) {
 		},
 		Sources: []*storage.Source{
 			&storage.Source{
-				Digest:       "890",
-				RelativePath: "baur-unittest/file1.xyz",
+				Digest: "890",
+				URL:    "file://baur-unittest/file1.xyz",
 			},
 
 			&storage.Source{
-				Digest:       "a3",
-				RelativePath: "baur-unittest/file2.xyz",
+				Digest: "a3",
+				URL:    "file://baur-unittest/file2.xyz",
 			},
 		},
 		TotalSrcDigest: "123",

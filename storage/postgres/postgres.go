@@ -137,8 +137,8 @@ func insertSourceIfNotExist(tx *sql.Tx, s *storage.Source) (int, error) {
 	`
 
 	return insertIfNotExist(tx,
-		insertStmt, []interface{}{s.RelativePath, s.Digest},
-		selectStmt, []interface{}{s.RelativePath, s.Digest})
+		insertStmt, []interface{}{s.URL, s.Digest},
+		selectStmt, []interface{}{s.URL, s.Digest})
 }
 
 func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {

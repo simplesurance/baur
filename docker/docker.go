@@ -131,3 +131,13 @@ func (c *Client) Size(ctx context.Context, imageID string) (int64, error) {
 
 	return -1, os.ErrNotExist
 }
+
+//ImageDigest retrieves the image digest from a remote registry and returns it
+func (c *Client) ImageDigest(ctx context.Context, image string) (string, error) {
+	ins, err := c.clt.DistributionInspect(ctx, image, c.authData)
+	if err != nil {
+		return "", errors.Wrap(err, "retrieving image information failed")
+	}
+
+	return ins.Descriptor.Digest.String(), nil
+}

@@ -35,16 +35,16 @@ var sourcesCmd = &cobra.Command{
 }
 
 func sources(cmd *cobra.Command, args []string) {
-	var alLFiles []*baur.File
+	var alLFiles []baur.BuildInput
 
 	rep := mustFindRepository()
 	app := mustArgToApp(rep, args[0])
 
-	if len(app.Sources) == 0 {
+	if len(app.SourcePaths) == 0 {
 		log.Fatalf("No source files have been configured in the %s file of %s\n", baur.AppCfgFile, app.Name)
 	}
 
-	for _, s := range app.Sources {
+	for _, s := range app.SourcePaths {
 		paths, err := s.Resolve()
 		if err != nil {
 			log.Fatalln("resolving source paths failed:", err)
@@ -54,13 +54,13 @@ func sources(cmd *cobra.Command, args []string) {
 	}
 
 	sort.Slice(alLFiles, func(i, j int) bool {
-		return alLFiles[i].RelPath() < alLFiles[j].RelPath()
+		return alLFiles[i].URL() < alLFiles[j].URL()
 	})
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	for _, p := range alLFiles {
 		if !sourcesShowDigest {
-			fmt.Fprintf(tw, "%s\n", p.Path())
+			fmt.Fprintf(tw, "%s\n", p)
 			continue
 		}
 
@@ -69,7 +69,7 @@ func sources(cmd *cobra.Command, args []string) {
 			log.Fatalln("creating digest failed:", err)
 		}
 
-		fmt.Fprintf(tw, "%s\t%s\n", p.Path(), d)
+		fmt.Fprintf(tw, "%s\t%s\n", p, d)
 	}
 
 	tw.Flush()

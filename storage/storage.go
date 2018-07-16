@@ -44,8 +44,8 @@ type Artifact struct {
 
 // Source represents a source of an artifact
 type Source struct {
-	RelativePath string
-	Digest       string
+	URL    string
+	Digest string
 }
 
 // Storer is an interface for persisting informations about builds

@@ -8,6 +8,7 @@ import (
 )
 
 //FileSrc is Source file of an application represented by a glob path
+// TODO: rename it to FileGlobPath or similar?
 type FileSrc struct {
 	baseDir  string
 	globPath string
@@ -23,7 +24,7 @@ func NewFileSrc(baseDir, glob string) *FileSrc {
 
 // Resolve returns a list of files that are matching the glob path of the
 // FileSrc
-func (f *FileSrc) Resolve() ([]*File, error) {
+func (f *FileSrc) Resolve() ([]BuildInput, error) {
 	absGlobPath := filepath.Join(f.baseDir, f.globPath)
 
 	paths, err := fs.Glob(absGlobPath)
@@ -35,7 +36,7 @@ func (f *FileSrc) Resolve() ([]*File, error) {
 		return nil, errors.New("glob matched 0 files")
 	}
 
-	res := make([]*File, 0, len(paths))
+	res := make([]BuildInput, 0, len(paths))
 	for _, p := range paths {
 		relPath, err := filepath.Rel(f.baseDir, p)
 		if err != nil {

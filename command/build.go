@@ -184,7 +184,7 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 		buildSources := []*storage.Source{}
 
 		log.Debugf("%q: resolving sources and calculating digests...\n", app)
-		for _, srcres := range app.Sources {
+		for _, srcres := range app.SourcePaths {
 			sources, err := srcres.Resolve()
 			if err != nil {
 				log.Fatalf("%q: resolving sources failed: %s\n", app, err)
@@ -197,8 +197,8 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 				}
 
 				buildSources = append(buildSources, &storage.Source{
-					Digest:       d.String(),
-					RelativePath: s.RelPath(),
+					Digest: d.String(),
+					URL:    s.URL(),
 				})
 			}
 		}
