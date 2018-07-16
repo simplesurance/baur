@@ -1,7 +1,7 @@
-package sha256
+package sha384
 
 import (
-	"crypto/sha256"
+	"crypto/sha512"
 	"fmt"
 	"io"
 	"os"
@@ -19,7 +19,7 @@ func File(path string) (*digest.Digest, error) {
 
 	defer f.Close()
 
-	h := sha256.New()
+	h := sha512.New384()
 	if _, err := io.Copy(h, f); err != nil {
 		return nil, errors.Wrap(err, "reading file failed")
 	}

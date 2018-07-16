@@ -246,7 +246,9 @@ func expandDoubleStarGlob(absGlobPath string) ([]string, error) {
 }
 
 // Glob does the same then filepath.Glob() but also support '**' to match files
-// and directories recursively
+// and directories recursively.
+// If a Glob doesn't match any files an empty []string is returned and error is
+// nil
 func Glob(path string) ([]string, error) {
 	var globPaths []string
 

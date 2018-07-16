@@ -11,8 +11,10 @@ type Algorithm int
 
 const (
 	_ Algorithm = iota
-	// SHA256 is a sha256 checksum
+	// SHA256 is the sha256 algorithm
 	SHA256
+	// SHA384 is the sha384 algorithm
+	SHA384
 )
 
 // String returns the textual representation
@@ -20,6 +22,9 @@ func (t Algorithm) String() string {
 	switch t {
 	case SHA256:
 		return "sha256"
+
+	case SHA384:
+		return "sha384"
 	default:
 		return "undefined"
 	}

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/simplesurance/baur/digest"
-	"github.com/simplesurance/baur/digest/sha256"
+	"github.com/simplesurance/baur/digest/sha384"
 )
 
 // File represent a file
@@ -25,7 +25,7 @@ func NewFile(rootDir, relPath string) *File {
 
 // Digest returns a digest of the file
 func (f *File) Digest() (*digest.Digest, error) {
-	return sha256.File(filepath.Join(f.absPath))
+	return sha384.File(filepath.Join(f.absPath))
 }
 
 // Path returns it's absolute path
