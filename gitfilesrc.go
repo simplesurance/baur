@@ -1,7 +1,6 @@
 package baur
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/simplesurance/baur/git"
@@ -22,7 +21,7 @@ func NewGitPaths(baseDir string, paths []string) *GitPaths {
 }
 
 // Resolve returns a list of files that are matching it's path
-func (g *GitPaths) Resolve() ([]string, error) {
+func (g *GitPaths) Resolve() ([]*File, error) {
 	arg := strings.Join(g.paths, " ")
 	out, err := git.LsFiles(g.baseDir, arg)
 	if err != nil {
@@ -30,9 +29,11 @@ func (g *GitPaths) Resolve() ([]string, error) {
 	}
 
 	paths := strings.Split(out, "\n")
-	for i := range paths {
-		paths[i] = filepath.Join(g.baseDir, paths[i])
+	res := make([]*File, 0, len(paths))
+
+	for _, p := range paths {
+		res = append(res, NewFile(g.baseDir, p))
 	}
 
-	return paths, nil
+	return res, nil
 }

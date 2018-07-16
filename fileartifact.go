@@ -2,9 +2,9 @@ package baur
 
 import (
 	"github.com/simplesurance/baur/digest"
-	"github.com/simplesurance/baur/digest/file"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/upload"
+	"github.com/simplesurance/baur2/digest/file"
 )
 
 // FileArtifact is a file build artifact

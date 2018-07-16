@@ -6,17 +6,17 @@ import (
 	"strings"
 )
 
-// Type describes the checksum type
-type Type int
+// Algorithm describes the digest algorithm
+type Algorithm int
 
 const (
-	_ Type = iota
+	_ Algorithm = iota
 	// SHA256 is a sha256 checksum
 	SHA256
 )
 
 // String returns the textual representation
-func (t Type) String() string {
+func (t Algorithm) String() string {
 	switch t {
 	case SHA256:
 		return "sha256"
@@ -27,13 +27,13 @@ func (t Type) String() string {
 
 // Digest contains a checksum
 type Digest struct {
-	Sum  string
-	Type Type
+	Sum       string
+	Algorithm Algorithm
 }
 
-// String returns '<type>:<checksum>'
+// String returns '<Algorithm>:<checksum>'
 func (d *Digest) String() string {
-	return fmt.Sprintf("%s:%s", d.Type, d.Sum)
+	return fmt.Sprintf("%s:%s", d.Algorithm, d.Sum)
 }
 
 // FromString converts a "sha256:<hash> string to Digest
@@ -52,7 +52,7 @@ func FromString(in string) (*Digest, error) {
 	}
 
 	return &Digest{
-		Sum:  spl[1],
-		Type: SHA256,
+		Sum:       spl[1],
+		Algorithm: SHA256,
 	}, nil
 }

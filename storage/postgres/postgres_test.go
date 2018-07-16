@@ -65,7 +65,7 @@ func TestSave(t *testing.T) {
 				Name:           "baur-unittest/dist/artifact.tar.xz",
 				Type:           storage.S3Artifact,
 				URI:            "http://test.de",
-				Digest:         digest.Digest{Type: digest.SHA256, Sum: "123"},
+				Digest:         digest.Digest{Algorithm: digest.SHA256, Sum: "123"},
 				SizeBytes:      64,
 				UploadDuration: time.Duration(5 * time.Second),
 			},

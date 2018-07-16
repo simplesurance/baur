@@ -29,7 +29,7 @@ var sourcesCmd = &cobra.Command{
 }
 
 func sources(cmd *cobra.Command, args []string) {
-	var allPaths []string
+	var alLFiles []*baur.File
 
 	rep := mustFindRepository()
 	app := mustArgToApp(rep, args[0])
@@ -43,16 +43,18 @@ func sources(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatalln("resolving source paths failed:", err)
 		}
-		allPaths = append(allPaths, paths...)
+		alLFiles = append(alLFiles, paths...)
 	}
 
-	if len(allPaths) == 0 {
+	if len(alLFiles) == 0 {
 		log.Fatalln("configured source file paths resolved to 0 files, ensure the configuration is correct")
 	}
 
-	sort.Strings(allPaths)
+	sort.Slice(alLFiles, func(i, j int) bool {
+		return alLFiles[i].RelPath() < alLFiles[j].RelPath()
+	})
 
-	for _, p := range allPaths {
-		fmt.Println(p)
+	for _, p := range alLFiles {
+		fmt.Printf("%s\t%s\n", p.RelPath(), "")
 	}
 }

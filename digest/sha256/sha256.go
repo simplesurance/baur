@@ -1,4 +1,4 @@
-package file
+package sha256
 
 import (
 	"crypto/sha256"
@@ -10,11 +10,11 @@ import (
 	"github.com/simplesurance/baur/digest"
 )
 
-// SHA256Digest returns the SHA256 Checksum of the file
-func SHA256Digest(path string) (*digest.Digest, error) {
+// File returns the SHA256 digest of the file
+func File(path string) (*digest.Digest, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "opening file failed")
 	}
 
 	defer f.Close()
@@ -25,7 +25,7 @@ func SHA256Digest(path string) (*digest.Digest, error) {
 	}
 
 	return &digest.Digest{
-		Sum:  fmt.Sprintf("%x", (h.Sum(nil))),
-		Type: digest.SHA256,
+		Algorithm: digest.SHA256,
+		Sum:       fmt.Sprintf("%x", (h.Sum(nil))),
 	}, nil
 }

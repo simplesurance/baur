@@ -3,6 +3,7 @@ package baur
 import (
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/fs"
 )
 
@@ -22,8 +23,23 @@ func NewFileSrc(baseDir, glob string) *FileSrc {
 
 // Resolve returns a list of files that are matching the glob path of the
 // FileSrc
-func (f *FileSrc) Resolve() ([]string, error) {
+func (f *FileSrc) Resolve() ([]*File, error) {
 	absGlobPath := filepath.Join(f.baseDir, f.globPath)
 
-	return fs.Glob(absGlobPath)
+	paths, err := fs.Glob(absGlobPath)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*File, 0, len(paths))
+	for _, p := range paths {
+		relPath, err := filepath.Rel(f.baseDir, p)
+		if err != nil {
+			return nil, errors.Wrapf(err, "converting %q to relpath with basedir %q failed", p, f.baseDir)
+		}
+
+		res = append(res, NewFile(f.baseDir, relPath))
+	}
+
+	return res, nil
 }

@@ -21,7 +21,7 @@ func createFiles(t *testing.T, basedir string, paths []string) {
 	}
 }
 
-func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []string, tc *testcase) {
+func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []*File, tc *testcase) {
 	if len(resolvedFiles) != len(tc.expectedMatches) {
 		t.Errorf("resolved to %d files (%v), expected %d (%+v)",
 			len(resolvedFiles), resolvedFiles,
@@ -29,15 +29,9 @@ func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []str
 	}
 
 	for _, e := range resolvedFiles {
-		rel, err := filepath.Rel(tempdir, e)
-		if err != nil {
-			t.Errorf("resolving relpath of %q failed: %s, testcase: %+v", e, tc, err)
-			continue
-		}
-
-		if !strtest.InSlice(tc.expectedMatches, rel) {
+		if !strtest.InSlice(tc.expectedMatches, e.RelPath()) {
 			t.Errorf("%q (%q) was returned but is not in expected return slice (%+v), testcase: %+v",
-				e, rel, tc.expectedMatches, tc)
+				e, e.RelPath(), tc.expectedMatches, tc)
 		}
 	}
 }
