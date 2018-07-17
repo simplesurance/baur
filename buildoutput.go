@@ -5,8 +5,8 @@ import (
 	"github.com/simplesurance/baur/upload"
 )
 
-// Artifact is an interface for build artifacts
-type Artifact interface {
+// BuildOutput is an interface for build artifacts
+type BuildOutput interface {
 	Exists() bool
 	UploadJob() (upload.Job, error)
 	Name() string
@@ -14,5 +14,5 @@ type Artifact interface {
 	LocalPath() string
 	UploadDestination() string
 	Digest() (*digest.Digest, error)
-	Size(*ArtifactBackends) (int64, error)
+	Size(*BuildOutputBackends) (int64, error)
 }

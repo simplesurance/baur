@@ -12,42 +12,42 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var sourcesShowDigest bool
+var inputsShowDigest bool
 
 func init() {
-	sourcesCmd.Flags().BoolVar(&sourcesShowDigest, "digest", false,
-		"show file digests")
-	rootCmd.AddCommand(sourcesCmd)
+	inputsCmd.Flags().BoolVar(&inputsShowDigest, "digest", false,
+		"show digests")
+	rootCmd.AddCommand(inputsCmd)
 }
 
-const sourcesLongHelp = `
-Shows source file paths of an application.
+const inputsLongHelp = `
+Shows build input paths of an application.
 
-The paths to the source files must be configured in the .app.toml file.
+The paths to the build inputs must be configured in the .app.toml file.
 `
 
-var sourcesCmd = &cobra.Command{
-	Use:   "sources [<APP-NAME>|<PATH>]",
+var inputsCmd = &cobra.Command{
+	Use:   "inputs [<APP-NAME>|<PATH>]",
 	Args:  cobra.ExactArgs(1),
-	Short: "list source files of an application",
-	Long:  strings.TrimSpace(sourcesLongHelp),
-	Run:   sources,
+	Short: "list build inputs of an application",
+	Long:  strings.TrimSpace(inputsLongHelp),
+	Run:   inputs,
 }
 
-func sources(cmd *cobra.Command, args []string) {
+func inputs(cmd *cobra.Command, args []string) {
 	var alLFiles []baur.BuildInput
 
 	rep := mustFindRepository()
 	app := mustArgToApp(rep, args[0])
 
-	if len(app.SourcePaths) == 0 {
-		log.Fatalf("No source files have been configured in the %s file of %s\n", baur.AppCfgFile, app.Name)
+	if len(app.BuildInputPaths) == 0 {
+		log.Fatalf("No build inputs have been configured in the %s file of %s\n", baur.AppCfgFile, app.Name)
 	}
 
-	for _, s := range app.SourcePaths {
+	for _, s := range app.BuildInputPaths {
 		paths, err := s.Resolve()
 		if err != nil {
-			log.Fatalln("resolving source paths failed:", err)
+			log.Fatalln("resolving build input paths failed:", err)
 		}
 
 		alLFiles = append(alLFiles, paths...)
@@ -59,7 +59,7 @@ func sources(cmd *cobra.Command, args []string) {
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	for _, p := range alLFiles {
-		if !sourcesShowDigest {
+		if !inputsShowDigest {
 			fmt.Fprintf(tw, "%s\n", p)
 			continue
 		}

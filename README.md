@@ -14,7 +14,6 @@ baur will implement:
 - detect if build artifacts for an application version already exist or if it's
   need to be build
 
-
 Baur makes certain Assumptions:
 - an application directory only contains one application,
 - an application can be build by running a single command,
@@ -26,7 +25,7 @@ To build the application run `make`
 
 ## Dependencies
 - To make use of git specify functionality like using the `$GITCOMMIT` variable
-    and `[GitSourceFiles]` directive in config files,  the git commandline tools
+    and `[Build.Input.GitFiles]` directive in config files,  the git commandline tools
     must be installed and findable via the `$PATH` environment variable.
 
 ## Configuration
@@ -36,11 +35,12 @@ To build the application run `make`
 
 2. Adapt the configuration files to your needs:
    - Add paths containing your applications to the `application_dirs` parameter.
-   - set the build_command to a command that when it's run in your application
-	 directories, produces build artifacts like a docker container or a tar
-	 archives.
-   - set the `postgresql_url` to a valid connection string to a database that will
-    store informations about builds and aritfacts.
+   - set the `command`  parameter in the `Build` section to the  command that
+     should be run to build your application
+     directories, produces build artifacts like a docker container or a tar
+     archives.
+   - set the `postgresql_url` to a valid connection string to a database that
+     will store informations about builds, it's inputs and artifacts.
     If you do not want to store the password of your database user in the
     `baur.toml` file. You can also put in your `.pgpass` file
     (https://www.postgresql.org/docs/9.3/static/libpq-pgpass.html).
@@ -51,50 +51,27 @@ To build the application run `make`
    file.
    Every application that is build via `baur` must have an `.app.toml` file.
 
-3. Specify in your `.app.toml` files the artifacts that are produced by builds
-   and where they should be uploaded to.
-   Baur supports uploading artifacts to S3 and docker containers to
-   hub.docker.com.
-   Authentication information for artifact repositories are read from
-   environment variables. S3 configuration parameters are the same
-   then for the aws CLI tool. See
-   https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
-
-   The credentials for the hub.docker.com registry can be specified by setting
-   the `DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
-   `DOCKER_PASSWORD` can be the cleartext password or a valid authentication
-   token.
+3. Specify in your `.app.toml` files the inputs and outputs of builds.
 
 ### Application configs (`app.toml`)
-The `dest_file` parameter in the `[[DockerArtifact]]` sections and the `tags`
-parameter of `[[S3Artifact]]` sections support variables in their values.
-The variables are replaced by baur during a run.
-
-The following variables are supported:
-- `$APPNAME` - is replaced with the name of the application
-- `$UUID` - is replaced with a generated UUID
-- `$GITCOMMIT` - is replaced with the current Git commit ID.
-                 The `.baur.toml` file must be part of a git repository and the
-                 `git` command must be in one of the directories in the `$PATH`
-                 environment variable.
-
-#### Application Sources
+#### Build Inputs
 To enable baur to reliably detect if an application needs to be rebuild, it
-tracks all influencing factor of a build. This can be:
-The artifacts that an application build produces change when:
+tracks all influencing factors as build inputs.
+Things that can change the output of an build can be e.g.:
 - build flags change
-- the source files change,
-- the build tools change (e.g. update to a newer gcc version).
+- source file change,
+- the build tools change (e.g. update to a newer gcc version),
+- a docker image changes that is used to build the application
 
-It's important that the list is complete. Otherwise it happens that baur won't
-rebuild an application despite it changed.
+It's important that the list of build inputs and outputs is complete. Otherwise
+it happens that baur won't rebuild an application despite it changed.
 
-Those sources must be configured per application in the `app.toml` file with the
+Build Inputs must be configured per application in the `app.toml` file with the
 following directives
 
-##### `[GitSourceFiles]`
-It's the preferred way to specify sources by files:
-- it's faster for large directories then `[SourceFiles]`,
+##### `[Build.Input.GitFiles]`
+It's the preferred way to specify input files:
+- it's faster for large directories then `[Build.Input.Files]`,
 - it ignores untracked files like temporary build files that are in the
     repository and probably not affect the build result,
 
@@ -105,7 +82,7 @@ application directory.
 It only matches files that are tracked by the git repository. Untracked files
 are ignored. Modified tracked files are considered.
 
-##### `[SourceFiles]`
+##### `[Build.Input.Files]`
 Has a `paths` parameter that accepts a list of glob paths to source files.
 
 To make it easier to track changes in the build environment it's advised to
@@ -115,12 +92,39 @@ build application in docker containers and define the docker image as Source
 (depending if an application needs to be rebuild because it sources changed is
 not implemented yet)
 
-##### `[[DockerSource]]`
+##### `[[Build.Input.DockerImages]]`
 Specifies a docker image as build input. This can be for example the docker
 image in that the application is build.
 It's identified by manifest digest to ensure that it is unambiguous.
 The digest for a docker image can be retrieved by e.g.
 `docker images --digests`.
+
+### Build Outputs
+Build outputs are the results that are produced by a build. They can be
+described in the `[Build.Output]` section.
+Baur supports to upload build results to S3 and docker images to a remote docker
+repository.
+Authentication information for output repositories are read from
+environment variables. S3 configuration parameters are the same then for the
+aws CLI tool. See
+https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
+The credentials for the hub.docker.com registry can be specified by setting
+the `DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
+`DOCKER_PASSWORD` can be the cleartext password or a valid authentication
+token.
+
+The `dest_file` parameter in the `[Build.Output.File.S3Upload]` sections and the
+`tag` parameter of `[Build.Output.DockerImage.RegistryUpload]` sections support
+variables in their values.
+The variables are replaced by baur during a run.
+
+The following variables are supported:
+- `$APPNAME` - is replaced with the name of the application
+- `$UUID` - is replaced with a generated UUID
+- `$GITCOMMIT` - is replaced with the current Git commit ID.
+                 The `.baur.toml` file must be part of a git repository and the
+                 `git` command must be in one of the directories in the `$PATH`
+                 environment variable.
 
 ## Examples
 - List all applications in the repository:
@@ -129,8 +133,8 @@ The digest for a docker image can be retrieved by e.g.
   `baur build --upload all`
 - Show informations about an application called `currency-service`:
   `baur show currency-service`
-- Show source files of an application called `claim-service`:
-  `baur sources claim-server`
+- Show inputs of an application called `claim-service` with their digests:
+  `baur inputs --digest claim-server`
 
 ## Development
 ### Create new Release

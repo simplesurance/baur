@@ -13,12 +13,12 @@ import (
 
 // App represents an application
 type App struct {
-	Dir         string
-	Name        string
-	BuildCmd    string
-	Repository  *Repository
-	Artifacts   []Artifact
-	SourcePaths []SrcResolver
+	Dir             string
+	Name            string
+	BuildCmd        string
+	Repository      *Repository
+	Outputs         []BuildOutput
+	BuildInputPaths []BuildInputPathResolver
 }
 
 func replaceUUIDvar(in string) string {
@@ -38,61 +38,61 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 	return strings.Replace(in, "$GITCOMMIT", commitID, -1), nil
 }
 
-func (a *App) setSourcesFromCfg(cfg *cfg.App) error {
-	sliceLen := len(cfg.SourceFiles.Paths) + len(cfg.DockerSource)
-	if len(cfg.GitSourceFiles.Paths) > 0 {
+func (a *App) setInputsFromCfg(cfg *cfg.App) error {
+	sliceLen := len(cfg.Build.Input.Files.Paths) + len(cfg.Build.Input.DockerImage)
+	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
 		sliceLen++
 	}
 
-	a.SourcePaths = make([]SrcResolver, 0, sliceLen)
+	a.BuildInputPaths = make([]BuildInputPathResolver, 0, sliceLen)
 
-	for _, p := range cfg.SourceFiles.Paths {
-		a.SourcePaths = append(a.SourcePaths, NewFileSrc(a.Dir, p))
+	for _, p := range cfg.Build.Input.Files.Paths {
+		a.BuildInputPaths = append(a.BuildInputPaths, NewFileGlobPath(a.Dir, p))
 	}
 
-	if len(cfg.GitSourceFiles.Paths) > 0 {
-		a.SourcePaths = append(a.SourcePaths, NewGitPaths(a.Dir, cfg.GitSourceFiles.Paths))
+	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
+		a.BuildInputPaths = append(a.BuildInputPaths, NewGitPaths(a.Dir, cfg.Build.Input.GitFiles.Paths))
 	}
 
-	for _, d := range cfg.DockerSource {
-		a.SourcePaths = append(a.SourcePaths, &DockerSrc{Repository: d.Repository, Digest: d.Digest})
+	for _, d := range cfg.Build.Input.DockerImage {
+		a.BuildInputPaths = append(a.BuildInputPaths, &DockerImageRef{Repository: d.Repository, Digest: d.Digest})
 	}
 
 	return nil
 }
 
-func (a *App) setDockerArtifactsFromCfg(cfg *cfg.App) error {
-	for _, ar := range cfg.DockerArtifact {
-		tag, err := replaceGitCommitVar(ar.Tag, a.Repository)
+func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
+	for _, di := range cfg.Build.Output.DockerImage {
+		tag, err := replaceGitCommitVar(di.RegistryUpload.Tag, a.Repository)
 		if err != nil {
 			return errors.Wrap(err, "replacing $GITCOMMIT in tag failed")
 		}
 
 		tag = replaceUUIDvar(tag)
 
-		a.Artifacts = append(a.Artifacts, &DockerArtifact{
-			ImageIDFile: path.Join(a.Dir, ar.IDFile),
+		a.Outputs = append(a.Outputs, &DockerArtifact{
+			ImageIDFile: path.Join(a.Dir, di.IDFile),
 			Tag:         tag,
-			Repository:  ar.Repository,
+			Repository:  di.RegistryUpload.Repository,
 		})
 	}
 
 	return nil
 }
 
-func (a *App) setS3ArtifactsFromCFG(cfg *cfg.App) error {
-	for _, ar := range cfg.S3Artifact {
-		destFile, err := replaceGitCommitVar(ar.DestFile, a.Repository)
+func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
+	for _, f := range cfg.Build.Output.File {
+		destFile, err := replaceGitCommitVar(f.S3Upload.DestFile, a.Repository)
 		if err != nil {
 			return errors.Wrap(err, "replacing $GITCOMMIT in dest_file failed")
 		}
 		destFile = replaceUUIDvar(replaceAppNameVar(destFile, a.Name))
 
-		url := "s3://" + ar.Bucket + "/" + destFile
+		url := "s3://" + f.S3Upload.Bucket + "/" + destFile
 
-		a.Artifacts = append(a.Artifacts, &FileArtifact{
-			RelPath:   ar.Path,
-			Path:      path.Join(a.Dir, ar.Path),
+		a.Outputs = append(a.Outputs, &FileArtifact{
+			RelPath:   f.Path,
+			Path:      path.Join(a.Dir, f.Path),
 			DestFile:  destFile,
 			UploadURL: url,
 		})
@@ -120,23 +120,23 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		Repository: repository,
 		Dir:        path.Dir(cfgPath),
 		Name:       cfg.Name,
-		BuildCmd:   cfg.BuildCommand,
+		BuildCmd:   cfg.Build.Command,
 	}
 
 	if len(app.BuildCmd) == 0 {
 		app.BuildCmd = repository.DefaultBuildCmd
 	}
 
-	if err := app.setDockerArtifactsFromCfg(cfg); err != nil {
-		return nil, errors.Wrap(err, "processing docker artifact declarations failed")
+	if err := app.setDockerOutputsFromCfg(cfg); err != nil {
+		return nil, errors.Wrap(err, "processing docker output declarations failed")
 	}
 
-	if err := app.setS3ArtifactsFromCFG(cfg); err != nil {
-		return nil, errors.Wrap(err, "processing S3 artifact declarations failed")
+	if err := app.setFileOutputsFromCFG(cfg); err != nil {
+		return nil, errors.Wrap(err, "processing S3 output declarations failed")
 	}
 
-	if err := app.setSourcesFromCfg(cfg); err != nil {
-		return nil, errors.Wrap(err, "processing Sources declarations failed")
+	if err := app.setInputsFromCfg(cfg); err != nil {
+		return nil, errors.Wrap(err, "processing Input declarations failed")
 	}
 
 	return &app, nil

@@ -152,7 +152,7 @@ func Test_Resolve(t *testing.T) {
 
 		createFiles(t, tempdir, tc.files)
 
-		fs := NewFileSrc(tempdir, tc.fileSrcGlobPath)
+		fs := NewFileGlobPath(tempdir, tc.fileSrcGlobPath)
 		resolvedFiles, err := fs.Resolve()
 		if err != nil {
 			t.Fatal("resolving glob path:", err)

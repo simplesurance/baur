@@ -7,24 +7,24 @@ import (
 	"github.com/simplesurance/baur/fs"
 )
 
-//FileSrc is Source file of an application represented by a glob path
+//FileGlobPath is Source file of an application represented by a glob path
 // TODO: rename it to FileGlobPath or similar?
-type FileSrc struct {
+type FileGlobPath struct {
 	baseDir  string
 	globPath string
 }
 
-// NewFileSrc returns a new FileSrc object
-func NewFileSrc(baseDir, glob string) *FileSrc {
-	return &FileSrc{
+// NewFileGlobPath returns a new FileGlobPath object
+func NewFileGlobPath(baseDir, glob string) *FileGlobPath {
+	return &FileGlobPath{
 		baseDir:  baseDir,
 		globPath: glob,
 	}
 }
 
 // Resolve returns a list of files that are matching the glob path of the
-// FileSrc
-func (f *FileSrc) Resolve() ([]BuildInput, error) {
+// FileGlobPath
+func (f *FileGlobPath) Resolve() ([]BuildInput, error) {
 	absGlobPath := filepath.Join(f.baseDir, f.globPath)
 
 	paths, err := fs.Glob(absGlobPath)

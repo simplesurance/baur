@@ -7,24 +7,24 @@ import (
 	"github.com/simplesurance/baur/digest"
 )
 
-// ArtifactType describes the type of an artifact
-type ArtifactType string
+// OutputType describes the type of an artifact
+type OutputType string
 
 const (
-	//DockerArtifact is a docker container artifact
-	DockerArtifact ArtifactType = "docker"
-	//S3Artifact is a file artifact stored on S3
-	S3Artifact ArtifactType = "s3"
+	//DockerOutput is a docker container artifact
+	DockerOutput OutputType = "docker"
+	//S3Output is a file artifact stored on S3
+	S3Output OutputType = "s3"
 )
 
 // Build represents a stored build
 type Build struct {
-	AppName        string
-	StartTimeStamp time.Time
-	StopTimeStamp  time.Time
-	Artifacts      []*Artifact
-	TotalSrcDigest string
-	Sources        []*Source
+	AppName          string
+	StartTimeStamp   time.Time
+	StopTimeStamp    time.Time
+	TotalInputDigest string
+	Outputs          []*Output
+	Inputs           []*Input
 }
 
 // AppNameLower returns the app of the name in lowercase
@@ -32,18 +32,18 @@ func (b *Build) AppNameLower() string {
 	return strings.ToLower(b.AppName)
 }
 
-// Artifact represents a stored artifact
-type Artifact struct {
+// Output represents a build output
+type Output struct {
 	Name           string
-	Type           ArtifactType
+	Type           OutputType
 	URI            string
 	Digest         digest.Digest
 	SizeBytes      int64
 	UploadDuration time.Duration
 }
 
-// Source represents a source of an artifact
-type Source struct {
+// Input represents a source of an artifact
+type Input struct {
 	URL    string
 	Digest string
 }

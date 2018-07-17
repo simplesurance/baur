@@ -1,6 +1,6 @@
 CREATE TABLE application (
 	id SERIAL PRIMARY KEY,
-	application_name TEXT NOT NULL UNIQUE
+	name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE build (
@@ -11,37 +11,37 @@ CREATE TABLE build (
 	total_src_digest TEXT
 );
 
-CREATE TABLE artifact (
+CREATE TABLE output (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
 	type TEXT,
 	digest TEXT,
 	size_bytes integer,
-	CONSTRAINT artifact_uniq UNIQUE(name, digest, size_bytes)
+	CONSTRAINT output_uniq UNIQUE(name, digest, size_bytes)
 );
 
-CREATE TABLE artifact_build (
+CREATE TABLE output_build (
 	build_id integer REFERENCES build (id) NOT NULL,
-	artifact_id integer REFERENCES artifact (id) NOT NULL
-	CONSTRAINT artifact_build_uniq UNIQUE(build_id, artifact_id)
+	output_id integer REFERENCES output (id) NOT NULL,
+	CONSTRAINT output_build_uniq UNIQUE(build_id, output_id)
 );
 
 CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
-	artifact_id integer REFERENCES artifact (id) NOT NULL,
+	output_id integer REFERENCES output (id) NOT NULL,
 	uri TEXT, /* TODO: should this be unique? */
 	upload_duration_msec integer
 );
 
-CREATE TABLE source (
+CREATE TABLE input (
 	id SERIAL PRIMARY KEY,
 	relative_path TEXT NOT NULL,
 	digest TEXT NOT NULL,
-	CONSTRAINT source_uniq UNIQUE(relative_path, digest)
+	CONSTRAINT input_uniq UNIQUE(relative_path, digest)
 );
 
-CREATE TABLE source_build (
+CREATE TABLE input_build (
 	build_id integer REFERENCES build (id),
-	source_id integer REFERENCES source(id)
-	CONSTRAINT source_build_uniq UNIQUE(build_id, source_id)
+	input_id integer REFERENCES input(id),
+	CONSTRAINT input_build_uniq UNIQUE(build_id, input_id)
 );

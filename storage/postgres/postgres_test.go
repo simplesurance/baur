@@ -60,28 +60,28 @@ func TestSave(t *testing.T) {
 		AppName:        "baur-unittest",
 		StartTimeStamp: start,
 		StopTimeStamp:  end,
-		Artifacts: []*storage.Artifact{
-			&storage.Artifact{
+		Outputs: []*storage.Output{
+			&storage.Output{
 				Name:           "baur-unittest/dist/artifact.tar.xz",
-				Type:           storage.S3Artifact,
+				Type:           storage.S3Output,
 				URI:            "http://test.de",
 				Digest:         digest.Digest{Algorithm: digest.SHA256, Sum: "123"},
 				SizeBytes:      64,
 				UploadDuration: time.Duration(5 * time.Second),
 			},
 		},
-		Sources: []*storage.Source{
-			&storage.Source{
+		Inputs: []*storage.Input{
+			&storage.Input{
 				Digest: "890",
 				URL:    "file://baur-unittest/file1.xyz",
 			},
 
-			&storage.Source{
+			&storage.Input{
 				Digest: "a3",
 				URL:    "file://baur-unittest/file2.xyz",
 			},
 		},
-		TotalSrcDigest: "123",
+		TotalInputDigest: "123",
 	}
 
 	err = c.Save(&b)

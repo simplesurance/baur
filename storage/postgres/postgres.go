@@ -52,7 +52,7 @@ func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 
 	var id int
 
-	r := tx.QueryRow(stmt, appID, b.StartTimeStamp, b.StopTimeStamp, b.TotalSrcDigest)
+	r := tx.QueryRow(stmt, appID, b.StartTimeStamp, b.StopTimeStamp, b.TotalInputDigest)
 
 	if err := r.Scan(&id); err != nil {
 		return -1, err
@@ -61,16 +61,16 @@ func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 	return id, nil
 }
 
-func insertArtifactIfNotExist(tx *sql.Tx, a *storage.Artifact) (int, error) {
+func insertOutputIfNotExist(tx *sql.Tx, a *storage.Output) (int, error) {
 	const insertStmt = `
-	INSERT INTO artifact
+	INSERT INTO output
 	(name, type, digest, size_bytes)
 	VALUES($1, $2, $3, $4)
 	RETURNING id;
 	`
 
 	const selectStmt = `
-	SELECT id FROM artifact 
+	SELECT id FROM input 
 	WHERE name = $1 AND digest = $2 AND size_bytes = $3;
 	`
 
@@ -79,10 +79,10 @@ func insertArtifactIfNotExist(tx *sql.Tx, a *storage.Artifact) (int, error) {
 		selectStmt, []interface{}{a.Name, a.Digest.String(), a.SizeBytes})
 }
 
-func insertSourceBuild(tx *sql.Tx, buildID, sourceID int) error {
-	const stmt = "INSERT into source_build VALUES($1, $2)"
+func insertInputBuild(tx *sql.Tx, buildID, inputID int) error {
+	const stmt = "INSERT into input_build VALUES($1, $2)"
 
-	_, err := tx.Exec(stmt, buildID, sourceID)
+	_, err := tx.Exec(stmt, buildID, inputID)
 
 	return err
 }
@@ -117,22 +117,22 @@ func insertIfNotExist(
 
 	r = tx.QueryRow(selectStmt, selectArgs...)
 	if err := r.Scan(&id); err != nil {
-		return -1, errors.Wrapf(err, "selecting source record failed after insert failed: %s", insertErr)
+		return -1, errors.Wrapf(err, "selecting input record failed after insert failed: %s", insertErr)
 	}
 
 	return id, nil
 }
 
-func insertSourceIfNotExist(tx *sql.Tx, s *storage.Source) (int, error) {
+func insertInputIfNotExist(tx *sql.Tx, s *storage.Input) (int, error) {
 	const insertStmt = `
-	INSERT INTO source
+	INSERT INTO input
 	(relative_path, digest)
 	VALUES($1, $2)
 	RETURNING id;
 	`
 
 	const selectStmt = `
-	SELECT id FROM source
+	SELECT id FROM output
 	WHERE relative_path = $1 AND digest = $2;
 	`
 
@@ -144,49 +144,49 @@ func insertSourceIfNotExist(tx *sql.Tx, s *storage.Source) (int, error) {
 func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 	const insertStmt = `
 	INSERT INTO application
-	(application_name)
+	(name)
 	VALUES($1)
 	RETURNING id;
 	`
-	const selectStmt = "SELECT id FROM application WHERE application_name = $1;"
+	const selectStmt = "SELECT id FROM application WHERE name = $1;"
 
 	return insertIfNotExist(tx,
 		insertStmt, []interface{}{appName},
 		selectStmt, []interface{}{appName})
 }
 
-func insertArtifactBuild(tx *sql.Tx, buildID, artifactID int) error {
-	const stmt = "INSERT into artifact_build VALUES($1, $2)"
+func insertOutputBuild(tx *sql.Tx, buildID, outputID int) error {
+	const stmt = "INSERT into output_build VALUES($1, $2)"
 
-	_, err := tx.Exec(stmt, buildID, artifactID)
+	_, err := tx.Exec(stmt, buildID, outputID)
 
 	return err
 }
 
-func insertUpload(tx *sql.Tx, artifactID int, url string, uploadDuration time.Duration) error {
+func insertUpload(tx *sql.Tx, outputID int, url string, uploadDuration time.Duration) error {
 	const stmt = `
 	INSERT into upload
-	(artifact_id, uri, upload_duration_msec)
+	(output_id, uri, upload_duration_msec)
 	VALUES($1, $2, $3)
 	RETURNING id
 	`
 
-	_, err := tx.Exec(stmt, artifactID, url, uploadDuration/time.Millisecond)
+	_, err := tx.Exec(stmt, outputID, url, uploadDuration/time.Millisecond)
 	return err
 }
 
-func saveArtifact(tx *sql.Tx, buildID int, a *storage.Artifact) error {
-	artifactID, err := insertArtifactIfNotExist(tx, a)
+func saveOutput(tx *sql.Tx, buildID int, a *storage.Output) error {
+	outputID, err := insertOutputIfNotExist(tx, a)
 	if err != nil {
-		return errors.Wrap(err, "storing artifact record failed")
+		return errors.Wrap(err, "storing output record failed")
 	}
 
-	err = insertArtifactBuild(tx, buildID, artifactID)
+	err = insertOutputBuild(tx, buildID, outputID)
 	if err != nil {
-		return errors.Wrap(err, "storing artifact_build record failed")
+		return errors.Wrap(err, "storing output_build record failed")
 	}
 
-	err = insertUpload(tx, artifactID, a.URI, a.UploadDuration)
+	err = insertUpload(tx, outputID, a.URI, a.UploadDuration)
 	if err != nil {
 		return errors.Wrap(err, "storing upload record failed")
 	}
@@ -219,21 +219,21 @@ func (c *Client) Save(b *storage.Build) error {
 		return errors.Wrap(err, "storing build record failed")
 	}
 
-	for _, a := range b.Artifacts {
-		if err := saveArtifact(tx, buildID, a); err != nil {
+	for _, a := range b.Outputs {
+		if err := saveOutput(tx, buildID, a); err != nil {
 			return err
 		}
 	}
 
-	for _, s := range b.Sources {
-		sourceID, err := insertSourceIfNotExist(tx, s)
+	for _, s := range b.Inputs {
+		inputID, err := insertInputIfNotExist(tx, s)
 		if err != nil {
-			return errors.Wrap(err, "storing source record failed")
+			return errors.Wrap(err, "storing input record failed")
 		}
 
-		err = insertSourceBuild(tx, buildID, sourceID)
+		err = insertInputBuild(tx, buildID, inputID)
 		if err != nil {
-			return errors.Wrap(err, "storing source_build failed")
+			return errors.Wrap(err, "storing input_build failed")
 		}
 	}
 

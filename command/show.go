@@ -56,14 +56,14 @@ func showApplicationInformation(app *baur.App) {
 	fmt.Fprintf(tw, "Directory:\t%s\n", app.Dir)
 	fmt.Fprintf(tw, "Build Command:\t%s\n", app.BuildCmd)
 
-	if len(app.Artifacts) == 0 {
-		fmt.Fprintf(tw, "Artifacts:-None-\n")
+	if len(app.Outputs) == 0 {
+		fmt.Fprintf(tw, "Outputs: -None-\n")
 	} else {
-		fmt.Fprintf(tw, "Artifacts:\t\n")
-		for i, art := range app.Artifacts {
+		fmt.Fprintf(tw, "Outputs:\t\n")
+		for i, art := range app.Outputs {
 			fmt.Fprintf(tw, "\tLocal:\t%s\n", art.LocalPath())
 			fmt.Fprintf(tw, "\tRemote:\t%s\n", art.UploadDestination())
-			if i < len(app.Artifacts)-1 {
+			if i < len(app.Outputs)-1 {
 				fmt.Fprintf(tw, "\t\t\n")
 			}
 		}

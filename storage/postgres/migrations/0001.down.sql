@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS application, build, artifact, artifact_build, upload, source, source_build;
+DROP TABLE IF EXISTS application, build, output, output_build, upload, input, input_build;
