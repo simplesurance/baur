@@ -23,6 +23,7 @@ CREATE TABLE artifact (
 CREATE TABLE artifact_build (
 	build_id integer REFERENCES build (id) NOT NULL,
 	artifact_id integer REFERENCES artifact (id) NOT NULL
+	CONSTRAINT artifact_build_uniq UNIQUE(build_id, artifact_id)
 );
 
 CREATE TABLE upload (
@@ -42,4 +43,5 @@ CREATE TABLE source (
 CREATE TABLE source_build (
 	build_id integer REFERENCES build (id),
 	source_id integer REFERENCES source(id)
+	CONSTRAINT source_build_uniq UNIQUE(build_id, source_id)
 );
