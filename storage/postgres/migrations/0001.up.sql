@@ -35,9 +35,9 @@ CREATE TABLE upload (
 
 CREATE TABLE input (
 	id SERIAL PRIMARY KEY,
-	relative_path TEXT NOT NULL,
+	url TEXT NOT NULL,
 	digest TEXT NOT NULL,
-	CONSTRAINT input_uniq UNIQUE(relative_path, digest)
+	CONSTRAINT input_uniq UNIQUE(url, digest)
 );
 
 CREATE TABLE input_build (

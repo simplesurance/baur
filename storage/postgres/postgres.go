@@ -126,14 +126,14 @@ func insertIfNotExist(
 func insertInputIfNotExist(tx *sql.Tx, s *storage.Input) (int, error) {
 	const insertStmt = `
 	INSERT INTO input
-	(relative_path, digest)
+	(url, digest)
 	VALUES($1, $2)
 	RETURNING id;
 	`
 
 	const selectStmt = `
 	SELECT id FROM output
-	WHERE relative_path = $1 AND digest = $2;
+	WHERE url = $1 AND digest = $2;
 	`
 
 	return insertIfNotExist(tx,
