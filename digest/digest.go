@@ -1,9 +1,11 @@
 package digest
 
 import (
-	"errors"
 	"fmt"
+	"math/big"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Algorithm describes the digest algorithm
@@ -32,32 +34,49 @@ func (t Algorithm) String() string {
 
 // Digest contains a checksum
 type Digest struct {
-	Sum       string
+	Sum       big.Int
 	Algorithm Algorithm
 }
 
 // String returns '<Algorithm>:<checksum>'
 func (d *Digest) String() string {
-	return fmt.Sprintf("%s:%s", d.Algorithm, d.Sum)
+	return fmt.Sprintf("%s:%s", d.Algorithm, d.Sum.Text(16))
 }
 
 // FromString converts a "sha256:<hash> string to Digest
 func FromString(in string) (*Digest, error) {
+	var algorithm Algorithm
+
 	spl := strings.Split(strings.TrimSpace(in), ":")
 	if len(spl) != 2 {
 		return nil, errors.New("invalid format, must contain exactly 1 ':'")
 	}
 
-	if spl[0] != "sha256" {
+	switch a := strings.ToLower(spl[0]); a {
+	case "sha256":
+		if len(spl[1]) != 64 {
+			return nil, fmt.Errorf("hash length is %d, expected length 64", len(spl[1]))
+		}
+
+		algorithm = SHA256
+	case "sha384":
+		if len(spl[1]) != 96 {
+			return nil, fmt.Errorf("hash length is %d, expected length 96", len(spl[1]))
+		}
+
+		algorithm = SHA384
+	default:
 		return nil, errors.New("unsupported format %q")
 	}
 
-	if len(spl[1]) != 64 {
-		return nil, fmt.Errorf("hash length is %d, expected length 64", len(spl[1]))
+	sum := big.Int{}
+	_, err := fmt.Sscan("0x"+spl[1], &sum)
+	if err != nil {
+		return nil, errors.Wrap(err, "converting digest to big int failed")
 	}
 
 	return &Digest{
-		Sum:       spl[1],
-		Algorithm: SHA256,
+		Sum:       sum,
+		Algorithm: algorithm,
 	}, nil
 }

@@ -3,8 +3,6 @@ package storage
 import (
 	"strings"
 	"time"
-
-	"github.com/simplesurance/baur/digest"
 )
 
 // OutputType describes the type of an artifact
@@ -37,7 +35,7 @@ type Output struct {
 	Name           string
 	Type           OutputType
 	URI            string
-	Digest         digest.Digest
+	Digest         string
 	SizeBytes      int64
 	UploadDuration time.Duration
 }

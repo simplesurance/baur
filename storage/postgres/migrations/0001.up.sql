@@ -8,7 +8,7 @@ CREATE TABLE build (
 	application_id integer REFERENCES application (id),
 	start_timestamp timestamp with time zone,
 	stop_timestamp timestamp with time zone,
-	total_src_digest TEXT
+	total_input_digest TEXT
 );
 
 CREATE TABLE output (

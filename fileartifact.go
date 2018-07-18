@@ -2,9 +2,9 @@ package baur
 
 import (
 	"github.com/simplesurance/baur/digest"
+	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/upload"
-	"github.com/simplesurance/baur2/digest/file"
 )
 
 // FileArtifact is a file build artifact
@@ -50,7 +50,7 @@ func (f *FileArtifact) UploadDestination() string {
 
 // Digest returns the file digest
 func (f *FileArtifact) Digest() (*digest.Digest, error) {
-	return file.SHA256Digest(f.LocalPath())
+	return sha384.File(f.LocalPath())
 }
 
 // Size returns the size of the file in bytes

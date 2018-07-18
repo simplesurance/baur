@@ -46,7 +46,7 @@ func (c *Client) ListBuildsPerApp(appName string, maxResults int) ([]*storage.Bu
 func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 	const stmt = `
 	INSERT INTO build
-	(application_id, start_timestamp, stop_timestamp, total_src_digest)
+	(application_id, start_timestamp, stop_timestamp, total_input_digest)
 	VALUES($1, $2, $3, $4)
 	RETURNING id;`
 
@@ -75,8 +75,8 @@ func insertOutputIfNotExist(tx *sql.Tx, a *storage.Output) (int, error) {
 	`
 
 	return insertIfNotExist(tx,
-		insertStmt, []interface{}{a.Name, a.Type, a.Digest.String(), a.SizeBytes},
-		selectStmt, []interface{}{a.Name, a.Digest.String(), a.SizeBytes})
+		insertStmt, []interface{}{a.Name, a.Type, a.Digest, a.SizeBytes},
+		selectStmt, []interface{}{a.Name, a.Digest, a.SizeBytes})
 }
 
 func insertInputBuild(tx *sql.Tx, buildID, inputID int) error {

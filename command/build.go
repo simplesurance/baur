@@ -9,6 +9,8 @@ import (
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/build"
 	"github.com/simplesurance/baur/build/seq"
+	"github.com/simplesurance/baur/digest"
+	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/docker"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/prettyprint"
@@ -29,8 +31,9 @@ type uploadUserData struct {
 }
 
 type buildUserData struct {
-	App    *baur.App
-	Inputs []*storage.Input
+	App              *baur.App
+	Inputs           []*storage.Input
+	TotalInputDigest string
 }
 
 var result = map[string]*storage.Build{}
@@ -45,11 +48,11 @@ func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 	defer resultLock.Unlock()
 
 	b := storage.Build{
-		AppName:        bud.App.Name,
-		StartTimeStamp: r.StartTs,
-		StopTimeStamp:  r.StopTs,
-		Inputs:         bud.Inputs,
-		//TotalSrcHash: // TODO
+		AppName:          bud.App.Name,
+		StartTimeStamp:   r.StartTs,
+		StopTimeStamp:    r.StopTs,
+		Inputs:           bud.Inputs,
+		TotalInputDigest: bud.TotalInputDigest,
 	}
 
 	result[bud.App.Name] = &b
@@ -89,7 +92,7 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 		Type:           arType,
 		URI:            r.URL,
 		UploadDuration: r.Duration,
-		Digest:         *artDigest,
+		Digest:         artDigest.String(),
 	})
 }
 
@@ -181,34 +184,52 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 	buildJobs := make([]*build.Job, 0, len(apps))
 
 	for _, app := range apps {
+		var totalDigest string
+		inputDigests := []*digest.Digest{}
 		buildInputs := []*storage.Input{}
 
-		log.Debugf("%q: resolving build inputs and calculating digests...\n", app)
+		log.Debugf("%s: resolving build inputs and calculating digests...\n", app)
 		for _, bip := range app.BuildInputPaths {
 			inputs, err := bip.Resolve()
 			if err != nil {
-				log.Fatalf("%q: resolving build input paths failed: %s\n", app, err)
+				log.Fatalf("%s: resolving build input paths failed: %s\n", app, err)
 			}
 
+			// TODO: move calculating digests and resolving path to
+			// a separate function
 			for _, s := range inputs {
 				d, err := s.Digest()
 				if err != nil {
-					log.Fatalf("%q: calculating build input digest failed: %s\n", app, err)
+					log.Fatalf("%s: calculating build input digest failed: %s\n", app, err)
 				}
 
 				buildInputs = append(buildInputs, &storage.Input{
 					Digest: d.String(),
 					URL:    s.URL(),
 				})
+
+				inputDigests = append(inputDigests, d)
 			}
 		}
+
+		if len(inputDigests) > 0 {
+			td, err := sha384.Sum(inputDigests)
+			if err != nil {
+				log.Fatalln("calculating total input digest failed:", err)
+			}
+
+			totalDigest = td.String()
+		}
+
+		log.Debugf("%s: total input digest: %s\n", app, totalDigest)
 
 		buildJobs = append(buildJobs, &build.Job{
 			Directory: app.Path,
 			Command:   app.BuildCmd,
 			UserData: &buildUserData{
-				App:    app,
-				Inputs: buildInputs,
+				App:              app,
+				Inputs:           buildInputs,
+				TotalInputDigest: totalDigest,
 			},
 		})
 	}
@@ -275,7 +296,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 
 		complete, build := recordResultIsComplete(ud.App)
 		if complete {
-			log.Debugf("%q: storing build information in database\n", ud.App)
+			log.Debugf("%s: storing build information in database\n", ud.App)
 			if err := store.Save(build); err != nil {
 				log.Fatalf("storing build information about %q failed: %s", ud.App.Name, err)
 			}
