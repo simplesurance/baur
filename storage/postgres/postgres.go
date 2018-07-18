@@ -70,7 +70,7 @@ func insertOutputIfNotExist(tx *sql.Tx, a *storage.Output) (int, error) {
 	`
 
 	const selectStmt = `
-	SELECT id FROM input 
+	SELECT id FROM output
 	WHERE name = $1 AND digest = $2 AND size_bytes = $3;
 	`
 
@@ -132,7 +132,7 @@ func insertInputIfNotExist(tx *sql.Tx, s *storage.Input) (int, error) {
 	`
 
 	const selectStmt = `
-	SELECT id FROM output
+	SELECT id FROM input
 	WHERE url = $1 AND digest = $2;
 	`
 
