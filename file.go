@@ -10,17 +10,17 @@ import (
 
 // File represent a file
 type File struct {
-	rootDir string
-	relPath string
-	absPath string
+	repoRootPath string
+	relPath      string
+	absPath      string
 }
 
 // NewFile returns a new file
-func NewFile(rootDir, relPath string) *File {
+func NewFile(repoRootPath, relPath string) *File {
 	return &File{
-		rootDir: rootDir,
-		relPath: relPath,
-		absPath: filepath.Join(rootDir, relPath),
+		repoRootPath: repoRootPath,
+		relPath:      relPath,
+		absPath:      filepath.Join(repoRootPath, relPath),
 	}
 }
 
@@ -34,8 +34,8 @@ func (f *File) Path() string {
 	return f.absPath
 }
 
-// RelPath returns the relative path
-func (f *File) RelPath() string {
+// RepoRelPath returns the path relative to the baur repository
+func (f *File) RepoRelPath() string {
 	return f.relPath
 }
 
@@ -46,5 +46,5 @@ func (f *File) URL() string {
 
 // String returns it's string representation
 func (f *File) String() string {
-	return f.RelPath()
+	return f.Path()
 }

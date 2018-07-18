@@ -10,22 +10,24 @@ import (
 //FileGlobPath is Source file of an application represented by a glob path
 // TODO: rename it to FileGlobPath or similar?
 type FileGlobPath struct {
-	baseDir  string
-	globPath string
+	repositoryRootPath string
+	relAppPath         string
+	globPath           string
 }
 
 // NewFileGlobPath returns a new FileGlobPath object
-func NewFileGlobPath(baseDir, glob string) *FileGlobPath {
+func NewFileGlobPath(repositoryRootPath, relAppPath, glob string) *FileGlobPath {
 	return &FileGlobPath{
-		baseDir:  baseDir,
-		globPath: glob,
+		repositoryRootPath: repositoryRootPath,
+		relAppPath:         relAppPath,
+		globPath:           glob,
 	}
 }
 
 // Resolve returns a list of files that are matching the glob path of the
 // FileGlobPath
 func (f *FileGlobPath) Resolve() ([]BuildInput, error) {
-	absGlobPath := filepath.Join(f.baseDir, f.globPath)
+	absGlobPath := filepath.Join(f.repositoryRootPath, f.relAppPath, f.globPath)
 
 	paths, err := fs.Glob(absGlobPath)
 	if err != nil {
@@ -38,12 +40,12 @@ func (f *FileGlobPath) Resolve() ([]BuildInput, error) {
 
 	res := make([]BuildInput, 0, len(paths))
 	for _, p := range paths {
-		relPath, err := filepath.Rel(f.baseDir, p)
+		relPath, err := filepath.Rel(f.repositoryRootPath, p)
 		if err != nil {
-			return nil, errors.Wrapf(err, "converting %q to relpath with basedir %q failed", p, f.baseDir)
+			return nil, errors.Wrapf(err, "converting %q to relpath with basedir %q failed", p, f.repositoryRootPath)
 		}
 
-		res = append(res, NewFile(f.baseDir, relPath))
+		res = append(res, NewFile(f.repositoryRootPath, relPath))
 	}
 
 	return res, nil

@@ -34,9 +34,9 @@ func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedBuildInput 
 	}
 
 	for _, e := range resolvedFiles {
-		if !strtest.InSlice(tc.expectedMatches, e.RelPath()) {
+		if !strtest.InSlice(tc.expectedMatches, e.RepoRelPath()) {
 			t.Errorf("%q (%q) was returned but is not in expected return slice (%+v), testcase: %+v",
-				e, e.RelPath(), tc.expectedMatches, tc)
+				e, e.RepoRelPath(), tc.expectedMatches, tc)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func Test_Resolve(t *testing.T) {
 
 		createFiles(t, tempdir, tc.files)
 
-		fs := NewFileGlobPath(tempdir, tc.fileSrcGlobPath)
+		fs := NewFileGlobPath(tempdir, ".", tc.fileSrcGlobPath)
 		resolvedFiles, err := fs.Resolve()
 		if err != nil {
 			t.Fatal("resolving glob path:", err)

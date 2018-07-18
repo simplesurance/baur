@@ -29,7 +29,7 @@ func lsCSV(apps []*baur.App) {
 	csvw := csv.NewWriter(os.Stdout)
 
 	for _, a := range apps {
-		csvw.Write([]string{a.Name, a.Dir})
+		csvw.Write([]string{a.Name, a.Path})
 	}
 	csvw.Flush()
 }
@@ -60,7 +60,7 @@ func ls(cmd *cobra.Command, args []string) {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintf(tw, "# Name\tDirectory\n")
 	for _, a := range apps {
-		fmt.Fprintf(tw, "%s\t%s\n", a.Name, a.Dir)
+		fmt.Fprintf(tw, "%s\t%s\n", a.Name, a.Path)
 	}
 	tw.Flush()
 

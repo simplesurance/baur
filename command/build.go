@@ -204,7 +204,7 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 		}
 
 		buildJobs = append(buildJobs, &build.Job{
-			Directory: app.Dir,
+			Directory: app.Path,
 			Command:   app.BuildCmd,
 			UserData: &buildUserData{
 				App:    app,

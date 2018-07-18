@@ -2,6 +2,7 @@ package baur
 
 import (
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -13,7 +14,8 @@ import (
 
 // App represents an application
 type App struct {
-	Dir             string
+	RelPath         string
+	Path            string
 	Name            string
 	BuildCmd        string
 	Repository      *Repository
@@ -38,7 +40,7 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 	return strings.Replace(in, "$GITCOMMIT", commitID, -1), nil
 }
 
-func (a *App) setInputsFromCfg(cfg *cfg.App) error {
+func (a *App) setInputsFromCfg(r *Repository, cfg *cfg.App) error {
 	sliceLen := len(cfg.Build.Input.Files.Paths) + len(cfg.Build.Input.DockerImage)
 	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
 		sliceLen++
@@ -47,11 +49,12 @@ func (a *App) setInputsFromCfg(cfg *cfg.App) error {
 	a.BuildInputPaths = make([]BuildInputPathResolver, 0, sliceLen)
 
 	for _, p := range cfg.Build.Input.Files.Paths {
-		a.BuildInputPaths = append(a.BuildInputPaths, NewFileGlobPath(a.Dir, p))
+		a.BuildInputPaths = append(a.BuildInputPaths, NewFileGlobPath(r.Path, a.RelPath, p))
 	}
 
 	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
-		a.BuildInputPaths = append(a.BuildInputPaths, NewGitPaths(a.Dir, cfg.Build.Input.GitFiles.Paths))
+		a.BuildInputPaths = append(a.BuildInputPaths,
+			NewGitPaths(r.Path, a.RelPath, cfg.Build.Input.GitFiles.Paths))
 	}
 
 	for _, d := range cfg.Build.Input.DockerImage {
@@ -71,7 +74,7 @@ func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
 		tag = replaceUUIDvar(tag)
 
 		a.Outputs = append(a.Outputs, &DockerArtifact{
-			ImageIDFile: path.Join(a.Dir, di.IDFile),
+			ImageIDFile: path.Join(a.Path, di.IDFile),
 			Tag:         tag,
 			Repository:  di.RegistryUpload.Repository,
 		})
@@ -92,7 +95,7 @@ func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 
 		a.Outputs = append(a.Outputs, &FileArtifact{
 			RelPath:   f.Path,
-			Path:      path.Join(a.Dir, f.Path),
+			Path:      path.Join(a.Path, f.Path),
 			DestFile:  destFile,
 			UploadURL: url,
 		})
@@ -116,9 +119,16 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 			cfgPath)
 	}
 
+	appAbsPath := path.Dir(cfgPath)
+	appRelPath, err := filepath.Rel(repository.Path, appAbsPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "resolving repository relative application path failed")
+	}
+
 	app := App{
 		Repository: repository,
-		Dir:        path.Dir(cfgPath),
+		Path:       path.Dir(cfgPath),
+		RelPath:    appRelPath,
 		Name:       cfg.Name,
 		BuildCmd:   cfg.Build.Command,
 	}
@@ -135,8 +145,8 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		return nil, errors.Wrap(err, "processing S3 output declarations failed")
 	}
 
-	if err := app.setInputsFromCfg(cfg); err != nil {
-		return nil, errors.Wrap(err, "processing Input declarations failed")
+	if err := app.setInputsFromCfg(repository, cfg); err != nil {
+		return nil, errors.Wrap(err, "processing input declarations failed")
 	}
 
 	return &app, nil

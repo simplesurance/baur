@@ -45,7 +45,7 @@ func showRepositoryInformation(rep *baur.Repository) {
 
 func showApplicationInformation(app *baur.App) {
 	if showPrintPathOnly {
-		fmt.Println(app.Dir)
+		fmt.Println(app.Path)
 		return
 	}
 
@@ -53,7 +53,7 @@ func showApplicationInformation(app *baur.App) {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(tw, "Name:\t%s\n", app.Name)
-	fmt.Fprintf(tw, "Directory:\t%s\n", app.Dir)
+	fmt.Fprintf(tw, "Directory:\t%s\n", app.Path)
 	fmt.Fprintf(tw, "Build Command:\t%s\n", app.BuildCmd)
 
 	if len(app.Outputs) == 0 {
