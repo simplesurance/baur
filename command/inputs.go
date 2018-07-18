@@ -8,6 +8,8 @@ import (
 	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/digest"
+	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/log"
 	"github.com/spf13/cobra"
 )
@@ -36,6 +38,7 @@ var inputsCmd = &cobra.Command{
 
 func inputs(cmd *cobra.Command, args []string) {
 	var alLFiles []baur.BuildInput
+	var inputDigests []*digest.Digest
 
 	rep := mustFindRepository()
 	app := mustArgToApp(rep, args[0])
@@ -69,8 +72,21 @@ func inputs(cmd *cobra.Command, args []string) {
 			log.Fatalln("creating digest failed:", err)
 		}
 
+		inputDigests = append(inputDigests, d)
+
 		fmt.Fprintf(tw, "%s\t%s\n", p, d)
 	}
 
 	tw.Flush()
+
+	if inputsShowDigest {
+		totalDigest, err := sha384.Sum(inputDigests)
+		if err != nil {
+			log.Fatalln("calculating total input digest failed:", err)
+		}
+
+		fmt.Printf("\ntotal digest: %s\n", totalDigest)
+
+	}
+
 }
