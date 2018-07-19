@@ -13,6 +13,7 @@ type File struct {
 	repoRootPath string
 	relPath      string
 	absPath      string
+	digest       *digest.Digest
 }
 
 // NewFile returns a new file
@@ -25,8 +26,19 @@ func NewFile(repoRootPath, relPath string) *File {
 }
 
 // Digest returns a digest of the file
-func (f *File) Digest() (*digest.Digest, error) {
-	return sha384.File(filepath.Join(f.absPath))
+func (f *File) Digest() (digest.Digest, error) {
+	if f.digest != nil {
+		return *f.digest, nil
+	}
+
+	d, err := sha384.File(filepath.Join(f.absPath))
+	if err != nil {
+		return digest.Digest{}, nil
+	}
+
+	f.digest = d
+
+	return *f.digest, nil
 }
 
 // Path returns it's absolute path

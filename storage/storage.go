@@ -49,5 +49,6 @@ type Input struct {
 // Storer is an interface for persisting informations about builds
 type Storer interface {
 	ListBuildsPerApp(appName string, maxResults int) ([]*Build, error)
+	FindLatestAppBuildByDigest(appName, totalInputDigest string) (int64, error)
 	Save(b *Build) error
 }

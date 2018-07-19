@@ -24,13 +24,13 @@ func NewRemoteDockerImg(repository, digest string) *RemoteDockerImg {
 }
 
 // Digest returns the image digest
-func (r *RemoteDockerImg) Digest() (*digest.Digest, error) {
+func (r *RemoteDockerImg) Digest() (digest.Digest, error) {
 	d, err := digest.FromString(r.digest)
 	if err != nil {
-		return nil, errors.Wrap(err, "parsing digest failed")
+		return digest.Digest{}, errors.Wrap(err, "parsing digest failed")
 	}
 
-	return d, nil
+	return *d, nil
 }
 
 // URL returns it's URL

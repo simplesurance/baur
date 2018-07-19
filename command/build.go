@@ -16,7 +16,6 @@ import (
 	"github.com/simplesurance/baur/prettyprint"
 	"github.com/simplesurance/baur/s3"
 	"github.com/simplesurance/baur/storage"
-	"github.com/simplesurance/baur/storage/postgres"
 	"github.com/simplesurance/baur/term"
 	"github.com/simplesurance/baur/upload"
 	sequploader "github.com/simplesurance/baur/upload/seq"
@@ -182,29 +181,32 @@ func dockerAuthFromEnv() (string, string) {
 
 func calcDigests(app *baur.App) ([]*storage.Input, string) {
 	var totalDigest string
-	var buildInputs []*storage.Input
+	var storageInputs []*storage.Input
 	inputDigests := []*digest.Digest{}
 
+	// TODO: refactor this functions, most is obsolete and can be replaced
+	// by App.TotalInputDigests()
+	// The storageInputs can be removed, apps.BuildInputs() can be used
+	// instead to later fill the struct for the db
+
 	log.Debugf("%s: resolving build inputs and calculating digests...\n", app)
-	for _, bip := range app.BuildInputPaths {
-		inputs, err := bip.Resolve()
+	buildInputs, err := app.BuildInputs()
+	if err != nil {
+		log.Fatalf("%s: resolving build input paths failed: %s\n", app, err)
+	}
+
+	for _, s := range buildInputs {
+		d, err := s.Digest()
 		if err != nil {
-			log.Fatalf("%s: resolving build input paths failed: %s\n", app, err)
+			log.Fatalf("%s: calculating build input digest failed: %s\n", app, err)
 		}
 
-		for _, s := range inputs {
-			d, err := s.Digest()
-			if err != nil {
-				log.Fatalf("%s: calculating build input digest failed: %s\n", app, err)
-			}
+		storageInputs = append(storageInputs, &storage.Input{
+			Digest: d.String(),
+			URL:    s.URL(),
+		})
 
-			buildInputs = append(buildInputs, &storage.Input{
-				Digest: d.String(),
-				URL:    s.URL(),
-			})
-
-			inputDigests = append(inputDigests, d)
-		}
+		inputDigests = append(inputDigests, &d)
 	}
 
 	if len(inputDigests) > 0 {
@@ -216,7 +218,7 @@ func calcDigests(app *baur.App) ([]*storage.Input, string) {
 		totalDigest = td.String()
 	}
 
-	return buildInputs, totalDigest
+	return storageInputs, totalDigest
 }
 
 func createBuildJobs(apps []*baur.App) []*build.Job {
@@ -342,11 +344,7 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	outputCnt := outputCount(apps)
 
 	if buildUpload {
-		var err error
-		store, err = postgres.New(repo.PSQLURL)
-		if err != nil {
-			log.Fatalf("could not establish connection to postgreSQL db: %s", err)
-		}
+		store = mustGetPostgresClt(repo)
 
 		uploadChan := make(chan *upload.Result, outputCnt)
 		uploader = startBGUploader(outputCnt, uploadChan)

@@ -8,16 +8,13 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/term"
 	"github.com/spf13/cobra"
 )
 
 var lsCSVFmt bool
-
-func init() {
-	lsCmd.Flags().BoolVar(&lsCSVFmt, "csv", false, "list applications in RFC4180 csv format")
-	rootCmd.AddCommand(lsCmd)
-}
+var lsShowBuildStatus bool
 
 var lsCmd = &cobra.Command{
 	Use:   "ls",
@@ -25,45 +22,108 @@ var lsCmd = &cobra.Command{
 	Run:   ls,
 }
 
-func lsCSV(apps []*baur.App) {
+func init() {
+	lsCmd.Flags().BoolVar(&lsCSVFmt, "csv", false, "list applications in RFC4180 CSV format")
+	lsCmd.Flags().BoolVarP(&lsShowBuildStatus, "build-status", "b", false,
+		"shows if a build for the application exist")
+	rootCmd.AddCommand(lsCmd)
+}
+
+func lsPlain(apps []*baur.App, storage storage.Storer) {
+	var buildExist int
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	if lsShowBuildStatus {
+		fmt.Fprintf(tw, "# Name\tDirectory\tBuild Status\n")
+	} else {
+		fmt.Fprintf(tw, "# Name\tDirectory\n")
+	}
+
+	for _, app := range apps {
+		if lsShowBuildStatus {
+			buildStatus, buildID := mustGetBuildStatus(app, storage)
+
+			if buildStatus == baur.BuildStatusExist {
+				fmt.Fprintf(tw, "%s\t%s\t%s (ID: %s)\n", app.Name, app.Path, buildStatus, buildID)
+				buildExist++
+
+			} else {
+				fmt.Fprintf(tw, "%s\t%s\t%s\n", app.Name, app.Path, buildStatus)
+			}
+
+			continue
+		}
+
+		fmt.Fprintf(tw, "%s\t%s\n", app.Name, app.Path)
+	}
+
+	tw.Flush()
+
+	term.PrintSep()
+
+	if lsShowBuildStatus {
+		fmt.Printf("Total: %d\n", len(apps))
+		fmt.Printf("Outstanding builds: %d\n", len(apps)-buildExist)
+
+		return
+	}
+
+	fmt.Printf("Total: %v\n", len(apps))
+}
+
+func lsCSV(apps []*baur.App, storage storage.Storer) {
 	csvw := csv.NewWriter(os.Stdout)
 
-	for _, a := range apps {
-		csvw.Write([]string{a.Name, a.Path})
+	for _, app := range apps {
+		if lsShowBuildStatus {
+			buildStatus, buildID := mustGetBuildStatus(app, storage)
+
+			csvw.Write([]string{
+				app.Name,
+				app.Path,
+				buildStatus.String(),
+				buildID,
+			})
+
+			continue
+		}
+
+		csvw.Write([]string{app.Name, app.Path})
 	}
+
 	csvw.Flush()
 }
 
 func ls(cmd *cobra.Command, args []string) {
+	var storage storage.Storer
 	rep := mustFindRepository()
+	apps := mustFindApps(rep)
 
-	apps, err := rep.FindApps()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if len(apps) == 0 {
-		log.Fatalf("could not find any applications\n"+
-			"- ensure the [Discover] section is correct in %s\n"+
-			"- ensure that you have >1 application dirs "+
-			"containing a %s file\n",
-			rep.CfgPath, baur.AppCfgFile)
-	}
-
-	if lsCSVFmt {
-		lsCSV(apps)
-		os.Exit(0)
+	if lsShowBuildStatus {
+		storage = mustGetPostgresClt(rep)
 	}
 
 	baur.SortAppsByName(apps)
 
-	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintf(tw, "# Name\tDirectory\n")
-	for _, a := range apps {
-		fmt.Fprintf(tw, "%s\t%s\n", a.Name, a.Path)
+	if lsCSVFmt {
+		lsCSV(apps, storage)
+		os.Exit(0)
 	}
-	tw.Flush()
 
-	term.PrintSep()
-	fmt.Printf("Total: %v\n", len(apps))
+	lsPlain(apps, storage)
+}
+
+func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, string) {
+	var strBuildID string
+
+	status, id, err := baur.GetBuildStatus(storage, app)
+	if err != nil {
+		log.Fatalln("evaluating build status failed:", err)
+	}
+
+	if id != -1 {
+		strBuildID = fmt.Sprint(id)
+	}
+
+	return status, strBuildID
 }

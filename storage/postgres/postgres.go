@@ -239,3 +239,25 @@ func (c *Client) Save(b *storage.Build) error {
 
 	return nil
 }
+
+// FindLatestAppBuildByDigest returns the build id of a build for the
+// application with the passed digest. If multiple builds exist, the one with
+// the lastest stop_timestamp is returned.
+// If no builds exist sql.ErrNoRows is returned
+func (c *Client) FindLatestAppBuildByDigest(appName, totalInputDigest string) (int64, error) {
+	const stmt = `
+	 SELECT build.id
+	 FROM application AS app
+	 JOIN build AS build ON app.id = build.application_id
+	 WHERE app.name = $1
+	 ORDER BY build.stop_timestamp DESC LIMIT 1
+	 `
+	var id int64
+
+	err := c.db.QueryRow(stmt, appName).Scan(&id)
+	if err != nil {
+		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+	}
+
+	return id, nil
+}

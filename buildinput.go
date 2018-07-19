@@ -6,7 +6,7 @@ import "github.com/simplesurance/baur/digest"
 // files, compiler binaries etc, everything that can influence the produced
 // build output
 type BuildInput interface {
-	Digest() (*digest.Digest, error)
+	Digest() (digest.Digest, error)
 	String() string
 	URL() string
 }

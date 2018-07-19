@@ -10,17 +10,21 @@ import (
 	"github.com/rs/xid"
 
 	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/digest"
+	"github.com/simplesurance/baur/digest/sha384"
 )
 
 // App represents an application
 type App struct {
-	RelPath         string
-	Path            string
-	Name            string
-	BuildCmd        string
-	Repository      *Repository
-	Outputs         []BuildOutput
-	BuildInputPaths []BuildInputPathResolver
+	RelPath          string
+	Path             string
+	Name             string
+	BuildCmd         string
+	Repository       *Repository
+	Outputs          []BuildOutput
+	BuildInputPaths  []BuildInputPathResolver
+	buildInputs      []BuildInput
+	totalInputDigest *digest.Digest
 }
 
 func replaceUUIDvar(in string) string {
@@ -152,13 +156,74 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	return &app, nil
 }
 
+func (a *App) String() string {
+	return a.Name
+}
+
+// BuildInputs returns all BuildInputs.
+// If the function is called the first time, the BuildInputPaths are resolved
+// and stored. On following calls the stored BuildInputs are returned.
+func (a *App) BuildInputs() ([]BuildInput, error) {
+	var res []BuildInput
+
+	if a.buildInputs != nil {
+		return a.buildInputs, nil
+	}
+
+	if len(a.BuildInputPaths) == 0 {
+		a.buildInputs = []BuildInput{}
+		return a.buildInputs, nil
+	}
+
+	for _, inputPath := range a.BuildInputPaths {
+		buildInputs, err := inputPath.Resolve()
+		if err != nil {
+			return nil, errors.Wrap(err, "resolving %q failed")
+		}
+
+		res = append(res, buildInputs...)
+	}
+
+	a.buildInputs = res
+	return a.buildInputs, nil
+}
+
+// TotalInputDigest returns the total input digest that is calculated over all
+// input sources. The calculation is only done on the 1. call on following calls
+// the stored digest is returned
+func (a *App) TotalInputDigest() (digest.Digest, error) {
+	if a.totalInputDigest != nil {
+		return *a.totalInputDigest, nil
+	}
+
+	buildInputs, err := a.BuildInputs()
+	if err != nil {
+		return digest.Digest{}, errors.Wrap(err, "resolving build inputs failed")
+	}
+
+	digests := make([]*digest.Digest, 0, len(buildInputs))
+	for _, bi := range buildInputs {
+		d, err := bi.Digest()
+		if err != nil {
+			return digest.Digest{}, errors.Wrapf(err, "calculating input digest of %q failed", bi)
+		}
+
+		digests = append(digests, &d)
+	}
+
+	totalDigest, err := sha384.Sum(digests)
+	if err != nil {
+		return digest.Digest{}, errors.Wrap(err, "calculating total input digest")
+	}
+
+	a.totalInputDigest = totalDigest
+
+	return *a.totalInputDigest, nil
+}
+
 // SortAppsByName sorts the apps in the slice by Name
 func SortAppsByName(apps []*App) {
 	sort.Slice(apps, func(i int, j int) bool {
 		return apps[i].Name < apps[j].Name
 	})
-}
-
-func (a *App) String() string {
-	return a.Name
 }

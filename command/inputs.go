@@ -47,13 +47,9 @@ func inputs(cmd *cobra.Command, args []string) {
 		log.Fatalf("No build inputs have been configured in the %s file of %s\n", baur.AppCfgFile, app.Name)
 	}
 
-	for _, s := range app.BuildInputPaths {
-		paths, err := s.Resolve()
-		if err != nil {
-			log.Fatalln("resolving build input paths failed:", err)
-		}
-
-		alLFiles = append(alLFiles, paths...)
+	alLFiles, err := app.BuildInputs()
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	sort.Slice(alLFiles, func(i, j int) bool {
@@ -72,9 +68,9 @@ func inputs(cmd *cobra.Command, args []string) {
 			log.Fatalln("creating digest failed:", err)
 		}
 
-		inputDigests = append(inputDigests, d)
+		inputDigests = append(inputDigests, &d)
 
-		fmt.Fprintf(tw, "%s\t%s\n", p, d)
+		fmt.Fprintf(tw, "%s\t%s\n", p, d.String())
 	}
 
 	tw.Flush()
