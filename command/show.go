@@ -53,7 +53,7 @@ func showApplicationInformation(app *baur.App) {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(tw, "Name:\t%s\n", app.Name)
-	fmt.Fprintf(tw, "Directory:\t%s\n", app.Path)
+	fmt.Fprintf(tw, "Directory:\t%s\n", app.RelPath)
 	fmt.Fprintf(tw, "Build Command:\t%s\n", app.BuildCmd)
 
 	if len(app.Outputs) == 0 {
@@ -61,7 +61,7 @@ func showApplicationInformation(app *baur.App) {
 	} else {
 		fmt.Fprintf(tw, "Outputs:\t\n")
 		for i, art := range app.Outputs {
-			fmt.Fprintf(tw, "\tLocal:\t%s\n", art.LocalPath())
+			fmt.Fprintf(tw, "\tLocal:\t%s\n", art.String())
 			fmt.Fprintf(tw, "\tRemote:\t%s\n", art.UploadDestination())
 			if i < len(app.Outputs)-1 {
 				fmt.Fprintf(tw, "\t\t\n")

@@ -22,7 +22,7 @@ func (f *FileArtifact) Exists() bool {
 
 // String returns the String representation
 func (f *FileArtifact) String() string {
-	return f.Name()
+	return f.RelPath
 }
 
 // UploadJob returns a upload.DockerJob for the artifact

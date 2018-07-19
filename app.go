@@ -98,7 +98,7 @@ func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 		url := "s3://" + f.S3Upload.Bucket + "/" + destFile
 
 		a.Outputs = append(a.Outputs, &FileArtifact{
-			RelPath:   f.Path,
+			RelPath:   path.Join(a.RelPath, f.Path),
 			Path:      path.Join(a.Path, f.Path),
 			DestFile:  destFile,
 			UploadURL: url,
