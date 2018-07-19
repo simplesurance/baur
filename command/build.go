@@ -180,47 +180,50 @@ func dockerAuthFromEnv() (string, string) {
 	return os.Getenv("DOCKER_USERNAME"), os.Getenv("DOCKER_PASSWORD")
 }
 
+func calcDigests(app *baur.App) ([]*storage.Input, string) {
+	var totalDigest string
+	var buildInputs []*storage.Input
+	inputDigests := []*digest.Digest{}
+
+	log.Debugf("%s: resolving build inputs and calculating digests...\n", app)
+	for _, bip := range app.BuildInputPaths {
+		inputs, err := bip.Resolve()
+		if err != nil {
+			log.Fatalf("%s: resolving build input paths failed: %s\n", app, err)
+		}
+
+		for _, s := range inputs {
+			d, err := s.Digest()
+			if err != nil {
+				log.Fatalf("%s: calculating build input digest failed: %s\n", app, err)
+			}
+
+			buildInputs = append(buildInputs, &storage.Input{
+				Digest: d.String(),
+				URL:    s.URL(),
+			})
+
+			inputDigests = append(inputDigests, d)
+		}
+	}
+
+	if len(inputDigests) > 0 {
+		td, err := sha384.Sum(inputDigests)
+		if err != nil {
+			log.Fatalln("calculating total input digest failed:", err)
+		}
+
+		totalDigest = td.String()
+	}
+
+	return buildInputs, totalDigest
+}
+
 func createBuildJobs(apps []*baur.App) []*build.Job {
 	buildJobs := make([]*build.Job, 0, len(apps))
 
 	for _, app := range apps {
-		var totalDigest string
-		inputDigests := []*digest.Digest{}
-		buildInputs := []*storage.Input{}
-
-		log.Debugf("%s: resolving build inputs and calculating digests...\n", app)
-		for _, bip := range app.BuildInputPaths {
-			inputs, err := bip.Resolve()
-			if err != nil {
-				log.Fatalf("%s: resolving build input paths failed: %s\n", app, err)
-			}
-
-			// TODO: move calculating digests and resolving path to
-			// a separate function
-			for _, s := range inputs {
-				d, err := s.Digest()
-				if err != nil {
-					log.Fatalf("%s: calculating build input digest failed: %s\n", app, err)
-				}
-
-				buildInputs = append(buildInputs, &storage.Input{
-					Digest: d.String(),
-					URL:    s.URL(),
-				})
-
-				inputDigests = append(inputDigests, d)
-			}
-		}
-
-		if len(inputDigests) > 0 {
-			td, err := sha384.Sum(inputDigests)
-			if err != nil {
-				log.Fatalln("calculating total input digest failed:", err)
-			}
-
-			totalDigest = td.String()
-		}
-
+		buildInputs, totalDigest := calcDigests(app)
 		log.Debugf("%s: total input digest: %s\n", app, totalDigest)
 
 		buildJobs = append(buildJobs, &build.Job{
