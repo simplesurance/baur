@@ -57,7 +57,6 @@ func GetBuildStatus(storage storage.Storer, app *App) (BuildStatus, int64, error
 
 		log.Fatalf("querying postgresql build database failed: %s\n", err)
 	}
-	fmt.Println(buildID)
 
 	return BuildStatusExist, buildID, nil
 }
