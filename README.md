@@ -127,8 +127,8 @@ The following variables are supported:
                  environment variable.
 
 ## Examples
-- List all applications in the repository:
-  `baur ls`
+- List all applications in the repository with their build status:
+  `baur ls --build-status`
 - Build all applications, upload their artifacts and records the results:
   `baur build --upload all`
 - Show informations about an application called `currency-service`:
