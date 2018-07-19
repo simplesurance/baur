@@ -31,7 +31,7 @@ The paths to the build inputs must be configured in the .app.toml file.
 var inputsCmd = &cobra.Command{
 	Use:   "inputs [<APP-NAME>|<PATH>]",
 	Args:  cobra.ExactArgs(1),
-	Short: "list build inputs of an application",
+	Short: "list resolved build inputs of an application",
 	Long:  strings.TrimSpace(inputsLongHelp),
 	Run:   inputs,
 }
