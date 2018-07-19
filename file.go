@@ -58,5 +58,5 @@ func (f *File) URL() string {
 
 // String returns it's string representation
 func (f *File) String() string {
-	return f.Path()
+	return f.RepoRelPath()
 }
