@@ -15,6 +15,7 @@ import (
 
 var lsCSVFmt bool
 var lsShowBuildStatus bool
+var lsShowAbsPath bool
 
 var lsCmd = &cobra.Command{
 	Use:   "ls",
@@ -26,7 +27,17 @@ func init() {
 	lsCmd.Flags().BoolVar(&lsCSVFmt, "csv", false, "list applications in RFC4180 CSV format")
 	lsCmd.Flags().BoolVarP(&lsShowBuildStatus, "build-status", "b", false,
 		"shows if a build for the application exist")
+	lsCmd.Flags().BoolVarP(&lsShowAbsPath, "abs-paths", "a", false,
+		"show absolute instead of relative paths")
 	rootCmd.AddCommand(lsCmd)
+}
+
+func appPath(a *baur.App, absolutePaths bool) string {
+	if absolutePaths {
+		return a.Path
+	}
+
+	return a.RelPath
 }
 
 func lsPlain(apps []*baur.App, storage storage.Storer) {
@@ -40,21 +51,25 @@ func lsPlain(apps []*baur.App, storage storage.Storer) {
 	}
 
 	for _, app := range apps {
+		path := appPath(app, lsShowAbsPath)
+
 		if lsShowBuildStatus {
 			buildStatus, buildID := mustGetBuildStatus(app, storage)
 
 			if buildStatus == baur.BuildStatusExist {
-				fmt.Fprintf(tw, "%s\t%s\t%s (ID: %s)\n", app.Name, app.Path, buildStatus, buildID)
+				fmt.Fprintf(tw, "%s\t%s\t%s (ID: %s)\n",
+					app.Name, path, buildStatus, buildID)
 				buildExist++
 
 			} else {
-				fmt.Fprintf(tw, "%s\t%s\t%s\n", app.Name, app.Path, buildStatus)
+				fmt.Fprintf(tw, "%s\t%s\t%s\n",
+					app.Name, path, buildStatus)
 			}
 
 			continue
 		}
 
-		fmt.Fprintf(tw, "%s\t%s\n", app.Name, app.Path)
+		fmt.Fprintf(tw, "%s\t%s\n", app.Name, path)
 	}
 
 	tw.Flush()
@@ -75,12 +90,14 @@ func lsCSV(apps []*baur.App, storage storage.Storer) {
 	csvw := csv.NewWriter(os.Stdout)
 
 	for _, app := range apps {
+		path := appPath(app, lsShowAbsPath)
+
 		if lsShowBuildStatus {
 			buildStatus, buildID := mustGetBuildStatus(app, storage)
 
 			csvw.Write([]string{
 				app.Name,
-				app.Path,
+				path,
 				buildStatus.String(),
 				buildID,
 			})
@@ -88,7 +105,7 @@ func lsCSV(apps []*baur.App, storage storage.Storer) {
 			continue
 		}
 
-		csvw.Write([]string{app.Name, app.Path})
+		csvw.Write([]string{app.Name, path})
 	}
 
 	csvw.Flush()
