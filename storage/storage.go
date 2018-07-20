@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
@@ -14,6 +15,9 @@ const (
 	//S3Output is a file artifact stored on S3
 	S3Output OutputType = "s3"
 )
+
+// ErrNotExist indicates that a record does not exist
+var ErrNotExist = errors.New("does not exist")
 
 // Build represents a stored build
 type Build struct {
@@ -51,4 +55,5 @@ type Storer interface {
 	ListBuildsPerApp(appName string, maxResults int) ([]*Build, error)
 	FindLatestAppBuildByDigest(appName, totalInputDigest string) (int64, error)
 	Save(b *Build) error
+	GetBuildWithoutInputs(id int64) (*Build, error)
 }

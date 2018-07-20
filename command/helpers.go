@@ -1,8 +1,10 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
@@ -84,4 +86,8 @@ func mustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	}
 
 	return clt
+}
+
+func durationToStrSec(d time.Duration) string {
+	return fmt.Sprintf("%.2fs", d.Seconds())
 }

@@ -261,3 +261,76 @@ func (c *Client) FindLatestAppBuildByDigest(appName, totalInputDigest string) (i
 
 	return id, nil
 }
+
+func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
+	const stmt = `SELECT
+			output.name, output.digest, output.type, output.size_bytes,
+			upload.uri, upload.upload_duration_msec
+		      FROM build
+		      JOIN output_build ON output_build.build_id = build.id
+		      JOIN output ON output.id = output_build.output_id
+		      JOIN upload ON upload.output_id = output.id
+		      WHERE build.id = $1
+		      `
+
+	rows, err := c.db.Query(stmt, buildID)
+	if err != nil {
+		return errors.Wrapf(err, "db query %q failed", stmt)
+	}
+
+	for rows.Next() {
+		var output storage.Output
+		var uploadDurationMsec int64
+
+		rows.Scan(
+			&output.Name,
+			&output.Digest,
+			&output.Type,
+			&output.SizeBytes,
+			&output.URI,
+			&uploadDurationMsec,
+		)
+
+		output.UploadDuration = time.Duration(uploadDurationMsec) * time.Millisecond
+		build.Outputs = append(build.Outputs, &output)
+	}
+
+	if err := rows.Err(); err != nil {
+		return errors.Wrap(err, "iterating over rows failed")
+	}
+
+	return nil
+}
+
+// GetBuildWithoutInputs retrieves a build from the database
+func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
+	var build storage.Build
+
+	const stmt = `
+	 SELECT app.name, 
+		build.start_timestamp, build.stop_timestamp, build.total_input_digest
+	 FROM application AS app
+	 JOIN build ON app.id = build.application_id
+	 WHERE build.id = $1`
+
+	err := c.db.QueryRow(stmt, id).Scan(
+		&build.AppName,
+		&build.StartTimeStamp,
+		&build.StopTimeStamp,
+		&build.TotalInputDigest)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, errors.Wrapf(err, "db query %q failed", stmt)
+	}
+
+	// TODO: handle the case that the build doesnt have any artifact and
+	// this query fails
+	if err := c.populateOutputs(&build, id); err != nil {
+		return nil, errors.Wrap(err, "fetching build outputs failed")
+	}
+
+	return &build, err
+}

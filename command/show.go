@@ -3,10 +3,13 @@ package command
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -19,14 +22,15 @@ func init() {
 
 const showExampleHelp = `
 baur show claim-service		        show informations about the claim-service application
+baur show 482				show informations about the build with ID 482
 baur show --path-only claim-service	show the path of the directory of the claim-service application
 baur show .		                show informations about the application in the current directory
 baur show		                show informations about the repository
 `
 
 var showCmd = &cobra.Command{
-	Use:     "show [<APP-NAME>|<PATH>]",
-	Short:   "shows informations about applications in the repository",
+	Use:     "show [<APP-NAME>|<PATH>|<BUILD-ID>]",
+	Short:   "shows informations about applications and builds",
 	Example: strings.TrimSpace(showExampleHelp),
 	Run:     show,
 	Args:    cobra.MaximumNArgs(1),
@@ -72,6 +76,43 @@ func showApplicationInformation(app *baur.App) {
 	tw.Flush()
 }
 
+func showBuildInformation(rep *baur.Repository, buildID int64) {
+	clt := mustGetPostgresClt(rep)
+	build, err := clt.GetBuildWithoutInputs(buildID)
+	if err != nil {
+		if err == storage.ErrNotExist {
+			log.Fatalf("build with id %d does not exist\n", buildID)
+		}
+
+		log.Fatalln("querying datatbase failed:", err)
+	}
+
+	fmt.Printf("# Build Information\n")
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	fmt.Fprintf(tw, "Application:\t%s\n", build.AppName)
+	fmt.Fprintf(tw, "Build ID:\t%d\n", buildID)
+
+	fmt.Fprintf(tw, "Build Duration:\t%s\n",
+		durationToStrSec(build.StopTimeStamp.Sub(build.StartTimeStamp)))
+	fmt.Fprintf(tw, "Input Digest:\t%s\n", build.TotalInputDigest)
+
+	fmt.Fprintf(tw, "Outputs:\t\n")
+	for i, o := range build.Outputs {
+		fmt.Fprintf(tw, "\tURL:\t%s\n", o.URI)
+		fmt.Fprintf(tw, "\tDigest:\t%s\n", o.Digest)
+		fmt.Fprintf(tw, "\tSize:\t%.3fMiB\n", float64(o.SizeBytes)/1024/1024)
+		fmt.Fprintf(tw, "\tUpload Duration:\t%s\n", durationToStrSec(o.UploadDuration))
+
+		if i < (len(build.Outputs) - 1) {
+			fmt.Fprintf(tw, "\t\t\t\n")
+		}
+	}
+
+	tw.Flush()
+
+}
+
 func show(cmd *cobra.Command, args []string) {
 	rep := mustFindRepository()
 
@@ -81,8 +122,12 @@ func show(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
+	buildID, err := strconv.ParseInt(args[0], 10, 64)
+	if err == nil {
+		showBuildInformation(rep, buildID)
+		os.Exit(0)
+	}
+
 	app := mustArgToApp(rep, args[0])
-
 	showApplicationInformation(app)
-
 }
