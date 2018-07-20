@@ -266,11 +266,10 @@ func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
 			upload.uri, upload.upload_duration_msec
-		      FROM build
-		      JOIN output_build ON output_build.build_id = build.id
-		      JOIN output ON output.id = output_build.output_id
+		      FROM output
+		      JOIN output_build ON output.id = output_build.output_id
 		      JOIN upload ON upload.output_id = output.id
-		      WHERE build.id = $1
+		      WHERE output_build.build_id = $1
 		      `
 
 	rows, err := c.db.Query(stmt, buildID)
@@ -307,7 +306,7 @@ func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
 	var build storage.Build
 
 	const stmt = `
-	 SELECT app.name, 
+	 SELECT app.name,
 		build.start_timestamp, build.stop_timestamp, build.total_input_digest
 	 FROM application AS app
 	 JOIN build ON app.id = build.application_id
