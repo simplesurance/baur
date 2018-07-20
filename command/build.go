@@ -294,7 +294,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 			log.Fatalf("upload of %q failed: %s\n", ud.Output, res.Err)
 		}
 
-		log.Actionf("%s: output %s uploaded to %s (%.3fs)\n",
+		log.Actionf("%s: %s uploaded to %s (%.3fs)\n",
 			ud.App.Name, ud.Output.LocalPath(), res.URL, res.Duration.Seconds())
 
 		resultAddUploadResult(ud.App.Name, ud.Output, res)
@@ -399,7 +399,7 @@ func buildCMD(cmd *cobra.Command, args []string) {
 				uploader.Add(uj)
 
 			}
-			log.Actionf("%s: created output %s\n", app.Name, ar)
+			log.Actionf("%s: created %s\n", app.Name, ar)
 		}
 
 	}
