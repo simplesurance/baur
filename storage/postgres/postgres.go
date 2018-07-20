@@ -155,23 +155,15 @@ func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 		selectStmt, []interface{}{appName})
 }
 
-func insertOutputBuild(tx *sql.Tx, buildID, outputID int) error {
-	const stmt = "INSERT into output_build VALUES($1, $2)"
-
-	_, err := tx.Exec(stmt, buildID, outputID)
-
-	return err
-}
-
-func insertUpload(tx *sql.Tx, outputID int, url string, uploadDuration time.Duration) error {
+func insertUpload(tx *sql.Tx, buildID, outputID int, url string, uploadDuration time.Duration) error {
 	const stmt = `
 	INSERT into upload
-	(output_id, uri, upload_duration_msec)
-	VALUES($1, $2, $3)
+	(build_id, output_id, uri, upload_duration_msec)
+	VALUES($1, $2, $3, $4)
 	RETURNING id
 	`
 
-	_, err := tx.Exec(stmt, outputID, url, uploadDuration/time.Millisecond)
+	_, err := tx.Exec(stmt, buildID, outputID, url, uploadDuration/time.Millisecond)
 	return err
 }
 
@@ -181,12 +173,7 @@ func saveOutput(tx *sql.Tx, buildID int, a *storage.Output) error {
 		return errors.Wrap(err, "storing output record failed")
 	}
 
-	err = insertOutputBuild(tx, buildID, outputID)
-	if err != nil {
-		return errors.Wrap(err, "storing output_build record failed")
-	}
-
-	err = insertUpload(tx, outputID, a.URI, a.UploadDuration)
+	err = insertUpload(tx, buildID, outputID, a.URI, a.UploadDuration)
 	if err != nil {
 		return errors.Wrap(err, "storing upload record failed")
 	}
@@ -267,9 +254,8 @@ func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
 			output.name, output.digest, output.type, output.size_bytes,
 			upload.uri, upload.upload_duration_msec
 		      FROM output
-		      JOIN output_build ON output.id = output_build.output_id
 		      JOIN upload ON upload.output_id = output.id
-		      WHERE output_build.build_id = $1
+		      WHERE upload.build_id = $1
 		      `
 
 	rows, err := c.db.Query(stmt, buildID)
