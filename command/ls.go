@@ -27,7 +27,7 @@ func init() {
 	lsCmd.Flags().BoolVar(&lsCSVFmt, "csv", false, "list applications in RFC4180 CSV format")
 	lsCmd.Flags().BoolVarP(&lsShowBuildStatus, "build-status", "b", false,
 		"shows if a build for the application exist")
-	lsCmd.Flags().BoolVarP(&lsShowAbsPath, "abs-paths", "a", false,
+	lsCmd.Flags().BoolVarP(&lsShowAbsPath, "abs-path", "a", false,
 		"show absolute instead of relative paths")
 	rootCmd.AddCommand(lsCmd)
 }
