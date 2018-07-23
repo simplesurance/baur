@@ -286,6 +286,11 @@ func (c *Client) Save(b *storage.Build) error {
 		return errors.Wrap(err, "storing upload record failed")
 	}
 
+	// inputs not specified in the baur app config
+	if len(b.Inputs) == 0 {
+		return nil
+	}
+
 	ids, err := insertInputsIfNotExist(tx, b.Inputs)
 	if err != nil {
 		return errors.Wrap(err, "storing inputs failed")
