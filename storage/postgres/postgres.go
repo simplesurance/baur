@@ -315,6 +315,9 @@ func (c *Client) FindLatestAppBuildByDigest(appName, totalInputDigest string) (i
 
 	err := c.db.QueryRow(stmt, appName).Scan(&id)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return -1, storage.ErrNotExist
+		}
 		return -1, errors.Wrapf(err, "db query %q failed", stmt)
 	}
 

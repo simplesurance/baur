@@ -1,7 +1,6 @@
 package baur
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -39,7 +38,7 @@ func (b BuildStatus) String() string {
 // storage if a build for this input digest already exist.
 // If a build exist for the totalInputDigest it returns the ID of the build that
 // was build last.
-func GetBuildStatus(storage storage.Storer, app *App) (BuildStatus, int64, error) {
+func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, int64, error) {
 	if len(app.BuildInputPaths) == 0 {
 		return BuildStatusInputsUndefined, -1, nil
 	}
@@ -49,13 +48,13 @@ func GetBuildStatus(storage storage.Storer, app *App) (BuildStatus, int64, error
 		return -1, -1, errors.Wrap(err, "calculating total input digest failed")
 	}
 
-	buildID, err := storage.FindLatestAppBuildByDigest(app.Name, d.String())
+	buildID, err := storer.FindLatestAppBuildByDigest(app.Name, d.String())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == storage.ErrNotExist {
 			return BuildStatusOutstanding, -1, nil
 		}
 
-		log.Fatalf("querying postgresql build database failed: %s\n", err)
+		log.Fatalf("fetching build of %q from storage failed: %s\n", app.Name, err)
 	}
 
 	return BuildStatusExist, buildID, nil
