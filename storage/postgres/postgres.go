@@ -308,12 +308,12 @@ func (c *Client) FindLatestAppBuildByDigest(appName, totalInputDigest string) (i
 	 SELECT build.id
 	 FROM application AS app
 	 JOIN build AS build ON app.id = build.application_id
-	 WHERE app.name = $1
+	 WHERE app.name = $1 AND total_input_digest = $2
 	 ORDER BY build.stop_timestamp DESC LIMIT 1
 	 `
 	var id int64
 
-	err := c.db.QueryRow(stmt, appName).Scan(&id)
+	err := c.db.QueryRow(stmt, appName, totalInputDigest).Scan(&id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return -1, storage.ErrNotExist
