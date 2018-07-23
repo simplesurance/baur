@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	_ "github.com/lib/pq" // postgresql
@@ -59,48 +60,139 @@ func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 	return id, nil
 }
 
-func insertOutputIfNotExist(tx *sql.Tx, a *storage.Output) (int, error) {
-	const stmt = `
-	INSERT INTO output
-	(name, type, digest, size_bytes)
-	VALUES($1, $2, $3, $4)
+func insertOutputsIfNotExist(tx *sql.Tx, outputs []*storage.Output) ([]int, error) {
+	const stmt1 = "INSERT INTO output (name, type, digest, size_bytes) VALUES"
+	const stmt2 = `
 	ON CONFLICT ON CONSTRAINT output_digest_key
 	DO UPDATE SET id=output.id RETURNING id
 	`
-	var id int
 
-	err := tx.QueryRow(stmt, a.Name, a.Type, a.Digest, a.SizeBytes).Scan(&id)
+	var (
+		argCNT    = 1
+		stmtVals  string
+		queryArgs = make([]interface{}, 0, len(outputs)*4)
+		ids       = make([]int, 0, len(outputs))
+	)
+
+	for i, out := range outputs {
+		stmtVals += fmt.Sprintf("($%d, $%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2, argCNT+3)
+		argCNT += 4
+		queryArgs = append(queryArgs, out.Name, out.Type, out.Digest, out.SizeBytes)
+
+		if i < len(outputs)-1 {
+			stmtVals += ", "
+		}
+	}
+	query := stmt1 + stmtVals + stmt2
+
+	rows, err := tx.Query(query, queryArgs...)
 	if err != nil {
-		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+		return nil, errors.Wrapf(err, "db query %q failed", query)
 	}
 
-	return id, nil
+	for rows.Next() {
+		var id int
+
+		err := rows.Scan(&id)
+		if err != nil {
+			rows.Close()
+			return nil, errors.Wrapf(err, "db query %q failed", query)
+		}
+
+		ids = append(ids, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "iterating over rows failed")
+	}
+
+	return ids, nil
 }
 
-func insertInputBuild(tx *sql.Tx, buildID, inputID int) error {
-	const stmt = "INSERT into input_build VALUES($1, $2)"
+func insertInputBuilds(tx *sql.Tx, buildID int, inputIDs []int) error {
+	const stmt1 = `
+		INSERT into input_build 
+		(build_id, input_id)
+		VALUES
+	`
 
-	_, err := tx.Exec(stmt, buildID, inputID)
+	var stmtVals string
+	argCNT := 1
+	queryArgs := make([]interface{}, 0, len(inputIDs))
 
-	return err
+	queryArgs = append(queryArgs, buildID)
+	argCNT++
+
+	for i, id := range inputIDs {
+		stmtVals += fmt.Sprintf("($1, $%d)", argCNT)
+		argCNT++
+
+		queryArgs = append(queryArgs, id)
+
+		if i < len(inputIDs)-1 {
+			stmtVals += ", "
+		}
+	}
+
+	query := stmt1 + stmtVals
+
+	_, err := tx.Exec(query, queryArgs...)
+	if err != nil {
+		return errors.Wrapf(err, "db query %q failed", query)
+	}
+
+	return nil
 }
 
-func insertInputIfNotExist(tx *sql.Tx, s *storage.Input) (int, error) {
-	const stmt = `
-	INSERT INTO input
-	(url, digest)
-	VALUES($1, $2)
+func insertInputsIfNotExist(tx *sql.Tx, inputs []*storage.Input) ([]int, error) {
+	const stmt1 = "INSERT INTO input (url, digest) VALUES"
+	const stmt2 = `
 	ON CONFLICT ON CONSTRAINT input_uniq
 	DO UPDATE SET id=input.id RETURNING id
 	`
-	var id int
+	var (
+		stmtVals string
 
-	err := tx.QueryRow(stmt, s.URL, s.Digest).Scan(&id)
-	if err != nil {
-		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+		argCNT    = 1
+		queryArgs = make([]interface{}, 0, len(inputs)*2)
+		ids       = make([]int, 0, len(inputs))
+	)
+
+	for i, in := range inputs {
+		stmtVals += fmt.Sprintf("($%d, $%d)", argCNT, argCNT+1)
+		argCNT += 2
+		queryArgs = append(queryArgs, in.URL, in.Digest)
+
+		if i < len(inputs)-1 {
+			stmtVals += ", "
+		}
 	}
 
-	return id, nil
+	query := stmt1 + stmtVals + stmt2
+
+	rows, err := tx.Query(query, queryArgs...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "db query %q failed", query)
+	}
+
+	for rows.Next() {
+		var id int
+
+		err := rows.Scan(&id)
+		if err != nil {
+			rows.Close()
+			return nil, errors.Wrapf(err, "db query %q failed", query)
+		}
+
+		ids = append(ids, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "iterating over rows failed")
+	}
+
+	return ids, nil
+
 }
 
 func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
@@ -121,30 +213,42 @@ func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 	return id, nil
 }
 
-func insertUpload(tx *sql.Tx, buildID, outputID int, url string, uploadDuration time.Duration) error {
+func insertUploads(tx *sql.Tx, buildID int, outputs []*storage.Output, outputIDs []int) error {
 	const stmt = `
 	INSERT into upload
 	(build_id, output_id, uri, upload_duration_msec)
-	VALUES($1, $2, $3, $4)
-	RETURNING id
+	VALUES
 	`
 
-	_, err := tx.Exec(stmt, buildID, outputID, url, uploadDuration/time.Millisecond)
+	var (
+		stmtVals  string
+		argCNT    = 1
+		queryArgs = make([]interface{}, 0, len(outputs)*4)
+	)
+
+	if len(outputs) != len(outputIDs) {
+		return fmt.Errorf("got slices with differen length of outputs (%d) and outputIDs (%d) s parameters",
+			len(outputs), len(outputIDs))
+	}
+
+	for i, out := range outputs {
+		stmtVals += fmt.Sprintf("($%d, $%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2, argCNT+3)
+		argCNT += 4
+		queryArgs = append(queryArgs, buildID, outputIDs[i], out.URI, out.UploadDuration/time.Millisecond)
+
+		if i < len(outputs)-1 {
+			stmtVals += ", "
+		}
+	}
+
+	query := stmt + stmtVals
+
+	_, err := tx.Exec(query, queryArgs...)
+	if err != nil {
+		return errors.Wrapf(err, "db query %q failed", query)
+	}
+
 	return err
-}
-
-func saveOutput(tx *sql.Tx, buildID int, a *storage.Output) error {
-	outputID, err := insertOutputIfNotExist(tx, a)
-	if err != nil {
-		return errors.Wrap(err, "storing output record failed")
-	}
-
-	err = insertUpload(tx, buildID, outputID, a.URI, a.UploadDuration)
-	if err != nil {
-		return errors.Wrap(err, "storing upload record failed")
-	}
-
-	return nil
 }
 
 // Save stores a build
@@ -172,22 +276,24 @@ func (c *Client) Save(b *storage.Build) error {
 		return errors.Wrap(err, "storing build record failed")
 	}
 
-	for _, a := range b.Outputs {
-		if err := saveOutput(tx, buildID, a); err != nil {
-			return err
-		}
+	outputIDs, err := insertOutputsIfNotExist(tx, b.Outputs)
+	if err != nil {
+		return errors.Wrap(err, "storing output records failed")
 	}
 
-	for _, s := range b.Inputs {
-		inputID, err := insertInputIfNotExist(tx, s)
-		if err != nil {
-			return errors.Wrap(err, "storing input record failed")
-		}
+	err = insertUploads(tx, buildID, b.Outputs, outputIDs)
+	if err != nil {
+		return errors.Wrap(err, "storing upload record failed")
+	}
 
-		err = insertInputBuild(tx, buildID, inputID)
-		if err != nil {
-			return errors.Wrap(err, "storing input_build failed")
-		}
+	ids, err := insertInputsIfNotExist(tx, b.Inputs)
+	if err != nil {
+		return errors.Wrap(err, "storing inputs failed")
+	}
+
+	err = insertInputBuilds(tx, buildID, ids)
+	if err != nil {
+		return errors.Wrap(err, "storing input_build failed")
 	}
 
 	return nil
