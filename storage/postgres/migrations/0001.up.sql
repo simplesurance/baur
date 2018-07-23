@@ -15,9 +15,8 @@ CREATE TABLE output (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
 	type TEXT,
-	digest TEXT,
-	size_bytes integer,
-	CONSTRAINT output_uniq UNIQUE(name, digest, size_bytes)
+	digest TEXT UNIQUE,
+	size_bytes integer
 );
 
 CREATE TABLE upload (
