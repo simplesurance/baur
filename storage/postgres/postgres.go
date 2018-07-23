@@ -277,8 +277,6 @@ func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
 		return nil, errors.Wrapf(err, "db query %q failed", stmt)
 	}
 
-	// TODO: handle the case that the build doesnt have any artifact and
-	// this query fails
 	if err := c.populateOutputs(&build, id); err != nil {
 		return nil, errors.Wrap(err, "fetching build outputs failed")
 	}
