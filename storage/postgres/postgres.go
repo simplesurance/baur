@@ -2,12 +2,10 @@ package postgres
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	_ "github.com/lib/pq" // postgresql
 	"github.com/pkg/errors"
-	"github.com/rs/xid"
 
 	"github.com/simplesurance/baur/storage"
 )
@@ -62,21 +60,21 @@ func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
 }
 
 func insertOutputIfNotExist(tx *sql.Tx, a *storage.Output) (int, error) {
-	const insertStmt = `
+	const stmt = `
 	INSERT INTO output
 	(name, type, digest, size_bytes)
 	VALUES($1, $2, $3, $4)
-	RETURNING id;
+	ON CONFLICT ON CONSTRAINT output_digest_key
+	DO UPDATE SET id=output.id RETURNING id
 	`
+	var id int
 
-	const selectStmt = `
-	SELECT id FROM output
-	WHERE name = $1 AND digest = $2 AND size_bytes = $3;
-	`
+	err := tx.QueryRow(stmt, a.Name, a.Type, a.Digest, a.SizeBytes).Scan(&id)
+	if err != nil {
+		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+	}
 
-	return insertIfNotExist(tx,
-		insertStmt, []interface{}{a.Name, a.Type, a.Digest, a.SizeBytes},
-		selectStmt, []interface{}{a.Name, a.Digest, a.SizeBytes})
+	return id, nil
 }
 
 func insertInputBuild(tx *sql.Tx, buildID, inputID int) error {
@@ -87,72 +85,40 @@ func insertInputBuild(tx *sql.Tx, buildID, inputID int) error {
 	return err
 }
 
-func insertIfNotExist(
-	tx *sql.Tx,
-	insertStmt string,
-	insertArgs []interface{},
-	selectStmt string,
-	selectArgs []interface{},
-) (int, error) {
+func insertInputIfNotExist(tx *sql.Tx, s *storage.Input) (int, error) {
+	const stmt = `
+	INSERT INTO input
+	(url, digest)
+	VALUES($1, $2)
+	ON CONFLICT ON CONSTRAINT input_uniq
+	DO UPDATE SET id=input.id RETURNING id
+	`
 	var id int
-	savepointName := xid.New().String()
 
-	_, err := tx.Exec(fmt.Sprintf("SAVEPOINT %s", savepointName))
+	err := tx.QueryRow(stmt, s.URL, s.Digest).Scan(&id)
 	if err != nil {
-		return -1, errors.Wrapf(err, "creating savepoint %q failed", savepointName)
-	}
-
-	r := tx.QueryRow(insertStmt, insertArgs...)
-	insertErr := r.Scan(&id)
-	if insertErr == nil {
-		return id, nil
-	}
-
-	// row already exist, TODO: only rollback and continue if it's
-	// an already exist error
-	_, err = tx.Exec(fmt.Sprintf("ROLLBACK TO %s", savepointName))
-	if err != nil {
-		return -1, errors.Wrapf(err, "rolling back transaction after insert error %q failed", insertErr)
-	}
-
-	r = tx.QueryRow(selectStmt, selectArgs...)
-	if err := r.Scan(&id); err != nil {
-		return -1, errors.Wrapf(err, "selecting input record failed after insert failed: %s", insertErr)
+		return -1, errors.Wrapf(err, "db query %q failed", stmt)
 	}
 
 	return id, nil
 }
 
-func insertInputIfNotExist(tx *sql.Tx, s *storage.Input) (int, error) {
-	const insertStmt = `
-	INSERT INTO input
-	(url, digest)
-	VALUES($1, $2)
-	RETURNING id;
-	`
-
-	const selectStmt = `
-	SELECT id FROM input
-	WHERE url = $1 AND digest = $2;
-	`
-
-	return insertIfNotExist(tx,
-		insertStmt, []interface{}{s.URL, s.Digest},
-		selectStmt, []interface{}{s.URL, s.Digest})
-}
-
 func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
-	const insertStmt = `
+	const stmt = `
 	INSERT INTO application
 	(name)
 	VALUES($1)
-	RETURNING id;
+	ON CONFLICT ON CONSTRAINT application_name_key
+	DO UPDATE SET id=application.id RETURNING id
 	`
-	const selectStmt = "SELECT id FROM application WHERE name = $1;"
+	var id int
 
-	return insertIfNotExist(tx,
-		insertStmt, []interface{}{appName},
-		selectStmt, []interface{}{appName})
+	err := tx.QueryRow(stmt, appName).Scan(&id)
+	if err != nil {
+		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+	}
+
+	return id, nil
 }
 
 func insertUpload(tx *sql.Tx, buildID, outputID int, url string, uploadDuration time.Duration) error {
