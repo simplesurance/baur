@@ -21,12 +21,12 @@ Baur makes certain Assumptions:
 
 
 ## Build
-To build the application run `make`
+To build baur run `make`.
 
 ## Dependencies
-- To make use of git specify functionality like using the `$GITCOMMIT` variable
-    and `[Build.Input.GitFiles]` directive in config files,  the git commandline tools
-    must be installed and findable via the `$PATH` environment variable.
+- To make use of git specific functionality like using the `$GITCOMMIT` variable
+    and `[Build.Input.GitFiles]` directive in config files,  the Git commandline
+    tools must be installed and in one of the paths of the `$PATH` environment variable.
 
 ## Configuration
 1. Setup your PostgreSQL baur database
@@ -35,14 +35,12 @@ To build the application run `make`
 
 2. Adapt the configuration files to your needs:
    - Add paths containing your applications to the `application_dirs` parameter.
-   - set the `command`  parameter in the `Build` section to the  command that
-     should be run to build your application
-     directories, produces build artifacts like a docker container or a tar
-     archives.
+   - set the `command` parameter in the `Build` section to the command that
+     should be run to build your application directories
    - set the `postgresql_url` to a valid connection string to a database that
-     will store informations about builds, it's inputs and artifacts.
-    If you do not want to store the password of your database user in the
-    `baur.toml` file. You can also put in your `.pgpass` file
+     will store information about builds, it's inputs and outputs.
+     If you do not want to store the password of your database user in the
+     `baur.toml` file. You can also put it in a `~/.pgpass` file
     (https://www.postgresql.org/docs/9.3/static/libpq-pgpass.html).
    - create the tables in the database by running the SQL-script
      `storage/postgres/migrations/0001.up.sql`
@@ -79,35 +77,31 @@ The baur repository has to be part of a checked out git repository to work.
 
 It's `paths` parameter accepts a list git path patterns that are relative to the
 application directory.
-It only matches files that are tracked by the git repository. Untracked files
+It only matches files that are tracked by the git repository, untracked files
 are ignored. Modified tracked files are considered.
 
 ##### `[Build.Input.Files]`
-Has a `paths` parameter that accepts a list of glob paths to source files.
+The section has a `paths` parameter that accepts a list of glob paths to source files.
 
 To make it easier to track changes in the build environment it's advised to
-build application in docker containers and define the docker image as Source
-(not supported yet).
-
-(depending if an application needs to be rebuild because it sources changed is
-not implemented yet)
+build application in docker containers and define the docker image as build
+input.
 
 ##### `[[Build.Input.DockerImages]]`
 Specifies a docker image as build input. This can be for example the docker
 image in that the application is build.
-It's identified by manifest digest to ensure that it is unambiguous.
-The digest for a docker image can be retrieved by e.g.
-`docker images --digests`.
+The docker image is specified by it's manifest digest.
+The manifest digest for a docker image can be retrieved with
+`docker images --digests` or `docker inspect`
 
 ### Build Outputs
 Build outputs are the results that are produced by a build. They can be
 described in the `[Build.Output]` section.
 Baur supports to upload build results to S3 and docker images to a remote docker
 repository.
-Authentication information for output repositories are read from
-environment variables. S3 configuration parameters are the same then for the
-aws CLI tool. See
-https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
+Authentication information for output repositories are read from environment
+variables. S3 configuration parameters are the same then for the aws CLI tool.
+See https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html.
 The credentials for the hub.docker.com registry can be specified by setting
 the `DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
 `DOCKER_PASSWORD` can be the cleartext password or a valid authentication
@@ -131,7 +125,7 @@ The following variables are supported:
   `baur ls --build-status`
 - Build all applications, upload their artifacts and records the results:
   `baur build --upload all`
-- Show informations about an application called `currency-service`:
+- Show information about an application called `currency-service`:
   `baur show currency-service`
 - Show inputs of an application called `claim-service` with their digests:
   `baur inputs --digest claim-server`
@@ -144,4 +138,4 @@ The following variables are supported:
 4. Push the `ver` file change to the remote git repository.
 5. Create a new release on github.com and upload the binaries.
 
-[modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en : )
+[modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en_us : )
