@@ -19,9 +19,16 @@ const (
 // ErrNotExist indicates that a record does not exist
 var ErrNotExist = errors.New("does not exist")
 
+// VCSState contains informations about the VCS at the time of the build
+type VCSState struct {
+	CommitID string
+	IsDirty  bool
+}
+
 // Build represents a stored build
 type Build struct {
 	AppName          string
+	VCSState         VCSState
 	StartTimeStamp   time.Time
 	StopTimeStamp    time.Time
 	TotalInputDigest string

@@ -16,13 +16,14 @@ import (
 
 // Repository represents an repository containing applications
 type Repository struct {
-	Path            string
-	CfgPath         string
-	AppSearchDirs   []string
-	SearchDepth     int
-	DefaultBuildCmd string
-	gitCommitID     string
-	PSQLURL         string
+	Path               string
+	CfgPath            string
+	AppSearchDirs      []string
+	SearchDepth        int
+	DefaultBuildCmd    string
+	gitCommitID        string
+	gitWorktreeIsDirty *bool
+	PSQLURL            string
 }
 
 // FindRepository searches for a repository config file in the current directory
@@ -187,5 +188,23 @@ func (r *Repository) GitCommitID() (string, error) {
 	r.gitCommitID = commit
 
 	return commit, nil
+}
 
+// GitWorkTreeIsDirty returns true if the git repository contains untracked
+// changes
+func (r *Repository) GitWorkTreeIsDirty() (bool, error) {
+	if r.gitWorktreeIsDirty != nil {
+		return *r.gitWorktreeIsDirty, nil
+	}
+
+	isDirty, err := git.WorkTreeIsDirty(r.Path)
+	if err != nil {
+		return false, errors.Wrap(err, "determining Git worktree state failed, "+
+			"ensure that the git command is in a directory in $PATH and "+
+			"that the .baur.toml file is part of a git repository")
+	}
+
+	r.gitWorktreeIsDirty = &isDirty
+
+	return isDirty, nil
 }

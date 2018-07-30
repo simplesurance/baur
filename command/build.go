@@ -47,7 +47,11 @@ func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 	defer resultLock.Unlock()
 
 	b := storage.Build{
-		AppName:          bud.App.Name,
+		AppName: bud.App.Name,
+		VCSState: storage.VCSState{
+			CommitID: mustGetCommitID(bud.App.Repository),
+			IsDirty:  mustGetGitWorktreeIsDirty(bud.App.Repository),
+		},
 		StartTimeStamp:   r.StartTs,
 		StopTimeStamp:    r.StopTs,
 		Inputs:           bud.Inputs,
@@ -337,6 +341,8 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	}
 
 	baur.SortAppsByName(apps)
+
+	repo.GitCommitID()
 
 	buildJobs := createBuildJobs(apps)
 	buildChan := make(chan *build.Result, len(apps))

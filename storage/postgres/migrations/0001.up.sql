@@ -3,8 +3,16 @@ CREATE TABLE application (
 	name TEXT NOT NULL UNIQUE
 );
 
+CREATE TABLE vcs (
+	id SERIAL PRIMARY KEY,
+	commit TEXT NOT NULL,
+	dirty BOOL NOT NULL,
+	CONSTRAINT vcs_uniq UNIQUE(commit, dirty)
+);
+
 CREATE TABLE build (
 	id SERIAL PRIMARY KEY,
+	vcs_id INTEGER REFERENCES vcs(id),
 	application_id integer REFERENCES application (id),
 	start_timestamp timestamp with time zone,
 	stop_timestamp timestamp with time zone,

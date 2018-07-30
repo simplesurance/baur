@@ -91,3 +91,21 @@ func mustGetPostgresClt(r *baur.Repository) *postgres.Client {
 func durationToStrSec(d time.Duration) string {
 	return fmt.Sprintf("%.2fs", d.Seconds())
 }
+
+func mustGetCommitID(r *baur.Repository) string {
+	commitID, err := r.GitCommitID()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return commitID
+}
+
+func mustGetGitWorktreeIsDirty(r *baur.Repository) bool {
+	isDirty, err := r.GitWorkTreeIsDirty()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return isDirty
+}

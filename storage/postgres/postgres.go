@@ -42,16 +42,16 @@ func (c *Client) ListBuildsPerApp(appName string, maxResults int) ([]*storage.Bu
 	return nil, nil
 }
 
-func insertBuild(tx *sql.Tx, appID int, b *storage.Build) (int, error) {
+func insertBuild(tx *sql.Tx, appID, vcsID int, b *storage.Build) (int, error) {
 	const stmt = `
 	INSERT INTO build
-	(application_id, start_timestamp, stop_timestamp, total_input_digest)
-	VALUES($1, $2, $3, $4)
+	(application_id, vcs_id, start_timestamp, stop_timestamp, total_input_digest)
+	VALUES($1, $2, $3, $4, $5)
 	RETURNING id;`
 
 	var id int
 
-	r := tx.QueryRow(stmt, appID, b.StartTimeStamp, b.StopTimeStamp, b.TotalInputDigest)
+	r := tx.QueryRow(stmt, appID, vcsID, b.StartTimeStamp, b.StopTimeStamp, b.TotalInputDigest)
 
 	if err := r.Scan(&id); err != nil {
 		return -1, err
@@ -195,6 +195,24 @@ func insertInputsIfNotExist(tx *sql.Tx, inputs []*storage.Input) ([]int, error) 
 
 }
 
+func insertVCSIfNotExist(tx *sql.Tx, v *storage.VCSState) (int, error) {
+	const stmt = `
+	INSERT INTO vcs
+	(commit, dirty)
+	VALUES($1, $2)
+	ON CONFLICT ON CONSTRAINT vcs_uniq
+	DO UPDATE SET id=vcs.id RETURNING id
+	`
+	var id int
+
+	err := tx.QueryRow(stmt, v.CommitID, v.IsDirty).Scan(&id)
+	if err != nil {
+		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+	}
+
+	return id, nil
+}
+
 func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 	const stmt = `
 	INSERT INTO application
@@ -271,7 +289,12 @@ func (c *Client) Save(b *storage.Build) error {
 		return errors.Wrap(err, "storing application record failed")
 	}
 
-	buildID, err := insertBuild(tx, appID, b)
+	vcsID, err := insertVCSIfNotExist(tx, &b.VCSState)
+	if err != nil {
+		return errors.Wrap(err, "storing vcs information failed")
+	}
+
+	buildID, err := insertBuild(tx, appID, vcsID, b)
 	if err != nil {
 		return errors.Wrap(err, "storing build record failed")
 	}

@@ -81,6 +81,10 @@ func TestSave(t *testing.T) {
 			},
 		},
 		TotalInputDigest: "123",
+		VCSState: storage.VCSState{
+			CommitID: "123",
+			IsDirty:  true,
+		},
 	}
 
 	err = c.Save(&b)
