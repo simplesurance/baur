@@ -3,6 +3,7 @@ package command
 import (
 	"encoding/csv"
 	"fmt"
+	"math"
 	"os"
 	"text/tabwriter"
 
@@ -56,25 +57,65 @@ func lsPlain(apps []*baur.App) {
 	fmt.Printf("Total: %v\n", len(apps))
 }
 
-func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
-	var buildExist int
-	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+func longestAppNameLen(apps []*baur.App) int {
+	var longest int
 
-	fmt.Fprintf(tw, "# Name\tBuild Status\tBuild ID\tGit Commit\n")
+	for _, a := range apps {
+		if len(a.Name) > longest {
+			longest = len(a.Name)
+		}
+	}
+
+	return longest
+}
+
+func longestStrLen(strs ...string) int {
+	var longest int
+
+	for _, s := range strs {
+		if len(s) > longest {
+			longest = len(s)
+		}
+	}
+
+	return longest
+}
+
+func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
+	const sepSpaces = 2
+	var (
+		buildExist int
+
+		nameColLen   = longestAppNameLen(apps) + sepSpaces
+		statusColLen = longestStrLen(baur.BuildStatusExist.String(), baur.BuildStatusInputsUndefined.String(), baur.BuildStatusOutstanding.String()) + sepSpaces
+		idColLen     = len(string(math.MaxInt64)) + sepSpaces
+		vcsColLen    = 40 + len("-dirty")
+	)
+
+	if nameColLen <= 2 {
+		nameColLen = 6
+	}
+
+	fmt.Printf("# %-*s\t%-*s\t%-*s\t%-*s\n",
+		nameColLen-2, "Name",
+		statusColLen, "Build Status",
+		idColLen, "Build Id",
+		vcsColLen, "Git Commit")
 
 	for _, app := range apps {
 		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
 
 		if buildStatus == baur.BuildStatusExist {
 			buildExist++
-			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", app.Name, buildStatus, buildID, vcsStr(&build.VCSState))
+			fmt.Printf("%-*s\t%-*s\t%-*s\t%-*s\n", nameColLen, app.Name,
+				statusColLen, buildStatus,
+				idColLen, buildID,
+				vcsColLen, vcsStr(&build.VCSState))
 			continue
 		}
 
-		fmt.Fprintf(tw, "%s\t%s\t\t\n", app.Name, buildStatus)
+		fmt.Printf("%-*s\t%-*s\t\t\n", nameColLen, app.Name, statusColLen, buildStatus)
 	}
-
-	tw.Flush()
 
 	term.PrintSep()
 
