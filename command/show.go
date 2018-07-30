@@ -93,6 +93,7 @@ func showBuildInformation(rep *baur.Repository, buildID int64) {
 	fmt.Fprintf(tw, "Application:\t%s\n", build.AppName)
 	fmt.Fprintf(tw, "Build ID:\t%d\n", buildID)
 
+	fmt.Fprintf(tw, "Build Started at:\t%s\n", build.StartTimeStamp)
 	fmt.Fprintf(tw, "Build Duration:\t%s\n",
 		durationToStrSec(build.StopTimeStamp.Sub(build.StartTimeStamp)))
 
