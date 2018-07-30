@@ -82,7 +82,7 @@ func mustFindApps(r *baur.Repository) []*baur.App {
 func mustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	clt, err := postgres.New(r.PSQLURL)
 	if err != nil {
-		log.Fatalf("could not establish connection to postgreSQL db: %s", err)
+		log.Fatalf("could not establish connection to postgreSQL db: %s\n", err)
 	}
 
 	return clt
