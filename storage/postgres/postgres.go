@@ -326,32 +326,6 @@ func (c *Client) Save(b *storage.Build) error {
 
 	return nil
 }
-
-// FindLatestAppBuildByDigest returns the build id of a build for the
-// application with the passed digest. If multiple builds exist, the one with
-// the lastest stop_timestamp is returned.
-// If no builds exist sql.ErrNoRows is returned
-func (c *Client) FindLatestAppBuildByDigest(appName, totalInputDigest string) (int64, error) {
-	const stmt = `
-	 SELECT build.id
-	 FROM application AS app
-	 JOIN build AS build ON app.id = build.application_id
-	 WHERE app.name = $1 AND total_input_digest = $2
-	 ORDER BY build.stop_timestamp DESC LIMIT 1
-	 `
-	var id int64
-
-	err := c.db.QueryRow(stmt, appName, totalInputDigest).Scan(&id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return -1, storage.ErrNotExist
-		}
-		return -1, errors.Wrapf(err, "db query %q failed", stmt)
-	}
-
-	return id, nil
-}
-
 func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
@@ -393,19 +367,25 @@ func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
 // GetBuildWithoutInputs retrieves a build from the database
 func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
 	var build storage.Build
+	var commitID sql.NullString
+	var isDirty sql.NullBool
 
 	const stmt = `
 	 SELECT app.name,
-		build.start_timestamp, build.stop_timestamp, build.total_input_digest
+		build.start_timestamp, build.stop_timestamp, build.total_input_digest,
+		vcs.commit, vcs.dirty
 	 FROM application AS app
 	 JOIN build ON app.id = build.application_id
+	 LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
 	 WHERE build.id = $1`
 
 	err := c.db.QueryRow(stmt, id).Scan(
 		&build.AppName,
 		&build.StartTimeStamp,
 		&build.StopTimeStamp,
-		&build.TotalInputDigest)
+		&build.TotalInputDigest,
+		&commitID,
+		&isDirty)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrNotExist
@@ -414,9 +394,66 @@ func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
 		return nil, errors.Wrapf(err, "db query %q failed", stmt)
 	}
 
+	if commitID.Valid {
+		build.VCSState.CommitID = commitID.String
+	}
+
+	build.VCSState.IsDirty = isDirty.Bool
+
 	if err := c.populateOutputs(&build, id); err != nil {
 		return nil, errors.Wrap(err, "fetching build outputs failed")
 	}
 
 	return &build, err
+}
+
+// GetLatestBuildByDigest returns the build id of a build for the
+// application with the passed digest. If multiple builds exist, the one with
+// the lastest stop_timestamp is returned.
+// If no builds exist sql.ErrNoRows is returned
+func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (int64, *storage.Build, error) {
+	var (
+		id       int64
+		build    storage.Build
+		commitID sql.NullString
+		isDirty  sql.NullBool
+	)
+
+	const stmt = `
+	 SELECT app.name, build.id,
+		build.start_timestamp, build.stop_timestamp, build.total_input_digest,
+		vcs.commit, vcs.dirty
+	 FROM application AS app
+	 JOIN build ON app.id = build.application_id
+	 LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
+	 WHERE app.name = $1 AND total_input_digest = $2
+	 ORDER BY build.stop_timestamp DESC LIMIT 1
+	 `
+
+	err := c.db.QueryRow(stmt, appName, totalInputDigest).Scan(
+		&build.AppName,
+		&id,
+		&build.StartTimeStamp,
+		&build.StopTimeStamp,
+		&build.TotalInputDigest,
+		&commitID,
+		&isDirty)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return -1, nil, storage.ErrNotExist
+		}
+
+		return -1, nil, errors.Wrapf(err, "db query %q failed", stmt)
+	}
+
+	if commitID.Valid {
+		build.VCSState.CommitID = commitID.String
+		build.VCSState.IsDirty = isDirty.Bool
+	}
+
+	if err := c.populateOutputs(&build, id); err != nil {
+		return -1, nil, errors.Wrap(err, "fetching build outputs failed")
+	}
+
+	return id, &build, err
 }

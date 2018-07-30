@@ -38,24 +38,24 @@ func (b BuildStatus) String() string {
 // storage if a build for this input digest already exist.
 // If a build exist for the totalInputDigest it returns the ID of the build that
 // was build last.
-func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, int64, error) {
+func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, int64, *storage.Build, error) {
 	if len(app.BuildInputPaths) == 0 {
-		return BuildStatusInputsUndefined, -1, nil
+		return BuildStatusInputsUndefined, -1, nil, nil
 	}
 
 	d, err := app.TotalInputDigest()
 	if err != nil {
-		return -1, -1, errors.Wrap(err, "calculating total input digest failed")
+		return -1, -1, nil, errors.Wrap(err, "calculating total input digest failed")
 	}
 
-	buildID, err := storer.FindLatestAppBuildByDigest(app.Name, d.String())
+	buildID, build, err := storer.GetLatestBuildByDigest(app.Name, d.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
-			return BuildStatusOutstanding, -1, nil
+			return BuildStatusOutstanding, -1, nil, nil
 		}
 
 		log.Fatalf("fetching build of %q from storage failed: %s\n", app.Name, err)
 	}
 
-	return BuildStatusExist, buildID, nil
+	return BuildStatusExist, buildID, build, nil
 }

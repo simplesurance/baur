@@ -40,36 +40,38 @@ func appPath(a *baur.App, absolutePaths bool) string {
 	return a.RelPath
 }
 
-func lsPlain(apps []*baur.App, storage storage.Storer) {
-	var buildExist int
+func lsPlain(apps []*baur.App) {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	if lsShowBuildStatus {
-		fmt.Fprintf(tw, "# Name\tDirectory\tBuild Status\n")
-	} else {
-		fmt.Fprintf(tw, "# Name\tDirectory\n")
-	}
+	fmt.Fprintf(tw, "# Name\tDirectory\n")
 
 	for _, app := range apps {
 		path := appPath(app, lsShowAbsPath)
+		fmt.Fprintf(tw, "%s\t%s\n", app.Name, path)
+	}
 
-		if lsShowBuildStatus {
-			buildStatus, buildID := mustGetBuildStatus(app, storage)
+	tw.Flush()
 
-			if buildStatus == baur.BuildStatusExist {
-				fmt.Fprintf(tw, "%s\t%s\t%s (ID: %s)\n",
-					app.Name, path, buildStatus, buildID)
-				buildExist++
+	term.PrintSep()
+	fmt.Printf("Total: %v\n", len(apps))
+}
 
-			} else {
-				fmt.Fprintf(tw, "%s\t%s\t%s\n",
-					app.Name, path, buildStatus)
-			}
+func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
+	var buildExist int
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
+	fmt.Fprintf(tw, "# Name\tBuild Status\tBuild ID\tGit Commit\n")
+
+	for _, app := range apps {
+		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
+
+		if buildStatus == baur.BuildStatusExist {
+			buildExist++
+			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", app.Name, buildStatus, buildID, vcsStr(&build.VCSState))
 			continue
 		}
 
-		fmt.Fprintf(tw, "%s\t%s\n", app.Name, path)
+		fmt.Fprintf(tw, "%s\t%s\t\t\n", app.Name, buildStatus)
 	}
 
 	tw.Flush()
@@ -86,24 +88,39 @@ func lsPlain(apps []*baur.App, storage storage.Storer) {
 	fmt.Printf("Total: %v\n", len(apps))
 }
 
-func lsCSV(apps []*baur.App, storage storage.Storer) {
+func lsBuildStatusCSV(apps []*baur.App, storage storage.Storer) {
 	csvw := csv.NewWriter(os.Stdout)
 
 	for _, app := range apps {
-		path := appPath(app, lsShowAbsPath)
+		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
 
-		if lsShowBuildStatus {
-			buildStatus, buildID := mustGetBuildStatus(app, storage)
-
+		if buildStatus == baur.BuildStatusExist {
 			csvw.Write([]string{
 				app.Name,
-				path,
 				buildStatus.String(),
 				buildID,
+				vcsStr(&build.VCSState),
 			})
 
 			continue
 		}
+
+		csvw.Write([]string{
+			app.Name,
+			buildStatus.String(),
+			buildID,
+		})
+
+	}
+
+	csvw.Flush()
+}
+
+func lsCSV(apps []*baur.App) {
+	csvw := csv.NewWriter(os.Stdout)
+
+	for _, app := range apps {
+		path := appPath(app, lsShowAbsPath)
 
 		csvw.Write([]string{app.Name, path})
 	}
@@ -116,24 +133,32 @@ func ls(cmd *cobra.Command, args []string) {
 	rep := mustFindRepository()
 	apps := mustFindApps(rep)
 
-	if lsShowBuildStatus {
-		storage = mustGetPostgresClt(rep)
-	}
-
 	baur.SortAppsByName(apps)
 
-	if lsCSVFmt {
-		lsCSV(apps, storage)
+	if lsShowBuildStatus {
+		storage = mustGetPostgresClt(rep)
+
+		if lsCSVFmt {
+			lsBuildStatusCSV(apps, storage)
+			os.Exit(0)
+		}
+
+		lsBuildStatusPlain(apps, storage)
 		os.Exit(0)
 	}
 
-	lsPlain(apps, storage)
+	if lsCSVFmt {
+		lsCSV(apps)
+		os.Exit(0)
+	}
+
+	lsPlain(apps)
 }
 
-func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, string) {
+func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.Build, string) {
 	var strBuildID string
 
-	status, id, err := baur.GetBuildStatus(storage, app)
+	status, id, build, err := baur.GetBuildStatus(storage, app)
 	if err != nil {
 		log.Fatalln("evaluating build status failed:", err)
 	}
@@ -142,5 +167,5 @@ func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus
 		strBuildID = fmt.Sprint(id)
 	}
 
-	return status, strBuildID
+	return status, build, strBuildID
 }

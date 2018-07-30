@@ -8,6 +8,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
 )
 
@@ -108,4 +109,16 @@ func mustGetGitWorktreeIsDirty(r *baur.Repository) bool {
 	}
 
 	return isDirty
+}
+
+func vcsStr(v *storage.VCSState) string {
+	if len(v.CommitID) == 0 {
+		return ""
+	}
+
+	if v.IsDirty {
+		return fmt.Sprintf("%s-dirty", v.CommitID)
+	}
+
+	return v.CommitID
 }

@@ -95,6 +95,9 @@ func showBuildInformation(rep *baur.Repository, buildID int64) {
 
 	fmt.Fprintf(tw, "Build Duration:\t%s\n",
 		durationToStrSec(build.StopTimeStamp.Sub(build.StartTimeStamp)))
+
+	fmt.Fprintf(tw, "Git Commit:\t%s\n", vcsStr(&build.VCSState))
+
 	fmt.Fprintf(tw, "Input Digest:\t%s\n", build.TotalInputDigest)
 
 	fmt.Fprintf(tw, "Outputs:\t\n")
