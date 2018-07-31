@@ -3,7 +3,6 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"time"
 
 	_ "github.com/lib/pq" // postgresql
 	"github.com/pkg/errors"
@@ -274,7 +273,7 @@ func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) error {
 	const stmt = `
 	INSERT into upload
-	(build_output_id, uri, upload_duration_msec)
+	(build_output_id, uri, upload_duration_ns)
 	VALUES
 	`
 
@@ -292,7 +291,7 @@ func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) 
 	for i, out := range outputs {
 		stmtVals += fmt.Sprintf("($%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2)
 		argCNT += 3
-		queryArgs = append(queryArgs, buildOutputIDs[i], out.URI, out.UploadDuration/time.Millisecond)
+		queryArgs = append(queryArgs, buildOutputIDs[i], out.URI, out.UploadDuration)
 
 		if i < len(outputs)-1 {
 			stmtVals += ", "
@@ -379,10 +378,11 @@ func (c *Client) Save(b *storage.Build) error {
 func (c *Client) populateOutputs(build *storage.Build) error {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
-			upload.uri, upload.upload_duration_msec
+			upload.uri, upload.upload_duration_ns
 		      FROM output
-		      JOIN upload ON upload.output_id = output.id
-		      WHERE upload.build_id = $1
+		      JOIN build_output ON output.id = build_output.output_id
+		      JOIN upload ON upload.build_output_id = build_output.id
+		      WHERE build_output.build_id = $1
 		      `
 
 	rows, err := c.db.Query(stmt, build.ID)
@@ -392,7 +392,6 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 
 	for rows.Next() {
 		var output storage.Output
-		var uploadDurationMsec int64
 
 		rows.Scan(
 			&output.Name,
@@ -400,10 +399,9 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 			&output.Type,
 			&output.SizeBytes,
 			&output.URI,
-			&uploadDurationMsec,
+			&output.UploadDuration,
 		)
 
-		output.UploadDuration = time.Duration(uploadDurationMsec) * time.Millisecond
 		build.Outputs = append(build.Outputs, &output)
 	}
 

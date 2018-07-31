@@ -38,7 +38,7 @@ CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
 	build_output_id integer REFERENCES build_output (id) NOT NULL,
 	uri TEXT, /* TODO: should this be unique? */
-	upload_duration_msec integer
+	upload_duration_ns BIGINT NOT NULL
 );
 
 CREATE TABLE input (
