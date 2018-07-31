@@ -388,7 +388,7 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 	for rows.Next() {
 		var output storage.Output
 
-		rows.Scan(
+		err := rows.Scan(
 			&output.Name,
 			&output.Digest,
 			&output.Type,
@@ -396,6 +396,9 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 			&output.URL,
 			&output.UploadDuration,
 		)
+		if err != nil {
+			return errors.Wrapf(err, "db query %q failed", stmt)
+		}
 
 		build.Outputs = append(build.Outputs, &output)
 	}
