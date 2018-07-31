@@ -15,6 +15,7 @@ baur will implement:
   need to be build
 
 Baur makes certain Assumptions:
+- the baur repository is part of a git repository,
 - an application directory only contains one application,
 - an application can be build by running a single command,
   a build has to produce 1 or more build artifacts
@@ -24,9 +25,9 @@ Baur makes certain Assumptions:
 To build baur run `make`.
 
 ## Dependencies
-- To make use of git specific functionality like using the `$GITCOMMIT` variable
-    and `[Build.Input.GitFiles]` directive in config files,  the Git commandline
-    tools must be installed and in one of the paths of the `$PATH` environment variable.
+- The git command lines tools are used to retrieve informations in a baur
+  repository. The tools must be installed and be in one of the paths of the
+  `$PATH` environment variable.
 
 ## Configuration
 1. Setup your PostgreSQL baur database
