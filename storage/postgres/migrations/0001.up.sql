@@ -13,18 +13,18 @@ CREATE TABLE vcs (
 CREATE TABLE build (
 	id SERIAL PRIMARY KEY,
 	vcs_id INTEGER REFERENCES vcs(id),
-	application_id integer REFERENCES application (id),
-	start_timestamp timestamp with time zone,
-	stop_timestamp timestamp with time zone,
+	application_id INTEGER REFERENCES application (id),
+	start_timestamp TIMESTAMP WITH TIME ZONE,
+	stop_timestamp TIMESTAMP WITH TIME ZONE,
 	total_input_digest TEXT
 );
 
 CREATE TABLE output (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
-	type TEXT,
+	type TEXT NOT NULL,
 	digest TEXT UNIQUE,
-	size_bytes integer
+	size_bytes INTEGER
 );
 
 CREATE TABLE build_output (
@@ -36,8 +36,8 @@ CREATE TABLE build_output (
 
 CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
-	build_output_id integer REFERENCES build_output (id) NOT NULL,
-	uri TEXT, /* TODO: should this be unique? */
+	build_output_id INTEGER REFERENCES build_output (id) NOT NULL,
+	uri TEXT NOT NULL,
 	upload_duration_ns BIGINT NOT NULL
 );
 
@@ -49,7 +49,7 @@ CREATE TABLE input (
 );
 
 CREATE TABLE input_build (
-	build_id integer REFERENCES build (id),
-	input_id integer REFERENCES input(id),
+	build_id INTEGER REFERENCES build (id),
+	input_id INTEGER REFERENCES input(id),
 	CONSTRAINT input_build_uniq UNIQUE(build_id, input_id)
 );
