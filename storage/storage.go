@@ -27,6 +27,7 @@ type VCSState struct {
 
 // Build represents a stored build
 type Build struct {
+	ID               int
 	AppName          string
 	VCSState         VCSState
 	StartTimeStamp   time.Time
@@ -60,7 +61,7 @@ type Input struct {
 // Storer is an interface for persisting informations about builds
 type Storer interface {
 	ListBuildsPerApp(appName string, maxResults int) ([]*Build, error)
-	GetLatestBuildByDigest(appName, totalInputDigest string) (int64, *Build, error)
+	GetLatestBuildByDigest(appName, totalInputDigest string) (*Build, error)
 	Save(b *Build) error
-	GetBuildWithoutInputs(id int64) (*Build, error)
+	GetBuildWithoutInputs(id int) (*Build, error)
 }

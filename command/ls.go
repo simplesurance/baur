@@ -199,13 +199,13 @@ func ls(cmd *cobra.Command, args []string) {
 func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.Build, string) {
 	var strBuildID string
 
-	status, id, build, err := baur.GetBuildStatus(storage, app)
+	status, build, err := baur.GetBuildStatus(storage, app)
 	if err != nil {
 		log.Fatalln("evaluating build status failed:", err)
 	}
 
-	if id != -1 {
-		strBuildID = fmt.Sprint(id)
+	if build != nil {
+		strBuildID = fmt.Sprint(build.ID)
 	}
 
 	return status, build, strBuildID

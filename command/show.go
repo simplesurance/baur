@@ -76,7 +76,7 @@ func showApplicationInformation(app *baur.App) {
 	tw.Flush()
 }
 
-func showBuildInformation(rep *baur.Repository, buildID int64) {
+func showBuildInformation(rep *baur.Repository, buildID int) {
 	clt := mustGetPostgresClt(rep)
 	build, err := clt.GetBuildWithoutInputs(buildID)
 	if err != nil {
@@ -126,9 +126,9 @@ func show(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	buildID, err := strconv.ParseInt(args[0], 10, 64)
+	buildID, err := strconv.ParseInt(args[0], 10, 32)
 	if err == nil {
-		showBuildInformation(rep, buildID)
+		showBuildInformation(rep, int(buildID))
 		os.Exit(0)
 	}
 

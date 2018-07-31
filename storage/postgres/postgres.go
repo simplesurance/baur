@@ -269,7 +269,9 @@ func insertUploads(tx *sql.Tx, buildID int, outputs []*storage.Output, outputIDs
 	return err
 }
 
-// Save stores a build
+// Save stores a build in the database, the ID field of the passed Build is
+// ignored. The database generates a record ID and it will be stored in the
+// passed Build.
 func (c *Client) Save(b *storage.Build) error {
 	tx, err := c.db.Begin()
 	if err != nil {
@@ -324,9 +326,12 @@ func (c *Client) Save(b *storage.Build) error {
 		return errors.Wrap(err, "storing input_build failed")
 	}
 
+	b.ID = buildID
+
 	return nil
 }
-func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
+
+func (c *Client) populateOutputs(build *storage.Build) error {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
 			upload.uri, upload.upload_duration_msec
@@ -335,7 +340,7 @@ func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
 		      WHERE upload.build_id = $1
 		      `
 
-	rows, err := c.db.Query(stmt, buildID)
+	rows, err := c.db.Query(stmt, build.ID)
 	if err != nil {
 		return errors.Wrapf(err, "db query %q failed", stmt)
 	}
@@ -365,10 +370,10 @@ func (c *Client) populateOutputs(build *storage.Build, buildID int64) error {
 }
 
 // GetBuildWithoutInputs retrieves a build from the database
-func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
-	var build storage.Build
+func (c *Client) GetBuildWithoutInputs(id int) (*storage.Build, error) {
 	var commitID sql.NullString
 	var isDirty sql.NullBool
+	build := storage.Build{ID: id}
 
 	const stmt = `
 	 SELECT app.name,
@@ -379,7 +384,7 @@ func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
 	 LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
 	 WHERE build.id = $1`
 
-	err := c.db.QueryRow(stmt, id).Scan(
+	err := c.db.QueryRow(stmt, build.ID).Scan(
 		&build.AppName,
 		&build.StartTimeStamp,
 		&build.StopTimeStamp,
@@ -400,7 +405,7 @@ func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
 
 	build.VCSState.IsDirty = isDirty.Bool
 
-	if err := c.populateOutputs(&build, id); err != nil {
+	if err := c.populateOutputs(&build); err != nil {
 		return nil, errors.Wrap(err, "fetching build outputs failed")
 	}
 
@@ -411,9 +416,8 @@ func (c *Client) GetBuildWithoutInputs(id int64) (*storage.Build, error) {
 // application with the passed digest. If multiple builds exist, the one with
 // the lastest stop_timestamp is returned.
 // If no builds exist sql.ErrNoRows is returned
-func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (int64, *storage.Build, error) {
+func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*storage.Build, error) {
 	var (
-		id       int64
 		build    storage.Build
 		commitID sql.NullString
 		isDirty  sql.NullBool
@@ -432,7 +436,7 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (int64
 
 	err := c.db.QueryRow(stmt, appName, totalInputDigest).Scan(
 		&build.AppName,
-		&id,
+		&build.ID,
 		&build.StartTimeStamp,
 		&build.StopTimeStamp,
 		&build.TotalInputDigest,
@@ -440,10 +444,10 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (int64
 		&isDirty)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return -1, nil, storage.ErrNotExist
+			return nil, storage.ErrNotExist
 		}
 
-		return -1, nil, errors.Wrapf(err, "db query %q failed", stmt)
+		return nil, errors.Wrapf(err, "db query %q failed", stmt)
 	}
 
 	if commitID.Valid {
@@ -451,9 +455,9 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (int64
 		build.VCSState.IsDirty = isDirty.Bool
 	}
 
-	if err := c.populateOutputs(&build, id); err != nil {
-		return -1, nil, errors.Wrap(err, "fetching build outputs failed")
+	if err := c.populateOutputs(&build); err != nil {
+		return nil, errors.Wrap(err, "fetching build outputs failed")
 	}
 
-	return id, &build, err
+	return &build, err
 }
