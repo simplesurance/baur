@@ -46,7 +46,7 @@ func (b *Build) AppNameLower() string {
 type Output struct {
 	Name           string
 	Type           OutputType
-	URI            string
+	URL            string
 	Digest         string
 	SizeBytes      int64
 	UploadDuration time.Duration

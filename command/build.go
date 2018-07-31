@@ -93,7 +93,7 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 		Name:           ar.Name(),
 		SizeBytes:      arSize,
 		Type:           arType,
-		URI:            r.URL,
+		URL:            r.URL,
 		UploadDuration: r.Duration,
 		Digest:         artDigest.String(),
 	})

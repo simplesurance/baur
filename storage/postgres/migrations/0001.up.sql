@@ -37,7 +37,7 @@ CREATE TABLE build_output (
 CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
 	build_output_id INTEGER REFERENCES build_output (id) NOT NULL,
-	uri TEXT NOT NULL,
+	url TEXT NOT NULL,
 	upload_duration_ns BIGINT NOT NULL
 );
 

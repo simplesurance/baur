@@ -103,7 +103,7 @@ func showBuildInformation(rep *baur.Repository, buildID int) {
 
 	fmt.Fprintf(tw, "Outputs:\t\n")
 	for i, o := range build.Outputs {
-		fmt.Fprintf(tw, "\tURL:\t%s\n", o.URI)
+		fmt.Fprintf(tw, "\tURL:\t%s\n", o.URL)
 		fmt.Fprintf(tw, "\tDigest:\t%s\n", o.Digest)
 		fmt.Fprintf(tw, "\tSize:\t%.3fMiB\n", float64(o.SizeBytes)/1024/1024)
 		fmt.Fprintf(tw, "\tUpload Duration:\t%s\n", durationToStrSec(o.UploadDuration))
