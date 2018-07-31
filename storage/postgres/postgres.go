@@ -36,11 +36,6 @@ func (c *Client) Close() {
 	c.db.Close()
 }
 
-// ListBuildsPerApp returns all builds for an app
-func (c *Client) ListBuildsPerApp(appName string, maxResults int) ([]*storage.Build, error) {
-	return nil, nil
-}
-
 func insertBuild(tx *sql.Tx, appID, vcsID int, b *storage.Build) (int, error) {
 	const stmt = `
 	INSERT INTO build
