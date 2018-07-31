@@ -60,6 +60,46 @@ func insertBuild(tx *sql.Tx, appID, vcsID int, b *storage.Build) (int, error) {
 	return id, nil
 }
 
+func insertBuildOutputs(tx *sql.Tx, buildID int, outputIDs []int) ([]int, error) {
+	const stmt1 = "INSERT INTO build_output(build_id, output_id) VALUES"
+	const stmt2 = "RETURNING ID"
+
+	var ids []int
+	var stmtVals string
+
+	for i, outputID := range outputIDs {
+		stmtVals += fmt.Sprintf("(%d, %d)", buildID, outputID)
+
+		if i < len(outputIDs)-1 {
+			stmtVals += ", "
+		}
+	}
+
+	query := stmt1 + stmtVals + stmt2
+	rows, err := tx.Query(query)
+	if err != nil {
+		return nil, errors.Wrapf(err, "db query %q failed", query)
+	}
+
+	for rows.Next() {
+		var id int
+
+		err := rows.Scan(&id)
+		if err != nil {
+			rows.Close()
+			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
+		}
+
+		ids = append(ids, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "iterating over rows failed")
+	}
+
+	return ids, nil
+}
+
 func insertOutputsIfNotExist(tx *sql.Tx, outputs []*storage.Output) ([]int, error) {
 	const stmt1 = "INSERT INTO output (name, type, digest, size_bytes) VALUES"
 	const stmt2 = `
@@ -96,7 +136,7 @@ func insertOutputsIfNotExist(tx *sql.Tx, outputs []*storage.Output) ([]int, erro
 		err := rows.Scan(&id)
 		if err != nil {
 			rows.Close()
-			return nil, errors.Wrapf(err, "db query %q failed", query)
+			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
 		}
 
 		ids = append(ids, id)
@@ -231,10 +271,10 @@ func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 	return id, nil
 }
 
-func insertUploads(tx *sql.Tx, buildID int, outputs []*storage.Output, outputIDs []int) error {
+func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) error {
 	const stmt = `
 	INSERT into upload
-	(build_id, output_id, uri, upload_duration_msec)
+	(build_output_id, uri, upload_duration_msec)
 	VALUES
 	`
 
@@ -244,15 +284,15 @@ func insertUploads(tx *sql.Tx, buildID int, outputs []*storage.Output, outputIDs
 		queryArgs = make([]interface{}, 0, len(outputs)*4)
 	)
 
-	if len(outputs) != len(outputIDs) {
-		return fmt.Errorf("got slices with differen length of outputs (%d) and outputIDs (%d) s parameters",
-			len(outputs), len(outputIDs))
+	if len(outputs) != len(buildOutputIDs) {
+		return fmt.Errorf("output (%d) and buildOutputIDs (%d) slices are not of same length",
+			len(outputs), len(buildOutputIDs))
 	}
 
 	for i, out := range outputs {
-		stmtVals += fmt.Sprintf("($%d, $%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2, argCNT+3)
-		argCNT += 4
-		queryArgs = append(queryArgs, buildID, outputIDs[i], out.URI, out.UploadDuration/time.Millisecond)
+		stmtVals += fmt.Sprintf("($%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2)
+		argCNT += 3
+		queryArgs = append(queryArgs, buildOutputIDs[i], out.URI, out.UploadDuration/time.Millisecond)
 
 		if i < len(outputs)-1 {
 			stmtVals += ", "
@@ -306,7 +346,12 @@ func (c *Client) Save(b *storage.Build) error {
 		return errors.Wrap(err, "storing output records failed")
 	}
 
-	err = insertUploads(tx, buildID, b.Outputs, outputIDs)
+	buildOutputIDs, err := insertBuildOutputs(tx, buildID, outputIDs)
+	if err != nil {
+		return errors.Wrap(err, "storing buildOutput records failed")
+	}
+
+	err = insertUploads(tx, buildOutputIDs, b.Outputs)
 	if err != nil {
 		return errors.Wrap(err, "storing upload record failed")
 	}

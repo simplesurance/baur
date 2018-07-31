@@ -27,10 +27,16 @@ CREATE TABLE output (
 	size_bytes integer
 );
 
+CREATE TABLE build_output (
+	id SERIAL PRIMARY KEY,
+	build_id INTEGER REFERENCES build (id) NOT NULL,
+	output_id INTEGER REFERENCES output (id) NOT NULL,
+	CONSTRAINT build_output_uniq UNIQUE(build_id, output_id)
+);
+
 CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
-	build_id integer REFERENCES build (id) NOT NULL,
-	output_id integer REFERENCES output (id) NOT NULL,
+	build_output_id integer REFERENCES build_output (id) NOT NULL,
 	uri TEXT, /* TODO: should this be unique? */
 	upload_duration_msec integer
 );
