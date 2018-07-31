@@ -90,7 +90,7 @@ func showBuildInformation(rep *baur.Repository, buildID int) {
 	fmt.Printf("# Build Information\n")
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	fmt.Fprintf(tw, "Application:\t%s\n", build.AppName)
+	fmt.Fprintf(tw, "Application:\t%s\n", build.Application.Name)
 	fmt.Fprintf(tw, "Build ID:\t%d\n", buildID)
 
 	fmt.Fprintf(tw, "Build Started at:\t%s\n", build.StartTimeStamp)
@@ -103,10 +103,10 @@ func showBuildInformation(rep *baur.Repository, buildID int) {
 
 	fmt.Fprintf(tw, "Outputs:\t\n")
 	for i, o := range build.Outputs {
-		fmt.Fprintf(tw, "\tURL:\t%s\n", o.URL)
+		fmt.Fprintf(tw, "\tURL:\t%s\n", o.Upload.URL)
 		fmt.Fprintf(tw, "\tDigest:\t%s\n", o.Digest)
 		fmt.Fprintf(tw, "\tSize:\t%.3fMiB\n", float64(o.SizeBytes)/1024/1024)
-		fmt.Fprintf(tw, "\tUpload Duration:\t%s\n", durationToStrSec(o.UploadDuration))
+		fmt.Fprintf(tw, "\tUpload Duration:\t%s\n", durationToStrSec(o.Upload.UploadDuration))
 
 		if i < (len(build.Outputs) - 1) {
 			fmt.Fprintf(tw, "\t\t\t\n")

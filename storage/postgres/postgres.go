@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/lib/pq" // postgresql
 	"github.com/pkg/errors"
@@ -247,7 +248,7 @@ func insertVCSIfNotExist(tx *sql.Tx, v *storage.VCSState) (int, error) {
 	return id, nil
 }
 
-func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
+func insertAppIfNotExist(tx *sql.Tx, app *storage.Application) error {
 	const stmt = `
 	INSERT INTO application
 	(name)
@@ -255,14 +256,13 @@ func insertAppIfNotExist(tx *sql.Tx, appName string) (int, error) {
 	ON CONFLICT ON CONSTRAINT application_name_key
 	DO UPDATE SET id=application.id RETURNING id
 	`
-	var id int
 
-	err := tx.QueryRow(stmt, appName).Scan(&id)
+	err := tx.QueryRow(stmt, app.NameLower()).Scan(&app.ID)
 	if err != nil {
-		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+		return errors.Wrapf(err, "db query %q failed", stmt)
 	}
 
-	return id, nil
+	return nil
 }
 
 func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) error {
@@ -278,6 +278,7 @@ func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) 
 		queryArgs = make([]interface{}, 0, len(outputs)*4)
 	)
 
+	// TODO: retrieve the ID from the insert and set it in out.Upload
 	if len(outputs) != len(buildOutputIDs) {
 		return fmt.Errorf("output (%d) and buildOutputIDs (%d) slices are not of same length",
 			len(outputs), len(buildOutputIDs))
@@ -286,7 +287,7 @@ func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) 
 	for i, out := range outputs {
 		stmtVals += fmt.Sprintf("($%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2)
 		argCNT += 3
-		queryArgs = append(queryArgs, buildOutputIDs[i], out.URL, out.UploadDuration)
+		queryArgs = append(queryArgs, buildOutputIDs[i], out.Upload.URL, out.Upload.UploadDuration)
 
 		if i < len(outputs)-1 {
 			stmtVals += ", "
@@ -320,7 +321,7 @@ func (c *Client) Save(b *storage.Build) error {
 		}
 	}()
 
-	appID, err := insertAppIfNotExist(tx, b.AppNameLower())
+	err = insertAppIfNotExist(tx, &b.Application)
 	if err != nil {
 		return errors.Wrap(err, "storing application record failed")
 	}
@@ -330,7 +331,7 @@ func (c *Client) Save(b *storage.Build) error {
 		return errors.Wrap(err, "storing vcs information failed")
 	}
 
-	buildID, err := insertBuild(tx, appID, vcsID, b)
+	buildID, err := insertBuild(tx, b.Application.ID, vcsID, b)
 	if err != nil {
 		return errors.Wrap(err, "storing build record failed")
 	}
@@ -373,7 +374,7 @@ func (c *Client) Save(b *storage.Build) error {
 func (c *Client) populateOutputs(build *storage.Build) error {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
-			upload.url, upload.upload_duration_ns
+			upload.id, upload.url, upload.upload_duration_ns
 		      FROM output
 		      JOIN build_output ON output.id = build_output.output_id
 		      JOIN upload ON upload.build_output_id = build_output.id
@@ -393,8 +394,9 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 			&output.Digest,
 			&output.Type,
 			&output.SizeBytes,
-			&output.URL,
-			&output.UploadDuration,
+			&output.Upload.ID,
+			&output.Upload.URL,
+			&output.Upload.UploadDuration,
 		)
 		if err != nil {
 			return errors.Wrapf(err, "db query %q failed", stmt)
@@ -417,8 +419,8 @@ func (c *Client) GetBuildWithoutInputs(id int) (*storage.Build, error) {
 	build := storage.Build{ID: id}
 
 	const stmt = `
-	 SELECT app.name,
-		build.start_timestamp, build.stop_timestamp, build.total_input_digest,
+	 SELECT app.id, app.name,
+		build.id, build.start_timestamp, build.stop_timestamp, build.total_input_digest,
 		vcs.commit, vcs.dirty
 	 FROM application AS app
 	 JOIN build ON app.id = build.application_id
@@ -426,7 +428,9 @@ func (c *Client) GetBuildWithoutInputs(id int) (*storage.Build, error) {
 	 WHERE build.id = $1`
 
 	err := c.db.QueryRow(stmt, build.ID).Scan(
-		&build.AppName,
+		&build.Application.ID,
+		&build.Application.Name,
+		&build.ID,
 		&build.StartTimeStamp,
 		&build.StopTimeStamp,
 		&build.TotalInputDigest,
@@ -453,9 +457,10 @@ func (c *Client) GetBuildWithoutInputs(id int) (*storage.Build, error) {
 	return &build, err
 }
 
-// GetLatestBuildByDigest returns the build id of a build for the
-// application with the passed digest. If multiple builds exist, the one with
-// the lastest stop_timestamp is returned.
+// GetLatestBuildByDigest returns the build id of a build for the application
+// with the passed digest. If multiple builds exist, the one with the lastest
+// stop_timestamp is returned.
+// Inputs are not fetched from the database.
 // If no builds exist sql.ErrNoRows is returned
 func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*storage.Build, error) {
 	var (
@@ -465,8 +470,8 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*stor
 	)
 
 	const stmt = `
-	 SELECT app.name, build.id,
-		build.start_timestamp, build.stop_timestamp, build.total_input_digest,
+	 SELECT app.id, app.name,
+		build.id, build.start_timestamp, build.stop_timestamp, build.total_input_digest,
 		vcs.commit, vcs.dirty
 	 FROM application AS app
 	 JOIN build ON app.id = build.application_id
@@ -476,7 +481,8 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*stor
 	 `
 
 	err := c.db.QueryRow(stmt, appName, totalInputDigest).Scan(
-		&build.AppName,
+		&build.Application.ID,
+		&build.Application.Name,
 		&build.ID,
 		&build.StartTimeStamp,
 		&build.StopTimeStamp,
@@ -501,4 +507,148 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*stor
 	}
 
 	return &build, err
+}
+
+// GetApps returns all application records ordered by Name
+func (c *Client) GetApps() ([]*storage.Application, error) {
+	const query = "SELECT id, name FROM application ORDER BY name"
+	var res []*storage.Application
+
+	rows, err := c.db.Query(query)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, errors.Wrapf(err, "db query %q failed", query)
+	}
+
+	for rows.Next() {
+		var app storage.Application
+
+		err := rows.Scan(&app.ID, &app.Name)
+		if err != nil {
+			rows.Close()
+			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
+		}
+
+		res = append(res, &app)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "iterating over rows failed")
+	}
+
+	return res, nil
+}
+
+// GetSameTotalInputDigestsForAppBuilds finds TotalInputDigests that are the
+// same for builds of an app with a build start time not before startTs
+// If not builds with the same totalInputDigest is found, an empty slice is
+// returned.
+func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) ([]string, error) {
+	const query = `
+		 SELECT total_input_digest from build
+		 JOIN application on build.application_id = application.id
+		 WHERE total_input_digest != ''
+		 AND build.start_timestamp  >= $1
+		 AND application.name = $2
+		 GROUP BY total_input_digest
+		 HAVING count(total_input_digest) > 1`
+
+	var res []string
+
+	rows, err := c.db.Query(query, startTs, appName)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, errors.Wrapf(err, "db query %q failed", query)
+	}
+
+	for rows.Next() {
+		var digest string
+
+		err := rows.Scan(&digest)
+		if err != nil {
+			rows.Close()
+			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
+		}
+
+		res = append(res, digest)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "iterating over rows failed")
+	}
+
+	return res, err
+}
+
+// GetAppBuildsByInputDigest returns all builds of an application with the given
+// totalInputDigest. If no matching entries are found it returns
+// storage.ErrNotExist
+func (c *Client) GetAppBuildsByInputDigest(appName, totalInputDigest string) ([]*storage.Build, error) {
+	const query = `
+		SELECT app.id, app.name,
+		       build.id, build.start_timestamp, build.stop_timestamp, build.total_input_digest,
+		       vcs.commit, vcs.dirty
+		FROM application AS app
+		JOIN build ON app.id = build.application_id
+		LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
+		WHERE app.name = $1
+		AND total_input_digest = $2
+		`
+	var res []*storage.Build
+
+	rows, err := c.db.Query(query, appName, totalInputDigest)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, errors.Wrapf(err, "db query %q failed", query)
+	}
+
+	for rows.Next() {
+		var build storage.Build
+		var commitID sql.NullString
+		var isDirty sql.NullBool
+
+		err := rows.Scan(
+			&build.Application.ID,
+			&build.Application.Name,
+			&build.ID,
+			&build.StartTimeStamp,
+			&build.StopTimeStamp,
+			&build.TotalInputDigest,
+			&commitID,
+			&isDirty)
+		if err != nil {
+			rows.Close()
+			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
+		}
+
+		if commitID.Valid {
+			build.VCSState.CommitID = commitID.String
+			build.VCSState.IsDirty = isDirty.Bool
+		}
+
+		if err := c.populateOutputs(&build); err != nil {
+			return nil, errors.Wrap(err, "fetching build outputs failed")
+		}
+
+		res = append(res, &build)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "iterating over rows failed")
+	}
+
+	if len(res) == 0 {
+		return nil, storage.ErrNotExist
+	}
+
+	return res, err
 }

@@ -131,6 +131,16 @@ The following variables are supported:
 - Show inputs of an application called `claim-service` with their digests:
   `baur inputs --digest claim-server`
 
+## Commands
+### `baur verify`
+Verify can be used to check for inconsistencies in past builds.
+It can find builds that have the same totalinputdigest but produced different
+artifacts. This can either mean that the build output it not reproducible (same
+inputs don't produce the same output) or that the specified Inputs are not
+complete.
+The command only compares the digests of file outputs. Docker container digest
+always differ when the container is rebuild.
+
 ## Development
 ### Create new Release
 1. Update the version number in the `ver` file and commit the change.

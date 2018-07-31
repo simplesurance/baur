@@ -25,10 +25,16 @@ type VCSState struct {
 	IsDirty  bool
 }
 
+// Application stores the name of the Application
+type Application struct {
+	ID   int
+	Name string
+}
+
 // Build represents a stored build
 type Build struct {
 	ID               int
-	AppName          string
+	Application      Application
 	VCSState         VCSState
 	StartTimeStamp   time.Time
 	StopTimeStamp    time.Time
@@ -37,19 +43,25 @@ type Build struct {
 	Inputs           []*Input
 }
 
-// AppNameLower returns the app of the name in lowercase
-func (b *Build) AppNameLower() string {
-	return strings.ToLower(b.AppName)
+// NameLower returns the app of the name in lowercase
+func (a *Application) NameLower() string {
+	return strings.ToLower(a.Name)
+}
+
+// Upload contains informations about an output upload
+type Upload struct {
+	ID             int
+	UploadDuration time.Duration
+	URL            string
 }
 
 // Output represents a build output
 type Output struct {
-	Name           string
-	Type           OutputType
-	URL            string
-	Digest         string
-	SizeBytes      int64
-	UploadDuration time.Duration
+	Name      string
+	Type      OutputType
+	Digest    string
+	SizeBytes int64
+	Upload    Upload
 }
 
 // Input represents a source of an artifact
@@ -63,4 +75,7 @@ type Storer interface {
 	GetLatestBuildByDigest(appName, totalInputDigest string) (*Build, error)
 	Save(b *Build) error
 	GetBuildWithoutInputs(id int) (*Build, error)
+	GetApps() ([]*Application, error)
+	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) ([]string, error)
+	GetAppBuildsByInputDigest(appName, totalInputDigest string) ([]*Build, error)
 }

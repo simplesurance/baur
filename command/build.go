@@ -47,7 +47,7 @@ func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 	defer resultLock.Unlock()
 
 	b := storage.Build{
-		AppName: bud.App.Name,
+		Application: storage.Application{Name: bud.App.Name},
 		VCSState: storage.VCSState{
 			CommitID: mustGetCommitID(bud.App.Repository),
 			IsDirty:  mustGetGitWorktreeIsDirty(bud.App.Repository),
@@ -90,12 +90,14 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 	}
 
 	b.Outputs = append(b.Outputs, &storage.Output{
-		Name:           ar.Name(),
-		SizeBytes:      arSize,
-		Type:           arType,
-		URL:            r.URL,
-		UploadDuration: r.Duration,
-		Digest:         artDigest.String(),
+		Name:      ar.Name(),
+		SizeBytes: arSize,
+		Type:      arType,
+		Upload: storage.Upload{
+			URL:            r.URL,
+			UploadDuration: r.Duration,
+		},
+		Digest: artDigest.String(),
 	})
 }
 
