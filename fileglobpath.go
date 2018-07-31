@@ -8,7 +8,6 @@ import (
 )
 
 //FileGlobPath is Source file of an application represented by a glob path
-// TODO: rename it to FileGlobPath or similar?
 type FileGlobPath struct {
 	repositoryRootPath string
 	relAppPath         string
