@@ -18,6 +18,13 @@ var lsCSVFmt bool
 var lsShowBuildStatus bool
 var lsShowAbsPath bool
 
+const (
+	lsNameCol   string = "Name"
+	lsStatusCol        = "Build Status"
+	lsIDCol            = "Build ID"
+	lsVCSCol           = "Git Commit"
+)
+
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "list all applications in the repository",
@@ -81,15 +88,26 @@ func longestStrLen(strs ...string) int {
 	return longest
 }
 
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
 func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
 	const sepSpaces = 2
 	var (
 		buildExist int
 
-		nameColLen   = longestAppNameLen(apps) + sepSpaces
-		statusColLen = longestStrLen(baur.BuildStatusExist.String(), baur.BuildStatusInputsUndefined.String(), baur.BuildStatusOutstanding.String()) + sepSpaces
-		idColLen     = len(string(math.MaxInt64)) + sepSpaces
-		vcsColLen    = 40 + len("-dirty")
+		nameColLen   = max(longestAppNameLen(apps), len(lsNameCol)) + sepSpaces
+		statusColLen = max(
+			longestStrLen(baur.BuildStatusExist.String(), baur.BuildStatusInputsUndefined.String(), baur.BuildStatusOutstanding.String()),
+			len(lsStatusCol),
+		) + sepSpaces
+		idColLen  = max(len(string(math.MaxInt64)), len(lsIDCol)) + sepSpaces
+		vcsColLen = max(40+len("-dirty"), len(lsVCSCol))
 	)
 
 	if nameColLen <= 2 {
@@ -97,10 +115,10 @@ func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
 	}
 
 	fmt.Printf("# %-*s\t%-*s\t%-*s\t%-*s\n",
-		nameColLen-2, "Name",
-		statusColLen, "Build Status",
-		idColLen, "Build Id",
-		vcsColLen, "Git Commit")
+		nameColLen-2, lsNameCol,
+		statusColLen, lsStatusCol,
+		idColLen, lsIDCol,
+		vcsColLen, lsVCSCol)
 
 	for _, app := range apps {
 		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
