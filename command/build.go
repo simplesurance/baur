@@ -311,7 +311,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 			if err := store.Save(build); err != nil {
 				log.Fatalf("storing build information about %q failed: %s", ud.App.Name, err)
 			}
-			log.Infof("%s: build %q stored in database\n", ud.App.Name, build.ID)
+			log.Infof("%s: build %d stored in database\n", ud.App.Name, build.ID)
 
 			log.Debugf("stored the following build information: %s\n", prettyprint.AsString(build))
 		}
