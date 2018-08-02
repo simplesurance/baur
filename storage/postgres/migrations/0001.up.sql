@@ -13,7 +13,7 @@ CREATE TABLE vcs (
 CREATE TABLE build (
 	id SERIAL PRIMARY KEY,
 	vcs_id INTEGER REFERENCES vcs(id),
-	application_id INTEGER REFERENCES application (id),
+	application_id INTEGER REFERENCES application (id) ON DELETE CASCADE,
 	start_timestamp TIMESTAMP WITH TIME ZONE,
 	stop_timestamp TIMESTAMP WITH TIME ZONE,
 	total_input_digest TEXT
@@ -29,14 +29,14 @@ CREATE TABLE output (
 
 CREATE TABLE build_output (
 	id SERIAL PRIMARY KEY,
-	build_id INTEGER REFERENCES build (id) NOT NULL,
-	output_id INTEGER REFERENCES output (id) NOT NULL,
+	build_id INTEGER REFERENCES build (id) ON DELETE CASCADE,
+	output_id INTEGER REFERENCES output (id),
 	CONSTRAINT build_output_uniq UNIQUE(build_id, output_id)
 );
 
 CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
-	build_output_id INTEGER REFERENCES build_output (id) NOT NULL,
+	build_output_id INTEGER REFERENCES build_output (id) ON DELETE CASCADE,
 	url TEXT NOT NULL,
 	upload_duration_ns BIGINT NOT NULL
 );
@@ -49,7 +49,7 @@ CREATE TABLE input (
 );
 
 CREATE TABLE input_build (
-	build_id INTEGER REFERENCES build (id),
+	build_id INTEGER REFERENCES build (id) ON DELETE CASCADE,
 	input_id INTEGER REFERENCES input(id),
 	CONSTRAINT input_build_uniq UNIQUE(build_id, input_id)
 );
