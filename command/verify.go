@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -18,7 +19,14 @@ The command scans past builds for patterns that indicate issues in the
 Build.Input or Build.Output configuration of an application.
 It finds builds for the same application that have the same digest for it's
 inputs but produced different outputs.
+
+Exit Codes:
+0 - no issues found
+1 - internal error
+2 - issues found
 `
+
+const verifyExitCodeIssuesFound int = 2
 
 var verifyFromDate string
 var verifyCmd = &cobra.Command{
@@ -96,5 +104,7 @@ func verify(cmd *cobra.Command, args []string) {
 		fmt.Println("Possible reason:")
 		fmt.Println("- builds are not reproducible, ensure a builds with the same inputs produce outputs with the same digest")
 		fmt.Println("- specified inputs of the build are incomplete")
+
+		os.Exit(verifyExitCodeIssuesFound)
 	}
 }
