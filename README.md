@@ -141,6 +141,9 @@ complete.
 The command only compares the digests of file outputs. Docker container digest
 always differ when the container is rebuild.
 
+To analyze differences in build outputs the [https://diffoscope.org/](diffoscope)
+tool can be handy.
+
 ## Development
 ### Create new Release
 1. Update the version number in the `ver` file and commit the change.
