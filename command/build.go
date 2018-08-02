@@ -408,7 +408,13 @@ func buildCMD(cmd *cobra.Command, args []string) {
 				uploader.Add(uj)
 
 			}
-			log.Actionf("%s: created %s\n", app.Name, ar)
+			d, err := ar.Digest()
+			if err != nil {
+				log.Fatalf("%s: could determine input digest of %s: %s\n",
+					app.Name, ar, err)
+			}
+
+			log.Actionf("%s: created %s (%s)\n", app.Name, ar, d)
 		}
 
 	}
