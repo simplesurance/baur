@@ -51,3 +51,8 @@ func (g *GitPaths) Resolve() ([]BuildInput, error) {
 
 	return res, nil
 }
+
+// String returns the paths, separated by ", "
+func (g *GitPaths) String() string {
+	return strings.Join(g.paths, ", ")
+}

@@ -49,3 +49,8 @@ func (f *FileGlobPath) Resolve() ([]BuildInput, error) {
 
 	return res, nil
 }
+
+// String returns the glob path
+func (f *FileGlobPath) String() string {
+	return filepath.Join(f.globPath)
+}

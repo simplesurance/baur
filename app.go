@@ -178,7 +178,7 @@ func (a *App) BuildInputs() ([]BuildInput, error) {
 	for _, inputPath := range a.BuildInputPaths {
 		buildInputs, err := inputPath.Resolve()
 		if err != nil {
-			return nil, errors.Wrap(err, "resolving %q failed")
+			return nil, errors.Wrapf(err, "resolving %q failed", inputPath)
 		}
 
 		res = append(res, buildInputs...)
@@ -198,7 +198,7 @@ func (a *App) TotalInputDigest() (digest.Digest, error) {
 
 	buildInputs, err := a.BuildInputs()
 	if err != nil {
-		return digest.Digest{}, errors.Wrap(err, "resolving build inputs failed")
+		return digest.Digest{}, err
 	}
 
 	digests := make([]*digest.Digest, 0, len(buildInputs))
