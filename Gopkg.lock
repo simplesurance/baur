@@ -119,6 +119,15 @@
   revision = "0b12d6b5"
 
 [[projects]]
+  name = "github.com/kisielk/gotool"
+  packages = [
+    ".",
+    "internal/load"
+  ]
+  revision = "80517062f582ea3340cd4baf70e86d539ae7d84d"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/lib/pq"
   packages = [
@@ -153,6 +162,12 @@
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/rogpeppe/godeps"
+  packages = ["build"]
+  revision = "404a7e748cd352bb0d7449dedc645546eebbfc6e"
 
 [[projects]]
   name = "github.com/rs/xid"
@@ -195,6 +210,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5251c9b92d6c52a0dcefa0d8d2388deaa287802827c76bacdfba819e90706707"
+  inputs-digest = "3ec44a399b5e6d46c6601a3e6c85d875044a948e8cc1de3e8b2e3951198f986d"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -26,9 +26,16 @@ type Build struct {
 // BuildInput contains information about inputs (sources, compiler, docker
 // images) for an build
 type BuildInput struct {
-	Files       FileInputs          `comment:"file paths, e.g: source files, the used compiler binary "`
-	GitFiles    GitFileInputs       `comment:"If the baur repository is part of a git repository, this option can be used to specify source files tracked by git."`
-	DockerImage []*DockerImageInput `comment:"docker images that are used to build the application or affect in other ways the produces artifact"`
+	Files         FileInputs          `comment:"file paths, e.g: source files, the used compiler binary "`
+	GitFiles      GitFileInputs       `comment:"If the baur repository is part of a git repository, this option can be used to specify source files tracked by git."`
+	GolangSources GolangSources       `comment:"Directories containing Golang applications, all source files to build the application are located and added as inputs (excluding stdlib and test files)"`
+	DockerImage   []*DockerImageInput `comment:"docker images that are used to build the application or affect in other ways the produces artifact"`
+}
+
+// GolangSources specifies inputs for Golang Applications
+type GolangSources struct {
+	Paths  []string `toml:"paths" comment:"paths to directories containing Golang source files" commented:"true"`
+	GoPath string   `toml:"go_path" comment:"specifies the GOPATH, that is used for source file discovery, if not set or empty the current GOPATH is used. The go_path is relative to the application directory." commented:"true"`
 }
 
 // DockerImageInput specifies a docker image as build source
@@ -99,6 +106,10 @@ func ExampleApp(name string) *App {
 						Repository: "simplesurance/alpine-build",
 						Digest:     "sha256:b1589cc882898e1e726994bbf9827953156b94d423dae8c89b56614ec298684e",
 					},
+				},
+				GolangSources: GolangSources{
+					Paths:  []string{"."},
+					GoPath: "../",
 				},
 			},
 			Output: BuildOutput{
@@ -236,11 +247,26 @@ func (b *BuildInput) Validate() error {
 		return errors.Wrap(err, "[Build.Input.Files] section contains errors")
 	}
 
+	if err := b.GolangSources.Validate(); err != nil {
+		return errors.Wrap(err, "[Build.Input.Files] section contains errors")
+	}
+
 	// TODO: add validation for gitfiles section
 
 	for _, d := range b.DockerImage {
 		if err := d.Validate(); err != nil {
 			return errors.Wrap(err, "[[Build.Input.DockerImages]] section contains errors")
+		}
+	}
+
+	return nil
+}
+
+// Validate validates the GolangSources section
+func (g *GolangSources) Validate() error {
+	for _, p := range g.Paths {
+		if len(p) == 0 {
+			return errors.New("a path can not be empty")
 		}
 	}
 

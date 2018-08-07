@@ -14,7 +14,7 @@ baur will implement:
 - detect if build artifacts for an application version already exist or if it's
   need to be build
 
-Baur makes certain Assumptions:
+baur makes certain Assumptions:
 - the baur repository is part of a git repository,
 - an application directory only contains one application,
 - an application can be build by running a single command,
@@ -25,7 +25,7 @@ Baur makes certain Assumptions:
 To build baur run `make`.
 
 ## Dependencies
-- The git command lines tools are used to retrieve informations in a baur
+- The git command lines tools are used to retrieve information in a baur
   repository. The tools must be installed and be in one of the paths of the
   `$PATH` environment variable.
 
@@ -94,6 +94,20 @@ image in that the application is build.
 The docker image is specified by it's manifest digest.
 The manifest digest for a docker image can be retrieved with
 `docker images --digests` or `docker inspect`
+
+#### `[Build.Input.GolangSources]`
+Allows to add Golang applications as inputs.
+The `paths` parameters take a list of paths to directories relative to the
+application directory.
+In every directory `.go` files are discovered and the files they depend on.
+Imports in the `.go` files are evaluated, resolved to files and tracked as build
+inputs.
+Go test files and imports belong to the Golang stdlib are ignored.
+
+To be able to resolve the imports either the `GOPATH` environment variable must
+be set correctly or alternatively the `go_path` parameter in the config section
+must be set the `GOPATH`. The `go_path` expects a path relative to the
+application directory.
 
 ### Build Outputs
 Build outputs are the results that are produced by a build. They can be

@@ -1,0 +1,99 @@
+package main
+
+import (
+	"fmt"
+	"go/build"
+	"sort"
+
+	"github.com/kisielk/gotool"
+)
+
+func addPackages(m map[string]bool, ss []string) {
+	for _, s := range ss {
+		m[s] = true
+	}
+}
+
+func imports(pkg *build.Package, isRoot bool) map[string]bool {
+	const noTestDeps = true
+
+	imps := make(map[string]bool)
+	addPackages(imps, pkg.Imports)
+	if isRoot && !noTestDeps {
+		addPackages(imps, pkg.TestImports)
+		addPackages(imps, pkg.XTestImports)
+	}
+	return imps
+}
+
+func sorted(m map[string]bool) []string {
+	s := make([]string, 0, len(m))
+	for x := range m {
+		s = append(s, x)
+	}
+	sort.Strings(s)
+	return s
+}
+
+// findImports recursively adds all imported packages by the given
+// package (packageName) to the allPkgs map.
+// Source: showdeps (https://github.com/rogpeppe/showdeps)
+func findImports(packageName, dir string, recur bool, allPkgs map[string][]string, rootPkgs map[string]bool) error {
+	fmt.Printf("pkg: %s\n", packageName)
+	if packageName == "C" {
+		return nil
+	}
+	pkg, err := build.Default.Import(packageName, dir, 0)
+	if err != nil {
+		return nil
+	}
+	allPkgs[pkg.ImportPath] = allPkgs[pkg.ImportPath] // ensure the package has an entry.
+	// Iterate through the imports in sorted order so that we provide
+	// deterministic results.
+	//for _, name := range sorted(imports(pkg, rootPkgs[pkg.ImportPath])) {
+	for _, name := range sorted(imports(pkg, rootPkgs[pkg.ImportPath])) {
+		_, alreadyDone := allPkgs[name]
+		allPkgs[name] = append(allPkgs[name], pkg.ImportPath)
+		if recur && !alreadyDone {
+			if err := findImports(name, pkg.Dir, recur, allPkgs, rootPkgs); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func GetSourceFiles(path string) error {
+	const allGoPkgs = "./..."
+
+	rootPkgs := gotool.ImportPaths([]string{allGoPkgs})
+	rootPkgs := make(map[string]bool)
+	for _, pkg := range rootPkgs {
+		rp, err := build.Default.Import(pkg, path, build.FindOnly) // replace "." with app dir
+		if err != nil {
+			return err
+		}
+
+		/*
+			p, err := build.Default.Import(rp.ImportPath, path, 0)
+			if err != nil {
+				return err
+			}
+			fmt.Println(p.GoFiles)
+		*/
+	}
+
+	allPkgs := make(map[string][]string)
+	for _, pkg := range rootPkgs {
+		if err := findImports(pkg, path, false, allPkgs, rootPkgs); err != nil {
+			fatalf("cannot find imports from %q: %v", pkg, err)
+		}
+	}
+	fmt.Println(pkg)
+
+	return nil
+}
+
+func main() {
+	fmt.Println(GetSourceFiles("."))
+}
