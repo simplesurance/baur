@@ -25,10 +25,8 @@ import (
 
 const buildLongHelp = `
 Builds applications.
+If no path or application name is passed, all applications in the repository are build.
 By default only applications with status "Outstanding" and "Inputs Undefined" are build.
-
-If no argument is the application in the current directory is build.
-If the current directory does not contain an application, all applications are build.
 
 Environment Variables:
 The following environment variables configure credentials for output repositories:
@@ -44,14 +42,13 @@ The following environment variables configure credentials for output repositorie
 `
 
 const buildExampleHelp = `
-baur build 		       build the applications in the current directory
 baur build payment-service     build the application with the name payment-service
-baur build ---force all	       rebuild all applications in the repository
+baur build ---force            rebuild all applications in the repository
 baur build --verbose ui/shop   build the application in the directory ui/shop with verbose output
 baur build --upload ui/shop    build the application in the directory ui/shop and upload it's outputs`
 
 var buildCmd = &cobra.Command{
-	Use:     "build [<PATH>|<APP-NAME>|all]",
+	Use:     "build [<PATH>|<APP-NAME>]",
 	Short:   "builds applications",
 	Long:    strings.TrimSpace(buildLongHelp),
 	Run:     buildCMD,
@@ -165,8 +162,8 @@ func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
 
 }
 
-func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
-	if strings.ToLower(arg) == "all" {
+func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
+	if len(args) == 0 {
 		apps, err := repo.FindApps()
 		if err != nil {
 			log.Fatalln(err)
@@ -175,7 +172,7 @@ func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
 		return apps
 	}
 
-	return []*baur.App{mustArgToApp(repo, arg)}
+	return []*baur.App{mustArgToApp(repo, args[0])}
 }
 
 func outputCount(apps []*baur.App) int {
@@ -366,13 +363,7 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	repo := mustFindRepository()
 	startTs := time.Now()
 
-	if len(args) > 0 {
-		apps = mustArgToApps(repo, args[0])
-	} else if isAppDir(".") {
-		apps = mustArgToApps(repo, ".")
-	} else {
-		apps = mustArgToApps(repo, "all")
-	}
+	apps = mustArgToApps(repo, args)
 
 	if buildUpload || !buildForce {
 		store = mustGetPostgresClt(repo)
