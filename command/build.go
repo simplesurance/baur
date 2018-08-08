@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -22,7 +23,52 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var buildUpload bool
+const buildLongHelp = `
+Builds applications.
+By default only applications with status "Outstanding" and "Inputs Undefined" are build.
+
+If no argument is the application in the current directory is build.
+If the current directory does not contain an application, all applications are build.
+
+Environment Variables:
+The following environment variables configure credentials for output repositories:
+
+  S3 Repositories:
+    AWS_REGION
+    AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY
+
+  Docker Repositories:
+    DOCKER_USERNAME
+    DOCKER_PASSWORD
+`
+
+const buildExampleHelp = `
+baur build 		       build the applications in the current directory
+baur build payment-service     build the application with the name payment-service
+baur build ---force all	       rebuild all applications in the repository
+baur build --verbose ui/shop   build the application in the directory ui/shop with verbose output
+baur build --upload ui/shop    build the application in the directory ui/shop and upload it's outputs`
+
+var buildCmd = &cobra.Command{
+	Use:     "build [<PATH>|<APP-NAME>|all]",
+	Short:   "builds applications",
+	Long:    strings.TrimSpace(buildLongHelp),
+	Run:     buildCMD,
+	Example: strings.TrimSpace(buildExampleHelp),
+	Args:    cobra.MaximumNArgs(1),
+}
+
+var (
+	buildUpload bool
+	buildForce  bool
+
+	result     = map[string]*storage.Build{}
+	resultLock = sync.Mutex{}
+
+	store          storage.Storer
+	outputBackends baur.BuildOutputBackends
+)
 
 type uploadUserData struct {
 	App    *baur.App
@@ -35,12 +81,13 @@ type buildUserData struct {
 	TotalInputDigest string
 }
 
-var result = map[string]*storage.Build{}
-var resultLock = sync.Mutex{}
-
-var store storage.Storer
-
-var outputBackends baur.BuildOutputBackends
+func init() {
+	buildCmd.Flags().BoolVar(&buildUpload, "upload", false,
+		"upload build outputs after the application(s) was build")
+	buildCmd.Flags().BoolVarP(&buildForce, "force", "f", false,
+		"force rebuilding of all applications")
+	rootCmd.AddCommand(buildCmd)
+}
 
 func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 	resultLock.Lock()
@@ -116,46 +163,6 @@ func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
 
 	return false, nil
 
-}
-
-func init() {
-	buildCmd.Flags().BoolVar(&buildUpload, "upload", false,
-		"upload build outputs after the application(s) was build")
-	rootCmd.AddCommand(buildCmd)
-}
-
-const buildLongHelp = `
-Builds applications.
-If no argument is the application in the current directory is build.
-If the current directory does not contain an application, all applications are build.
-
-Environment Variables:
-The following environment variables configure credentials for output repositories:
-
-  S3 Repositories:
-    AWS_REGION
-    AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY
-
-  Docker Repositories:
-    DOCKER_USERNAME
-    DOCKER_PASSWORD
-`
-
-const buildExampleHelp = `
-baur build 		       build the applications in the current directory
-baur build all		       build all applications in the repository
-baur build payment-service     build the application with the name payment-service
-baur build --verbose ui/shop   build the application in the directory ui/shop with verbose output
-baur build --upload ui/shop    build the application in the directory ui/shop and upload it's outputs`
-
-var buildCmd = &cobra.Command{
-	Use:     "build [<PATH>|<APP-NAME>|all]",
-	Short:   "builds an application",
-	Long:    strings.TrimSpace(buildLongHelp),
-	Run:     buildCMD,
-	Example: strings.TrimSpace(buildExampleHelp),
-	Args:    cobra.MaximumNArgs(1),
 }
 
 func mustArgToApps(repo *baur.Repository, arg string) []*baur.App {
@@ -327,6 +334,30 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 	close(finished)
 }
 
+func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
+	var res []*baur.App
+
+	for _, app := range apps {
+		buildStatus, _, _ := mustGetBuildStatus(app, storage)
+
+		if buildStatus != baur.BuildStatusExist {
+			res = append(res, app)
+		}
+
+		if !log.DebugEnabled {
+			fmt.Printf(".")
+		}
+
+		log.Debugf("\n%s: build status. %q\n", app, buildStatus)
+	}
+
+	if !log.DebugEnabled {
+		fmt.Println()
+	}
+
+	return res
+}
+
 func buildCMD(cmd *cobra.Command, args []string) {
 	var apps []*baur.App
 	var uploadWatchFin chan struct{}
@@ -343,6 +374,23 @@ func buildCMD(cmd *cobra.Command, args []string) {
 		apps = mustArgToApps(repo, "all")
 	}
 
+	if buildUpload || !buildForce {
+		store = mustGetPostgresClt(repo)
+	}
+
+	if !buildForce {
+		log.Actionf("identifying applications with outstanding builds")
+		apps = outstandingBuilds(store, apps)
+	}
+
+	if len(apps) == 0 {
+		fmt.Println()
+		term.PrintSep()
+		fmt.Printf("Application build(s) already exist, nothing to build, see 'baur ls -b'.\n" +
+			"If you want to rebuild applications pass '-f' to 'baur build'\n")
+		os.Exit(0)
+	}
+
 	baur.SortAppsByName(apps)
 
 	repo.GitCommitID()
@@ -353,8 +401,6 @@ func buildCMD(cmd *cobra.Command, args []string) {
 	outputCnt := outputCount(apps)
 
 	if buildUpload {
-		store = mustGetPostgresClt(repo)
-
 		uploadChan := make(chan *upload.Result, outputCnt)
 		uploader = startBGUploader(outputCnt, uploadChan)
 		uploadWatchFin = make(chan struct{}, 1)
