@@ -138,8 +138,9 @@ The following variables are supported:
 ## Examples
 - List all applications in the repository with their build status:
   `baur ls --build-status`
-- Build all applications, upload their artifacts and records the results:
-  `baur build --upload all`
+- Build all applications with outstanding builds, upload their artifacts and
+  records the results:
+  `baur build --upload`
 - Show information about an application called `currency-service`:
   `baur show currency-service`
 - Show inputs of an application called `claim-service` with their digests:
