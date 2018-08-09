@@ -32,7 +32,7 @@ func CommitID(dir string) (string, error) {
 // LsFiles runs git ls-files in dir, passes args as argument and returns the
 // output
 func LsFiles(dir, args string) (string, error) {
-	cmd := "git ls-files " + args
+	cmd := "git ls-files --error-unmatch " + args
 
 	out, exitCode, err := exec.Command(dir, cmd)
 	if err != nil {
@@ -40,6 +40,11 @@ func LsFiles(dir, args string) (string, error) {
 	}
 
 	if exitCode != 0 {
+		if strings.Contains(out, "did not match any file(s)") {
+			splt := strings.Split(out, "Did you forget to 'git add'")
+			return "", errors.New(strings.Replace(splt[0], "\n", " ", -1))
+		}
+
 		return "", fmt.Errorf("%q exited with code %d, output: %q", cmd, exitCode, out)
 	}
 
