@@ -58,7 +58,8 @@ func containsOnlyDockerIssues(issues []*storage.VerifyIssue) bool {
 }
 
 func verify(cmd *cobra.Command, args []string) {
-	startTs, err := time.Parse("2006.01.02", verifyFromDate)
+	const dateLayout = "2006.01.02"
+	startTs, err := time.Parse(dateLayout, verifyFromDate)
 	if err != nil {
 		log.Fatalf("parsing start date value failed: %s\n:", err)
 	}
@@ -76,7 +77,7 @@ func verify(cmd *cobra.Command, args []string) {
 		log.Fatalln("retrieving applications from storage failed:", err)
 	}
 
-	log.Actionln("scanning for builds with same inputs that produced different outputs...")
+	log.Actionf("scanning for builds after %s with same inputs that produced different outputs...\n", startTs.Format(dateLayout))
 
 	var issuesFound bool
 	for _, app := range storedApps {
