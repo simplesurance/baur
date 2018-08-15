@@ -69,8 +69,7 @@ func checkCfgVersion(cfg *cfg.Repository, cfgPath string) error {
 	}
 
 	if cfgVer.Major != version.CurSemVer.Major || cfgVer.Minor != version.CurSemVer.Minor {
-		return fmt.Errorf("repository config is for a different baur version, "+
-			"%q vs %q",
+		return fmt.Errorf("repository config incompatible with baur version, repository config is %q, baur version is %q",
 			cfgVer.Short(), version.CurSemVer.Short())
 	}
 
