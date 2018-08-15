@@ -415,47 +415,18 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 
 // GetBuildWithoutInputs retrieves a build from the database
 func (c *Client) GetBuildWithoutInputs(id int) (*storage.Build, error) {
-	var commitID sql.NullString
-	var isDirty sql.NullBool
-	build := storage.Build{ID: id}
-
-	const stmt = `
-	 SELECT app.id, app.name,
-		build.id, build.start_timestamp, build.stop_timestamp, build.total_input_digest,
-		vcs.commit, vcs.dirty
-	 FROM application AS app
-	 JOIN build ON app.id = build.application_id
-	 LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
-	 WHERE build.id = $1`
-
-	err := c.db.QueryRow(stmt, build.ID).Scan(
-		&build.Application.ID,
-		&build.Application.Name,
-		&build.ID,
-		&build.StartTimeStamp,
-		&build.StopTimeStamp,
-		&build.TotalInputDigest,
-		&commitID,
-		&isDirty)
+	builds, err := c.GetBuildsWithoutInputs([]int{id})
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, storage.ErrNotExist
-		}
-
-		return nil, errors.Wrapf(err, "db query %q failed", stmt)
+		return nil, err
 	}
 
-	if commitID.Valid {
-		build.VCSState.CommitID = commitID.String
+	// should not happen, GetBuildsWithoutInputs should return an error if
+	// no records are found, one id should only match one db id
+	if len(builds) != 1 {
+		panic(fmt.Sprintf("postgres: GetBuildsWithoutInputs returned no error and %d results when querying for 1 id", len(builds)))
 	}
 
-	build.VCSState.IsDirty = isDirty.Bool
-
-	if err := c.populateOutputs(&build); err != nil {
-		return nil, errors.Wrap(err, "fetching build outputs failed")
-	}
-
-	return &build, err
+	return builds[0], nil
 }
 
 // GetLatestBuildByDigest returns the build id of a build for the application
