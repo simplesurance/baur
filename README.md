@@ -106,7 +106,7 @@ Go test files and imports belong to the Golang stdlib are ignored.
 
 To be able to resolve the imports either the `GOPATH` environment variable must
 be set correctly or alternatively the `go_path` parameter in the config section
-must be set the `GOPATH`. The `go_path` expects a path relative to the
+must be set to the `GOPATH`. The `go_path` expects a path relative to the
 application directory.
 
 ### Build Outputs
