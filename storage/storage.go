@@ -76,6 +76,6 @@ type Storer interface {
 	Save(b *Build) error
 	GetBuildWithoutInputs(id int) (*Build, error)
 	GetApps() ([]*Application, error)
-	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) ([]string, error)
-	GetAppBuildsByInputDigest(appName, totalInputDigest string) ([]*Build, error)
+	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
+	GetBuildsWithoutInputs(buildIDs []int) ([]*Build, error)
 }

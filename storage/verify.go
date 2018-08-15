@@ -127,7 +127,7 @@ func findOutputsWithDifferentDigest(refBuild *Build, builds []*Build) *VerifyIss
 func VerifySameInputDigestSameOutputs(clt Storer, appName string, startTs time.Time) ([]*VerifyIssue, error) {
 	var issues []*VerifyIssue
 
-	sameDigests, err := clt.GetSameTotalInputDigestsForAppBuilds(appName, startTs)
+	builds, err := clt.GetSameTotalInputDigestsForAppBuilds(appName, startTs)
 	if err != nil {
 		if err == ErrNotExist {
 			return nil, err
@@ -136,8 +136,8 @@ func VerifySameInputDigestSameOutputs(clt Storer, appName string, startTs time.T
 		return nil, errors.Wrap(err, "retrieving builds with same total input digest failed")
 	}
 
-	for _, totalInputDigest := range sameDigests {
-		builds, err := clt.GetAppBuildsByInputDigest(appName, totalInputDigest)
+	for totalInputDigest, buildIDs := range builds {
+		builds, err := clt.GetBuildsWithoutInputs(buildIDs)
 		if err != nil {
 			return nil, errors.Wrapf(err, "rerieving builds for %s with TotalInputDigest %q failed", appName, totalInputDigest)
 		}

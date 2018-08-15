@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq" // postgresql
@@ -546,17 +547,24 @@ func (c *Client) GetApps() ([]*storage.Application, error) {
 // same for builds of an app with a build start time not before startTs
 // If not builds with the same totalInputDigest is found, an empty slice is
 // returned.
-func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) ([]string, error) {
+func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error) {
 	const query = `
-		 SELECT total_input_digest from build
-		 JOIN application on build.application_id = application.id
-		 WHERE total_input_digest != ''
-		 AND build.start_timestamp  >= $1
-		 AND application.name = $2
-		 GROUP BY total_input_digest
-		 HAVING count(total_input_digest) > 1`
+		 WITH data AS(
+			 SELECT total_input_digest from build
+			 JOIN application on build.application_id = application.id
+			 WHERE total_input_digest != ''
+			 AND build.start_timestamp  >= $1
+			 AND application.name = $2
+			 GROUP BY total_input_digest
+			 HAVING count(total_input_digest) > 1)
 
-	var res []string
+		SELECT build.id, build.total_input_digest FROM data
+		JOIN build ON build.total_input_digest = data.total_input_digest
+		JOIN application on build.application_id = application.id
+		WHERE build.start_timestamp  >= $1
+		AND application.name = $2`
+
+	res := map[string][]int{}
 
 	rows, err := c.db.Query(query, startTs, appName)
 	if err != nil {
@@ -569,14 +577,15 @@ func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs ti
 
 	for rows.Next() {
 		var digest string
+		var buildID int
 
-		err := rows.Scan(&digest)
+		err := rows.Scan(&buildID, &digest)
 		if err != nil {
 			rows.Close()
 			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
 		}
 
-		res = append(res, digest)
+		res[digest] = append(res[digest], buildID)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -586,23 +595,30 @@ func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs ti
 	return res, err
 }
 
-// GetAppBuildsByInputDigest returns all builds of an application with the given
-// totalInputDigest. If no matching entries are found it returns
-// storage.ErrNotExist
-func (c *Client) GetAppBuildsByInputDigest(appName, totalInputDigest string) ([]*storage.Build, error) {
-	const query = `
+func toStringSlice(ints []int) []string {
+	res := make([]string, 0, len(ints))
+
+	for _, val := range ints {
+		res = append(res, fmt.Sprint(val))
+	}
+
+	return res
+}
+
+// GetBuildsWithoutInputs returns multiple builds by their IDs
+func (c *Client) GetBuildsWithoutInputs(buildIDs []int) ([]*storage.Build, error) {
+	query := fmt.Sprintf(`
 		SELECT app.id, app.name,
 		       build.id, build.start_timestamp, build.stop_timestamp, build.total_input_digest,
 		       vcs.commit, vcs.dirty
 		FROM application AS app
 		JOIN build ON app.id = build.application_id
 		LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
-		WHERE app.name = $1
-		AND total_input_digest = $2
-		`
+		WHERE build.id IN (%s)`, strings.Join(toStringSlice(buildIDs), ", "))
+
 	var res []*storage.Build
 
-	rows, err := c.db.Query(query, appName, totalInputDigest)
+	rows, err := c.db.Query(query)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrNotExist
