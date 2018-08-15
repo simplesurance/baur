@@ -74,8 +74,8 @@ type Input struct {
 type Storer interface {
 	GetLatestBuildByDigest(appName, totalInputDigest string) (*Build, error)
 	Save(b *Build) error
-	GetBuildWithoutInputs(id int) (*Build, error)
 	GetApps() ([]*Application, error)
 	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
+	GetBuildWithoutInputs(id int) (*Build, error)
 	GetBuildsWithoutInputs(buildIDs []int) ([]*Build, error)
 }
