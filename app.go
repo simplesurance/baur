@@ -25,6 +25,7 @@ type App struct {
 	BuildInputPaths  []BuildInputPathResolver
 	buildInputs      []BuildInput
 	totalInputDigest *digest.Digest
+	Status           *Status
 }
 
 func replaceUUIDvar(in string) string {

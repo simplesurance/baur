@@ -14,9 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var lsCSVFmt bool
-var lsShowBuildStatus bool
-var lsShowAbsPath bool
+var (
+	lsCSVFmt, lsShowBuildStatus, lsShowAbsPath bool
+	lsWantedStatus                             string
+)
 
 const (
 	lsNameCol   string = "Name"
@@ -37,6 +38,8 @@ func init() {
 		"shows if a build for the application exist")
 	lsCmd.Flags().BoolVarP(&lsShowAbsPath, "abs-path", "a", false,
 		"show absolute instead of relative paths")
+	lsCmd.Flags().StringVarP(&lsWantedStatus, "status", "s", "",
+		"filter the list to a specific status")
 	rootCmd.AddCommand(lsCmd)
 }
 
@@ -96,7 +99,7 @@ func max(a, b int) int {
 	return b
 }
 
-func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
+func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer, wantedStatus baur.Status) {
 	const sepSpaces = 2
 	var (
 		buildExist int
@@ -120,8 +123,15 @@ func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
 		idColLen, lsIDCol,
 		vcsColLen, lsVCSCol)
 
+	skippedCount := 0
+
 	for _, app := range apps {
 		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
+
+		if wantedStatus.IsNotNull() && wantedStatus != buildStatus {
+			skippedCount++
+			continue
+		}
 
 		if buildStatus == baur.BuildStatusExist {
 			buildExist++
@@ -141,17 +151,25 @@ func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
 		fmt.Printf("Total: %d\n", len(apps))
 		fmt.Printf("Outstanding builds: %d\n", len(apps)-buildExist)
 
+		if skippedCount > 0 {
+			fmt.Printf("Skipped: %d\n", skippedCount)
+		}
+
 		return
 	}
 
 	fmt.Printf("Total: %v\n", len(apps))
 }
 
-func lsBuildStatusCSV(apps []*baur.App, storage storage.Storer) {
+func lsBuildStatusCSV(apps []*baur.App, storage storage.Storer, wantedStatus baur.Status) {
 	csvw := csv.NewWriter(os.Stdout)
 
 	for _, app := range apps {
 		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
+
+		if wantedStatus.IsNotNull() && wantedStatus != buildStatus {
+			continue
+		}
 
 		if buildStatus == baur.BuildStatusExist {
 			csvw.Write([]string{
@@ -188,6 +206,16 @@ func lsCSV(apps []*baur.App) {
 }
 
 func ls(cmd *cobra.Command, args []string) {
+	var wantedStatus baur.Status
+
+	if lsWantedStatus != "" {
+		var err error
+		wantedStatus, err = baur.NewAppStatus(lsWantedStatus)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
 	var storage storage.Storer
 	rep := mustFindRepository()
 	apps := mustFindApps(rep)
@@ -198,11 +226,11 @@ func ls(cmd *cobra.Command, args []string) {
 		storage = mustGetPostgresClt(rep)
 
 		if lsCSVFmt {
-			lsBuildStatusCSV(apps, storage)
+			lsBuildStatusCSV(apps, storage, wantedStatus)
 			os.Exit(0)
 		}
 
-		lsBuildStatusPlain(apps, storage)
+		lsBuildStatusPlain(apps, storage, wantedStatus)
 		os.Exit(0)
 	}
 
@@ -211,13 +239,17 @@ func ls(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
+	if wantedStatus > 0 {
+		log.Fatalln("Can't filter a plain list by status")
+	}
+
 	lsPlain(apps)
 }
 
-func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.Build, string) {
+func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.Status, *storage.Build, string) {
 	var strBuildID string
 
-	status, build, err := baur.GetBuildStatus(storage, app)
+	status, build, err := baur.GetAppStatus(storage, app)
 	if err != nil {
 		log.Fatalf("evaluating build status of %s failed: %s\n", app, err)
 	}
@@ -225,6 +257,8 @@ func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus
 	if build != nil {
 		strBuildID = fmt.Sprint(build.ID)
 	}
+
+	app.Status = &status
 
 	return status, build, strBuildID
 }
