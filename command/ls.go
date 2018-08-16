@@ -15,8 +15,8 @@ import (
 )
 
 var lsCSVFmt bool
-var lsShowBuildStatus bool
 var lsShowAbsPath bool
+var lsShort bool
 
 const (
 	lsNameCol   string = "Name"
@@ -33,8 +33,7 @@ var lsCmd = &cobra.Command{
 
 func init() {
 	lsCmd.Flags().BoolVar(&lsCSVFmt, "csv", false, "list applications in RFC4180 CSV format")
-	lsCmd.Flags().BoolVarP(&lsShowBuildStatus, "build-status", "b", false,
-		"shows if a build for the application exist")
+	lsCmd.Flags().BoolVarP(&lsShort, "short", "x", false, "skip details")
 	lsCmd.Flags().BoolVarP(&lsShowAbsPath, "abs-path", "a", false,
 		"show absolute instead of relative paths")
 	rootCmd.AddCommand(lsCmd)
@@ -137,7 +136,7 @@ func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
 
 	term.PrintSep()
 
-	if lsShowBuildStatus {
+	if !lsShort {
 		fmt.Printf("Total: %d\n", len(apps))
 		fmt.Printf("Outstanding builds: %d\n", len(apps)-buildExist)
 
@@ -194,7 +193,7 @@ func ls(cmd *cobra.Command, args []string) {
 
 	baur.SortAppsByName(apps)
 
-	if lsShowBuildStatus {
+	if !lsShort {
 		storage = mustGetPostgresClt(rep)
 
 		if lsCSVFmt {
