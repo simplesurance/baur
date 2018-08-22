@@ -12,7 +12,7 @@ import (
 	"github.com/simplesurance/baur/storage/postgres"
 )
 
-func mustFindRepository() *baur.Repository {
+func MustFindRepository() *baur.Repository {
 	log.Debugln("searching for repository root...")
 
 	rep, err := baur.FindRepository()
@@ -80,7 +80,7 @@ func mustFindApps(r *baur.Repository) []*baur.App {
 
 }
 
-func mustGetPostgresClt(r *baur.Repository) *postgres.Client {
+func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	clt, err := postgres.New(r.PSQLURL)
 	if err != nil {
 		log.Fatalf("could not establish connection to postgreSQL db: %s\n", err)

@@ -63,9 +63,9 @@ func verify(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("parsing start date value failed: %s\n:", err)
 	}
-	repo := mustFindRepository()
+	repo := MustFindRepository()
 
-	clt := mustGetPostgresClt(repo)
+	clt := MustGetPostgresClt(repo)
 	defer clt.Close()
 
 	storedApps, err := clt.GetApps()
