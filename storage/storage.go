@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"database/sql"
 	"errors"
 	"strings"
 	"time"
@@ -43,6 +44,12 @@ type Build struct {
 	Inputs           []*Input
 }
 
+// BuildWithDuration adds duration to a Build
+type BuildWithDuration struct {
+	Build    Build
+	Duration float64
+}
+
 // NameLower returns the app of the name in lowercase
 func (a *Application) NameLower() string {
 	return strings.ToLower(a.Name)
@@ -70,6 +77,9 @@ type Input struct {
 	Digest string
 }
 
+// RowScanFunc should run rows.Scan and return a value for that row
+type RowScanFunc func(rows *sql.Rows) (interface{}, error)
+
 // Storer is an interface for persisting informations about builds
 type Storer interface {
 	GetLatestBuildByDigest(appName, totalInputDigest string) (*Build, error)
@@ -78,4 +88,6 @@ type Storer interface {
 	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
 	GetBuildWithoutInputs(id int) (*Build, error)
 	GetBuildsWithoutInputs(buildIDs []int) ([]*Build, error)
+	GetBuildOutputs(buildID int) ([]*Output, error)
+	GetBuilds(filters []CanFilter, sorters []CanSort) ([]*BuildWithDuration, error)
 }
