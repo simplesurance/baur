@@ -9,7 +9,7 @@ import (
 	"io"
 	"os"
 
-	docker "docker.io/go-docker"
+	"docker.io/go-docker"
 	"docker.io/go-docker/api/types"
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/log"

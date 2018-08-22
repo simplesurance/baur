@@ -40,7 +40,7 @@ func inputs(cmd *cobra.Command, args []string) {
 	var alLFiles []baur.BuildInput
 	var inputDigests []*digest.Digest
 
-	rep := mustFindRepository()
+	rep := MustFindRepository()
 	app := mustArgToApp(rep, args[0])
 
 	if len(app.BuildInputPaths) == 0 {

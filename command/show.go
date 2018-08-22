@@ -77,7 +77,7 @@ func showApplicationInformation(app *baur.App) {
 }
 
 func showBuildInformation(rep *baur.Repository, buildID int) {
-	clt := mustGetPostgresClt(rep)
+	clt := MustGetPostgresClt(rep)
 	build, err := clt.GetBuildWithoutInputs(buildID)
 	if err != nil {
 		if err == storage.ErrNotExist {
@@ -118,7 +118,7 @@ func showBuildInformation(rep *baur.Repository, buildID int) {
 }
 
 func show(cmd *cobra.Command, args []string) {
-	rep := mustFindRepository()
+	rep := MustFindRepository()
 
 	if len(args) == 0 {
 		showRepositoryInformation(rep)

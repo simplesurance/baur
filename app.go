@@ -172,6 +172,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	return &app, nil
 }
 
+// String returns the string representation of an app
 func (a *App) String() string {
 	return a.Name
 }
