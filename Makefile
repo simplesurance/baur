@@ -52,24 +52,7 @@ release: clean dirty_worktree_check dist/linux_amd64/baur dist/darwin_amd64/baur
 .PHONY: check
 check:
 	$(info * running static code checks)
-	@gometalinter \
-		--deadline 10m \
-		--vendor \
-		--sort="path" \
-		--aggregate \
-		--enable-gc \
-		--disable-all \
-		--enable goimports \
-		--enable misspell \
-		--enable vet \
-		--enable deadcode \
-		--enable varcheck \
-		--enable ineffassign \
-		--enable structcheck \
-		--enable unconvert \
-		--enable golint \
-		--enable unused \
-		./...
+	@gometalinter ./...
 
 .PHONY: clean
 clean:

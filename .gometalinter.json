@@ -1,0 +1,19 @@
+{
+	"Aggregate": true,
+	"Deadline": "5m",
+	"Sort": ["Path"],
+	"Vendor": true,
+	"Warn-Unmatched-Nolint": true,
+	"Enable": [
+		"deadcode",
+		"goimports",
+		"golint",
+		"ineffassign",
+		"misspell",
+		"structcheck",
+		"unconvert",
+		"unused",
+		"varcheck",
+		"vet"
+	]
+}
