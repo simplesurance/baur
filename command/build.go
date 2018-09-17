@@ -255,13 +255,13 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 func startBGUploader(outputCnt int, uploadChan chan *upload.Result) upload.Manager {
 	s3Uploader, err := s3.NewClient()
 	if err != nil {
-		log.Fatalln(err.Error)
+		log.Fatalln(err.Error())
 	}
 
 	dockerUser, dockerPass := dockerAuthFromEnv()
 	dockerUploader, err := docker.NewClient(dockerUser, dockerPass)
 	if err != nil {
-		log.Fatalln(err.Error)
+		log.Fatalln(err.Error())
 	}
 
 	uploader := sequploader.New(s3Uploader, dockerUploader, uploadChan)
