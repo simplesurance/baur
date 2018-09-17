@@ -1,0 +1,98 @@
+# Golang CircleCI 2.0 configuration file
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1
+        environment:
+          TEST_RESULTS: /tmp/test-results
+          DB_URL: "postgres://root@localhost:5432/baur?sslmode=disable"
+
+      - image: circleci/postgres:10
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_DB: baur
+
+    working_directory: /go/src/github.com/simplesurance/baur
+    steps:
+      - checkout
+
+      - run:
+          name: Preparing Test Environment
+          command: |
+            sudo apt-get install -y postgresql-client
+
+            go get github.com/jstemmer/go-junit-report
+
+            mkdir -p ${TEST_RESULTS}
+
+      - run:
+          name: Waiting for Postgres to be ready
+          command: |
+            for i in `seq 1 30`; do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+
+      - run:
+          name: Applying Database Up Migrations
+          command:
+            psql -d $DB_URL < storage/postgres/migrations/*.up.sql
+
+      - run:
+          name: Run Tests
+          command: |
+            trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+            go test -v -test.timeout 1m ./... | tee ${TEST_RESULTS}/go-test.out
+
+      - run:
+          name: Applying Database Down Migrations
+          command:
+            psql -d $DB_URL < storage/postgres/migrations/*.down.sql
+
+      - store_test_results:
+          path: /tmp/test-results
+
+  build:
+    docker:
+      - image: circleci/golang:1
+
+    working_directory: /go/src/github.com/simplesurance/baur
+    steps:
+      - checkout
+
+      - run:
+          name: Building baur
+          command: make baur
+
+  static_analysis:
+    docker:
+      - image: circleci/golang:1
+
+    working_directory: /go/src/github.com/simplesurance/baur
+    steps:
+      - checkout
+
+      - run:
+          name: Preparing Test Environment
+          command: |
+            GOMETALINTER_VER=2.0.11
+
+            curl -fsSL https://github.com/alecthomas/gometalinter/releases/download/v${GOMETALINTER_VER}/gometalinter-${GOMETALINTER_VER}-linux-amd64.tar.gz | tar zxvf -
+            sudo mv gometalinter-${GOMETALINTER_VER}-linux-amd64/* /usr/local/bin/
+            rm -rf gometalinter-${GOMETALINTER_VER}-linux-amd64/
+
+      - run:
+          name: Running Static Code Analysis
+          command: make check
+
+workflows:
+  version: 2
+  workflow:
+    jobs:
+      - build
+      - test
+      - static_analysis
