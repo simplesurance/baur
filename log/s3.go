@@ -5,5 +5,5 @@ type S3Logger struct{}
 
 // Log logs a debug message
 func (l *S3Logger) Log(args ...interface{}) {
-	Debugln(args)
+	Debugln(args...)
 }
