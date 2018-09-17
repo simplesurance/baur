@@ -67,7 +67,7 @@ func resolve(ctx build.Context, path string) ([]string, error) {
 	for pkgName := range allPkgs {
 		pkg, err := ctx.Import(pkgName, path, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "determining imports from %q failed", pkg)
+			return nil, errors.Wrapf(err, "determining imports from %q (%q) failed", pkg.Name, pkg.ImportPath)
 		}
 
 		gofiles := absFilePaths(pkg, pkg.GoFiles)
