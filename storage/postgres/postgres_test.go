@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -8,7 +10,7 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-const sqlConStr = "postgresql://baur@jenkins.sisu.sh:5432/baur?sslmode=disable"
+var sqlConStr string
 
 var build = storage.Build{
 	Application:    storage.Application{Name: "baur-unittest"},
@@ -42,6 +44,16 @@ var build = storage.Build{
 		CommitID: "123",
 		IsDirty:  true,
 	},
+}
+
+func TestMain(m *testing.M) {
+	sqlConStr = os.Getenv("DB_URL")
+	if sqlConStr == "" {
+		fmt.Println("DB_URL environment variable not set")
+		os.Exit(1)
+	}
+
+	os.Exit(m.Run())
 }
 
 func TestInsertAppIfNotExist(t *testing.T) {
