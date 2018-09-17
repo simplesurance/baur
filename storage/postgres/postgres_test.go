@@ -140,8 +140,8 @@ func TestGetSameTotalInputDigestsForAppBuilds(t *testing.T) {
 	}
 
 	digests, err = c.GetSameTotalInputDigestsForAppBuilds(b1.Application.Name, build.StartTimeStamp)
-	if err != storage.ErrNotExist {
-		t.Errorf("returned error %q when no builds with same input digest exist, expected no error", err)
+	if err != nil {
+		t.Errorf("returned error %q expected no error when no builds with same input digest exist, expected no error", err)
 	}
 	if len(digests) != 0 {
 		t.Errorf("returned %d digests, expected 0, if only builds with different input digest exist", len(digests))
