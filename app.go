@@ -176,12 +176,10 @@ func (a *App) String() string {
 	return a.Name
 }
 
-// BuildInputs returns all BuildInputs.
+// BuildInputs returns all deduplicated BuildInputs.
 // If the function is called the first time, the BuildInputPaths are resolved
 // and stored. On following calls the stored BuildInputs are returned.
 func (a *App) BuildInputs() ([]BuildInput, error) {
-	var res []BuildInput
-
 	if a.buildInputs != nil {
 		return a.buildInputs, nil
 	}
@@ -191,16 +189,27 @@ func (a *App) BuildInputs() ([]BuildInput, error) {
 		return a.buildInputs, nil
 	}
 
+	dedupBuildInputs := map[string]BuildInput{}
+
 	for _, inputPath := range a.BuildInputPaths {
 		buildInputs, err := inputPath.Resolve()
 		if err != nil {
 			return nil, errors.Wrapf(err, "resolving %q failed", inputPath)
 		}
 
-		res = append(res, buildInputs...)
+		for _, bi := range buildInputs {
+			if _, exist := dedupBuildInputs[bi.URL()]; exist {
+				continue
+			}
+
+			dedupBuildInputs[bi.URL()] = bi
+		}
 	}
 
-	a.buildInputs = res
+	for _, bi := range dedupBuildInputs {
+		a.buildInputs = append(a.buildInputs, bi)
+	}
+
 	return a.buildInputs, nil
 }
 
