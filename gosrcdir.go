@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/fs"
-	"github.com/simplesurance/baur/golang/golang"
+	"github.com/simplesurance/baur/golang"
 	"github.com/simplesurance/baur/log"
 )
 
