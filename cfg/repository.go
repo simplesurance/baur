@@ -21,12 +21,12 @@ type Repository struct {
 	Discover    Discover        `comment:"application discovery settings"`
 	Build       RepositoryBuild `comment:"build configuration"`
 	BaurVersion string          `toml:"baur_version" comment:"version of baur"`
-	Database    Database        `toml:"Database" comment:"configures the database in which build informations are stored" commented:"true"`
+	Database    Database        `toml:"Database" comment:"configures the database in which build informations are stored"`
 }
 
 // Database contains database configuration
 type Database struct {
-	PGSQLURL string `toml:"postgresql_url" comment:"connection string to the PostgreSQL database, see https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING" commented:"true"`
+	PGSQLURL string `toml:"postgresql_url" comment:"connection string to the PostgreSQL database, see https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING"`
 }
 
 // Discover stores the [Discover] section of the repository configuration.
