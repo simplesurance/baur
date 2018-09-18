@@ -167,4 +167,7 @@ tool can be handy.
 4. Push the `ver` file change to the remote git repository.
 5. Create a new release on github.com and upload the binaries.
 
+## CI Status: [![CircleCI](https://circleci.com/gh/simplesurance/baur.svg?style=svg&circle-token=8bc17577e45f5246cba2e1ea199ae504c8700eb6)](https://circleci.com/gh/simplesurance/baur)
+
+
 [modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en_us : )
