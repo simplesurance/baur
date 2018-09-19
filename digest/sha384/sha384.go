@@ -3,8 +3,7 @@ package sha384
 import (
 	"bytes"
 	"crypto/sha512"
-	"fmt"
-	"hash"
+	stdhash "hash"
 	"io"
 	"math/big"
 	"os"
@@ -14,50 +13,56 @@ import (
 	"github.com/simplesurance/baur/digest"
 )
 
-// File returns the SHA256 digest of the file
-func File(path string) (*digest.Digest, error) {
+// Hash offers an interface to add data for computing a digest
+type Hash struct {
+	hash stdhash.Hash
+}
+
+// New returns a  sha384.Hash to compute a digest
+func New() *Hash {
+	return &Hash{hash: sha512.New384()}
+}
+
+// AddFile reads a file and adds it to the hash
+func (h *Hash) AddFile(path string) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "opening file failed")
+		return errors.Wrap(err, "opening file failed")
 	}
 
 	defer f.Close()
 
-	h := sha512.New384()
-	if _, err := io.Copy(h, f); err != nil {
-		return nil, errors.Wrap(err, "reading file failed")
+	if _, err := io.Copy(h.hash, f); err != nil {
+		return errors.Wrap(err, "reading file failed")
 	}
 
-	return HashToDigest(h)
+	return nil
 }
 
-// HashToDigest returns a SHA384 digest for a hash.Hash
-func HashToDigest(h hash.Hash) (*digest.Digest, error) {
+// Digest returns the digest of the hash
+func (h *Hash) Digest() *digest.Digest {
 	sum := big.Int{}
-	_, err := fmt.Sscan(fmt.Sprintf("0x%x", (h.Sum(nil))), &sum)
-	if err != nil {
-		return nil, errors.Wrap(err, "converting digest to big int failed")
-	}
+	sum.SetBytes(h.hash.Sum(nil))
 
 	return &digest.Digest{
 		Algorithm: digest.SHA384,
 		Sum:       sum,
-	}, nil
+	}
 }
 
-// Bytes hashes the byte slice
-func Bytes(b []byte) (*digest.Digest, error) {
-	h := sha512.New384()
-	_, err := h.Write(b)
+// AddBytes add bytes to the hash
+func (h *Hash) AddBytes(b []byte) error {
+	_, err := h.hash.Write(b)
 	if err != nil {
-		return nil, errors.Wrap(err, "writing to hash stream failed")
+		return errors.Wrap(err, "writing to hash stream failed")
 	}
 
-	return HashToDigest(h)
+	return nil
 }
 
-// Sum aggregates multiple digests to a single SHA384 one
+// Sum aggregates multiple digests to a single SHA384 digest
 func Sum(digests []*digest.Digest) (*digest.Digest, error) {
+	hash := New()
 	buf := bytes.Buffer{}
 
 	sort.Slice(digests, func(i, j int) bool {
@@ -76,6 +81,9 @@ func Sum(digests []*digest.Digest) (*digest.Digest, error) {
 		buf.WriteString(d.String())
 	}
 
-	return Bytes(buf.Bytes())
+	if err := hash.AddBytes(buf.Bytes()); err != nil {
+		return nil, err
+	}
 
+	return hash.Digest(), nil
 }
