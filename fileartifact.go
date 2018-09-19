@@ -50,7 +50,14 @@ func (f *FileArtifact) UploadDestination() string {
 
 // Digest returns the file digest
 func (f *FileArtifact) Digest() (*digest.Digest, error) {
-	return sha384.File(f.LocalPath())
+	sha := sha384.New()
+
+	err := sha.AddFile(f.LocalPath())
+	if err != nil {
+		return nil, err
+	}
+
+	return sha.Digest(), err
 }
 
 // Size returns the size of the file in bytes

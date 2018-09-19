@@ -31,12 +31,19 @@ func (f *File) Digest() (digest.Digest, error) {
 		return *f.digest, nil
 	}
 
-	d, err := sha384.File(filepath.Join(f.absPath))
+	sha := sha384.New()
+
+	err := sha.AddBytes([]byte(f.relPath))
 	if err != nil {
-		return digest.Digest{}, nil
+		return digest.Digest{}, err
 	}
 
-	f.digest = d
+	err = sha.AddFile(filepath.Join(f.absPath))
+	if err != nil {
+		return digest.Digest{}, err
+	}
+
+	f.digest = sha.Digest()
 
 	return *f.digest, nil
 }
