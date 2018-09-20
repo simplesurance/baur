@@ -10,10 +10,6 @@
 		"golint",
 		"ineffassign",
 		"misspell",
-		"structcheck",
-		"unconvert",
-		"unused",
-		"varcheck",
 		"vet"
 	]
 }
