@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	toml "github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml"
 
 	"github.com/pkg/errors"
 
