@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/upload"
 )
@@ -63,8 +64,14 @@ func (u *Uploader) Start() {
 			log.Debugf("uploading %s\n", job)
 			if job.Type() == upload.JobS3 {
 				url, err = u.s3.Upload(job.LocalPath(), job.RemoteDest())
+				if err != nil {
+					err = errors.Wrap(err, "S3 upload failed")
+				}
 			} else if job.Type() == upload.JobDocker {
 				url, err = u.docker.Upload(context.Background(), job.LocalPath(), job.RemoteDest())
+				if err != nil {
+					err = errors.Wrap(err, "Docker upload failed")
+				}
 			} else {
 				panic(fmt.Sprintf("invalid job %+v", job))
 			}
@@ -88,7 +95,6 @@ func (u *Uploader) Start() {
 			return
 		}
 		u.lock.Unlock()
-
 	}
 }
 
