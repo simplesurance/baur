@@ -8,6 +8,8 @@ github.com/aws/aws-sdk-go v1.14.31 h1:amhorvKh1zNxo9YCntvA5uDmgw+pCYXOp4xO8WS1oD
 github.com/aws/aws-sdk-go v1.14.31/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/aws/aws-sdk-go v1.15.38 h1:OtXBWF75rR4KWnYPumoK2MF5rHfDMrlzUB5czArWCw0=
 github.com/aws/aws-sdk-go v1.15.38/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
+github.com/aws/aws-sdk-go v1.15.40 h1:3psP3mqMQz0otZEZyQMd8QLQM88voCTuL72gua8zvNs=
+github.com/aws/aws-sdk-go v1.15.40/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff h1:FKH02LHYqSmeWd3GBh0KIkM8JBpw3RrShgtcWShdWJg=
 github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
 github.com/docker/go-connections v0.3.0 h1:3lOnM9cSzgGwx8VfK/NGOW5fLQ0GjIlCkaktF+n1M6o=
@@ -61,7 +63,11 @@ golang.org/x/net v0.0.0-20180719180050-a680a1efc54d h1:i6RB+Qz1ug7TvJdY4zieRMpnL
 golang.org/x/net v0.0.0-20180719180050-a680a1efc54d/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3 h1:czFLhve3vsQetD6JOJ8NZZvGQIXlnN3/yXxbT6/awxI=
 golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
+golang.org/x/net v0.0.0-20180921000356-2f5d2388922f h1:QM2QVxvDoW9PFSPp/zy9FgxJLfaWTZlS61KEPtBwacM=
+golang.org/x/net v0.0.0-20180921000356-2f5d2388922f/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/sys v0.0.0-20180715085529-ac767d655b30 h1:4bYUqrXBoiI7UFQeibUwFhvcHfaEeL75O3lOcZa964o=
 golang.org/x/sys v0.0.0-20180715085529-ac767d655b30/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180920110915-d641721ec2de h1:soC2mvPVpAV+Ld2qtpNn1eq25WTn76uIGNV23bofu6Q=
 golang.org/x/sys v0.0.0-20180920110915-d641721ec2de/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20180924142050-c01370cb5c9b h1:IttiFPmVSU0Fu6o5f05qydRhwn3mF7V4K9Ft+gHeC08=
+golang.org/x/sys v0.0.0-20180924142050-c01370cb5c9b/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
