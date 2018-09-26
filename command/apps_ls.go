@@ -7,11 +7,12 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/spf13/cobra"
+
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/term"
-	"github.com/spf13/cobra"
 )
 
 var lsCSVFmt bool
@@ -37,7 +38,7 @@ func init() {
 		"shows if a build for the application exist")
 	lsCmd.Flags().BoolVarP(&lsShowAbsPath, "abs-path", "a", false,
 		"show absolute instead of relative paths")
-	rootCmd.AddCommand(lsCmd)
+	appsCmd.AddCommand(lsCmd)
 }
 
 func appPath(a *baur.App, absolutePaths bool) string {

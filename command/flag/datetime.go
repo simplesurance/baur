@@ -2,28 +2,39 @@ package flag
 
 import (
 	"time"
-
-	"github.com/pkg/errors"
 )
 
-// InputTimeFormat is the format for datetime inputs in flags
-const InputTimeFormat = "2006-01-02T15:04:05"
+const (
+	dateTimeFormat  = "2006.01.02-15:04"
+	dateTimeFormat1 = "2006.01.02-15:04:05-MST"
+
+	// DateTimeExampleFormat is an exemplary valid datetime flag
+	DateTimeExampleFormat = "2006.01.28-15:30"
+	// DateTimeFormatDescr contains a description of the supported formats
+	DateTimeFormatDescr = "YYYY.MM.DD-HH:MM[:SS-TZ]"
+)
 
 // DateTimeFlagValue is the DateTime pflag flag
 type DateTimeFlagValue struct {
 	time.Time
 }
 
-// String returns the string value of a datetime flag
+// String returns an empty string
 func (v *DateTimeFlagValue) String() string {
 	return ""
 }
 
 // Set implements the pflag.Value interface
 func (v *DateTimeFlagValue) Set(timeStr string) error {
-	t, err := time.Parse(InputTimeFormat, timeStr)
+	var t time.Time
+	var err error
+
+	t, err = time.Parse(dateTimeFormat, timeStr)
 	if err != nil {
-		return errors.Wrap(err, "error while parsing time")
+		t, err = time.Parse(dateTimeFormat1, timeStr)
+		if err != nil {
+			return err
+		}
 	}
 
 	v.Time = t
@@ -31,7 +42,7 @@ func (v *DateTimeFlagValue) Set(timeStr string) error {
 	return nil
 }
 
-// Type returns the name of this type
+// Type returns the value description string
 func (*DateTimeFlagValue) Type() string {
-	return "datetime"
+	return "<datetime>"
 }

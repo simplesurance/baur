@@ -4,10 +4,11 @@ import (
 	"os"
 	"path"
 
+	"github.com/spf13/cobra"
+
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/log"
-	"github.com/spf13/cobra"
 )
 
 func init() {

@@ -3,9 +3,9 @@ package dataprovider
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/storage"
 )
 
@@ -46,7 +46,7 @@ func buildsToStrings(buildsWithDuration []*storage.BuildWithDuration) (strings [
 		strings = append(strings, []string{
 			strconv.Itoa(build.ID),
 			build.Application.Name,
-			build.StartTimeStamp.Format(time.RFC850),
+			build.StartTimeStamp.Format(DateTimeFormat),
 			fmt.Sprintf("%.0f", buildWithDuration.Duration),
 			build.TotalInputDigest,
 		})
