@@ -1,19 +1,24 @@
 package flag
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
 )
+
+// SortFlagFormatDescr contains the format description of SortFlag values
+const SortFlagFormatDescr = "<FIELD>-<ORDER>"
 
 // SortFlagValue implements pflag.Value
 type SortFlagValue struct {
 	*postgres.Sorter
 }
 
-// String implementing the Value interface
+// String returns an empty string
 func (v *SortFlagValue) String() string {
 	return ""
 }
@@ -30,33 +35,37 @@ func (v *SortFlagValue) Set(sortStr string) error {
 	return nil
 }
 
-// Type returns the name of the sort flag. Implementing the Value interface
+// Type returns the value description string
 func (*SortFlagValue) Type() string {
-	return "sort"
+	return SortFlagFormatDescr
 }
 
 func parseSortFlag(str string) (*postgres.Sorter, error) {
 	pieces := strings.Split(str, "-")
 	if len(pieces) != 2 {
-		return nil, errors.New("sorting string doesn't have 2 pieces")
+		return nil, fmt.Errorf("invalid format, format must be %s", SortFlagFormatDescr)
 	}
 
-	first := strings.ToLower(pieces[0])
-	second := strings.ToLower(pieces[1])
+	field := strings.ToLower(pieces[0])
+	order := strings.ToLower(pieces[1])
 
-	if (first != "time" && first != "duration") || (second != "asc" && second != "desc") {
-		return nil, errors.New("invalid sorting field or direction")
+	if order != "asc" && order != "desc" {
+		return nil, errors.New("invalid sort order, must be \"asc\" or \"desc\"")
+	}
+
+	if field != "time" && field != "duration" {
+		return nil, errors.New("invalid sorting field, must be \"time\" or \"duration\"")
 	}
 
 	var sortField storage.Field
-	if first == "time" {
+	if field == "time" {
 		sortField = storage.FieldBuildStartDatetime
 	} else {
 		sortField = storage.FieldDuration
 	}
 
 	var sortDirection storage.OrderDirection
-	if second == "asc" {
+	if order == "asc" {
 		sortDirection = storage.OrderAsc
 	} else {
 		sortDirection = storage.OrderDesc

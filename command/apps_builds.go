@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/build"
 	"github.com/simplesurance/baur/build/seq"
@@ -20,7 +22,6 @@ import (
 	"github.com/simplesurance/baur/term"
 	"github.com/simplesurance/baur/upload"
 	sequploader "github.com/simplesurance/baur/upload/seq"
-	"github.com/spf13/cobra"
 )
 
 const buildLongHelp = `
@@ -83,7 +84,7 @@ func init() {
 		"upload build outputs after the application(s) was build")
 	appBuildCmd.Flags().BoolVarP(&buildForce, "force", "f", false,
 		"force rebuilding of all applications")
-	appCmd.AddCommand(appBuildCmd)
+	appsCmd.AddCommand(appBuildCmd)
 }
 
 func resultAddBuildResult(bud *buildUserData, r *build.Result) {
