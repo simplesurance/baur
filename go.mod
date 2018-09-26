@@ -3,7 +3,7 @@ module github.com/simplesurance/baur
 require (
 	docker.io/go-docker v1.0.0
 	github.com/Microsoft/go-winio v0.4.11 // indirect
-	github.com/aws/aws-sdk-go v1.15.41
+	github.com/aws/aws-sdk-go v1.15.42
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.3.3 // indirect
