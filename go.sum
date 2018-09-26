@@ -10,6 +10,8 @@ github.com/aws/aws-sdk-go v1.15.38 h1:OtXBWF75rR4KWnYPumoK2MF5rHfDMrlzUB5czArWCw
 github.com/aws/aws-sdk-go v1.15.38/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/aws/aws-sdk-go v1.15.41 h1:dr+Z+19rMrA2vLXfIaW904m2SCMchoAof5l+pqtHSH8=
 github.com/aws/aws-sdk-go v1.15.41/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
+github.com/aws/aws-sdk-go v1.15.42 h1:EdZS/WPf0v7TBmFCB6DH6V0IGAzVppx8km8Z65/OiWA=
+github.com/aws/aws-sdk-go v1.15.42/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff h1:FKH02LHYqSmeWd3GBh0KIkM8JBpw3RrShgtcWShdWJg=
 github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
 github.com/docker/go-connections v0.3.0 h1:3lOnM9cSzgGwx8VfK/NGOW5fLQ0GjIlCkaktF+n1M6o=
