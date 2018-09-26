@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"database/sql"
 	"errors"
 	"strings"
 	"time"
@@ -76,9 +75,6 @@ type Input struct {
 	URL    string
 	Digest string
 }
-
-// RowScanFunc should run rows.Scan and return a value for that row
-type RowScanFunc func(rows *sql.Rows) (interface{}, error)
 
 // Storer is an interface for persisting informations about builds
 type Storer interface {

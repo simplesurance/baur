@@ -1,13 +1,15 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
-
-	"github.com/simplesurance/baur/storage"
 )
+
+// RowScanFunc should run rows.Scan and return a value for that row
+type RowScanFunc func(rows *sql.Rows) (interface{}, error)
 
 // Query is the sql query struct
 type Query struct {
@@ -60,7 +62,7 @@ func sqlQuote(subject string) string {
 }
 
 // RunSelectQuery runs a sql_query and extracts the results using the row scanner func
-func RunSelectQuery(c Client, query Query, rowScanFunc storage.RowScanFunc) ([]interface{}, error) {
+func RunSelectQuery(c Client, query Query, rowScanFunc RowScanFunc) ([]interface{}, error) {
 	compiledQuery, params, err := query.Compile()
 	if err != nil {
 		return nil, errors.Wrap(err, "error while trying to compile the query")
