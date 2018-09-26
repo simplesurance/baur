@@ -98,7 +98,7 @@ github.com/rs/xid
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.2
 github.com/spf13/pflag
-# golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3
+# golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/proxy
