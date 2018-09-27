@@ -8,7 +8,8 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-var BuildLsFieldsMap = SqlFields{
+// BuildLsFieldsMap is the map of fields => strings
+var BuildLsFieldsMap = SQLFields{
 	storage.FieldBuildID:               "build.id",
 	storage.FieldDuration:              "duration",
 	storage.FieldApplicationName:       "application.name",
@@ -17,7 +18,8 @@ var BuildLsFieldsMap = SqlFields{
 	storage.FieldOne:                   "1",
 }
 
-var BuildLsFilterOperators = SqlFilterOperators{
+// BuildLsFilterOperators is the map of operators => strings
+var BuildLsFilterOperators = SQLFilterOperators{
 	storage.OperatorEq:  "=",
 	storage.OperatorGt:  ">",
 	storage.OperatorLt:  "<",
@@ -25,11 +27,13 @@ var BuildLsFilterOperators = SqlFilterOperators{
 	storage.OperatorLte: "<=",
 }
 
-var BuildLsSqlMap = SqlMap{
+// BuildLsSQLMap is an actual implementation of SQLStringer
+var BuildLsSQLMap = SQLMap{
 	Fields:    BuildLsFieldsMap,
 	Operators: BuildLsFilterOperators,
 }
 
+// GetBuilds fetches builds
 func (c *Client) GetBuilds(filters []storage.CanFilter, sorters []storage.CanSort) (
 	[]*storage.BuildWithDuration, error) {
 	queryStr := fmt.Sprintf(`
@@ -47,7 +51,7 @@ func (c *Client) GetBuilds(filters []storage.CanFilter, sorters []storage.CanSor
 		WrapKey(PlaceholderSorters),
 	)
 
-	q := NewQuery(queryStr, BuildLsSqlMap)
+	q := NewQuery(queryStr, BuildLsSQLMap)
 
 	// todo find a way to strip WHERE and ORDER BY clauses from the compiled query when no filters / sorters
 	// so that we don't have to rely on the following hack. This is like "WHERE 1 = 1 AND ...":

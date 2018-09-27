@@ -8,14 +8,17 @@ import (
 	"github.com/simplesurance/baur/storage/postgres"
 )
 
+// SortFlagValue implements pflag.Value
 type SortFlagValue struct {
 	*postgres.Sorter
 }
 
+// String implementing the Value interface
 func (v *SortFlagValue) String() string {
 	return ""
 }
 
+// Set implementing the Value interface
 func (v *SortFlagValue) Set(sortStr string) error {
 	sort, err := parseSortFlag(sortStr)
 	if err != nil {
@@ -27,6 +30,7 @@ func (v *SortFlagValue) Set(sortStr string) error {
 	return nil
 }
 
+// Type returns the name of the sort flag. Implementing the Value interface
 func (*SortFlagValue) Type() string {
 	return "sort"
 }

@@ -1,4 +1,4 @@
-package data_provider
+package dataprovider
 
 import (
 	"fmt"
@@ -9,18 +9,21 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-type buildListProvider struct {
+// BuildListProvider is the provider for the list of builds
+type BuildListProvider struct {
 	storer storage.Storer
 	data   [][]string
 }
 
-func NewBuildListProvider(storer storage.Storer) *buildListProvider {
-	return &buildListProvider{
+// NewBuildListProvider constructor
+func NewBuildListProvider(storer storage.Storer) *BuildListProvider {
+	return &BuildListProvider{
 		storer: storer,
 	}
 }
 
-func (p *buildListProvider) FetchData(filters []storage.CanFilter, sorters []storage.CanSort) error {
+// FetchData fetches data
+func (p *BuildListProvider) FetchData(filters []storage.CanFilter, sorters []storage.CanSort) error {
 	data, err := p.storer.GetBuilds(filters, sorters)
 	if err != nil {
 		return errors.Wrap(err, "error while trying to retrieve builds")
@@ -31,7 +34,8 @@ func (p *buildListProvider) FetchData(filters []storage.CanFilter, sorters []sto
 	return nil
 }
 
-func (p *buildListProvider) GetData() (data [][]string) {
+// GetData implements the provider interface
+func (p *BuildListProvider) GetData() (data [][]string) {
 	return p.data
 }
 

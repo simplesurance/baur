@@ -17,9 +17,11 @@ type Client struct {
 	Db *sql.DB
 }
 
-type SqlFields map[storage.Field]string
+// SQLFields is a collection of field names
+type SQLFields map[storage.Field]string
 
-type SqlFilterOperators map[storage.SortOperator]string
+// SQLFilterOperators is a collection of operator names
+type SQLFilterOperators map[storage.SortOperator]string
 
 // New establishes a connection a postgres db
 func New(url string) (*Client, error) {
@@ -376,7 +378,8 @@ func (c *Client) Save(b *storage.Build) error {
 	return nil
 }
 
-func (c *Client) GetBuildOutputs(buildId int) ([]*storage.Output, error) {
+// GetBuildOutputs returns build outputs
+func (c *Client) GetBuildOutputs(buildID int) ([]*storage.Output, error) {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
 			upload.id, upload.url, upload.upload_duration_ns
@@ -386,7 +389,7 @@ func (c *Client) GetBuildOutputs(buildId int) ([]*storage.Output, error) {
 		      WHERE build_output.build_id = $1
 		      `
 
-	rows, err := c.Db.Query(stmt, buildId)
+	rows, err := c.Db.Query(stmt, buildID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "db query %q failed", stmt)
 	}

@@ -1,4 +1,4 @@
-package data_provider
+package dataprovider
 
 import (
 	"fmt"
@@ -9,20 +9,23 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-type appListProvider struct {
+// AppListProvider is the provider for the list of applications
+type AppListProvider struct {
 	apps   []*baur.App
 	storer storage.Storer
 	data   [][]string
 }
 
-func NewAppListProvider(apps []*baur.App, storer storage.Storer) *appListProvider {
-	return &appListProvider{
+// NewAppListProvider is the constructor of the app list provider
+func NewAppListProvider(apps []*baur.App, storer storage.Storer) *AppListProvider {
+	return &AppListProvider{
 		apps:   apps,
 		storer: storer,
 	}
 }
 
-func (p *appListProvider) FetchData() {
+// FetchData fetches data
+func (p *AppListProvider) FetchData() {
 	for _, app := range p.apps {
 		status, build, err := baur.GetBuildStatus(p.storer, app)
 		if err != nil {
@@ -33,7 +36,7 @@ func (p *appListProvider) FetchData() {
 		p.data = append(p.data, []string{
 			app.Name,
 			status.String(),
-			getBuildIdStr(build),
+			getBuildIDStr(build),
 			vcsStr(build),
 		})
 	}
@@ -41,7 +44,7 @@ func (p *appListProvider) FetchData() {
 	return
 }
 
-func getBuildIdStr(build *storage.Build) string {
+func getBuildIDStr(build *storage.Build) string {
 	if build == nil {
 		return ""
 	}
@@ -49,7 +52,8 @@ func getBuildIdStr(build *storage.Build) string {
 	return strconv.Itoa(build.ID)
 }
 
-func (p *appListProvider) GetData() (data [][]string) {
+// GetData implements the provider interface
+func (p *AppListProvider) GetData() (data [][]string) {
 	return p.data
 }
 

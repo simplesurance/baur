@@ -5,12 +5,14 @@ import (
 	"strings"
 )
 
+// PlaceholderTemplate is the template for a sql placeholder
 const PlaceholderTemplate = "{{%s}}"
 
 func stringHasPlaceholder(string, key string) bool {
 	return strings.Contains(strings.ToLower(string), WrapKey(key))
 }
 
+// WrapKey wraps a key name into a template placeholder
 func WrapKey(key string) string {
 	return fmt.Sprintf(PlaceholderTemplate, key)
 }

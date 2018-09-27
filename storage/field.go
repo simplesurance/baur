@@ -2,36 +2,31 @@ package storage
 
 import "fmt"
 
+// Field is the field type
 type Field int
 
 const (
+	// FieldNull is the null value
 	FieldNull Field = iota
 
+	// FieldOne is used for the default 1=1 condition
 	FieldOne
 
-	FieldApplicationID
+	// FieldApplicationName app name
 	FieldApplicationName
 
-	FieldVCSStateID
-	FieldVCSStateCommitID
-	FieldVCSStateIsDirty
-
+	// FieldBuildID build id
 	FieldBuildID
+	// FieldBuildStartDatetime start time
 	FieldBuildStartDatetime
-	FieldBuildStopTimestamp
+	// FieldBuildTotalInputDigest total input digest
 	FieldBuildTotalInputDigest
 
-	FieldOutputID
-	FieldOutputName
-	FieldOutputType
-	FieldOutputSizeBytes
-
-	FieldUploadID
-	FieldUploadDuration
-
+	// FieldDuration duration
 	FieldDuration
 )
 
+// GetName returns the name of a field
 func (f Field) GetName(fields map[Field]string) (string, error) {
 	if name, ok := fields[f]; ok {
 		return name, nil

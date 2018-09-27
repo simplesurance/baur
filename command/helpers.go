@@ -12,6 +12,7 @@ import (
 	"github.com/simplesurance/baur/storage/postgres"
 )
 
+// MustFindRepository must find repo
 func MustFindRepository() *baur.Repository {
 	log.Debugln("searching for repository root...")
 
@@ -80,6 +81,7 @@ func mustFindApps(r *baur.Repository) []*baur.App {
 
 }
 
+// MustGetPostgresClt must return the PG client
 func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	clt, err := postgres.New(r.PSQLURL)
 	if err != nil {

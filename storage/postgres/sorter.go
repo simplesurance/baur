@@ -9,41 +9,46 @@ import (
 )
 
 var (
+	// PlaceholderSorters is the placeholder for sorters
 	PlaceholderSorters = "sorters"
 )
 
+// Sorter renders sorting in SQL
 type Sorter struct {
 	field     storage.Field
 	direction storage.OrderDirection
 }
 
+// IsIncomplete implementing CanSort
 func (s *Sorter) IsIncomplete() bool {
 	return s.GetField() == storage.FieldNull || s.GetDirection() == ""
 }
 
+// GetField implementing CanSort
 func (s *Sorter) GetField() storage.Field {
 	return s.field
 }
 
+// GetDirection implementing CanSort
 func (s *Sorter) GetDirection() storage.OrderDirection {
 	return s.direction
 }
 
+// NewSorter Sorter constructor
 func NewSorter(field storage.Field, direction storage.OrderDirection) *Sorter {
 	return &Sorter{field, direction}
 }
 
+// Sorters provides a collection of sorters and the strings map
 type Sorters struct {
 	sorters []*Sorter
-	sqlMap  SqlStringer
+	sqlMap  SQLStringer
 }
 
+// SetSorters sets sorters on a query
 func (q *Query) SetSorters(sorters []storage.CanSort) error {
 	if !stringHasPlaceholder(q.baseQuery, PlaceholderSorters) {
-		return errors.New(fmt.Sprintf(
-			"the %s placeholder was not found in query",
-			WrapKey(PlaceholderSorters),
-		))
+		return fmt.Errorf("the %s placeholder was not found in query", WrapKey(PlaceholderSorters))
 	}
 
 	if !strings.Contains(strings.ToLower(q.baseQuery), "order by") {
@@ -68,6 +73,7 @@ func getSortersFromCanSortSlice(canSorters []storage.CanSort) (sorters Sorters) 
 	return
 }
 
+// String string representation of a collection of sorters
 func (s Sorters) String() string {
 	if len(s.sorters) == 0 {
 		return ""
@@ -87,9 +93,8 @@ func (s Sorters) String() string {
 }
 
 // Compile looks for the sorters placeholder and returns the query with the SORT included.
-// Only replaces 1 occurence.
-// Returns error if the placeholder is not found.
-func (s Sorters) Compile(queryTpl string, mapper SqlStringer) (string, error) {
+// Only replaces 1 occurrence. Returns error if the placeholder is not found.
+func (s Sorters) Compile(queryTpl string, mapper SQLStringer) (string, error) {
 	if len(s.sorters) == 0 {
 		if stringHasPlaceholder(queryTpl, PlaceholderSorters) {
 			return "", errors.New("tpl contains the filters placeholder, but query has no filters")

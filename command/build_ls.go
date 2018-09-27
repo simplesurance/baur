@@ -5,13 +5,14 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+
 	"github.com/simplesurance/baur/command/flag"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
 	viewList "github.com/simplesurance/baur/view/list"
-	"github.com/simplesurance/baur/view/list/data_provider"
-	"github.com/spf13/cobra"
+	"github.com/simplesurance/baur/view/list/dataprovider"
 )
 
 var buildLsCmd = &cobra.Command{
@@ -87,7 +88,7 @@ func argsBuildLs(cmd *cobra.Command, args []string) error {
 func runBuildLs(cmd *cobra.Command, args []string) {
 	repo := MustFindRepository()
 
-	listProvider := data_provider.NewBuildListProvider(MustGetPostgresClt(repo))
+	listProvider := dataprovider.NewBuildListProvider(MustGetPostgresClt(repo))
 
 	filters := buildLsConfig.getFilters()
 
@@ -103,11 +104,11 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	list := viewList.NewList(
 		[]*viewList.Column{
-			{"Id"},
-			{"App"},
-			{"Start Time"},
-			{"Duration (s)"},
-			{"Input Digest"},
+			{Name: "Id"},
+			{Name: "App"},
+			{Name: "Start Time"},
+			{Name: "Duration (s)"},
+			{Name: "Input Digest"},
 		},
 		listProvider,
 	)

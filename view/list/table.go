@@ -34,10 +34,12 @@ func (l *List) Flatten(viewer Flattener, hi StringHighlighterFunc, quiet bool) (
 	return viewer.FlattenList(*l, hi, quiet)
 }
 
+// GetData implements DataProvider
 func (l *List) GetData() [][]string {
 	return l.data
 }
 
+// GetColumnNames returns column names
 func (l *List) GetColumnNames() (names []string) {
 	for _, col := range l.columns {
 		names = append(names, col.Name)

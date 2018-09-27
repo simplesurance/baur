@@ -1,19 +1,23 @@
 package postgres
 
-type SqlStringer interface {
-	GetFieldsMap() SqlFields
-	GetOperatorsMap() SqlFilterOperators
+// SQLStringer contains fields and operator maps for string conversion
+type SQLStringer interface {
+	GetFieldsMap() SQLFields
+	GetOperatorsMap() SQLFilterOperators
 }
 
-type SqlMap struct {
-	Fields    SqlFields
-	Operators SqlFilterOperators
+// SQLMap implements SQLStringer
+type SQLMap struct {
+	Fields    SQLFields
+	Operators SQLFilterOperators
 }
 
-func (sm SqlMap) GetFieldsMap() SqlFields {
+// GetFieldsMap is the getter for the map of fields
+func (sm SQLMap) GetFieldsMap() SQLFields {
 	return sm.Fields
 }
 
-func (sm SqlMap) GetOperatorsMap() SqlFilterOperators {
+// GetOperatorsMap is the getter for the map of operators
+func (sm SQLMap) GetOperatorsMap() SQLFilterOperators {
 	return sm.Operators
 }

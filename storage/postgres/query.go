@@ -5,18 +5,21 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/storage"
 )
 
+// Query is the sql query struct
 type Query struct {
 	baseQuery string
 	filters   Filters
 	sorters   Sorters
 
-	sqlMap SqlStringer
+	sqlMap SQLStringer
 }
 
-func NewQuery(baseQuery string, sqlMap SqlMap) *Query {
+// NewQuery is the Query constructor
+func NewQuery(baseQuery string, sqlMap SQLMap) *Query {
 	return &Query{
 		baseQuery: baseQuery,
 		sqlMap:    sqlMap,
@@ -39,11 +42,13 @@ func (q *Query) Compile() (compiledQuery string, params []interface{}, err error
 	return
 }
 
-func (q *Query) GetFieldsMap() SqlFields {
+// GetFieldsMap is part of the SQLStringer implementation in Query
+func (q *Query) GetFieldsMap() SQLFields {
 	return q.sqlMap.GetFieldsMap()
 }
 
-func (q *Query) GetOperatorsMap() SqlFilterOperators {
+// GetOperatorsMap is part of the SQLStringer implementation in Query
+func (q *Query) GetOperatorsMap() SQLFilterOperators {
 	return q.sqlMap.GetOperatorsMap()
 }
 

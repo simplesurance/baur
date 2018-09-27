@@ -8,42 +8,52 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-type filter struct {
+// Filter is an implementation of CanFilter
+type Filter struct {
 	field    storage.Field
 	operator storage.SortOperator
 	value    interface{}
 }
 
-func (f *filter) IsIncomplete() bool {
+// IsIncomplete implementing CanFilter
+func (f *Filter) IsIncomplete() bool {
 	return f.GetField() == storage.FieldNull || f.GetOperator() == storage.OperatorNull || f.GetValue() == nil
 }
 
-func (f *filter) GetField() storage.Field {
+// GetField implementing CanFilter
+func (f *Filter) GetField() storage.Field {
 	return f.field
 }
 
-func (f *filter) GetOperator() storage.SortOperator {
+// GetOperator implementing CanFilter
+func (f *Filter) GetOperator() storage.SortOperator {
 	return f.operator
 }
 
-func (f *filter) GetValue() interface{} {
+// GetValue implementing CanFilter
+func (f *Filter) GetValue() interface{} {
 	return f.value
 }
 
-func NewFilter(field storage.Field, operator storage.SortOperator, value interface{}) *filter {
-	return &filter{field, operator, value}
+// NewFilter is the filter constructor
+func NewFilter(field storage.Field, operator storage.SortOperator, value interface{}) *Filter {
+	return &Filter{field, operator, value}
 }
 
+// Filters provides a collection of filters next to the SQLMap
 type Filters struct {
-	filters []*filter
-	sqlMap  SqlStringer
+	filters []*Filter
+	sqlMap  SQLStringer
 }
 
 var (
-	TplFilterGlue      = " AND "
+	// TplFilterGlue is the glue between filters
+	TplFilterGlue = " AND "
+	// PlaceholderFilters is the filters placeholder key
 	PlaceholderFilters = "filters"
 )
 
+// SetFilters sets filters on a query
 func (q *Query) SetFilters(filters []storage.CanFilter) error {
 	for _, filter := range filters {
 		if filter.IsIncomplete() {
@@ -52,10 +62,7 @@ func (q *Query) SetFilters(filters []storage.CanFilter) error {
 	}
 
 	if !stringHasPlaceholder(q.baseQuery, PlaceholderFilters) {
-		return errors.New(fmt.Sprintf(
-			"the %s placeholder was not found in query",
-			WrapKey(PlaceholderFilters),
-		))
+		return fmt.Errorf("the %s placeholder was not found in query", WrapKey(PlaceholderFilters))
 	}
 
 	if !strings.Contains(strings.ToLower(q.baseQuery), "where") {
@@ -78,6 +85,7 @@ func (q *Query) getFiltersFromCanFilterSlice(canFilters []storage.CanFilter) (fi
 	return
 }
 
+// String returns the string representation of a filters collection
 func (f Filters) String() string {
 	var pieces []string
 
@@ -101,6 +109,7 @@ func (f Filters) String() string {
 	return strings.Join(pieces, TplFilterGlue)
 }
 
+// GetValues returns the values of a filters collection
 func (f Filters) GetValues() []interface{} {
 	var values []interface{}
 
@@ -113,8 +122,8 @@ func (f Filters) GetValues() []interface{} {
 
 // Compile looks for the filters placeholder and returns the query
 // with the WHERE conditions included, along with the query params.
-// Only replaces 1 occurence. Returns error if the placeholder is not found.
-func (f Filters) Compile(queryTpl string, mapper SqlStringer) (string, []interface{}, error) {
+// Only replaces 1 occurrence. Returns error if the placeholder is not found.
+func (f Filters) Compile(queryTpl string, mapper SQLStringer) (string, []interface{}, error) {
 	if len(f.filters) == 0 {
 		if stringHasPlaceholder(queryTpl, PlaceholderFilters) {
 			return "", nil, errors.New("tpl contains the filters placeholder, but query has no filters")

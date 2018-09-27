@@ -44,6 +44,7 @@ type Build struct {
 	Inputs           []*Input
 }
 
+// BuildWithDuration adds duration to a Build
 type BuildWithDuration struct {
 	Build    Build
 	Duration float64
@@ -87,6 +88,6 @@ type Storer interface {
 	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
 	GetBuildWithoutInputs(id int) (*Build, error)
 	GetBuildsWithoutInputs(buildIDs []int) ([]*Build, error)
-	GetBuildOutputs(buildId int) ([]*Output, error)
+	GetBuildOutputs(buildID int) ([]*Output, error)
 	GetBuilds(filters []CanFilter, sorters []CanSort) ([]*BuildWithDuration, error)
 }
