@@ -8,6 +8,7 @@ import (
 	toml "github.com/pelletier/go-toml"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/version"
 )
 
@@ -79,14 +80,17 @@ func ExampleRepository() *Repository {
 // If overwrite is true an existent file will be overwriten. If it's false the
 // function returns an error if the file exist.
 func (r *Repository) ToFile(filepath string, overwrite bool) error {
+	var openFlags int
+
 	data, err := toml.Marshal(*r)
 	if err != nil {
 		return errors.Wrap(err, "marshalling config failed")
 	}
 
-	openFlags := os.O_WRONLY | os.O_CREATE
-	if !overwrite {
-		openFlags |= os.O_EXCL
+	if overwrite {
+		openFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	} else {
+		openFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
 	}
 
 	f, err := os.OpenFile(filepath, openFlags, 0666)
@@ -95,6 +99,14 @@ func (r *Repository) ToFile(filepath string, overwrite bool) error {
 	}
 
 	_, err = f.Write(data)
+	if err != nil {
+		return errors.Wrap(err, "writing to file failed")
+	}
+
+	err = f.Close()
+	if err != nil {
+		return errors.Wrap(err, "closing file failed")
+	}
 
 	return err
 }
