@@ -210,6 +210,14 @@ func (a *App) ToFile(filepath string) error {
 	}
 
 	_, err = f.Write(data)
+	if err != nil {
+		return errors.Wrap(err, "writing to file failed")
+	}
+
+	err = f.Close()
+	if err != nil {
+		return errors.Wrap(err, "closing file failed")
+	}
 
 	return err
 }
