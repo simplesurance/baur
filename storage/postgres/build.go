@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/storage"
 )

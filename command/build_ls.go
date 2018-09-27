@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/command/flag"

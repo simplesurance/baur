@@ -1,10 +1,11 @@
 package flag
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
-	"strings"
 )
 
 type SortFlagValue struct {

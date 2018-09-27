@@ -2,10 +2,11 @@ package data_provider
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/simplesurance/baur/storage"
 	"strconv"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/simplesurance/baur/storage"
 )
 
 type buildListProvider struct {

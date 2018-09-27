@@ -3,6 +3,7 @@ package list
 import (
 	"bytes"
 	"encoding/csv"
+
 	"github.com/pkg/errors"
 )
 

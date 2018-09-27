@@ -1,8 +1,9 @@
 package flag
 
 import (
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const InputTimeFormat = "2006-01-02T15:04:05"

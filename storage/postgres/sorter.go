@@ -2,9 +2,10 @@ package postgres
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/storage"
-	"strings"
 )
 
 var (

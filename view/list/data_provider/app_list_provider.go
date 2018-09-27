@@ -2,10 +2,11 @@ package data_provider
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
-	"strconv"
 )
 
 type appListProvider struct {

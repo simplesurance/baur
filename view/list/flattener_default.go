@@ -2,10 +2,11 @@ package list
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"reflect"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/pkg/errors"
 )
 
 // DefaultListFlattener provides a default flattener with tabs
