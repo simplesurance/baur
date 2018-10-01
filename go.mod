@@ -3,11 +3,11 @@ module github.com/simplesurance/baur
 require (
 	docker.io/go-docker v1.0.0
 	github.com/Microsoft/go-winio v0.4.11 // indirect
-	github.com/aws/aws-sdk-go v1.15.43
+	github.com/aws/aws-sdk-go v1.15.45
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.3.3 // indirect
-	github.com/go-ini/ini v1.38.2 // indirect
+	github.com/go-ini/ini v1.38.3 // indirect
 	github.com/gogo/protobuf v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
@@ -22,5 +22,5 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.2 // indirect
 	golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3 // indirect
-	golang.org/x/sys v0.0.0-20180926160741-c2ed4eda69e7 // indirect
+	golang.org/x/sys v0.0.0-20180928133829-e4b3c5e90611 // indirect
 )
