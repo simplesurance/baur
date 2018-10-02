@@ -3,9 +3,9 @@ package baur
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/golang"
 	"github.com/simplesurance/baur/log"
@@ -72,5 +72,5 @@ func (g *GoSrcDirs) Resolve() ([]BuildInput, error) {
 
 // String returns the path
 func (g *GoSrcDirs) String() string {
-	return strings.Join(g.paths, ", ")
+	return fmt.Sprintf("Build.Input.GolangSources")
 }

@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/fs"
 )
 
@@ -52,5 +53,5 @@ func (f *FileGlobPath) Resolve() ([]BuildInput, error) {
 
 // String returns the glob path
 func (f *FileGlobPath) String() string {
-	return filepath.Join(f.globPath)
+	return "Build.Input.Files"
 }

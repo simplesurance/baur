@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/git"
 )
@@ -41,7 +40,7 @@ func (g *GitPaths) Resolve() ([]BuildInput, error) {
 	for _, p := range paths {
 		isFile, err := fs.IsFile(filepath.Join(baseDir, p))
 		if err != nil {
-			return nil, errors.Wrapf(err, "resolved path %q does not exist", p)
+			return nil, err
 		}
 
 		if isFile {
@@ -52,7 +51,7 @@ func (g *GitPaths) Resolve() ([]BuildInput, error) {
 	return res, nil
 }
 
-// String returns the paths, separated by ", "
+// String returns the string representation
 func (g *GitPaths) String() string {
-	return strings.Join(g.paths, ", ")
+	return "Build.Input.Gitfiles"
 }
