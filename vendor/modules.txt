@@ -18,7 +18,7 @@ docker.io/go-docker/api/types/strslice
 docker.io/go-docker/api/types/swarm/runtime
 # github.com/Microsoft/go-winio v0.4.11
 github.com/Microsoft/go-winio
-# github.com/aws/aws-sdk-go v1.15.43
+# github.com/aws/aws-sdk-go v1.15.49
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/session
 github.com/aws/aws-sdk-go/service/s3/s3manager
@@ -43,6 +43,7 @@ github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
 github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
 github.com/aws/aws-sdk-go/aws/ec2metadata
 github.com/aws/aws-sdk-go/aws/signer/v4
+github.com/aws/aws-sdk-go/internal/s3err
 github.com/aws/aws-sdk-go/private/protocol
 github.com/aws/aws-sdk-go/private/protocol/eventstream
 github.com/aws/aws-sdk-go/private/protocol/eventstream/eventstreamapi
@@ -61,7 +62,7 @@ github.com/docker/go-connections/tlsconfig
 github.com/docker/go-connections/nat
 # github.com/docker/go-units v0.3.3
 github.com/docker/go-units
-# github.com/go-ini/ini v1.38.2
+# github.com/go-ini/ini v1.38.3
 github.com/go-ini/ini
 # github.com/gogo/protobuf v1.1.1
 github.com/gogo/protobuf/proto
@@ -90,12 +91,12 @@ github.com/rogpeppe/godeps/build
 github.com/rs/xid
 # github.com/spf13/cobra v0.0.3
 github.com/spf13/cobra
-# github.com/spf13/pflag v1.0.2
+# github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3
+# golang.org/x/net v0.0.0-20181005035420-146acd28ed58
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/proxy
 golang.org/x/net/internal/socks
-# golang.org/x/sys v0.0.0-20180926160741-c2ed4eda69e7
+# golang.org/x/sys v0.0.0-20181005133103-4497e2df6f9e
 golang.org/x/sys/windows
