@@ -3,91 +3,111 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/simplesurance/baur/storage"
 )
+
+// sqlFieldMap contains a mapping from storage.Fields to table column names
+var sqlFieldMap = map[storage.Field]string{
+	storage.FieldApplicationName: "application.name",
+	storage.FieldBuildDuration:   "duration",
+	storage.FieldBuildStartTime:  "build.start_timestamp",
+}
+
+// sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
+var sqlOperatorMap = map[storage.Op]string{
+	storage.OpEQ: "=",
+	storage.OpGT: ">",
+	storage.OpLT: "<",
+}
+
+// sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
+var sqlOrderDirectionMap = map[storage.Order]string{
+	storage.OrderAsc:  "ASC",
+	storage.OrderDesc: "DESC",
+}
 
 // RowScanFunc should run rows.Scan and return a value for that row
 type RowScanFunc func(rows *sql.Rows) (interface{}, error)
 
 // Query is the sql query struct
 type Query struct {
-	baseQuery string
-	filters   Filters
-	sorters   Sorters
-
-	sqlMap SQLStringer
+	BaseQuery string
+	Filters   []*storage.Filter
+	Sorters   []*storage.Sorter
 }
 
-// NewQuery is the Query constructor
-func NewQuery(baseQuery string, sqlMap SQLMap) *Query {
-	return &Query{
-		baseQuery: baseQuery,
-		sqlMap:    sqlMap,
-	}
-}
-
-// Compile compiles the actual sql query
-// and returns it along with the query params
-func (q *Query) Compile() (compiledQuery string, params []interface{}, err error) {
-	compiledQuery, params, err = q.filters.Compile(q.baseQuery, q)
-	if err != nil {
-		return "", nil, errors.Wrap(err, "couldn't compile filters")
+func (q *Query) compileFilterStr() (filterStr string, args []interface{}, err error) {
+	if len(q.Filters) == 0 {
+		return
 	}
 
-	compiledQuery, err = q.sorters.Compile(compiledQuery, q)
-	if err != nil {
-		return "", nil, errors.Wrap(err, "couldn't compile sorters")
+	filterStr = "WHERE "
+	for i, f := range q.Filters {
+		field, exist := sqlFieldMap[f.Field]
+		if !exist {
+			return "", nil, fmt.Errorf("no postgresql mapping for storage field %s exists", f.Field)
+		}
+
+		op, exist := sqlOperatorMap[f.Operator]
+		if !exist {
+			return "", nil, fmt.Errorf("no postgresql mapping for storage operator %s exists", f.Operator)
+		}
+
+		filterStr += fmt.Sprintf("%s %s $%d", field, op, i+1)
+		args = append(args, f.Value)
+
+		if i+1 < len(q.Filters) {
+			filterStr += " AND "
+		}
 	}
 
 	return
 }
 
-// GetFieldsMap is part of the SQLStringer implementation in Query
-func (q *Query) GetFieldsMap() SQLFields {
-	return q.sqlMap.GetFieldsMap()
-}
-
-// GetOperatorsMap is part of the SQLStringer implementation in Query
-func (q *Query) GetOperatorsMap() SQLFilterOperators {
-	return q.sqlMap.GetOperatorsMap()
-}
-
-func sqlQuote(subject string) string {
-	if !strings.Contains(subject, " ") {
-		return subject
-	}
-	return fmt.Sprintf("'%s'", subject)
-}
-
-// RunSelectQuery runs a sql_query and extracts the results using the row scanner func
-func RunSelectQuery(c Client, query Query, rowScanFunc RowScanFunc) ([]interface{}, error) {
-	compiledQuery, params, err := query.Compile()
-	if err != nil {
-		return nil, errors.Wrap(err, "error while trying to compile the query")
+func (q *Query) compileSorterStr() (string, error) {
+	if len(q.Sorters) == 0 {
+		return "", nil
 	}
 
-	rows, err := c.Db.Query(compiledQuery, params...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "db query failed: \"%v\" (params %q) ", compiledQuery, params)
-	}
-
-	var results []interface{}
-	for rows.Next() {
-		convertedRow, err := rowScanFunc(rows)
-		if err != nil {
-			rows.Close()
-			return nil,
-				errors.Wrapf(err, "parsing result of query %q (params %q) failed", compiledQuery, params)
+	var sorterStr = "ORDER BY "
+	for i, f := range q.Sorters {
+		field, exist := sqlFieldMap[f.Field]
+		if !exist {
+			return "", fmt.Errorf("no postgresql mapping for storage field %s exists", f.Field)
 		}
 
-		results = append(results, convertedRow)
+		dir, exist := sqlOrderDirectionMap[f.Order]
+		if !exist {
+			return "", fmt.Errorf("no postgresql mapping for storage order direction %s exists", f.Order)
+		}
+
+		sorterStr += fmt.Sprintf("%s %s", field, dir)
+
+		if i+1 < len(q.Sorters) {
+			sorterStr += ",  "
+		}
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, errors.Wrapf(err, "iterating over rows failed (query %q, params %q)", compiledQuery, params)
+	return sorterStr, nil
+}
+
+// Compile compiles the actual sql query
+// and returns it along with the query params
+func (q *Query) Compile() (query string, args []interface{}, err error) {
+	if len(q.Filters) == 0 && len(q.Sorters) == 0 {
+		return q.BaseQuery, nil, nil
 	}
 
-	return results, nil
+	filterStr, args, err := q.compileFilterStr()
+	if err != nil {
+		return "", nil, err
+	}
+
+	orderStr, err := q.compileSorterStr()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return fmt.Sprintf("%s %s %s", q.BaseQuery, filterStr, orderStr), args, nil
 }
