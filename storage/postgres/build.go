@@ -2,124 +2,79 @@ package postgres
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/storage"
 )
 
-// BuildLsFieldsMap is the map of fields => strings
-var BuildLsFieldsMap = SQLFields{
-	storage.FieldBuildID:               "build.id",
-	storage.FieldDuration:              "duration",
-	storage.FieldApplicationName:       "application.name",
-	storage.FieldBuildStartDatetime:    "build.start_timestamp",
-	storage.FieldBuildTotalInputDigest: "build.total_input_digest",
-	storage.FieldOne:                   "1",
-}
-
-// BuildLsFilterOperators is the map of operators => strings
-var BuildLsFilterOperators = SQLFilterOperators{
-	storage.OperatorEq:  "=",
-	storage.OperatorGt:  ">",
-	storage.OperatorLt:  "<",
-	storage.OperatorGte: ">=",
-	storage.OperatorLte: "<=",
-}
-
-// BuildLsSQLMap is an actual implementation of SQLStringer
-var BuildLsSQLMap = SQLMap{
-	Fields:    BuildLsFieldsMap,
-	Operators: BuildLsFilterOperators,
-}
-
-// GetBuilds fetches builds
-func (c *Client) GetBuilds(filters []storage.CanFilter, sorters []storage.CanSort) (
+// GetBuilds returns builds from the database
+func (c *Client) GetBuilds(filters []*storage.Filter, sorters []*storage.Sorter) (
 	[]*storage.BuildWithDuration, error) {
-	queryStr := fmt.Sprintf(`
-		SELECT
-			application.id, application.name,
-			build.id, build.start_timestamp, build.total_input_digest, 
-			vcs.commit, vcs.dirty,
-			EXTRACT(EPOCH FROM (build.stop_timestamp - build.start_timestamp)) as duration
+	const baseQuery = `
+		SELECT application.id, application.name,
+		       build.id, build.start_timestamp, build.total_input_digest, 
+		       vcs.commit, vcs.dirty,
+		       (EXTRACT(EPOCH FROM (build.stop_timestamp - build.start_timestamp))::bigint * 1000000000) as duration
 		FROM application
 		JOIN build ON application.id = build.application_id
-		LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
-		WHERE %s
-		ORDER BY %s`,
-		WrapKey(PlaceholderFilters),
-		WrapKey(PlaceholderSorters),
-	)
+		LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id`
 
-	q := NewQuery(queryStr, BuildLsSQLMap)
+	var builds []*storage.BuildWithDuration
 
-	// todo find a way to strip WHERE and ORDER BY clauses from the compiled query when no filters / sorters
-	// so that we don't have to rely on the following hack. This is like "WHERE 1 = 1 AND ...":
-	defaultFilter := NewFilter(storage.FieldOne, storage.OperatorEq, "1")
-	// prepend the default 1=1 filter to the incoming filters list
-	filters = append([]storage.CanFilter{defaultFilter}, filters...)
+	q := Query{
+		BaseQuery: baseQuery,
+		Filters:   filters,
+		Sorters:   sorters,
+	}
 
-	err := q.SetFilters(filters)
+	query, args, err := q.Compile()
 	if err != nil {
-		return nil, errors.Wrap(err, "problem with filters")
+		return nil, errors.Wrap(err, "compiling query string failed")
 	}
 
-	if len(sorters) == 0 {
-		sorter := NewSorter(storage.FieldBuildStartDatetime, storage.OrderDesc)
-		sorters = []storage.CanSort{sorter}
-	}
-	q.SetSorters(sorters)
-
-	rowValues, err := RunSelectQuery(*c, *q, rowParser)
+	rows, err := c.Db.Query(query, args...)
 	if err != nil {
-		return nil, errors.Wrap(err, "error retrieving builds")
+		return nil, errors.Wrapf(err, "db query '%s' (%q) failed", query, args)
 	}
 
-	buildsWithDuration, err := getBuildsFromQueryResults(rowValues)
-	if err != nil {
-		return nil, errors.Wrap(err, "error converting at least one of the query results to build")
+	for rows.Next() {
+		build, err := scanBuildRow(rows)
+		if err != nil {
+			return nil, errors.Wrapf(err, "scanning result of db query '%s' (%q) failed", query, args)
+		}
+
+		builds = append(builds, build)
 	}
 
-	return buildsWithDuration, nil
+	return builds, nil
 }
 
-func rowParser(rows *sql.Rows) (interface{}, error) {
+func scanBuildRow(rows *sql.Rows) (*storage.BuildWithDuration, error) {
 	var (
-		buildWithDuration storage.BuildWithDuration
-		commitID          sql.NullString
-		isDirty           sql.NullBool
+		build    storage.BuildWithDuration
+		commitID sql.NullString
+		isDirty  sql.NullBool
 	)
 
 	err := rows.Scan(
-		&buildWithDuration.Build.Application.ID,
-		&buildWithDuration.Build.Application.Name,
-		&buildWithDuration.Build.ID,
-		&buildWithDuration.Build.StartTimeStamp,
-		&buildWithDuration.Build.TotalInputDigest,
+		&build.Build.Application.ID,
+		&build.Build.Application.Name,
+		&build.Build.ID,
+		&build.Build.StartTimeStamp,
+		&build.Build.TotalInputDigest,
 		&commitID,
 		&isDirty,
-		&buildWithDuration.Duration,
+		&build.Duration,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	if commitID.Valid {
-		buildWithDuration.Build.VCSState.CommitID = commitID.String
-		buildWithDuration.Build.VCSState.IsDirty = isDirty.Bool
+		build.Build.VCSState.CommitID = commitID.String
+		build.Build.VCSState.IsDirty = isDirty.Bool
 	}
 
-	return buildWithDuration, nil
-}
-
-func getBuildsFromQueryResults(rowValues []interface{}) (buildsWithDuration []*storage.BuildWithDuration, err error) {
-	for _, value := range rowValues {
-		buildWithDuration, ok := value.(storage.BuildWithDuration)
-		if !ok {
-			return nil, fmt.Errorf("strange build retrieved from db: %q", value)
-		}
-		buildsWithDuration = append(buildsWithDuration, &buildWithDuration)
-	}
-
-	return
+	return &build, nil
 }

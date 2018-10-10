@@ -11,7 +11,6 @@ import (
 	"github.com/simplesurance/baur/command/flag"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
-	"github.com/simplesurance/baur/storage/postgres"
 	viewList "github.com/simplesurance/baur/view/list"
 	"github.com/simplesurance/baur/view/list/dataprovider"
 )
@@ -60,7 +59,6 @@ var buildsLsConfig buildsLsConf
 var highlight = color.New(color.FgGreen).SprintFunc()
 
 func init() {
-
 	buildsLsCmd.Flags().BoolVar(&buildsLsConfig.csv, "csv", false,
 		"Lists applications in the RFC4180 CSV format")
 
@@ -80,6 +78,13 @@ func init() {
 }
 
 func runBuildLs(cmd *cobra.Command, args []string) {
+	var sorters []*storage.Sorter
+
+	defaultSorter := storage.Sorter{
+		Field: storage.FieldBuildStartTime,
+		Order: storage.OrderDesc,
+	}
+
 	buildsLsConfig.app = args[0]
 
 	repo := MustFindRepository()
@@ -88,12 +93,13 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	filters := buildsLsConfig.getFilters()
 
-	sorters, err := buildsLsConfig.getSorters()
-	if err != nil {
-		log.Fatalln(errors.Wrap(err, "invalid sorter string"))
+	if buildsLsConfig.sort.Sorter != (storage.Sorter{}) {
+		sorters = append(sorters, &buildsLsConfig.sort.Sorter)
 	}
 
-	err = listProvider.FetchData(filters, sorters)
+	sorters = append(sorters, &defaultSorter)
+
+	err := listProvider.FetchData(filters, sorters)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "fetching data failed"))
 	}
@@ -124,30 +130,29 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 	fmt.Println(str)
 }
 
-func (conf buildsLsConf) getFilters() (filters []storage.CanFilter) {
+func (conf buildsLsConf) getFilters() (filters []*storage.Filter) {
 	if conf.app != "all" {
-		filter := postgres.NewFilter(storage.FieldApplicationName, storage.OperatorEq, conf.app)
-		filters = append(filters, filter)
+		filters = append(filters, &storage.Filter{
+			Field:    storage.FieldApplicationName,
+			Operator: storage.OpEQ,
+			Value:    conf.app,
+		})
 	}
 
 	if conf.before != (flag.DateTimeFlagValue{}) {
-		filter := postgres.NewFilter(storage.FieldBuildStartDatetime, storage.OperatorLte, conf.before.Time)
-		filters = append(filters, filter)
+		filters = append(filters, &storage.Filter{
+			Field:    storage.FieldBuildStartTime,
+			Operator: storage.OpLT,
+			Value:    string(conf.before.Time.Unix()),
+		})
 	}
 
 	if conf.after != (flag.DateTimeFlagValue{}) {
-		filter := postgres.NewFilter(storage.FieldBuildStartDatetime, storage.OperatorGte, conf.after.Time)
-		filters = append(filters, filter)
-	}
-
-	return
-}
-
-func (conf buildsLsConf) getSorters() (sorters []storage.CanSort, err error) {
-	// TODO: does this function really have to return an error value, it
-	// never fails
-	if conf.sort != (flag.SortFlagValue{}) {
-		sorters = append(sorters, conf.sort.Sorter)
+		filters = append(filters, &storage.Filter{
+			Field:    storage.FieldBuildStartTime,
+			Operator: storage.OpGT,
+			Value:    string(conf.after.Time.Unix()),
+		})
 	}
 
 	return

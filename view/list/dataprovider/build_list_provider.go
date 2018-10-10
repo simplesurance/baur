@@ -23,7 +23,7 @@ func NewBuildListProvider(storer storage.Storer) *BuildListProvider {
 }
 
 // FetchData fetches data
-func (p *BuildListProvider) FetchData(filters []storage.CanFilter, sorters []storage.CanSort) error {
+func (p *BuildListProvider) FetchData(filters []*storage.Filter, sorters []*storage.Sorter) error {
 	data, err := p.storer.GetBuilds(filters, sorters)
 	if err != nil {
 		return errors.Wrap(err, "error while trying to retrieve builds")
@@ -47,7 +47,7 @@ func buildsToStrings(buildsWithDuration []*storage.BuildWithDuration) (strings [
 			strconv.Itoa(build.ID),
 			build.Application.Name,
 			build.StartTimeStamp.Format(DateTimeFormat),
-			fmt.Sprintf("%.0f", buildWithDuration.Duration),
+			fmt.Sprint(buildWithDuration.Duration.Seconds()),
 			build.TotalInputDigest,
 		})
 	}

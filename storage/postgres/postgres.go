@@ -17,12 +17,6 @@ type Client struct {
 	Db *sql.DB
 }
 
-// SQLFields is a collection of field names
-type SQLFields map[storage.Field]string
-
-// SQLFilterOperators is a collection of operator names
-type SQLFilterOperators map[storage.SortOperator]string
-
 // New establishes a connection a postgres db
 func New(url string) (*Client, error) {
 	db, err := sql.Open("postgres", url)
