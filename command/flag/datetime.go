@@ -5,8 +5,10 @@ import (
 )
 
 const (
-	dateTimeFormat  = "2006.01.02-15:04"
-	dateTimeFormat1 = "2006.01.02-15:04:05-MST"
+	// DateTimeFormat describes a short format supported by the flag
+	DateTimeFormat = "2006.01.02-15:04"
+	// DateTimeFormatTz describes long format supported by the flag
+	DateTimeFormatTz = "2006.01.02-15:04:05-MST"
 
 	// DateTimeExampleFormat is an exemplary valid datetime flag
 	DateTimeExampleFormat = "2006.01.28-15:30"
@@ -29,9 +31,9 @@ func (v *DateTimeFlagValue) Set(timeStr string) error {
 	var t time.Time
 	var err error
 
-	t, err = time.Parse(dateTimeFormat, timeStr)
+	t, err = time.Parse(DateTimeFormat, timeStr)
 	if err != nil {
-		t, err = time.Parse(dateTimeFormat1, timeStr)
+		t, err = time.Parse(DateTimeFormatTz, timeStr)
 		if err != nil {
 			return err
 		}
