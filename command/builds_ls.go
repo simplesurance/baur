@@ -2,23 +2,26 @@ package command
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/command/flag"
+	"github.com/simplesurance/baur/format"
+	"github.com/simplesurance/baur/format/csv"
+	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
-	viewList "github.com/simplesurance/baur/view/list"
-	"github.com/simplesurance/baur/view/list/dataprovider"
 )
 
 const buildsLsExample = `
 baur builds ls -s duration-desc calc               list builds of the calc
 						   application, sorted by build duration
-baur builds ls --csv --after=2018-09-27-11:30 all  list builds in csv format that
+baur builds ls --csv --after=2018.09.27-11:30 all  list builds in csv format that
 					           happened after 2018.09.27 11:30`
 
 const buildsLsLongHelp = `
@@ -68,7 +71,7 @@ func init() {
 	buildsLsCmd.Flags().VarP(&buildsLsConfig.sort, "sort", "s",
 		strings.TrimSpace(buildsLsSortHelp))
 
-	buildsLsCmd.Flags().VarP(&buildsLsConfig.after, "after", "f",
+	buildsLsCmd.Flags().VarP(&buildsLsConfig.after, "after", "a",
 		fmt.Sprintf("Only show builds that were build after this datetime.\nFormat: %s", highlight(flag.DateTimeFormatDescr)))
 
 	buildsLsCmd.Flags().VarP(&buildsLsConfig.before, "before", "b",
@@ -89,8 +92,6 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	repo := MustFindRepository()
 
-	listProvider := dataprovider.NewBuildListProvider(MustGetPostgresClt(repo))
-
 	filters := buildsLsConfig.getFilters()
 
 	if buildsLsConfig.sort.Sorter != (storage.Sorter{}) {
@@ -99,35 +100,61 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	sorters = append(sorters, &defaultSorter)
 
-	err := listProvider.FetchData(filters, sorters)
-	if err != nil {
-		log.Fatalln(errors.Wrap(err, "fetching data failed"))
+	printBuilds(repo, filters, sorters)
+}
+
+func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*storage.Sorter) {
+	var headers []string
+	var formatter format.Formatter
+	psql := MustGetPostgresClt(repo)
+	writeHeaders := !buildsLsConfig.quiet
+
+	if writeHeaders {
+		headers = []string{
+			"Id",
+			"App",
+			"Start Time",
+			"Duration (s)",
+			"Input Digest",
+		}
+
 	}
 
-	list := viewList.NewList(
-		[]*viewList.Column{
-			{Name: "Id"},
-			{Name: "App"},
-			{Name: "Start Time"},
-			{Name: "Duration (s)"},
-			{Name: "Input Digest"},
-		},
-		listProvider,
-	)
-
-	var flattener viewList.FlattenerFunc
 	if buildsLsConfig.csv {
-		flattener = viewList.CsvListFlattener
+		formatter = csv.New(headers, os.Stdout, writeHeaders)
 	} else {
-		flattener = viewList.DefaultListFlattener
+		formatter = table.New(headers, os.Stdout, writeHeaders)
 	}
 
-	str, err := list.Flatten(flattener, highlight, buildsLsConfig.quiet)
+	builds, err := psql.GetBuilds(filters, sorters)
 	if err != nil {
-		log.Fatalln("formatting data failed: ", err.Error())
+		log.Fatalln(err)
 	}
 
-	fmt.Println(str)
+	for _, build := range builds {
+		var row format.Row
+
+		if buildsLsConfig.quiet {
+			row.Data = []interface{}{build.ID}
+		} else {
+			row.Data = []interface{}{
+				strconv.Itoa(build.ID),
+				build.Application.Name,
+				build.StartTimeStamp.Format(flag.DateTimeFormatTz),
+				fmt.Sprint(build.Duration.Seconds()),
+				build.TotalInputDigest,
+			}
+		}
+
+		if err := formatter.WriteRow(&row); err != nil {
+			log.Fatalln(err)
+		}
+
+	}
+
+	if err := formatter.Flush(); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func (conf buildsLsConf) getFilters() (filters []*storage.Filter) {
@@ -143,7 +170,7 @@ func (conf buildsLsConf) getFilters() (filters []*storage.Filter) {
 		filters = append(filters, &storage.Filter{
 			Field:    storage.FieldBuildStartTime,
 			Operator: storage.OpLT,
-			Value:    string(conf.before.Time.Unix()),
+			Value:    conf.before.Time,
 		})
 	}
 
@@ -151,7 +178,7 @@ func (conf buildsLsConf) getFilters() (filters []*storage.Filter) {
 		filters = append(filters, &storage.Filter{
 			Field:    storage.FieldBuildStartTime,
 			Operator: storage.OpGT,
-			Value:    string(conf.after.Time.Unix()),
+			Value:    conf.after.Time,
 		})
 	}
 
