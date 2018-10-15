@@ -189,13 +189,13 @@ func lsCSV(apps []*baur.App) {
 
 func ls(cmd *cobra.Command, args []string) {
 	var storage storage.Storer
-	rep := mustFindRepository()
+	rep := MustFindRepository()
 	apps := mustFindApps(rep)
 
 	baur.SortAppsByName(apps)
 
 	if lsShowBuildStatus {
-		storage = mustGetPostgresClt(rep)
+		storage = MustGetPostgresClt(rep)
 
 		if lsCSVFmt {
 			lsBuildStatusCSV(apps, storage)

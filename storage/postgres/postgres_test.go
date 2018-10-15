@@ -67,7 +67,7 @@ func TestInsertAppIfNotExist(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tx, err := c.db.Begin()
+	tx, err := c.Db.Begin()
 	if err != nil {
 		t.Fatal("starting transaction failed:", err)
 	}

@@ -33,7 +33,7 @@ var appInitCmd = &cobra.Command{
 
 func appInit(cmd *cobra.Command, args []string) {
 	var appName string
-	mustFindRepository()
+	MustFindRepository()
 
 	cwd, err := os.Getwd()
 	if err != nil {

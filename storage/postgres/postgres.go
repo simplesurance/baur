@@ -14,8 +14,14 @@ import (
 
 // Client is a postgres storage client
 type Client struct {
-	db *sql.DB
+	Db *sql.DB
 }
+
+// SQLFields is a collection of field names
+type SQLFields map[storage.Field]string
+
+// SQLFilterOperators is a collection of operator names
+type SQLFilterOperators map[storage.SortOperator]string
 
 // New establishes a connection a postgres db
 func New(url string) (*Client, error) {
@@ -29,13 +35,13 @@ func New(url string) (*Client, error) {
 	}
 
 	return &Client{
-		db: db,
+		Db: db,
 	}, nil
 }
 
 // Close closes the connection
 func (c *Client) Close() {
-	c.db.Close()
+	c.Db.Close()
 }
 
 func insertBuild(tx *sql.Tx, appID, vcsID int, b *storage.Build) (int, error) {
@@ -309,7 +315,7 @@ func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) 
 // ignored. The database generates a record ID and it will be stored in the
 // passed Build.
 func (c *Client) Save(b *storage.Build) error {
-	tx, err := c.db.Begin()
+	tx, err := c.Db.Begin()
 	if err != nil {
 		return errors.Wrap(err, "starting transaction failed")
 	}
@@ -372,6 +378,50 @@ func (c *Client) Save(b *storage.Build) error {
 	return nil
 }
 
+// GetBuildOutputs returns build outputs
+func (c *Client) GetBuildOutputs(buildID int) ([]*storage.Output, error) {
+	const stmt = `SELECT
+			output.name, output.digest, output.type, output.size_bytes,
+			upload.id, upload.url, upload.upload_duration_ns
+		      FROM output
+		      JOIN build_output ON output.id = build_output.output_id
+		      JOIN upload ON upload.build_output_id = build_output.id
+		      WHERE build_output.build_id = $1
+		      `
+
+	rows, err := c.Db.Query(stmt, buildID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "db query %q failed", stmt)
+	}
+
+	var outputs []*storage.Output
+
+	for rows.Next() {
+		var output storage.Output
+
+		err := rows.Scan(
+			&output.Name,
+			&output.Digest,
+			&output.Type,
+			&output.SizeBytes,
+			&output.Upload.ID,
+			&output.Upload.URL,
+			&output.Upload.UploadDuration,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "db query %q failed", stmt)
+		}
+
+		outputs = append(outputs, &output)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "iterating over rows failed")
+	}
+
+	return outputs, nil
+}
+
 func (c *Client) populateOutputs(build *storage.Build) error {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
@@ -382,7 +432,7 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 		      WHERE build_output.build_id = $1
 		      `
 
-	rows, err := c.db.Query(stmt, build.ID)
+	rows, err := c.Db.Query(stmt, build.ID)
 	if err != nil {
 		return errors.Wrapf(err, "db query %q failed", stmt)
 	}
@@ -452,7 +502,7 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*stor
 	 ORDER BY build.stop_timestamp DESC LIMIT 1
 	 `
 
-	err := c.db.QueryRow(stmt, appName, totalInputDigest).Scan(
+	err := c.Db.QueryRow(stmt, appName, totalInputDigest).Scan(
 		&build.Application.ID,
 		&build.Application.Name,
 		&build.ID,
@@ -474,9 +524,12 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*stor
 		build.VCSState.IsDirty = isDirty.Bool
 	}
 
-	if err := c.populateOutputs(&build); err != nil {
+	builds, err := c.GetBuildOutputs(build.ID)
+	if err != nil {
 		return nil, errors.Wrap(err, "fetching build outputs failed")
 	}
+
+	build.Outputs = builds
 
 	return &build, err
 }
@@ -486,7 +539,7 @@ func (c *Client) GetApps() ([]*storage.Application, error) {
 	const query = "SELECT id, name FROM application ORDER BY name"
 	var res []*storage.Application
 
-	rows, err := c.db.Query(query)
+	rows, err := c.Db.Query(query)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrNotExist
@@ -537,7 +590,7 @@ func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs ti
 
 	res := map[string][]int{}
 
-	rows, err := c.db.Query(query, startTs, appName)
+	rows, err := c.Db.Query(query, startTs, appName)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrNotExist
@@ -589,7 +642,7 @@ func (c *Client) GetBuildsWithoutInputs(buildIDs []int) ([]*storage.Build, error
 
 	var res []*storage.Build
 
-	rows, err := c.db.Query(query)
+	rows, err := c.Db.Query(query)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrNotExist
