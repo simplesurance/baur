@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )

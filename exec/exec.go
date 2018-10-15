@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/log"
 )
 

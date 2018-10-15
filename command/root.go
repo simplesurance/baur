@@ -6,9 +6,10 @@ import (
 	"path/filepath"
 	"runtime/pprof"
 
+	"github.com/spf13/cobra"
+
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/version"
-	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{

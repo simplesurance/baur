@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/upload"
 )

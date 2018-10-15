@@ -7,11 +7,12 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/spf13/cobra"
+
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/log"
-	"github.com/spf13/cobra"
 )
 
 var inputsShowDigest bool

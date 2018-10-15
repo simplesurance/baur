@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/term"
-	"github.com/spf13/cobra"
 )
 
 const verifyLongHelp = `

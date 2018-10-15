@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/pelletier/go-toml"
-
 	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/version"
