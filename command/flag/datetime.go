@@ -21,7 +21,7 @@ type DateTimeFlagValue struct {
 	time.Time
 }
 
-// String returns an empty string
+// String returns the default value in the usage output
 func (v *DateTimeFlagValue) String() string {
 	return ""
 }

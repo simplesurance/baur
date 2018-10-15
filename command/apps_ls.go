@@ -1,231 +1,215 @@
 package command
 
 import (
-	"encoding/csv"
 	"fmt"
-	"math"
 	"os"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/command/flag"
+	"github.com/simplesurance/baur/format"
+	"github.com/simplesurance/baur/format/csv"
+	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
-	"github.com/simplesurance/baur/term"
 )
-
-var lsCSVFmt bool
-var lsShowBuildStatus bool
-var lsShowAbsPath bool
 
 const (
-	lsNameCol   string = "Name"
-	lsStatusCol        = "Build Status"
-	lsIDCol            = "Build ID"
-	lsVCSCol           = "Git Commit"
+	lsAppNameHeader        = "Name"
+	lsAppNameParam         = "name"
+	lsAppPathHeader        = "Path"
+	lsAppPathParam         = "path"
+	lsAppBuildIDHeader     = "Build ID"
+	lsAppBuildIDParam      = "build-id"
+	lsAppBuildStatusHeader = "Build Status"
+	lsAppBuildStatusParam  = "build-status"
 )
 
-var lsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "list all applications in the repository",
-	Run:   ls,
+type appsLsConf struct {
+	csv         bool
+	quiet       bool
+	absPaths    bool
+	buildStatus flag.BuildStatus
+	fields      *flag.Fields
 }
+
+var appsLsCmd = &cobra.Command{
+	Use:   "ls [<APP-NAME>]...",
+	Short: "list applications and their status",
+	Run:   ls,
+	Args:  cobra.ArbitraryArgs,
+}
+
+var appsLsConfig appsLsConf
 
 func init() {
-	lsCmd.Flags().BoolVar(&lsCSVFmt, "csv", false, "list applications in RFC4180 CSV format")
-	lsCmd.Flags().BoolVarP(&lsShowBuildStatus, "build-status", "b", false,
-		"shows if a build for the application exist")
-	lsCmd.Flags().BoolVarP(&lsShowAbsPath, "abs-path", "a", false,
-		"show absolute instead of relative paths")
-	appsCmd.AddCommand(lsCmd)
+	appsLsCmd.Flags().BoolVar(&appsLsConfig.csv, "csv", false,
+		"List applications in RFC4180 CSV format")
+
+	appsLsCmd.Flags().BoolVarP(&appsLsConfig.quiet, "quiet", "q", false,
+		"Only print application names")
+
+	appsLsCmd.Flags().BoolVar(&appsLsConfig.absPaths, "abs-path", false,
+		"Show absolute instead of relative paths")
+
+	appsLsCmd.Flags().VarP(&appsLsConfig.buildStatus, "build-status", "s",
+		appsLsConfig.buildStatus.Usage(highlight))
+
+	appsLsConfig.fields = flag.NewFields([]string{
+		lsAppNameParam,
+		lsAppPathParam,
+		lsAppBuildIDParam,
+		lsAppBuildStatusParam,
+	})
+	appsLsCmd.Flags().VarP(appsLsConfig.fields, "fields", "f",
+		appsLsConfig.fields.Usage(highlight))
+
+	appsCmd.AddCommand(appsLsCmd)
 }
 
-func appPath(a *baur.App, absolutePaths bool) string {
-	if absolutePaths {
-		return a.Path
+func createHeader() []string {
+	var headers []string
+
+	if appsLsConfig.fields.IsSet(lsAppNameParam) {
+		headers = append(headers, lsAppNameHeader)
 	}
 
-	return a.RelPath
-}
-
-func lsPlain(apps []*baur.App) {
-	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
-
-	fmt.Fprintf(tw, "# Name\tDirectory\n")
-
-	for _, app := range apps {
-		path := appPath(app, lsShowAbsPath)
-		fmt.Fprintf(tw, "%s\t%s\n", app.Name, path)
+	if appsLsConfig.fields.IsSet(lsAppPathParam) {
+		headers = append(headers, lsAppPathHeader)
 	}
 
-	tw.Flush()
-
-	term.PrintSep()
-	fmt.Printf("Total: %v\n", len(apps))
-}
-
-func longestAppNameLen(apps []*baur.App) int {
-	var longest int
-
-	for _, a := range apps {
-		if len(a.Name) > longest {
-			longest = len(a.Name)
-		}
+	if appsLsConfig.fields.IsSet(lsAppBuildIDParam) {
+		headers = append(headers, lsAppBuildIDHeader)
 	}
 
-	return longest
-}
-
-func longestStrLen(strs ...string) int {
-	var longest int
-
-	for _, s := range strs {
-		if len(s) > longest {
-			longest = len(s)
-		}
+	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
+		headers = append(headers, lsAppBuildStatusHeader)
 	}
 
-	return longest
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-
-	return b
-}
-
-func lsBuildStatusPlain(apps []*baur.App, storage storage.Storer) {
-	const sepSpaces = 2
-	var (
-		buildExist int
-
-		nameColLen   = max(longestAppNameLen(apps), len(lsNameCol)) + sepSpaces
-		statusColLen = max(
-			longestStrLen(baur.BuildStatusExist.String(), baur.BuildStatusInputsUndefined.String(), baur.BuildStatusOutstanding.String()),
-			len(lsStatusCol),
-		) + sepSpaces
-		idColLen  = max(len(string(math.MaxInt64)), len(lsIDCol)) + sepSpaces
-		vcsColLen = max(40+len("-dirty"), len(lsVCSCol))
-	)
-
-	if nameColLen <= 2 {
-		nameColLen = 6
-	}
-
-	fmt.Printf("# %-*s\t%-*s\t%-*s\t%-*s\n",
-		nameColLen-2, lsNameCol,
-		statusColLen, lsStatusCol,
-		idColLen, lsIDCol,
-		vcsColLen, lsVCSCol)
-
-	for _, app := range apps {
-		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
-
-		if buildStatus == baur.BuildStatusExist {
-			buildExist++
-			fmt.Printf("%-*s\t%-*s\t%-*s\t%-*s\n", nameColLen, app.Name,
-				statusColLen, buildStatus,
-				idColLen, buildID,
-				vcsColLen, vcsStr(&build.VCSState))
-			continue
-		}
-
-		fmt.Printf("%-*s\t%-*s\t\t\n", nameColLen, app.Name, statusColLen, buildStatus)
-	}
-
-	term.PrintSep()
-
-	if lsShowBuildStatus {
-		fmt.Printf("Total: %d\n", len(apps))
-		fmt.Printf("Outstanding builds: %d\n", len(apps)-buildExist)
-
-		return
-	}
-
-	fmt.Printf("Total: %v\n", len(apps))
-}
-
-func lsBuildStatusCSV(apps []*baur.App, storage storage.Storer) {
-	csvw := csv.NewWriter(os.Stdout)
-
-	for _, app := range apps {
-		buildStatus, build, buildID := mustGetBuildStatus(app, storage)
-
-		if buildStatus == baur.BuildStatusExist {
-			csvw.Write([]string{
-				app.Name,
-				buildStatus.String(),
-				buildID,
-				vcsStr(&build.VCSState),
-			})
-
-			continue
-		}
-
-		csvw.Write([]string{
-			app.Name,
-			buildStatus.String(),
-			buildID,
-		})
-
-	}
-
-	csvw.Flush()
-}
-
-func lsCSV(apps []*baur.App) {
-	csvw := csv.NewWriter(os.Stdout)
-
-	for _, app := range apps {
-		path := appPath(app, lsShowAbsPath)
-
-		csvw.Write([]string{app.Name, path})
-	}
-
-	csvw.Flush()
+	return headers
 }
 
 func ls(cmd *cobra.Command, args []string) {
-	var storage storage.Storer
-	rep := MustFindRepository()
-	apps := mustFindApps(rep)
+	var headers []string
+	var formatter format.Formatter
+	var storageClt storage.Storer
 
-	baur.SortAppsByName(apps)
+	repo := MustFindRepository()
+	apps := mustArgToApps(repo, args)
+	writeHeaders := !appsLsConfig.quiet
 
-	if lsShowBuildStatus {
-		storage = MustGetPostgresClt(rep)
+	if storageQueryIsNeeded() {
+		storageClt = MustGetPostgresClt(repo)
+	}
 
-		if lsCSVFmt {
-			lsBuildStatusCSV(apps, storage)
-			os.Exit(0)
+	if writeHeaders {
+		headers = createHeader()
+	}
+
+	if appsLsConfig.csv {
+		formatter = csv.New(headers, os.Stdout, writeHeaders)
+	} else {
+		formatter = table.New(headers, os.Stdout, writeHeaders)
+	}
+
+	for i, app := range apps {
+		var row *format.Row
+		var build *storage.Build
+		var buildStatus baur.BuildStatus
+
+		if storageQueryIsNeeded() {
+			var err error
+
+			buildStatus, build, err = baur.GetBuildStatus(storageClt, app)
+			if err != nil {
+				log.Fatalf("gathering informations for %s failed: %s", app, err)
+			}
+
+			// querying the build status for all applications can
+			// take some time, output progress dots to let the user
+			// know that something is happening
+			if !appsLsConfig.quiet && !appsLsConfig.csv {
+				fmt.Printf(".")
+
+				if i+1 == len(apps) {
+					fmt.Printf("\n\n")
+				}
+			}
 		}
 
-		lsBuildStatusPlain(apps, storage)
-		os.Exit(0)
+		if appsLsConfig.buildStatus.IsSet() && buildStatus != appsLsConfig.buildStatus.Status {
+			continue
+		}
+
+		if appsLsConfig.quiet {
+			row = assembleQuietRow(app)
+		} else {
+			row = assembleRow(app, build, buildStatus)
+		}
+
+		if err := formatter.WriteRow(row); err != nil {
+			log.Fatalln(err)
+		}
 	}
 
-	if lsCSVFmt {
-		lsCSV(apps)
-		os.Exit(0)
-	}
-
-	lsPlain(apps)
+	formatter.Flush()
 }
 
-func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.Build, string) {
-	var strBuildID string
+func assembleQuietRow(app *baur.App) *format.Row {
+	return &format.Row{
+		Data: []interface{}{app.Name},
+	}
+}
 
-	status, build, err := baur.GetBuildStatus(storage, app)
-	if err != nil {
-		log.Fatalf("evaluating build status of %s failed: %s\n", app, err)
+func storageQueryIsNeeded() bool {
+	return (appsLsConfig.buildStatus.IsSet() ||
+		appsLsConfig.fields.IsSet(lsAppBuildIDParam) ||
+		appsLsConfig.fields.IsSet(lsAppBuildStatusParam))
+}
+
+func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) *format.Row {
+	var row format.Row
+
+	if appsLsConfig.fields.IsSet(lsAppNameParam) {
+		row.Data = append(row.Data, app.Name)
 	}
 
-	if build != nil {
-		strBuildID = fmt.Sprint(build.ID)
+	if appsLsConfig.fields.IsSet(lsAppPathParam) {
+		if appsLsConfig.absPaths {
+			row.Data = append(row.Data, app.Path)
+		} else {
+			row.Data = append(row.Data, app.RelPath)
+		}
 	}
 
-	return status, build, strBuildID
+	if appsLsConfig.fields.IsSet(lsAppBuildIDParam) {
+		if buildStatus == baur.BuildStatusExist {
+			row.Data = append(row.Data, fmt.Sprint(build.ID))
+		} else {
+			// no build exist, we don't have a build id
+			row.Data = append(row.Data, "")
+		}
+	}
+
+	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
+		row.Data = append(row.Data, colorizedBuildStatus((buildStatus)))
+	}
+
+	return &row
+}
+
+func colorizedBuildStatus(status baur.BuildStatus) string {
+	switch status {
+	case baur.BuildStatusExist:
+		return greenHighlight(baur.BuildStatusExist.String())
+
+	case baur.BuildStatusOutstanding:
+		return redHighlight(baur.BuildStatusOutstanding.String())
+
+	case baur.BuildStatusInputsUndefined:
+		return yellowHighlight(baur.BuildStatusInputsUndefined.String())
+	default:
+		panic(fmt.Sprintf("invalid build-status: %v", status))
+	}
 }

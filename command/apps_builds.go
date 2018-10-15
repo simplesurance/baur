@@ -163,19 +163,6 @@ func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
 
 }
 
-func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
-	if len(args) == 0 {
-		apps, err := repo.FindApps()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		return apps
-	}
-
-	return []*baur.App{mustArgToApp(repo, args[0])}
-}
-
 func outputCount(apps []*baur.App) int {
 	var cnt int
 
@@ -464,4 +451,19 @@ func appBuildRun(cmd *cobra.Command, args []string) {
 
 	term.PrintSep()
 	log.Infof("finished in %s\n", time.Since(startTs))
+}
+
+func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.Build, string) {
+	var strBuildID string
+
+	status, build, err := baur.GetBuildStatus(storage, app)
+	if err != nil {
+		log.Fatalf("evaluating build status of %s failed: %s\n", app, err)
+	}
+
+	if build != nil {
+		strBuildID = fmt.Sprint(build.ID)
+	}
+
+	return status, build, strBuildID
 }
