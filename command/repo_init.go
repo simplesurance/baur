@@ -12,12 +12,12 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	repoCmd.AddCommand(initCmd)
 }
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "creates a repository config in the current directory",
+	Short: "creates a repository config file in the current directory",
 	Run:   initRepositoryCfg,
 }
 
