@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/git"

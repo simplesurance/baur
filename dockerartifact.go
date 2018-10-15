@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/upload"
