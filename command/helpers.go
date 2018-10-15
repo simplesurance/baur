@@ -6,10 +6,20 @@ import (
 	"path"
 	"time"
 
+	"github.com/fatih/color"
+
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
+)
+
+// highlight is a function that highlights parts of strings in the cli output
+var (
+	greenHighlight  = color.New(color.FgGreen).SprintFunc()
+	redHighlight    = color.New(color.FgRed).SprintFunc()
+	yellowHighlight = color.New(color.FgYellow).SprintFunc()
+	highlight       = greenHighlight
 )
 
 // MustFindRepository must find repo
@@ -63,24 +73,6 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	return app
 }
 
-func mustFindApps(r *baur.Repository) []*baur.App {
-	apps, err := r.FindApps()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if len(apps) == 0 {
-		log.Fatalf("could not find any applications\n"+
-			"- ensure the [Discover] section is correct in %s\n"+
-			"- ensure that you have >1 application dirs "+
-			"containing a %s file\n",
-			r.CfgPath, baur.AppCfgFile)
-	}
-
-	return apps
-
-}
-
 // MustGetPostgresClt must return the PG client
 func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	clt, err := postgres.New(r.PSQLURL)
@@ -123,4 +115,30 @@ func vcsStr(v *storage.VCSState) string {
 	}
 
 	return v.CommitID
+}
+
+func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
+	if len(args) == 0 {
+		apps, err := repo.FindApps()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if len(apps) == 0 {
+			log.Fatalf("could not find any applications\n"+
+				"- ensure the [Discover] section is correct in %s\n"+
+				"- ensure that you have >1 application dirs "+
+				"containing a %s file\n",
+				repo.CfgPath, baur.AppCfgFile)
+		}
+
+		return apps
+	}
+
+	apps := make([]*baur.App, 0, len(args))
+	for _, arg := range args {
+		apps = append(apps, mustArgToApp(repo, arg))
+	}
+
+	return apps
 }

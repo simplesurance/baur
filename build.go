@@ -5,7 +5,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
 
@@ -55,7 +54,7 @@ func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, *storage.Buil
 			return BuildStatusOutstanding, nil, nil
 		}
 
-		log.Fatalf("fetching build of %q from storage failed: %s\n", app.Name, err)
+		return -1, nil, errors.Wrap(err, "fetching latest build failed")
 	}
 
 	return BuildStatusExist, build, nil

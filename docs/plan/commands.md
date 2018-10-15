@@ -35,12 +35,8 @@ baur repo show
 
 
 - ```
-  baur app ls [--csv] [-q/--quiet] [--status=<BUILD-STATUS>] [--sort-by=<FIELD>...] [--sort-order=asc|desc] --fields=<FIELD> [--<FIELD>=<Value>]... [-a/--abs-path]
-  <FIELD> is one of: app, path, latest-build-id,  number-of-builds
-					 build-duration, avg(build-duration), max(build-duration),
-					 artifact-size, avg(artifact-size), max(artifact-size),
-					 upload-duration, avg(upload-duration),
-					 max(upload-duration)
+  baur apps ls [--csv] [-q] [--status=<BUILD-STATUS>] [--sort=<FIELD>-<SORT-ORDER>] --abs-path
+  <FIELD> is one of: app, path, build-id, status
   ```
   Shows informations about applications
   If `--quiet` Is passed only application names are shown
