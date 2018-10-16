@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -145,11 +146,11 @@ const (
 func (s Order) String() string {
 	switch s {
 	case OrderAsc:
-		return "Asc"
+		return "asc"
 	case OrderDesc:
-		return "Desc"
+		return "desc"
 	default:
-		return "SortUndefined"
+		return "invalid"
 	}
 }
 
@@ -169,6 +170,11 @@ func OrderFromStr(s string) (Order, error) {
 type Sorter struct {
 	Field Field
 	Order Order
+}
+
+// String return the string representation
+func (s *Sorter) String() string {
+	return fmt.Sprintf("%s-%s", s.Field, s.Order)
 }
 
 // Storer is an interface for persisting informations about builds

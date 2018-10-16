@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur"
@@ -28,16 +27,6 @@ const buildsLsLongHelp = `
 baur builds ls allows to list builds of applications
 `
 
-var buildsLsSortHelp = fmt.Sprintf(`
-Sort the list by a specific field.
-Format: %s
-where %s is one of: %s, %s
-and %s one of: %s, %s`,
-	highlight("<FIELD>-<ORDER>"),
-	highlight("<FIELD>"), highlight("time"),
-	highlight("duration"),
-	highlight("<ORDER>"), highlight("asc"), highlight("desc"))
-
 var buildsLsCmd = &cobra.Command{
 	Use:     "ls <APP-NAME>|all",
 	Short:   "list builds",
@@ -52,24 +41,26 @@ type buildsLsConf struct {
 	csv    bool
 	after  flag.DateTimeFlagValue
 	before flag.DateTimeFlagValue
-	sort   flag.SortFlagValue
+	sort   *flag.Sort
 	quiet  bool
 }
 
 var buildsLsConfig buildsLsConf
 
-// highlight is a function that highlights parts of strings in the cli output
-var highlight = color.New(color.FgGreen).SprintFunc()
-
 func init() {
+	buildsLsConfig.sort = flag.NewSort(map[string]storage.Field{
+		"time":     storage.FieldBuildStartTime,
+		"duration": storage.FieldBuildDuration,
+	})
+
 	buildsLsCmd.Flags().BoolVar(&buildsLsConfig.csv, "csv", false,
 		"Lists applications in the RFC4180 CSV format")
 
 	buildsLsCmd.Flags().BoolVarP(&buildsLsConfig.quiet, "quiet", "q", false,
 		"Only print builds ids")
 
-	buildsLsCmd.Flags().VarP(&buildsLsConfig.sort, "sort", "s",
-		strings.TrimSpace(buildsLsSortHelp))
+	buildsLsCmd.Flags().VarP(buildsLsConfig.sort, "sort", "s",
+		buildsLsConfig.sort.Usage(highlight))
 
 	buildsLsCmd.Flags().VarP(&buildsLsConfig.after, "after", "a",
 		fmt.Sprintf("Only show builds that were build after this datetime.\nFormat: %s", highlight(flag.DateTimeFormatDescr)))
@@ -93,9 +84,8 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 	repo := MustFindRepository()
 
 	filters := buildsLsConfig.getFilters()
-
-	if buildsLsConfig.sort.Sorter != (storage.Sorter{}) {
-		sorters = append(sorters, &buildsLsConfig.sort.Sorter)
+	if buildsLsConfig.sort.Value != (storage.Sorter{}) {
+		sorters = append(sorters, &buildsLsConfig.sort.Value)
 	}
 
 	sorters = append(sorters, &defaultSorter)
