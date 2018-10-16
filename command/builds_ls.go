@@ -54,7 +54,7 @@ func init() {
 	})
 
 	buildsLsCmd.Flags().BoolVar(&buildsLsConfig.csv, "csv", false,
-		"Lists applications in the RFC4180 CSV format")
+		"List builds in RFC4180 CSV format")
 
 	buildsLsCmd.Flags().BoolVarP(&buildsLsConfig.quiet, "quiet", "q", false,
 		"Only print builds ids")
