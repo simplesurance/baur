@@ -42,7 +42,7 @@ baur repo show
   If `--quiet` Is passed only application names are shown
 
 
-## `baur build`
+## `baur builds`
 - ```
   baur build show <BUILD-ID>
   ``
@@ -58,15 +58,16 @@ baur repo show
   if `-q` is passed only build-ids are printed
 
 
-## `baur input`
+## `baur inputs`
 - ```
-  baur input diff <BUILDID> <BUILDID>
+  baur inputs diff <BUILDID> <BUILDID>
   ```
   Compares the input digests of two builds, it prints which outputs differ
   (similiar to diff view)
 
 - ```
-   baur input ls [--csv] [--fields=<FIELD>...] [--FIELD=<VALUE>]...  <APP>|<BUILDID>|<PATH>
-   Field is one of : app, build-start-date, build-end-date, digest
+   baur inputs show [--csv] --digests  <APP>|<BUILDID>|<PATH>
+   baur apps inputs  [--csv] --digests  <APP|PATH> (can be an alias of inputs show)
+   baur builds inputs  [--csv] --digests  <BUILDID> (can be an alias of inputs show
   ```
   list inputs of an app or, build
