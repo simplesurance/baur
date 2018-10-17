@@ -51,7 +51,12 @@ func (g *GitPaths) Resolve() ([]BuildInput, error) {
 	return res, nil
 }
 
-// String returns the string representation
+// Type returns the type of resolver
+func (g *GitPaths) Type() string {
+	return "GitFiles"
+}
+
+// String returns the path to resolve
 func (g *GitPaths) String() string {
-	return "Build.Input.Gitfiles"
+	return strings.Join(g.paths, ", ")
 }

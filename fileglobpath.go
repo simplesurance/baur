@@ -51,7 +51,12 @@ func (f *FileGlobPath) Resolve() ([]BuildInput, error) {
 	return res, nil
 }
 
-// String returns the glob path
+// Type returns the type of resolver
+func (f *FileGlobPath) Type() string {
+	return "Files"
+}
+
+// String returns the path that is resolved
 func (f *FileGlobPath) String() string {
-	return "Build.Input.Files"
+	return f.globPath
 }

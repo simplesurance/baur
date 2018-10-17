@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
@@ -21,20 +20,11 @@ func init() {
 	rootCmd.AddCommand(showCmd)
 }
 
-const showExampleHelp = `
-baur show claim-service		        show informations about the claim-service application
-baur show 482				show informations about the build with ID 482
-baur show --path-only claim-service	show the path of the directory of the claim-service application
-baur show .		                show informations about the application in the current directory
-baur show		                show informations about the repository
-`
-
 var showCmd = &cobra.Command{
-	Use:     "show [<APP-NAME>|<PATH>|<BUILD-ID>]",
-	Short:   "shows informations about applications and builds",
-	Example: strings.TrimSpace(showExampleHelp),
-	Run:     show,
-	Args:    cobra.MaximumNArgs(1),
+	Use:   "show [<APP-NAME>|<PATH>|<BUILD-ID>]",
+	Short: "shows informations about applications and builds",
+	Run:   showOld,
+	Args:  cobra.MaximumNArgs(1),
 }
 
 func showRepositoryInformation(rep *baur.Repository) {
@@ -118,7 +108,7 @@ func showBuildInformation(rep *baur.Repository, buildID int) {
 
 }
 
-func show(cmd *cobra.Command, args []string) {
+func showOld(cmd *cobra.Command, args []string) {
 	rep := MustFindRepository()
 
 	if len(args) == 0 {

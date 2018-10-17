@@ -4,4 +4,7 @@ package baur
 // concrete values (files)
 type BuildInputPathResolver interface {
 	Resolve() ([]BuildInput, error)
+	// Type returns the type of resolver
+	Type() string
+	String() string
 }
