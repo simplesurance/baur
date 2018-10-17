@@ -155,7 +155,9 @@ func ls(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	formatter.Flush()
+	if err := formatter.Flush(); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func assembleQuietRow(app *baur.App) []interface{} {
