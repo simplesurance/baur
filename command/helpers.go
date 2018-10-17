@@ -146,8 +146,8 @@ func mustWriteRow(fmt format.Formatter, row []interface{}) {
 	}
 }
 
-func fmtVertTitle(title string) string {
-	if appsLsConfig.csv {
+func fmtVertTitle(csvFormat bool, title string) string {
+	if csvFormat {
 		return title
 	}
 
