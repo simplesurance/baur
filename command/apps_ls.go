@@ -108,9 +108,9 @@ func ls(cmd *cobra.Command, args []string) {
 	}
 
 	if appsLsConfig.csv {
-		formatter = csv.New(headers, os.Stdout, writeHeaders)
+		formatter = csv.New(headers, os.Stdout)
 	} else {
-		formatter = table.New(headers, os.Stdout, writeHeaders)
+		formatter = table.New(headers, os.Stdout)
 	}
 
 	showProgress := len(apps) >= 5 && !appsLsConfig.quiet && !appsLsConfig.csv

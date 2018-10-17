@@ -111,9 +111,9 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 	}
 
 	if buildsLsConfig.csv {
-		formatter = csv.New(headers, os.Stdout, writeHeaders)
+		formatter = csv.New(headers, os.Stdout)
 	} else {
-		formatter = table.New(headers, os.Stdout, writeHeaders)
+		formatter = table.New(headers, os.Stdout)
 	}
 
 	builds, err := psql.GetBuilds(filters, sorters)

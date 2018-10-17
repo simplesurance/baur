@@ -12,14 +12,15 @@ type Formatter struct {
 	csvWriter *csv.Writer
 }
 
-// New returns a CSVwriter that writes to out
-func New(headers []string, out io.Writer, writeHeader bool) *Formatter {
+// New returns a new tabwriter, if headers is not empty it's written as first
+// row to the output
+func New(headers []string, out io.Writer) *Formatter {
 	f := Formatter{
 		out:       out,
 		csvWriter: csv.NewWriter(out),
 	}
 
-	if writeHeader {
+	if len(headers) > 0 {
 		_ = f.writeHeader(headers)
 	}
 
