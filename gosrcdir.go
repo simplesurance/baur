@@ -3,6 +3,7 @@ package baur
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -70,7 +71,12 @@ func (g *GoSrcDirs) Resolve() ([]BuildInput, error) {
 	return res, nil
 }
 
-// String returns the path
+// Type returns the type of resolver
+func (g *GoSrcDirs) Type() string {
+	return "GolangSources"
+}
+
+// String returns the GoPath and Paths to resolve
 func (g *GoSrcDirs) String() string {
-	return fmt.Sprintf("Build.Input.GolangSources")
+	return fmt.Sprintf("GOPATH: \"%s\", Paths: \"%s\"", g.gopath, strings.Join(g.paths, ", "))
 }

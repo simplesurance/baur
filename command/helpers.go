@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	"github.com/fatih/color"
 
 	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
@@ -83,10 +83,6 @@ func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	return clt
 }
 
-func durationToStrSec(d time.Duration) string {
-	return fmt.Sprintf("%.2fs", d.Seconds())
-}
-
 func mustGetCommitID(r *baur.Repository) string {
 	commitID, err := r.GitCommitID()
 	if err != nil {
@@ -141,4 +137,19 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 	}
 
 	return apps
+}
+
+func mustWriteRow(fmt format.Formatter, row []interface{}) {
+	err := fmt.WriteRow(row)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func fmtVertTitle(title string) string {
+	if appsLsConfig.csv {
+		return title
+	}
+
+	return highlight(title + ":")
 }
