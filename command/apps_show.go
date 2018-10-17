@@ -43,29 +43,32 @@ func appsShow(cmd *cobra.Command, args []string) {
 		formatter = table.New(nil, os.Stdout)
 	}
 
-	mustWriteRow(formatter, []interface{}{fmtVertTitle("Name"), app.Name})
-	mustWriteRow(formatter, []interface{}{fmtVertTitle("Path"), app.RelPath})
-	mustWriteRow(formatter, []interface{}{fmtVertTitle("Build Command"), app.BuildCmd})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Name"), app.Name})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Path"), app.RelPath})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Build Command"), app.BuildCmd})
 
-	if len(app.Outputs) == 0 {
-		mustWriteRow(formatter, []interface{}{fmtVertTitle("Outputs"), "None", ""})
-	} else {
-		mustWriteRow(formatter, []interface{}{fmtVertTitle("Outputs"), "", ""})
+	if len(app.Outputs) != 0 {
+		mustWriteRow(formatter, []interface{}{})
+		mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Outputs")})
 
-		for _, art := range app.Outputs {
-			mustWriteRow(formatter, []interface{}{"", fmtVertTitle("Local"), art.String()})
-			mustWriteRow(formatter, []interface{}{"", fmtVertTitle("Remote"), art.UploadDestination()})
+		for i, art := range app.Outputs {
+			mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Local"), art.String()})
+			mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Remote"), art.UploadDestination()})
+
+			if i+1 < len(app.Outputs) {
+				mustWriteRow(formatter, []interface{}{})
+			}
 		}
 	}
-	if len(app.BuildInputPaths) == 0 {
-		mustWriteRow(formatter, []interface{}{fmtVertTitle("Inputs"), "None", ""})
-	} else {
 
-		mustWriteRow(formatter, []interface{}{fmtVertTitle("Inputs"), "", ""})
+	if len(app.BuildInputPaths) != 0 {
+		mustWriteRow(formatter, []interface{}{})
+		mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Inputs")})
 
 		for _, bi := range app.BuildInputPaths {
-			mustWriteRow(formatter, []interface{}{"", fmtVertTitle(bi.Type()), bi.String()})
+			mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, bi.Type()), bi.String()})
 		}
+
 	}
 
 	if err := formatter.Flush(); err != nil {

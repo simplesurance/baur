@@ -11,7 +11,7 @@ configurations in the repository.
 
 var appsCmd = &cobra.Command{
 	Use:   "apps",
-	Short: "build and list applications, init configuration files",
+	Short: "build, show informations and init config files of applications",
 	Long:  appsLongHelp[1:],
 }
 
