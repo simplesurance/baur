@@ -36,14 +36,14 @@ func base64AuthData(user, password string) (string, error) {
 	return base64.StdEncoding.EncodeToString(js), nil
 }
 
-// NewClient intializes a new docker client with the given docker registry
+// NewClientwAuth intializes a new docker client with the given docker registry
 // authentication data.
 // The following environment variables are respected:
 // Use DOCKER_HOST to set the url to the docker server.
 // Use DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
 // Use DOCKER_CERT_PATH to load the TLS certificates from.
 // Use DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
-func NewClient(user, password string) (*Client, error) {
+func NewClientwAuth(user, password string) (*Client, error) {
 	clt, err := docker.NewEnvClient()
 	if err != nil {
 		return nil, err
@@ -57,6 +57,18 @@ func NewClient(user, password string) (*Client, error) {
 	return &Client{
 		clt:      clt,
 		authData: authData,
+	}, nil
+}
+
+// NewClient returns a new docker client
+func NewClient() (*Client, error) {
+	clt, err := docker.NewEnvClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{
+		clt: clt,
 	}, nil
 }
 

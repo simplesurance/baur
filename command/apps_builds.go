@@ -24,6 +24,11 @@ import (
 	sequploader "github.com/simplesurance/baur/upload/seq"
 )
 
+const (
+	dockerEnvUsernameVar = "DOCKER_USERNAME"
+	dockerEnvPasswordVar = "DOCKER_PASSWORD"
+)
+
 const buildLongHelp = `
 Builds applications.
 If no path or application name is passed, all applications in the repository are build.
@@ -174,7 +179,7 @@ func outputCount(apps []*baur.App) int {
 }
 
 func dockerAuthFromEnv() (string, string) {
-	return os.Getenv("DOCKER_USERNAME"), os.Getenv("DOCKER_PASSWORD")
+	return os.Getenv(dockerEnvUsernameVar), os.Getenv(dockerEnvPasswordVar)
 }
 
 func calcDigests(app *baur.App) ([]*storage.Input, string) {
@@ -241,15 +246,22 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 }
 
 func startBGUploader(outputCnt int, uploadChan chan *upload.Result) upload.Manager {
+	var dockerUploader *docker.Client
 	s3Uploader, err := s3.NewClient()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
 	dockerUser, dockerPass := dockerAuthFromEnv()
-	dockerUploader, err := docker.NewClient(dockerUser, dockerPass)
+	if len(dockerUser) != 0 {
+		log.Debugf("read docker registry auth data from %q, %q Env variables, authenticating as %q \n",
+			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
+		dockerUploader, err = docker.NewClientwAuth(dockerUser, dockerPass)
+	} else {
+		dockerUploader, err = docker.NewClient()
+	}
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatalln(err)
 	}
 
 	uploader := sequploader.New(s3Uploader, dockerUploader, uploadChan)

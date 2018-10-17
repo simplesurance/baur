@@ -114,13 +114,13 @@ Build outputs are the results that are produced by a build. They can be
 described in the `[Build.Output]` section.
 Baur supports to upload build results to S3 and docker images to a remote docker
 repository.
-Authentication information for output repositories are read from environment
-variables. S3 configuration parameters are the same then for the aws CLI tool.
+Authentication information for output repositories are either read from the
+docker credentials helper or, if set, read from
+`DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
+`DOCKER_PASSWORD` can be the cleartext password or a valid authentication token.
+
+S3 configuration parameters are the same then for the aws CLI tool.
 See https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html.
-The credentials for the hub.docker.com registry can be specified by setting
-the `DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
-`DOCKER_PASSWORD` can be the cleartext password or a valid authentication
-token.
 
 The `dest_file` parameter in the `[Build.Output.File.S3Upload]` sections and the
 `tag` parameter of `[Build.Output.DockerImage.RegistryUpload]` sections support
