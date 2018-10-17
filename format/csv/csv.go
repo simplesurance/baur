@@ -4,8 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-
-	"github.com/simplesurance/baur/format"
 )
 
 // Formatter converts Rows into CSV format.
@@ -33,10 +31,10 @@ func (f *Formatter) writeHeader(headers []string) error {
 }
 
 // WriteRow writes a row to the csvwriter buffer
-func (f *Formatter) WriteRow(row *format.Row) error {
+func (f *Formatter) WriteRow(row []interface{}) error {
 	var str []string
 
-	for _, col := range row.Data {
+	for _, col := range row {
 		str = append(str, fmt.Sprint(col))
 	}
 

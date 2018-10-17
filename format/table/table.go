@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"text/tabwriter"
-
-	"github.com/simplesurance/baur/format"
 )
 
 // Formatter converts Rows into an ASCII table format with space separated
@@ -45,13 +43,13 @@ func (f *Formatter) writeHeader(headers []string) error {
 }
 
 // WriteRow writes a row to the tabwriter buffer
-func (f *Formatter) WriteRow(row *format.Row) error {
+func (f *Formatter) WriteRow(row []interface{}) error {
 	var rowStr string
 
-	for i, col := range row.Data {
+	for i, col := range row {
 		rowStr += fmt.Sprintf("%s", col)
 
-		if i+1 < len(row.Data) {
+		if i+1 < len(row) {
 			rowStr += "\t"
 		}
 	}

@@ -122,12 +122,12 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 	}
 
 	for _, build := range builds {
-		var row format.Row
+		var row []interface{}
 
 		if buildsLsConfig.quiet {
-			row.Data = []interface{}{build.ID}
+			row = []interface{}{build.ID}
 		} else {
-			row.Data = []interface{}{
+			row = []interface{}{
 				strconv.Itoa(build.ID),
 				build.Application.Name,
 				build.StartTimeStamp.Format(flag.DateTimeFormatTz),
@@ -136,7 +136,7 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 			}
 		}
 
-		if err := formatter.WriteRow(&row); err != nil {
+		if err := formatter.WriteRow(row); err != nil {
 			log.Fatalln(err)
 		}
 
