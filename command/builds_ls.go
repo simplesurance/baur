@@ -97,7 +97,7 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 	var headers []string
 	var formatter format.Formatter
 	psql := MustGetPostgresClt(repo)
-	writeHeaders := !buildsLsConfig.quiet
+	writeHeaders := !buildsLsConfig.quiet && !buildsLsConfig.csv
 
 	if writeHeaders {
 		headers = []string{

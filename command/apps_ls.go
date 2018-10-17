@@ -97,7 +97,7 @@ func ls(cmd *cobra.Command, args []string) {
 
 	repo := MustFindRepository()
 	apps := mustArgToApps(repo, args)
-	writeHeaders := !appsLsConfig.quiet
+	writeHeaders := !appsLsConfig.quiet && !appsLsConfig.csv
 
 	if storageQueryIsNeeded() {
 		storageClt = MustGetPostgresClt(repo)
@@ -112,6 +112,8 @@ func ls(cmd *cobra.Command, args []string) {
 	} else {
 		formatter = table.New(headers, os.Stdout, writeHeaders)
 	}
+
+	showProgress := len(apps) >= 5 && !appsLsConfig.quiet && !appsLsConfig.csv
 
 	for i, app := range apps {
 		var row *format.Row
@@ -129,7 +131,7 @@ func ls(cmd *cobra.Command, args []string) {
 			// querying the build status for all applications can
 			// take some time, output progress dots to let the user
 			// know that something is happening
-			if !appsLsConfig.quiet && !appsLsConfig.csv {
+			if showProgress {
 				fmt.Printf(".")
 
 				if i+1 == len(apps) {
