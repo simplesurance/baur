@@ -116,7 +116,7 @@ func ls(cmd *cobra.Command, args []string) {
 	showProgress := len(apps) >= 5 && !appsLsConfig.quiet && !appsLsConfig.csv
 
 	for i, app := range apps {
-		var row *format.Row
+		var row []interface{}
 		var build *storage.Build
 		var buildStatus baur.BuildStatus
 
@@ -158,10 +158,8 @@ func ls(cmd *cobra.Command, args []string) {
 	formatter.Flush()
 }
 
-func assembleQuietRow(app *baur.App) *format.Row {
-	return &format.Row{
-		Data: []interface{}{app.Name},
-	}
+func assembleQuietRow(app *baur.App) []interface{} {
+	return []interface{}{app.Name}
 }
 
 func storageQueryIsNeeded() bool {
@@ -170,35 +168,35 @@ func storageQueryIsNeeded() bool {
 		appsLsConfig.fields.IsSet(lsAppBuildStatusParam))
 }
 
-func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) *format.Row {
-	var row format.Row
+func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) []interface{} {
+	var row []interface{}
 
 	if appsLsConfig.fields.IsSet(lsAppNameParam) {
-		row.Data = append(row.Data, app.Name)
+		row = append(row, app.Name)
 	}
 
 	if appsLsConfig.fields.IsSet(lsAppPathParam) {
 		if appsLsConfig.absPaths {
-			row.Data = append(row.Data, app.Path)
+			row = append(row, app.Path)
 		} else {
-			row.Data = append(row.Data, app.RelPath)
+			row = append(row, app.RelPath)
 		}
 	}
 
 	if appsLsConfig.fields.IsSet(lsAppBuildIDParam) {
 		if buildStatus == baur.BuildStatusExist {
-			row.Data = append(row.Data, fmt.Sprint(build.ID))
+			row = append(row, fmt.Sprint(build.ID))
 		} else {
 			// no build exist, we don't have a build id
-			row.Data = append(row.Data, "")
+			row = append(row, "")
 		}
 	}
 
 	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
-		row.Data = append(row.Data, colorizedBuildStatus((buildStatus)))
+		row = append(row, colorizedBuildStatus((buildStatus)))
 	}
 
-	return &row
+	return row
 }
 
 func colorizedBuildStatus(status baur.BuildStatus) string {
