@@ -48,7 +48,7 @@ func (f *Formatter) WriteRow(row []interface{}) error {
 	var rowStr string
 
 	for i, col := range row {
-		rowStr += fmt.Sprintf("%s", col)
+		rowStr += fmt.Sprintf("%v", col)
 
 		if i+1 < len(row) {
 			rowStr += "\t"
