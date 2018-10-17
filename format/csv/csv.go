@@ -36,7 +36,7 @@ func (f *Formatter) WriteRow(row []interface{}) error {
 	var str []string
 
 	for _, col := range row {
-		str = append(str, fmt.Sprint(col))
+		str = append(str, fmt.Sprintf("%v", col))
 	}
 
 	return f.csvWriter.Write(str)
