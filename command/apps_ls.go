@@ -172,10 +172,11 @@ func assembleQuietRow(app *baur.App) []interface{} {
 }
 
 func storageQueryIsNeeded() bool {
-	return (appsLsConfig.buildStatus.IsSet() ||
-		appsLsConfig.fields.IsSet(lsAppBuildIDParam) ||
-		appsLsConfig.fields.IsSet(lsAppBuildStatusParam) ||
-		appsLsConfig.fields.IsSet(lsAppGitCommitParam))
+	return !appsLsConfig.quiet &&
+		(appsLsConfig.buildStatus.IsSet() ||
+			appsLsConfig.fields.IsSet(lsAppBuildIDParam) ||
+			appsLsConfig.fields.IsSet(lsAppBuildStatusParam) ||
+			appsLsConfig.fields.IsSet(lsAppGitCommitParam))
 }
 
 func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) []interface{} {
