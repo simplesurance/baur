@@ -26,7 +26,7 @@ type Build struct {
 // BuildInput contains information about inputs (sources, compiler, docker
 // images) for an build
 type BuildInput struct {
-	Files         FileInputs          `comment:"file paths, e.g: source files, the used compiler binary "`
+	Files         FileInputs          `comment:"file paths, e.g: source files, the used compiler binary"`
 	GitFiles      GitFileInputs       `comment:"If the baur repository is part of a git repository, this option can be used to specify source files tracked by git."`
 	GolangSources GolangSources       `comment:"Directories containing Golang applications, all source files to build the application are located and added as inputs (excluding stdlib and test files)"`
 	DockerImage   []*DockerImageInput `comment:"docker images that are used to build the application or affect in other ways the produces artifact"`
@@ -46,14 +46,14 @@ type DockerImageInput struct {
 
 // FileInputs describes a file source
 type FileInputs struct {
-	Paths []string `toml:"paths" commented:"true" comment:"relative path to source files,  supports Golang Glob syntax (https://golang.org/pkg/path/filepath/#Match) and ** to match files recursively"`
+	Paths []string `toml:"paths" commented:"false" comment:"relative path to source files,  supports Golang Glob syntax (https://golang.org/pkg/path/filepath/#Match) and ** to match files recursively"`
 }
 
 // GitFileInputs describes source files that are in the git repository by git
 // pathnames
 type GitFileInputs struct {
 	// TODO: improve description
-	Paths []string `toml:"paths" commented:"true" comment:"Specifies relative paths to source files that are tracked in the git repository.\n All paths must be inside the git repository.\n All patterns in pathnames are supported that git commands support.\n Files that are not tracked by the git repository are ignored. Tracked but modified files are matched."`
+	Paths []string `toml:"paths" commented:"false" comment:"Specifies relative paths to source files that are tracked in the git repository.\n All paths must be inside the git repository.\n All patterns in pathnames are supported that git commands support.\n Files that are not tracked by the git repository are ignored. Tracked but modified files are matched."`
 }
 
 // BuildOutput the build output section
@@ -96,10 +96,10 @@ func ExampleApp(name string) *App {
 			Command: "make docker_dist",
 			Input: BuildInput{
 				Files: FileInputs{
-					Paths: []string{"Makefile", "src/**", "../../protos/src/pb/certificate.proto"},
+					Paths: []string{".app.toml"},
 				},
 				GitFiles: GitFileInputs{
-					Paths: []string{".", "../components/", "../../makeincludes/*.mk", "../../makeincludes/ui"},
+					Paths: []string{"."},
 				},
 				DockerImage: []*DockerImageInput{
 					&DockerImageInput{
