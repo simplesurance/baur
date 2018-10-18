@@ -153,10 +153,6 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		BuildCmd:   cfg.Build.Command,
 	}
 
-	if len(app.BuildCmd) == 0 {
-		app.BuildCmd = repository.DefaultBuildCmd
-	}
-
 	if err := app.setDockerOutputsFromCfg(cfg); err != nil {
 		return nil, errors.Wrap(err, "processing docker output declarations failed")
 	}

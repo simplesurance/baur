@@ -21,7 +21,6 @@ type Repository struct {
 	CfgPath            string
 	AppSearchDirs      []string
 	SearchDepth        int
-	DefaultBuildCmd    string
 	gitCommitID        string
 	gitWorktreeIsDirty *bool
 	PSQLURL            string
@@ -96,12 +95,11 @@ func NewRepository(cfgPath string) (*Repository, error) {
 	}
 
 	r := Repository{
-		CfgPath:         cfgPath,
-		DefaultBuildCmd: cfg.Build.BuildCmd,
-		Path:            path.Dir(cfgPath),
-		AppSearchDirs:   fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
-		SearchDepth:     cfg.Discover.SearchDepth,
-		PSQLURL:         cfg.Database.PGSQLURL,
+		CfgPath:       cfgPath,
+		Path:          path.Dir(cfgPath),
+		AppSearchDirs: fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
+		SearchDepth:   cfg.Discover.SearchDepth,
+		PSQLURL:       cfg.Database.PGSQLURL,
 	}
 
 	err = fs.DirsExist(r.AppSearchDirs)

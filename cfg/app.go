@@ -18,7 +18,7 @@ type App struct {
 
 // Build the build section
 type Build struct {
-	Command string      `toml:"command" commented:"true" comment:"command to build the application, overwrites the parameter in the repository config"`
+	Command string      `toml:"command" commented:"false" comment:"command to build the application"`
 	Input   BuildInput  `comment:"specifies the inputs for an build, an input is everything that affects the build output"`
 	Output  BuildOutput `comment:"specifies the outputs that the application build produces"`
 }
@@ -93,7 +93,7 @@ func ExampleApp(name string) *App {
 		Name: name,
 
 		Build: Build{
-			Command: "make docker_dist",
+			Command: "make dist",
 			Input: BuildInput{
 				Files: FileInputs{
 					Paths: []string{".app.toml"},
@@ -238,6 +238,9 @@ func (a *App) Validate() error {
 
 // Validate validates the build section
 func (b *Build) Validate() error {
+	if len(b.Command) == 0 {
+		return errors.New("[Build] section contains errors: command can not be empty")
+	}
 	if err := b.Input.Validate(); err != nil {
 		return err
 	}

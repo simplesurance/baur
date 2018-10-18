@@ -18,10 +18,9 @@ const (
 
 // Repository contains the repository configuration.
 type Repository struct {
-	Discover    Discover        `comment:"application discovery settings"`
-	Build       RepositoryBuild `comment:"build configuration"`
-	BaurVersion string          `toml:"baur_version" comment:"version of baur"`
-	Database    Database        `toml:"Database" comment:"configures the database in which build informations are stored"`
+	Discover    Discover `comment:"application discovery settings"`
+	BaurVersion string   `toml:"baur_version" comment:"version of baur"`
+	Database    Database `toml:"Database" comment:"configures the database in which build informations are stored"`
 }
 
 // Database contains database configuration
@@ -33,11 +32,6 @@ type Database struct {
 type Discover struct {
 	Dirs        []string `toml:"application_dirs" comment:"list of directories containing applications, example: ['go/code', 'shop/']"`
 	SearchDepth int      `toml:"search_depth" comment:"specifies the max. directory the application search recurses into subdirectories"`
-}
-
-// RepositoryBuild contains the build section of the repository
-type RepositoryBuild struct {
-	BuildCmd string `toml:"build_command" comment:"command to build the application, can be overwritten in the application config files"`
 }
 
 // RepositoryFromFile reads the repository config from a file and returns it.
@@ -64,9 +58,6 @@ func ExampleRepository() *Repository {
 		Discover: Discover{
 			Dirs:        []string{"."},
 			SearchDepth: 1,
-		},
-		Build: RepositoryBuild{
-			BuildCmd: "make docker_dist",
 		},
 
 		Database: Database{
@@ -117,11 +108,6 @@ func (r *Repository) Validate() error {
 		return errors.Wrap(err, "[Discover] section contains errors")
 	}
 
-	err = r.Build.Validate()
-	if err != nil {
-		return errors.Wrap(err, "[Build] section contains errors")
-	}
-
 	err = r.Database.Validate()
 	if err != nil {
 		return errors.Wrap(err, "[Database] section contains errors")
@@ -139,15 +125,6 @@ func (d *Discover) Validate() error {
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {
 		return fmt.Errorf("search_depth parameter must be in range (%d, %d]",
 			minSearchDepth, maxSearchDepth)
-	}
-
-	return nil
-}
-
-// Validate validates the [Build] section of a repository config file
-func (b *RepositoryBuild) Validate() error {
-	if len(b.BuildCmd) == 0 {
-		return errors.New("build_command can not be empty")
 	}
 
 	return nil
