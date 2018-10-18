@@ -14,12 +14,10 @@ import (
 	"github.com/simplesurance/baur/storage/postgres"
 )
 
-// highlight is a function that highlights parts of strings in the cli output
 var (
-	greenHighlight  = color.New(color.FgGreen).SprintFunc()
-	redHighlight    = color.New(color.FgRed).SprintFunc()
-	yellowHighlight = color.New(color.FgYellow).SprintFunc()
-	highlight       = greenHighlight
+	greenHighlight = color.New(color.FgGreen).SprintFunc()
+	// highlight is a function that highlights parts of strings in the cli output
+	highlight = greenHighlight
 )
 
 // MustFindRepository must find repo

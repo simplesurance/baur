@@ -20,10 +20,12 @@ const (
 	lsAppNameParam         = "name"
 	lsAppPathHeader        = "Path"
 	lsAppPathParam         = "path"
-	lsAppBuildIDHeader     = "Build ID"
-	lsAppBuildIDParam      = "build-id"
 	lsAppBuildStatusHeader = "Build Status"
 	lsAppBuildStatusParam  = "build-status"
+	lsAppBuildIDHeader     = "Build ID"
+	lsAppBuildIDParam      = "build-id"
+	lsAppGitCommitHeader   = "Git Commit"
+	lsAppGitCommitParam    = "git-commit"
 )
 
 type appsLsConf struct {
@@ -61,6 +63,7 @@ func init() {
 		lsAppPathParam,
 		lsAppBuildIDParam,
 		lsAppBuildStatusParam,
+		lsAppGitCommitParam,
 	})
 	appsLsCmd.Flags().VarP(appsLsConfig.fields, "fields", "f",
 		appsLsConfig.fields.Usage(highlight))
@@ -79,12 +82,16 @@ func createHeader() []string {
 		headers = append(headers, lsAppPathHeader)
 	}
 
+	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
+		headers = append(headers, lsAppBuildStatusHeader)
+	}
+
 	if appsLsConfig.fields.IsSet(lsAppBuildIDParam) {
 		headers = append(headers, lsAppBuildIDHeader)
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
-		headers = append(headers, lsAppBuildStatusHeader)
+	if appsLsConfig.fields.IsSet(lsAppGitCommitParam) {
+		headers = append(headers, lsAppGitCommitHeader)
 	}
 
 	return headers
@@ -167,7 +174,8 @@ func assembleQuietRow(app *baur.App) []interface{} {
 func storageQueryIsNeeded() bool {
 	return (appsLsConfig.buildStatus.IsSet() ||
 		appsLsConfig.fields.IsSet(lsAppBuildIDParam) ||
-		appsLsConfig.fields.IsSet(lsAppBuildStatusParam))
+		appsLsConfig.fields.IsSet(lsAppBuildStatusParam) ||
+		appsLsConfig.fields.IsSet(lsAppGitCommitParam))
 }
 
 func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) []interface{} {
@@ -185,6 +193,10 @@ func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStat
 		}
 	}
 
+	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
+		row = append(row, (buildStatus))
+	}
+
 	if appsLsConfig.fields.IsSet(lsAppBuildIDParam) {
 		if buildStatus == baur.BuildStatusExist {
 			row = append(row, fmt.Sprint(build.ID))
@@ -194,24 +206,13 @@ func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStat
 		}
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
-		row = append(row, colorizedBuildStatus((buildStatus)))
+	if appsLsConfig.fields.IsSet(lsAppGitCommitParam) {
+		if buildStatus == baur.BuildStatusExist {
+			row = append(row, fmt.Sprint(build.VCSState.CommitID))
+		} else {
+			row = append(row, "")
+		}
 	}
 
 	return row
-}
-
-func colorizedBuildStatus(status baur.BuildStatus) string {
-	switch status {
-	case baur.BuildStatusExist:
-		return greenHighlight(baur.BuildStatusExist.String())
-
-	case baur.BuildStatusOutstanding:
-		return redHighlight(baur.BuildStatusOutstanding.String())
-
-	case baur.BuildStatusInputsUndefined:
-		return yellowHighlight(baur.BuildStatusInputsUndefined.String())
-	default:
-		panic(fmt.Sprintf("invalid build-status: %v", status))
-	}
 }
