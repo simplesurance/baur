@@ -45,7 +45,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&verifyFromDate, "from", "s", verifyStartdateStr,
 		"start date, format: YYYY.MM.DD")
 
-	rootCmd.AddCommand(verifyCmd)
+	buildsCmd.AddCommand(verifyCmd)
 }
 
 func containsOnlyDockerIssues(issues []*storage.VerifyIssue) bool {
