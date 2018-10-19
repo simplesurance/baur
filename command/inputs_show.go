@@ -50,7 +50,7 @@ func inputsShow(cmd *cobra.Command, args []string) {
 	writeHeaders := !inputsShowConfig.quiet && !inputsShowConfig.csv
 
 	if len(app.BuildInputPaths) == 0 {
-		log.Fatalf("No build inputs have been configured in the %s file of %s\n", baur.AppCfgFile, app.Name)
+		log.Fatalf("No build inputs are configured in %s of %s", baur.AppCfgFile, app.Name)
 	}
 
 	if writeHeaders {

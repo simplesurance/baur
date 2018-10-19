@@ -49,7 +49,6 @@ release: clean dirty_worktree_check dist/linux_amd64/baur dist/darwin_amd64/baur
 	@echo - git push --tags
 	@echo - upload $(ls dist/*/*.tar.xz) files
 
-
 .PHONY: check
 check:
 	$(info * running static code checks)

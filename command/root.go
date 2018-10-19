@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur/exec"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/version"
 )
@@ -25,7 +26,10 @@ var cpuProfilingFlag bool
 var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
 
 func initSb(_ *cobra.Command, _ []string) {
-	log.DebugEnabled = verboseFlag
+	if verboseFlag {
+		log.StdLogger.EnableDebug(verboseFlag)
+		exec.SetDebugOutputFn(log.StdLogger.Debugf)
+	}
 
 	if cpuProfilingFlag {
 		cpuProfFile, err := os.Create(defCPUProfFile)
@@ -50,7 +54,7 @@ func Execute() {
 	}
 
 	if cpuProfilingFlag {
-		log.Infof("\ncpu profile written to %q\n", defCPUProfFile)
+		fmt.Printf("\ncpu profile written to %q\n", defCPUProfFile)
 		pprof.StopCPUProfile()
 	}
 }

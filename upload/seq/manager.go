@@ -10,9 +10,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/upload"
 )
+
+// Logger defines the logger interface
+type Logger interface {
+	Debugf(format string, v ...interface{})
+}
 
 // Uploader is a sequential uploader
 type Uploader struct {
@@ -22,12 +26,14 @@ type Uploader struct {
 	queue          []upload.Job
 	stopProcessing bool
 	statusChan     chan<- *upload.Result
+	logger         Logger
 }
 
 // New initializes a sequential uploader
 // Status chan must have a buffer count > 1 otherwise a deadlock occurs
-func New(s3Uploader upload.S3Uploader, dockerUploader upload.DockerUploader, status chan<- *upload.Result) *Uploader {
+func New(logger Logger, s3Uploader upload.S3Uploader, dockerUploader upload.DockerUploader, status chan<- *upload.Result) *Uploader {
 	return &Uploader{
+		logger:     logger,
 		s3:         s3Uploader,
 		statusChan: status,
 		lock:       sync.Mutex{},
@@ -62,7 +68,7 @@ func (u *Uploader) Start() {
 			var url string
 			startTs := time.Now()
 
-			log.Debugf("uploading %s\n", job)
+			u.logger.Debugf("uploading %s", job)
 			if job.Type() == upload.JobS3 {
 				url, err = u.s3.Upload(job.LocalPath(), job.RemoteDest())
 				if err != nil {

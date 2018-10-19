@@ -12,8 +12,6 @@ import (
 	"docker.io/go-docker"
 	"docker.io/go-docker/api/types"
 	"github.com/pkg/errors"
-
-	"github.com/simplesurance/baur/log"
 )
 
 // Client is a docker client
@@ -110,10 +108,6 @@ func (c *Client) Upload(ctx context.Context, image, dest string) (string, error)
 	r := bufio.NewReader(closer)
 	for {
 		status, err := r.ReadBytes('\n')
-
-		log.Debugf("docker Upload of %s to %s, read server response: %q\n",
-			image, dest, status)
-
 		if err == io.EOF {
 			break
 		}

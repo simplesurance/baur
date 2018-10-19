@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -24,7 +25,7 @@ var initCmd = &cobra.Command{
 func initRepositoryCfg(cmd *cobra.Command, args []string) {
 	rep, err := baur.FindRepository()
 	if err == nil {
-		log.Fatalf("repository configuration %s already exist\n",
+		log.Fatalf("repository configuration %s already exist",
 			path.Join(rep.Path, baur.RepositoryCfgFile))
 	}
 
@@ -44,6 +45,6 @@ func initRepositoryCfg(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	log.Infof("written example repository configuration to %s\n",
+	fmt.Printf("written example repository configuration to %s\n",
 		baur.RepositoryCfgFile)
 }

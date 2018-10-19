@@ -7,15 +7,20 @@ import (
 	"syscall"
 
 	"github.com/pkg/errors"
-
-	"github.com/simplesurance/baur/log"
 )
+
+var debugOutputFn = func(string, ...interface{}) { return }
+
+// SetDebugOutputFn configures the package to pass debug output to this function
+func SetDebugOutputFn(fn func(format string, v ...interface{})) {
+	debugOutputFn = fn
+}
 
 // Command runs the passed command in a shell in the passed dir.
 // If the command exits with a code != 0, err is nil
 func Command(dir, command string) (output string, exitCode int, err error) {
 	cmd := exec.Command("sh", "-c", command)
-	log.Debugf("running in %q \"%s %s\"\n", dir, cmd.Path, strings.Join(cmd.Args, " "))
+	debugOutputFn("running in %q \"%s %s\"\n", dir, cmd.Path, strings.Join(cmd.Args, " "))
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
@@ -34,7 +39,7 @@ func Command(dir, command string) (output string, exitCode int, err error) {
 	in := bufio.NewScanner(outReader)
 	for in.Scan() {
 		o := in.Text()
-		log.Debugln(o)
+		debugOutputFn(o)
 		output += o + "\n"
 	}
 

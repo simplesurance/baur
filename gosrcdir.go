@@ -9,7 +9,6 @@ import (
 
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/golang"
-	"github.com/simplesurance/baur/log"
 )
 
 // GoSrcDirs resolves Golang source files in directories to files including
@@ -50,8 +49,6 @@ func (g *GoSrcDirs) Resolve() ([]BuildInput, error) {
 
 		fullpaths = append(fullpaths, absPath)
 	}
-
-	log.Debugf("resolving go src files, GOPATH=%q, srcdirs=%q\n", g.gopath, fullpaths)
 
 	absSrcPaths, err := golang.SrcFiles(g.gopath, fullpaths...)
 	if err != nil {

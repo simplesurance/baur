@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -58,6 +59,6 @@ func appsInit(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	log.Infof("configuration file for %s was written to %s\n",
+	fmt.Printf("configuration file for %s was written to %s\n",
 		appName, baur.AppCfgFile)
 }

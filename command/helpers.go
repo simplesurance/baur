@@ -28,14 +28,14 @@ func MustFindRepository() *baur.Repository {
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Fatalf("could not find repository root config file "+
-				"ensure the file '%s' exist in the root\n",
+				"ensure the file '%s' exist in the root",
 				baur.RepositoryCfgFile)
 		}
 
 		log.Fatalln(err)
 	}
 
-	log.Debugf("repository root found: %v\n", rep.Path)
+	log.Debugf("repository root found: %s", rep.Path)
 
 	return rep
 }
@@ -54,7 +54,7 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	if isAppDir(arg) {
 		app, err := repo.AppByDir(arg)
 		if err != nil {
-			log.Fatalf("could not find application in dir '%s': %s\n", arg, err)
+			log.Fatalf("could not find application in dir '%s': %s", arg, err)
 		}
 
 		return app
@@ -63,7 +63,7 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	app, err := repo.AppByName(arg)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Fatalf("could not find application with name '%s'\n", arg)
+			log.Fatalf("could not find application with name '%s'", arg)
 		}
 		log.Fatalln(err)
 	}
@@ -75,7 +75,7 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	clt, err := postgres.New(r.PSQLURL)
 	if err != nil {
-		log.Fatalf("could not establish connection to postgreSQL db: %s\n", err)
+		log.Fatalf("could not establish connection to postgreSQL db: %s", err)
 	}
 
 	return clt
@@ -119,7 +119,7 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 		}
 
 		if len(apps) == 0 {
-			log.Fatalf("could not find any applications\n"+
+			log.Fatalf("could not find any applications"+
 				"- ensure the [Discover] section is correct in %s\n"+
 				"- ensure that you have >1 application dirs "+
 				"containing a %s file\n",

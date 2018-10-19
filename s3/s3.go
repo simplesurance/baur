@@ -8,14 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-
-	"github.com/simplesurance/baur/log"
 )
 
 // Client is a S3 uploader client
 type Client struct {
 	sess     *session.Session
 	uploader *s3manager.Uploader
+}
+
+// Logger defines the interface for an S3 logger
+type Logger interface {
+	Debugf(format string, v ...interface{})
+	Debugln(v ...interface{})
+	DebugEnabled() bool
 }
 
 // DefaultRetries is the number of retries for a S3 upload until an error is
@@ -25,16 +30,20 @@ const DefaultRetries = 3
 // NewClient returns a new S3 Client, configuration is read from env variables
 // or configuration files,
 // see https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-func NewClient() (*Client, error) {
+func NewClient(logger Logger) (*Client, error) {
+	loglvl := aws.LogLevel(aws.LogOff)
+	if logger.DebugEnabled() {
+		loglvl = aws.LogLevel(aws.LogDebug)
+	}
+
 	cfg := aws.Config{
-		Logger:           &log.S3Logger{},
-		LogLevel:         aws.LogLevel(aws.LogDebug),
+		Logger:           aws.LoggerFunc(logger.Debugln),
+		LogLevel:         loglvl,
 		MaxRetries:       aws.Int(DefaultRetries),
 		S3ForcePathStyle: aws.Bool(true),
 	}
 
 	sess, err := session.NewSession(&cfg)
-
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +93,6 @@ func (c *Client) Upload(file string, dest string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	defer f.Close()
 
 	res, err := c.uploader.Upload(&s3manager.UploadInput{
@@ -92,7 +100,6 @@ func (c *Client) Upload(file string, dest string) (string, error) {
 		Key:    aws.String(fileFromURL(url)),
 		Body:   f,
 	})
-
 	if err != nil {
 		return "", err
 	}

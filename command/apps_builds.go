@@ -120,7 +120,7 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 
 	b, exist := result[appName]
 	if !exist {
-		log.Fatalf("resultAddUploadResult: %q does not exist in build result map\n", appName)
+		log.Fatalf("resultAddUploadResult: %q does not exist in build result map", appName)
 	}
 
 	if r.Job.Type() == upload.JobDocker {
@@ -131,12 +131,12 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 
 	artDigest, err := ar.Digest()
 	if err != nil {
-		log.Fatalf("getting digest for output %q failed: %s\n", ar, err)
+		log.Fatalf("getting digest for output %q failed: %s", ar, err)
 	}
 
 	arSize, err := ar.Size(&outputBackends)
 	if err != nil {
-		log.Fatalf("getting size of output %q failed: %s\n", ar, err)
+		log.Fatalf("getting size of output %q failed: %s", ar, err)
 	}
 
 	b.Outputs = append(b.Outputs, &storage.Output{
@@ -157,7 +157,7 @@ func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
 
 	b, exist := result[app.Name]
 	if !exist {
-		log.Fatalf("recordResultIfComplete: %q does not exist in build result map\n", app.Name)
+		log.Fatalf("recordResultIfComplete: %q does not exist in build result map", app.Name)
 	}
 
 	if len(app.Outputs) == len(b.Outputs) {
@@ -192,7 +192,7 @@ func calcDigests(app *baur.App) ([]*storage.Input, string) {
 	// The storageInputs can be removed, apps.BuildInputs() can be used
 	// instead to later fill the struct for the db
 
-	log.Debugf("%s: resolving build inputs and calculating digests...\n", app)
+	log.Debugf("%s: resolving build inputs and calculating digests...", app)
 	buildInputs, err := app.BuildInputs()
 	if err != nil {
 		log.Fatalf("%s: resolving build input paths failed: %s\n", app, err)
@@ -201,7 +201,7 @@ func calcDigests(app *baur.App) ([]*storage.Input, string) {
 	for _, s := range buildInputs {
 		d, err := s.Digest()
 		if err != nil {
-			log.Fatalf("%s: calculating build input digest failed: %s\n", app, err)
+			log.Fatalf("%s: calculating build input digest failed: %s", app, err)
 		}
 
 		storageInputs = append(storageInputs, &storage.Input{
@@ -215,7 +215,7 @@ func calcDigests(app *baur.App) ([]*storage.Input, string) {
 	if len(inputDigests) > 0 {
 		td, err := sha384.Sum(inputDigests)
 		if err != nil {
-			log.Fatalln("calculating total input digest failed:", err)
+			log.Fatalf("%s: calculating total input digest failed: %s", app, err)
 		}
 
 		totalDigest = td.String()
@@ -247,14 +247,14 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 
 func startBGUploader(outputCnt int, uploadChan chan *upload.Result) upload.Manager {
 	var dockerUploader *docker.Client
-	s3Uploader, err := s3.NewClient()
+	s3Uploader, err := s3.NewClient(log.StdLogger)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
 	dockerUser, dockerPass := dockerAuthFromEnv()
 	if len(dockerUser) != 0 {
-		log.Debugf("read docker registry auth data from %q, %q Env variables, authenticating as %q \n",
+		log.Debugf("read docker registry auth data from %q, %q Env variables, authenticating as %q",
 			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
 		dockerUploader, err = docker.NewClientwAuth(dockerUser, dockerPass)
 	} else {
@@ -264,7 +264,7 @@ func startBGUploader(outputCnt int, uploadChan chan *upload.Result) upload.Manag
 		log.Fatalln(err)
 	}
 
-	uploader := sequploader.New(s3Uploader, dockerUploader, uploadChan)
+	uploader := sequploader.New(log.StdLogger, s3Uploader, dockerUploader, uploadChan)
 
 	outputBackends.DockerClt = dockerUploader
 
@@ -304,7 +304,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 			log.Fatalf("upload of %q failed: %s\n", ud.Output, res.Err)
 		}
 
-		log.Actionf("%s: %s uploaded to %s (%.3fs)\n",
+		fmt.Printf("%s: %s uploaded to %s (%.3fs)\n",
 			ud.App.Name, ud.Output.LocalPath(), res.URL, res.Duration.Seconds())
 
 		resultAddUploadResult(ud.App.Name, ud.Output, res)
@@ -315,7 +315,7 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 			if err := store.Save(build); err != nil {
 				log.Fatalf("storing build information about %q failed: %s", ud.App.Name, err)
 			}
-			log.Infof("%s: build %d stored in database\n", ud.App.Name, build.ID)
+			fmt.Printf("%s: build %d stored in database\n", ud.App.Name, build.ID)
 
 			log.Debugf("stored the following build information: %s\n", prettyprint.AsString(build))
 		}
@@ -341,14 +341,14 @@ func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 			res = append(res, app)
 		}
 
-		if !log.DebugEnabled {
+		if !verboseFlag {
 			fmt.Printf(".")
 		}
 
 		log.Debugf("\n%s: build status. %q\n", app, buildStatus)
 	}
 
-	if !log.DebugEnabled {
+	if !log.DebugEnabled() {
 		fmt.Println()
 	}
 
@@ -370,15 +370,18 @@ func appBuildRun(cmd *cobra.Command, args []string) {
 	}
 
 	if !buildForce {
-		log.Actionf("identifying applications with outstanding builds")
+		fmt.Printf("identifying applications with outstanding builds")
+		if verboseFlag {
+			fmt.Println()
+		}
 		apps = outstandingBuilds(store, apps)
 	}
 
 	if len(apps) == 0 {
 		fmt.Println()
 		term.PrintSep()
-		fmt.Printf("Application build(s) already exist, nothing to build, see 'baur ls -b'.\n" +
-			"If you want to rebuild applications pass '-f' to 'baur build'\n")
+		fmt.Println("Application build(s) already exist, nothing to build, see 'baur ls -b'.\n" +
+			"If you want to rebuild applications pass '-f' to 'baur build'")
 		os.Exit(0)
 	}
 
@@ -397,10 +400,10 @@ func appBuildRun(cmd *cobra.Command, args []string) {
 		uploadWatchFin = make(chan struct{}, 1)
 		go waitPrintUploadStatus(uploader, uploadChan, uploadWatchFin, outputCnt)
 
-		log.Actionf("building and uploading the following applications: \n%s\n",
+		fmt.Printf("building and uploading the following applications:\n%s\n",
 			appsToString(apps))
 	} else {
-		log.Actionf("building the following applications: \n%s\n",
+		fmt.Printf("building the following applications:\n%s\n",
 			appsToString(apps))
 	}
 
@@ -413,28 +416,29 @@ func appBuildRun(cmd *cobra.Command, args []string) {
 		app := bud.App
 
 		if status.Error != nil {
-			log.Fatalf("%s: build failed: %s\n", app.Name, status.Error)
+			log.Fatalf("%s: build failed: %s", app.Name, status.Error)
 		}
 
 		if status.ExitCode != 0 {
 			log.Fatalf("%s: build failed: command (%q) exited with code %d "+
-				"Output: %s\n",
+				"Output: %s",
 				app.Name, status.Job.Command, status.ExitCode, status.Output)
 		}
 
-		log.Actionf("%s: build successful (%.3fs)\n", app.Name, status.StopTs.Sub(status.StartTs).Seconds())
+		fmt.Printf("%s: build successful (%.3fs)\n", app.Name, status.StopTs.Sub(status.StartTs).Seconds())
 		resultAddBuildResult(bud, status)
 
 		for _, ar := range app.Outputs {
 			if !ar.Exists() {
-				log.Fatalf("build output %q of %s did not exist after build\n",
-					ar, app)
+				log.Fatalf("%s: build output %q did not exist after build",
+					app, ar)
 			}
 
 			if buildUpload {
 				uj, err := ar.UploadJob()
 				if err != nil {
-					log.Fatalf("could not get upload job for build output %s: %s", ar, err)
+					log.Fatalf("%s: could not get upload job for build output %s: %s",
+						app, ar, err)
 				}
 
 				uj.SetUserData(&uploadUserData{
@@ -447,22 +451,22 @@ func appBuildRun(cmd *cobra.Command, args []string) {
 			}
 			d, err := ar.Digest()
 			if err != nil {
-				log.Fatalf("%s: could determine input digest of %s: %s\n",
+				log.Fatalf("%s: calculating input digest of %s failed: %s",
 					app.Name, ar, err)
 			}
 
-			log.Actionf("%s: created %s (%s)\n", app.Name, ar, d)
+			fmt.Printf("%s: created %s (%s)\n", app.Name, ar, d)
 		}
 
 	}
 
 	if buildUpload && outputCnt > 0 {
-		log.Actionf("waiting for uploads to finish...\n")
+		fmt.Println("waiting for uploads to finish...")
 		<-uploadWatchFin
 	}
 
 	term.PrintSep()
-	log.Infof("finished in %s\n", time.Since(startTs))
+	fmt.Printf("finished in %s\n", time.Since(startTs))
 }
 
 func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.Build, string) {
@@ -470,7 +474,7 @@ func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus
 
 	status, build, err := baur.GetBuildStatus(storage, app)
 	if err != nil {
-		log.Fatalf("evaluating build status of %s failed: %s\n", app, err)
+		log.Fatalf("%s: evaluating build status of failed: %s", app, err)
 	}
 
 	if build != nil {

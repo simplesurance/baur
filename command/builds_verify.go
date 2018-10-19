@@ -62,7 +62,7 @@ func verify(cmd *cobra.Command, args []string) {
 	const dateLayout = "2006.01.02"
 	startTs, err := time.Parse(dateLayout, verifyFromDate)
 	if err != nil {
-		log.Fatalf("parsing start date value failed: %s\n:", err)
+		log.Fatalf("parsing start date value failed: %s:", err)
 	}
 	repo := MustFindRepository()
 
@@ -78,7 +78,7 @@ func verify(cmd *cobra.Command, args []string) {
 		log.Fatalln("retrieving applications from storage failed:", err)
 	}
 
-	log.Actionf("scanning for builds after %s with same inputs that produced different outputs...\n", startTs.Format(dateLayout))
+	fmt.Printf("scanning for builds after %s with same inputs that produced different outputs...\n", startTs.Format(dateLayout))
 
 	var issuesFound bool
 	for _, app := range storedApps {
