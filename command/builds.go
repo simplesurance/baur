@@ -10,7 +10,7 @@ The build command groups subcommands that act on past application builds.
 
 var buildsCmd = &cobra.Command{
 	Use:   "builds",
-	Short: "show informations about past builds",
+	Short: "show information about past builds",
 	Long:  buildsLongHelp[1:],
 }
 

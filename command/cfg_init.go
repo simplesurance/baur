@@ -14,17 +14,18 @@ import (
 )
 
 func init() {
-	appsCmd.AddCommand(appsInitCmd)
+	cfgCmd.AddCommand(cfgInitCmd)
 }
 
-const appsInitLongHelp = `
-Create an application config file in the current directory.
-If no name is passed, the application name will be the name of the current directory.`
+const cfgInitCmdHelp = `
+Create a template application or repository config file in the current directory.
+`
 
 const appsInitExample = `
-baur appinit shop-ui    create a new application config with the app name set to shop-ui`
+baur cfg init shop-ui    create a .app.toml application config with the app name set to shop-ui
+baur cfg init		 create a .baur.toml repository application config`
 
-var appsInitCmd = &cobra.Command{
+var cfgInitCmd = &cobra.Command{
 	Use:     "init [APP-NAME]",
 	Short:   "creates an application config file in the current directory",
 	Long:    strings.TrimSpace(appsInitLongHelp),
