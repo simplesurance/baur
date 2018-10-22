@@ -4,15 +4,15 @@ require (
 	docker.io/go-docker v1.0.0
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/Microsoft/go-winio v0.4.11 // indirect
-	github.com/aws/aws-sdk-go v1.15.43
+	github.com/aws/aws-sdk-go v1.15.59
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.3.3 // indirect
 	github.com/fatih/color v1.7.0
-	github.com/go-ini/ini v1.38.2 // indirect
+	github.com/go-ini/ini v1.39.0 // indirect
 	github.com/gogo/protobuf v1.1.1 // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20180825215210-0210a2f0f73c // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
@@ -27,14 +27,15 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/godeps v0.0.0-20180524172459-404a7e748cd3
 	github.com/rs/xid v1.2.1
-	github.com/smartystreets/assertions v0.0.0-20180820201707-7c9eb446e3cf // indirect
+	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/smartystreets/goconvey v0.0.0-20180222194500-ef6db91d284a // indirect
 	github.com/spf13/cobra v0.0.3
-	github.com/spf13/pflag v1.0.2 // indirect
+	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect
-	golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3 // indirect
-	golang.org/x/sys v0.0.0-20180926160741-c2ed4eda69e7 // indirect
+	golang.org/x/net v0.0.0-20181017193950-04a2e542c03f // indirect
+	golang.org/x/sys v0.0.0-20181022074355-8b8824e799c8 // indirect
 	golang.org/x/text v0.3.0 // indirect
-	gopkg.in/ini.v1 v1.38.2 // indirect
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	gopkg.in/ini.v1 v1.39.0 // indirect
 	gopkg.in/yaml.v2 v2.2.1 // indirect
 )
