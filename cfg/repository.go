@@ -7,20 +7,22 @@ import (
 
 	"github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
-
-	"github.com/simplesurance/baur/version"
 )
 
 const (
 	minSearchDepth = 0
 	maxSearchDepth = 10
+	// configVersion identifies the format of the configuration files,
+	// whenever an incompatible change is made, this number has to be
+	// increased
+	configVersion int = 1
 )
 
 // Repository contains the repository configuration.
 type Repository struct {
-	Discover    Discover `comment:"application discovery settings"`
-	BaurVersion string   `toml:"baur_version" comment:"version of baur"`
-	Database    Database `toml:"Database" comment:"configures the database in which build informations are stored"`
+	Discover      Discover `comment:"application discovery settings"`
+	ConfigVersion int      `toml:"config_version" comment:"internal, version of baur cfg file"`
+	Database      Database `toml:"Database" comment:"configures the database in which build informations are stored"`
 }
 
 // Database contains database configuration
@@ -54,7 +56,7 @@ func RepositoryFromFile(cfgPath string) (*Repository, error) {
 // ExampleRepository returns an exemplary Repository config
 func ExampleRepository() *Repository {
 	return &Repository{
-		BaurVersion: version.Version,
+		ConfigVersion: configVersion,
 		Discover: Discover{
 			Dirs:        []string{"."},
 			SearchDepth: 1,
@@ -103,6 +105,15 @@ func (r *Repository) ToFile(filepath string, overwrite bool) error {
 
 // Validate validates a repository configuration
 func (r *Repository) Validate() error {
+	if r.ConfigVersion == 0 {
+		return fmt.Errorf("config_version value is unset or 0")
+	}
+	if r.ConfigVersion != configVersion {
+		return fmt.Errorf("incompatible configuration files\n"+
+			"config_version value is %d, expecting version: %d\n"+
+			"Update your baur configuration files or downgrade baur.", r.ConfigVersion, configVersion)
+	}
+
 	err := r.Discover.Validate()
 	if err != nil {
 		return errors.Wrap(err, "[Discover] section contains errors")
