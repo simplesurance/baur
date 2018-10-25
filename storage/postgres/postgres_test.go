@@ -20,7 +20,7 @@ var build = storage.Build{
 	Outputs: []*storage.Output{
 		&storage.Output{
 			Name: "baur-unittest/dist/artifact.tar.xz",
-			Type: storage.S3Output,
+			Type: storage.FileArtifact,
 			Upload: storage.Upload{
 				URL:            "http://test.de",
 				UploadDuration: time.Duration(5 * time.Second),

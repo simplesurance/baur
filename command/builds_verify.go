@@ -50,7 +50,7 @@ func init() {
 
 func containsOnlyDockerIssues(issues []*storage.VerifyIssue) bool {
 	for _, i := range issues {
-		if i.Output.Type != storage.DockerOutput {
+		if i.Output.Type != storage.DockerArtifact {
 			return false
 		}
 	}

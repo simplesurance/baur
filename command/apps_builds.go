@@ -113,7 +113,7 @@ func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 }
 
 func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result) {
-	var arType storage.OutputType
+	var arType storage.ArtifactType
 
 	resultLock.Lock()
 	defer resultLock.Unlock()
@@ -124,9 +124,9 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 	}
 
 	if r.Job.Type() == upload.JobDocker {
-		arType = storage.DockerOutput
+		arType = storage.DockerArtifact
 	} else if r.Job.Type() == upload.JobS3 {
-		arType = storage.FileOutput
+		arType = storage.FileArtifact
 	}
 
 	artDigest, err := ar.Digest()

@@ -181,7 +181,7 @@ func insertInputBuilds(tx *sql.Tx, buildID int, inputIDs []int) error {
 }
 
 func insertInputsIfNotExist(tx *sql.Tx, inputs []*storage.Input) ([]int, error) {
-	const stmt1 = "INSERT INTO input (url, digest) VALUES"
+	const stmt1 = "INSERT INTO input (url, type, digest) VALUES"
 	const stmt2 = `
 	ON CONFLICT ON CONSTRAINT input_uniq
 	DO UPDATE SET id=input.id RETURNING id
@@ -195,9 +195,9 @@ func insertInputsIfNotExist(tx *sql.Tx, inputs []*storage.Input) ([]int, error) 
 	)
 
 	for i, in := range inputs {
-		stmtVals += fmt.Sprintf("($%d, $%d)", argCNT, argCNT+1)
-		argCNT += 2
-		queryArgs = append(queryArgs, in.URL, in.Digest)
+		stmtVals += fmt.Sprintf("($%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2)
+		argCNT += 3
+		queryArgs = append(queryArgs, in.URL, in.Type, in.Digest)
 
 		if i < len(inputs)-1 {
 			stmtVals += ", "
