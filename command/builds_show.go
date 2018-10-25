@@ -78,6 +78,7 @@ func buildsShow(cmd *cobra.Command, args []string) {
 		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Outputs")})
 	}
 	for i, o := range build.Outputs {
+		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Type"), o.Type})
 		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "URI"), o.Upload.URI})
 		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Digest"), o.Digest})
 		mustWriteRow(formatter, []interface{}{

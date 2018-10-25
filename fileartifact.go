@@ -64,3 +64,8 @@ func (f *FileArtifact) Digest() (*digest.Digest, error) {
 func (f *FileArtifact) Size(_ *BuildOutputBackends) (int64, error) {
 	return fs.FileSize(f.LocalPath())
 }
+
+// Type returns "file"
+func (f *FileArtifact) Type() string {
+	return "file"
+}
