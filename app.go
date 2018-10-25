@@ -195,11 +195,11 @@ func (a *App) BuildInputs() ([]BuildInput, error) {
 		}
 
 		for _, bi := range buildInputs {
-			if _, exist := dedupBuildInputs[bi.URL()]; exist {
+			if _, exist := dedupBuildInputs[bi.URI()]; exist {
 				continue
 			}
 
-			dedupBuildInputs[bi.URL()] = bi
+			dedupBuildInputs[bi.URI()] = bi
 		}
 	}
 

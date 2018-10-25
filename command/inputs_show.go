@@ -73,7 +73,7 @@ func inputsShow(cmd *cobra.Command, args []string) {
 	}
 
 	sort.Slice(inputs, func(i, j int) bool {
-		return inputs[i].URL() < inputs[j].URL()
+		return inputs[i].URI() < inputs[j].URI()
 	})
 
 	for _, input := range inputs {

@@ -1,7 +1,6 @@
 package baur
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/simplesurance/baur/digest"
@@ -58,9 +57,9 @@ func (f *File) RepoRelPath() string {
 	return f.relPath
 }
 
-// URL returns an URL
-func (f *File) URL() string {
-	return fmt.Sprintf("file://%s", f.relPath)
+// URI calls RepoRelPath()
+func (f *File) URI() string {
+	return f.RepoRelPath()
 }
 
 // String returns it's string representation
