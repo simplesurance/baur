@@ -59,7 +59,7 @@ func (a *Application) NameLower() string {
 type Upload struct {
 	ID             int
 	UploadDuration time.Duration
-	URL            string
+	URI            string
 }
 
 // Output represents a build output
@@ -97,7 +97,7 @@ func (f Field) String() string {
 
 // Input represents a source of an artifact
 type Input struct {
-	URL    string
+	URI    string
 	Type   ArtifactType
 	Digest string
 }
