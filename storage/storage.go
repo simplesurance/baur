@@ -11,10 +11,10 @@ import (
 type OutputType string
 
 const (
-	//DockerOutput is a docker container artifact
+	//DockerOutput is a docker image artifact
 	DockerOutput OutputType = "docker"
-	//S3Output is a file artifact stored on S3
-	S3Output OutputType = "s3"
+	//FileOutput is a file artifact
+	FileOutput OutputType = "file"
 )
 
 // ErrNotExist indicates that a record does not exist
