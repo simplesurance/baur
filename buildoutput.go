@@ -15,4 +15,5 @@ type BuildOutput interface {
 	UploadDestination() string
 	Digest() (*digest.Digest, error)
 	Size(*BuildOutputBackends) (int64, error)
+	Type() string
 }

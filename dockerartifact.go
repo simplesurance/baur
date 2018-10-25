@@ -95,3 +95,8 @@ func (d *DockerArtifact) Size(b *BuildOutputBackends) (int64, error) {
 
 	return b.DockerClt.Size(context.Background(), id)
 }
+
+// Type returns "docker"
+func (d *DockerArtifact) Type() string {
+	return "docker"
+}

@@ -52,6 +52,7 @@ func appsShow(cmd *cobra.Command, args []string) {
 		mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Outputs")})
 
 		for i, art := range app.Outputs {
+			mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Type"), art.Type()})
 			mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Local"), art.String()})
 			mustWriteRow(formatter, []interface{}{fmtVertTitle(appsShowConfig.csv, "Remote"), art.UploadDestination()})
 
