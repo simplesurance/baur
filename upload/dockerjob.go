@@ -37,5 +37,5 @@ func (d *DockerJob) SetUserData(u interface{}) {
 
 // String returns the string representation
 func (d *DockerJob) String() string {
-	return fmt.Sprintf("%s -> %s:%s", d.ImageID, d.Repository, d.Tag)
+	return fmt.Sprintf("docker image: %s:%s", d.Repository, d.Tag)
 }
