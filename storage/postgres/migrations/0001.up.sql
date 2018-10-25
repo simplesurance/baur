@@ -37,16 +37,16 @@ CREATE TABLE build_output (
 CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
 	build_output_id INTEGER REFERENCES build_output (id) ON DELETE CASCADE,
-	url TEXT NOT NULL,
+	uri TEXT NOT NULL,
 	upload_duration_ns BIGINT NOT NULL
 );
 
 CREATE TABLE input (
 	id SERIAL PRIMARY KEY,
-	url TEXT NOT NULL,
+	uri TEXT NOT NULL,
 	type TEXT NOT NULL,
 	digest TEXT NOT NULL,
-	CONSTRAINT input_uniq UNIQUE(url, digest)
+	CONSTRAINT input_uniq UNIQUE(uri, digest)
 );
 
 CREATE TABLE input_build (

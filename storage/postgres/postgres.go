@@ -181,7 +181,7 @@ func insertInputBuilds(tx *sql.Tx, buildID int, inputIDs []int) error {
 }
 
 func insertInputsIfNotExist(tx *sql.Tx, inputs []*storage.Input) ([]int, error) {
-	const stmt1 = "INSERT INTO input (url, type, digest) VALUES"
+	const stmt1 = "INSERT INTO input (uri, type, digest) VALUES"
 	const stmt2 = `
 	ON CONFLICT ON CONSTRAINT input_uniq
 	DO UPDATE SET id=input.id RETURNING id
@@ -269,7 +269,7 @@ func insertAppIfNotExist(tx *sql.Tx, app *storage.Application) error {
 func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) error {
 	const stmt = `
 	INSERT into upload
-	(build_output_id, url, upload_duration_ns)
+	(build_output_id, uri, upload_duration_ns)
 	VALUES
 	`
 
@@ -376,7 +376,7 @@ func (c *Client) Save(b *storage.Build) error {
 func (c *Client) GetBuildOutputs(buildID int) ([]*storage.Output, error) {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
-			upload.id, upload.url, upload.upload_duration_ns
+			upload.id, upload.uri, upload.upload_duration_ns
 		      FROM output
 		      JOIN build_output ON output.id = build_output.output_id
 		      JOIN upload ON upload.build_output_id = build_output.id
@@ -419,7 +419,7 @@ func (c *Client) GetBuildOutputs(buildID int) ([]*storage.Output, error) {
 func (c *Client) populateOutputs(build *storage.Build) error {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
-			upload.id, upload.url, upload.upload_duration_ns
+			upload.id, upload.uri, upload.upload_duration_ns
 		      FROM output
 		      JOIN build_output ON output.id = build_output.output_id
 		      JOIN upload ON upload.build_output_id = build_output.id
