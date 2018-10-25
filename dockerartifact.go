@@ -68,7 +68,7 @@ func (d *DockerArtifact) Name() string {
 
 // UploadDestination returns the upload destination
 func (d *DockerArtifact) UploadDestination() string {
-	return fmt.Sprintf("docker://%s:%s", d.Repository, d.Tag)
+	return fmt.Sprintf("%s:%s", d.Repository, d.Tag)
 }
 
 // Digest returns the image ID as Digest object
