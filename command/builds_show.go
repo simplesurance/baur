@@ -39,7 +39,7 @@ func buildsShow(cmd *cobra.Command, args []string) {
 
 	buildID, err := strconv.Atoi(args[0])
 	if err != nil {
-		log.Fatalf("%q is not a numeric build ID\n")
+		log.Fatalf("%q is not a numeric build ID\n", args[0])
 	}
 
 	repo := MustFindRepository()
