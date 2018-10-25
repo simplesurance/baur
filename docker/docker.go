@@ -117,7 +117,7 @@ func (c *Client) Upload(ctx context.Context, image, dest string) (string, error)
 		}
 	}
 
-	return "docker://" + dest, nil
+	return dest, nil
 }
 
 // Size returns the size of an image in Bytes
