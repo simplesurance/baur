@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-// OutputType describes the type of an artifact
-type OutputType string
+// ArtifactType describes the type of an artifact
+type ArtifactType string
 
 const (
-	//DockerOutput is a docker image artifact
-	DockerOutput OutputType = "docker"
-	//FileOutput is a file artifact
-	FileOutput OutputType = "file"
+	//DockerArtifact is a docker image artifact
+	DockerArtifact ArtifactType = "docker"
+	//FileArtifact is a file artifact
+	FileArtifact ArtifactType = "file"
 )
 
 // ErrNotExist indicates that a record does not exist
@@ -65,7 +65,7 @@ type Upload struct {
 // Output represents a build output
 type Output struct {
 	Name      string
-	Type      OutputType
+	Type      ArtifactType
 	Digest    string
 	SizeBytes int64
 	Upload    Upload
@@ -98,6 +98,7 @@ func (f Field) String() string {
 // Input represents a source of an artifact
 type Input struct {
 	URL    string
+	Type   ArtifactType
 	Digest string
 }
 
