@@ -197,7 +197,7 @@ func insertInputsIfNotExist(tx *sql.Tx, inputs []*storage.Input) ([]int, error) 
 	for i, in := range inputs {
 		stmtVals += fmt.Sprintf("($%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2)
 		argCNT += 3
-		queryArgs = append(queryArgs, in.URL, in.Type, in.Digest)
+		queryArgs = append(queryArgs, in.URI, in.Type, in.Digest)
 
 		if i < len(inputs)-1 {
 			stmtVals += ", "
@@ -288,7 +288,7 @@ func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) 
 	for i, out := range outputs {
 		stmtVals += fmt.Sprintf("($%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2)
 		argCNT += 3
-		queryArgs = append(queryArgs, buildOutputIDs[i], out.Upload.URL, out.Upload.UploadDuration)
+		queryArgs = append(queryArgs, buildOutputIDs[i], out.Upload.URI, out.Upload.UploadDuration)
 
 		if i < len(outputs)-1 {
 			stmtVals += ", "
@@ -399,7 +399,7 @@ func (c *Client) GetBuildOutputs(buildID int) ([]*storage.Output, error) {
 			&output.Type,
 			&output.SizeBytes,
 			&output.Upload.ID,
-			&output.Upload.URL,
+			&output.Upload.URI,
 			&output.Upload.UploadDuration,
 		)
 		if err != nil {
@@ -440,7 +440,7 @@ func (c *Client) populateOutputs(build *storage.Build) error {
 			&output.Type,
 			&output.SizeBytes,
 			&output.Upload.ID,
-			&output.Upload.URL,
+			&output.Upload.URI,
 			&output.Upload.UploadDuration,
 		)
 		if err != nil {

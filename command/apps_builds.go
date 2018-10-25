@@ -144,7 +144,7 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 		SizeBytes: arSize,
 		Type:      arType,
 		Upload: storage.Upload{
-			URL:            r.URL,
+			URI:            r.URL,
 			UploadDuration: r.Duration,
 		},
 		Digest: artDigest.String(),
@@ -206,7 +206,7 @@ func calcDigests(app *baur.App) ([]*storage.Input, string) {
 
 		storageInputs = append(storageInputs, &storage.Input{
 			Digest: d.String(),
-			URL:    s.URI(),
+			URI:    s.URI(),
 		})
 
 		inputDigests = append(inputDigests, &d)

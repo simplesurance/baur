@@ -22,7 +22,7 @@ var build = storage.Build{
 			Name: "baur-unittest/dist/artifact.tar.xz",
 			Type: storage.FileArtifact,
 			Upload: storage.Upload{
-				URL:            "http://test.de",
+				URI:            "http://test.de",
 				UploadDuration: time.Duration(5 * time.Second),
 			},
 			Digest:    "sha384:c825bb06739ba6b41f6cc0c123a5956bd65be9e22d51640a0460e0b16eb4523af4d68a1b56d63fd67dab484a0796fc69",
@@ -32,12 +32,12 @@ var build = storage.Build{
 	Inputs: []*storage.Input{
 		&storage.Input{
 			Digest: "890",
-			URL:    "file://baur-unittest/file1.xyz",
+			URI:    "baur-unittest/file1.xyz",
 		},
 
 		&storage.Input{
 			Digest: "a3",
-			URL:    "file://baur-unittest/file2.xyz",
+			URI:    "baur-unittest/file2.xyz",
 		},
 	},
 	TotalInputDigest: "123",
