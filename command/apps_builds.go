@@ -126,7 +126,7 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 	if r.Job.Type() == upload.JobDocker {
 		arType = storage.DockerOutput
 	} else if r.Job.Type() == upload.JobS3 {
-		arType = storage.S3Output
+		arType = storage.FileOutput
 	}
 
 	artDigest, err := ar.Digest()
