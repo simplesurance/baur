@@ -206,7 +206,7 @@ func calcDigests(app *baur.App) ([]*storage.Input, string) {
 
 		storageInputs = append(storageInputs, &storage.Input{
 			Digest: d.String(),
-			URL:    s.URL(),
+			URL:    s.URI(),
 		})
 
 		inputDigests = append(inputDigests, &d)

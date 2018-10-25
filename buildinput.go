@@ -8,5 +8,5 @@ import "github.com/simplesurance/baur/digest"
 type BuildInput interface {
 	Digest() (digest.Digest, error)
 	String() string
-	URL() string
+	URI() string
 }

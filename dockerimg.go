@@ -34,12 +34,12 @@ func (r *RemoteDockerImg) Digest() (digest.Digest, error) {
 	return *d, nil
 }
 
-// URL returns it's URL
-func (r *RemoteDockerImg) URL() string {
-	return fmt.Sprintf("docker://%s", r.path)
+// URI returns <repository>/<path>@:<digest>
+func (r *RemoteDockerImg) URI() string {
+	return r.path
 }
 
 // String returns a string representation
 func (r *RemoteDockerImg) String() string {
-	return r.URL()
+	return "docker image: " + r.URI()
 }
