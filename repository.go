@@ -1,7 +1,6 @@
 package baur
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,8 +10,6 @@ import (
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/git"
-	"github.com/simplesurance/baur/log"
-	"github.com/simplesurance/baur/version"
 )
 
 // Repository represents an repository containing applications
@@ -43,39 +40,6 @@ func FindRepository() (*Repository, error) {
 	return NewRepository(rootPath)
 }
 
-func writeVersionToCfg(cfg *cfg.Repository, cfgPath string) error {
-	cfg.BaurVersion = version.Version
-
-	err := cfg.ToFile(cfgPath, true)
-	if err != nil {
-		return errors.Wrapf(err, "updating baur_version in %q failed", cfgPath)
-	}
-
-	log.Debugf("baur version written to %q\n", cfgPath)
-
-	return nil
-}
-
-func checkCfgVersion(cfg *cfg.Repository, cfgPath string) error {
-	if cfg.BaurVersion == "" {
-		if err := writeVersionToCfg(cfg, cfgPath); err != nil {
-			return err
-		}
-	}
-
-	cfgVer, err := version.SemVerFromString(cfg.BaurVersion)
-	if err != nil {
-		return errors.Wrapf(err, "could not parse baur_version value %q from %q", cfg.BaurVersion, cfgPath)
-	}
-
-	if cfgVer.Major != version.CurSemVer.Major || cfgVer.Minor != version.CurSemVer.Minor {
-		return fmt.Errorf("repository config incompatible with baur version, repository config is %q, baur version is %q",
-			cfgVer.Short(), version.CurSemVer.Short())
-	}
-
-	return nil
-}
-
 // NewRepository reads the configuration file and returns a Repository
 func NewRepository(cfgPath string) (*Repository, error) {
 	cfg, err := cfg.RepositoryFromFile(cfgPath)
@@ -88,10 +52,6 @@ func NewRepository(cfgPath string) (*Repository, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"validating repository config %q failed", cfgPath)
-	}
-
-	if err := checkCfgVersion(cfg, cfgPath); err != nil {
-		return nil, err
 	}
 
 	r := Repository{
