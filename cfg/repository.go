@@ -119,11 +119,6 @@ func (r *Repository) Validate() error {
 		return errors.Wrap(err, "[Discover] section contains errors")
 	}
 
-	err = r.Database.Validate()
-	if err != nil {
-		return errors.Wrap(err, "[Database] section contains errors")
-	}
-
 	return nil
 }
 
@@ -139,14 +134,4 @@ func (d *Discover) Validate() error {
 	}
 
 	return nil
-}
-
-// Validate validates the [Database] section of a repository config file
-func (d *Database) Validate() error {
-	if len(d.PGSQLURL) == 0 {
-		return errors.New("postgresql_url can not be empty")
-	}
-
-	return nil
-
 }

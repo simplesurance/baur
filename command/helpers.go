@@ -103,8 +103,24 @@ func getPostgresCltWithEnv(psqlURI string) (*postgres.Client, error) {
 	return postgres.New(uri)
 }
 
+//mustHavePSQLURI calls log.Fatalf if neither envVarPSQLURL nor the postgres_url
+//in the repository config is set
+func mustHavePSQLURI(r *baur.Repository) {
+	if len(r.PSQLURL) != 0 {
+		return
+	}
+
+	if len(os.Getenv(envVarPSQLURL)) == 0 {
+		log.Fatalf("PostgreSQL connection information is missing.\n"+
+			"- set postgres_url in your repository config or\n"+
+			"- set the $%s environment variable", envVarPSQLURL)
+	}
+}
+
 // MustGetPostgresClt must return the PG client
 func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
+	mustHavePSQLURI(r)
+
 	clt, err := getPostgresCltWithEnv(r.PSQLURL)
 	if err != nil {
 		log.Fatalf("could not establish connection to postgreSQL db: %s", err)
