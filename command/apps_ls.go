@@ -37,7 +37,7 @@ type appsLsConf struct {
 }
 
 var appsLsCmd = &cobra.Command{
-	Use:   "ls [<APP-NAME>]...",
+	Use:   "ls [<APP-NAME>|<PATH>]...",
 	Short: "list applications and their status",
 	Run:   ls,
 	Args:  cobra.ArbitraryArgs,
