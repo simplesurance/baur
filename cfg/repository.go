@@ -63,7 +63,7 @@ func ExampleRepository() *Repository {
 		},
 
 		Database: Database{
-			PGSQLURL: "postgresql://guest:guest@jenkins.sisu.sh:5432/baur",
+			PGSQLURL: "postgres://postgres@localhost:5432/baur?sslmode=disable",
 		},
 	}
 }
