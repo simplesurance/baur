@@ -21,8 +21,6 @@ jobs:
       - run:
           name: Preparing Test Environment
           command: |
-            sudo apt-get install -y postgresql-client
-
             go get github.com/jstemmer/go-junit-report
 
             mkdir -p ${TEST_RESULTS}
@@ -38,20 +36,15 @@ jobs:
             echo Failed waiting for Postgres && exit 1
 
       - run:
-          name: Applying Database Up Migrations
+          name: Creating Database Tables with baur init db
           command:
-            psql -d $DB_URL < storage/postgres/migrations/*.up.sql
+            go run -mod=vendor cmd/baur/main.go init db -- $DB_URL
 
       - run:
           name: Run Tests
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
             go test -v -test.timeout 1m ./... | tee ${TEST_RESULTS}/go-test.out
-
-      - run:
-          name: Applying Database Down Migrations
-          command:
-            psql -d $DB_URL < storage/postgres/migrations/*.down.sql
 
       - store_test_results:
           path: /tmp/test-results
