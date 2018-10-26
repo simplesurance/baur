@@ -71,7 +71,7 @@ If a configuration is set via an environment variable it has the highest
 precedence and overwrites the configuration set by other means.
 The following environment variables are supported:
 
-- `$BAUR_POSTGRES_URL`
+- `$BAUR_POSTGRESQL_URL`
 - `$BAUR_DOCKER_USERNAME`
 - `$BAUR_DOCKER_PASSWORD`
 - S3 environment variables described at https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html

@@ -16,7 +16,7 @@ import (
 
 // envVarPSQLURL contains the name of an environment variable in that the
 // postgresql URI can be stored
-const envVarPSQLURL = "BAUR_POSTGRES_URL"
+const envVarPSQLURL = "BAUR_POSTGRESQL_URL"
 
 var (
 	greenHighlight = color.New(color.FgGreen).SprintFunc()
