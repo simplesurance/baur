@@ -29,6 +29,13 @@ To build baur run `make`.
   repository. The tools must be installed and be in one of the paths of the
   `$PATH` environment variable.
 
+## Quickstart Guide
+The chapter describes a quick way to setup baur and dependencies for
+experimenting with it locally. It's not suitable for running baur in production.
+
+1. `docker run -p 5432:5432 -e POSTGRES_DB=baur postgres:latest`
+2. `psql -d "postgres://postgres@localhost:5432/baur?sslmode=disable" < storage/postgres/migrations/*.up.sql`
+
 ## Configuration
 1. Setup your PostgreSQL baur database
 1. Create a `baur.toml` file in the root of your repository by running
