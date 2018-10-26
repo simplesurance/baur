@@ -30,7 +30,7 @@ const (
 )
 
 const buildLongHelp = `
-Builds applications.
+Build applications.
 If no path or application name is passed, all applications in the repository are build.
 By default only applications with status "Outstanding" and "Inputs Undefined" are build.
 
@@ -53,11 +53,11 @@ build ---force            rebuild all applications in the repository
 build --verbose ui/shop   build the application in the directory ui/shop with verbose output
 build --upload ui/shop    build the application in the directory ui/shop and upload it's outputs`
 
-var appBuildCmd = &cobra.Command{
+var buildCmd = &cobra.Command{
 	Use:     "build [<PATH>|<APP-NAME>]",
-	Short:   "builds applications",
+	Short:   "build applications",
 	Long:    strings.TrimSpace(buildLongHelp),
-	Run:     appBuildRun,
+	Run:     buildRun,
 	Example: strings.TrimSpace(buildExampleHelp),
 	Args:    cobra.MaximumNArgs(1),
 }
@@ -85,11 +85,11 @@ type buildUserData struct {
 }
 
 func init() {
-	appBuildCmd.Flags().BoolVar(&buildUpload, "upload", false,
+	buildCmd.Flags().BoolVar(&buildUpload, "upload", false,
 		"upload build outputs after the application(s) was build")
-	appBuildCmd.Flags().BoolVarP(&buildForce, "force", "f", false,
+	buildCmd.Flags().BoolVarP(&buildForce, "force", "f", false,
 		"force rebuilding of all applications")
-	appsCmd.AddCommand(appBuildCmd)
+	rootCmd.AddCommand(buildCmd)
 }
 
 func resultAddBuildResult(bud *buildUserData, r *build.Result) {
@@ -355,7 +355,7 @@ func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 	return res
 }
 
-func appBuildRun(cmd *cobra.Command, args []string) {
+func buildRun(cmd *cobra.Command, args []string) {
 	var apps []*baur.App
 	var uploadWatchFin chan struct{}
 	var uploader upload.Manager

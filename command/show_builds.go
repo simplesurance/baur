@@ -14,27 +14,27 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-type buildsShowConf struct {
+type showBuildConf struct {
 	csv bool
 }
 
-var buildsShowCmd = &cobra.Command{
-	Use:   "show <BUILD-ID>",
-	Short: "show informations about a build",
-	Run:   buildsShow,
+var showBuildCmd = &cobra.Command{
+	Use:   "build <BUILD-ID>",
+	Short: "show information about a build",
+	Run:   showBuild,
 	Args:  cobra.ExactArgs(1),
 }
 
-var buildsShowConfig buildsShowConf
+var showBuildConfig showBuildConf
 
 func init() {
-	buildsShowCmd.Flags().BoolVar(&buildsShowConfig.csv, "csv", false,
+	showBuildCmd.Flags().BoolVar(&showBuildConfig.csv, "csv", false,
 		"Show output in RFC4180 CSV format")
 
-	buildsCmd.AddCommand(buildsShowCmd)
+	showCmd.AddCommand(showBuildCmd)
 }
 
-func buildsShow(cmd *cobra.Command, args []string) {
+func showBuild(cmd *cobra.Command, args []string) {
 	var formatter format.Formatter
 
 	buildID, err := strconv.Atoi(args[0])
@@ -54,39 +54,39 @@ func buildsShow(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	if buildsShowConfig.csv {
+	if showBuildConfig.csv {
 		formatter = csv.New(nil, os.Stdout)
 	} else {
 		formatter = table.New(nil, os.Stdout)
 	}
 
-	mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Application"), build.Application.Name})
-	mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Build ID"), build.ID})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Application"), build.Application.Name})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Build ID"), build.ID})
 
-	mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Build Started At"), build.StartTimeStamp})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Build Started At"), build.StartTimeStamp})
 	mustWriteRow(formatter, []interface{}{
-		fmtVertTitle(buildsShowConfig.csv, "Build Duration"),
+		fmtVertTitle(showBuildConfig.csv, "Build Duration"),
 		fmt.Sprintf("%.2f s", build.StopTimeStamp.Sub(build.StartTimeStamp).Seconds()),
 	})
 
-	mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Git Commit"), vcsStr(&build.VCSState)})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Git Commit"), vcsStr(&build.VCSState)})
 
-	mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Total Input Digest"), build.TotalInputDigest})
+	mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Total Input Digest"), build.TotalInputDigest})
 
 	if len(build.Outputs) > 0 {
 		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Outputs")})
+		mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Outputs")})
 	}
 	for i, o := range build.Outputs {
-		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Type"), o.Type})
-		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "URI"), o.Upload.URI})
-		mustWriteRow(formatter, []interface{}{fmtVertTitle(buildsShowConfig.csv, "Digest"), o.Digest})
+		mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Type"), o.Type})
+		mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "URI"), o.Upload.URI})
+		mustWriteRow(formatter, []interface{}{fmtVertTitle(showBuildConfig.csv, "Digest"), o.Digest})
 		mustWriteRow(formatter, []interface{}{
-			fmtVertTitle(buildsShowConfig.csv, "Size"),
+			fmtVertTitle(showBuildConfig.csv, "Size"),
 			fmt.Sprintf("%.2f MiB", float64(o.SizeBytes)/1024/1024),
 		})
 		mustWriteRow(formatter, []interface{}{
-			fmtVertTitle(buildsShowConfig.csv, "Upload Duration"),
+			fmtVertTitle(showBuildConfig.csv, "Upload Duration"),
 			fmt.Sprintf("%.2f s", o.Upload.UploadDuration.Seconds()),
 		})
 		if i+1 < len(build.Outputs) {

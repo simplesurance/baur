@@ -14,26 +14,26 @@ import (
 )
 
 func init() {
-	appsCmd.AddCommand(appsInitCmd)
+	initCmd.AddCommand(initAppCmd)
 }
 
-const appsInitLongHelp = `
+const initAppLongHelp = `
 Create an application config file in the current directory.
 If no name is passed, the application name will be the name of the current directory.`
 
-const appsInitExample = `
-baur appinit shop-ui    create a new application config with the app name set to shop-ui`
+const initAppExample = `
+baur init app shop-ui	create an application config with the app name set to shop-ui`
 
-var appsInitCmd = &cobra.Command{
-	Use:     "init [APP-NAME]",
+var initAppCmd = &cobra.Command{
+	Use:     "app [APP-NAME]",
 	Short:   "creates an application config file in the current directory",
-	Long:    strings.TrimSpace(appsInitLongHelp),
-	Example: strings.TrimSpace(appsInitExample),
-	Run:     appsInit,
+	Long:    strings.TrimSpace(initAppLongHelp),
+	Example: strings.TrimSpace(initAppExample),
+	Run:     initApp,
 	Args:    cobra.MaximumNArgs(1),
 }
 
-func appsInit(cmd *cobra.Command, args []string) {
+func initApp(cmd *cobra.Command, args []string) {
 	var appName string
 	MustFindRepository()
 

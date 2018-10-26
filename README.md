@@ -39,7 +39,7 @@ experimenting with it locally. It's not suitable for running baur in production.
 ## Configuration
 1. Setup your PostgreSQL baur database
 1. Create a `baur.toml` file in the root of your repository by running
-   `baur repo init` in the repository root.
+   `baur init repo` in the repository root.
 
 2. Adapt the configuration files to your needs:
    - Add paths containing your applications to the `application_dirs` parameter.
@@ -53,7 +53,7 @@ experimenting with it locally. It's not suitable for running baur in production.
    - create the tables in the database by running the SQL-script
      `storage/postgres/migrations/0001.up.sql`
 
-2. Run `baur apps init` in your application directories to create an `.app.toml`
+2. Run `baur init app` in your application directories to create an `.app.toml`
    file.
    Every application that is build via `baur` must have an `.app.toml` file.
 
@@ -144,14 +144,14 @@ The following variables are supported:
 
 ## Examples
 - List all applications in the repository with their build status:
-  `baur ls --build-status`
+  `baur ls apps`
 - Build all applications with outstanding builds, upload their artifacts and
   records the results:
-  `baur apps build --upload`
+  `baur build --upload`
 - Show information about an application called `currency-service`:
-  `baur show currency-service`
+  `baur show app currency-service`
 - Show inputs of an application called `claim-service` with their digests:
-  `baur inputs --digest claim-server`
+  `baur show inputs --digests claim-server`
 
 ## Commands
 ### `baur verify`

@@ -6,6 +6,22 @@
 - `--version`
 
 
+
+```
+baur init appcfg
+baur init repocfg
+baur init db
+baur build
+baur show app
+baur show build
+baur ls builds
+baur ls inputs
+baur ls outputs
+baur diff inputs
+```
+
+
+
 ## `baur repo`
 ```
 baur repo init

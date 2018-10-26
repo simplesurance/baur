@@ -28,7 +28,7 @@ const (
 	lsAppGitCommitParam    = "git-commit"
 )
 
-type appsLsConf struct {
+type lsAppsConf struct {
 	csv         bool
 	quiet       bool
 	absPaths    bool
@@ -36,61 +36,61 @@ type appsLsConf struct {
 	fields      *flag.Fields
 }
 
-var appsLsCmd = &cobra.Command{
-	Use:   "ls [<APP-NAME>|<PATH>]...",
+var lsAppsCmd = &cobra.Command{
+	Use:   "apps [<APP-NAME>|<PATH>]...",
 	Short: "list applications and their status",
 	Run:   ls,
 	Args:  cobra.ArbitraryArgs,
 }
 
-var appsLsConfig appsLsConf
+var lsAppsConfig lsAppsConf
 
 func init() {
-	appsLsCmd.Flags().BoolVar(&appsLsConfig.csv, "csv", false,
+	lsAppsCmd.Flags().BoolVar(&lsAppsConfig.csv, "csv", false,
 		"List applications in RFC4180 CSV format")
 
-	appsLsCmd.Flags().BoolVarP(&appsLsConfig.quiet, "quiet", "q", false,
+	lsAppsCmd.Flags().BoolVarP(&lsAppsConfig.quiet, "quiet", "q", false,
 		"Only print application names")
 
-	appsLsCmd.Flags().BoolVar(&appsLsConfig.absPaths, "abs-path", false,
+	lsAppsCmd.Flags().BoolVar(&lsAppsConfig.absPaths, "abs-path", false,
 		"Show absolute instead of relative paths")
 
-	appsLsCmd.Flags().VarP(&appsLsConfig.buildStatus, "build-status", "s",
-		appsLsConfig.buildStatus.Usage(highlight))
+	lsAppsCmd.Flags().VarP(&lsAppsConfig.buildStatus, "build-status", "s",
+		lsAppsConfig.buildStatus.Usage(highlight))
 
-	appsLsConfig.fields = flag.NewFields([]string{
+	lsAppsConfig.fields = flag.NewFields([]string{
 		lsAppNameParam,
 		lsAppPathParam,
 		lsAppBuildIDParam,
 		lsAppBuildStatusParam,
 		lsAppGitCommitParam,
 	})
-	appsLsCmd.Flags().VarP(appsLsConfig.fields, "fields", "f",
-		appsLsConfig.fields.Usage(highlight))
+	lsAppsCmd.Flags().VarP(lsAppsConfig.fields, "fields", "f",
+		lsAppsConfig.fields.Usage(highlight))
 
-	appsCmd.AddCommand(appsLsCmd)
+	lsCmd.AddCommand(lsAppsCmd)
 }
 
 func createHeader() []string {
 	var headers []string
 
-	if appsLsConfig.fields.IsSet(lsAppNameParam) {
+	if lsAppsConfig.fields.IsSet(lsAppNameParam) {
 		headers = append(headers, lsAppNameHeader)
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppPathParam) {
+	if lsAppsConfig.fields.IsSet(lsAppPathParam) {
 		headers = append(headers, lsAppPathHeader)
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
+	if lsAppsConfig.fields.IsSet(lsAppBuildStatusParam) {
 		headers = append(headers, lsAppBuildStatusHeader)
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppBuildIDParam) {
+	if lsAppsConfig.fields.IsSet(lsAppBuildIDParam) {
 		headers = append(headers, lsAppBuildIDHeader)
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppGitCommitParam) {
+	if lsAppsConfig.fields.IsSet(lsAppGitCommitParam) {
 		headers = append(headers, lsAppGitCommitHeader)
 	}
 
@@ -104,7 +104,7 @@ func ls(cmd *cobra.Command, args []string) {
 
 	repo := MustFindRepository()
 	apps := mustArgToApps(repo, args)
-	writeHeaders := !appsLsConfig.quiet && !appsLsConfig.csv
+	writeHeaders := !lsAppsConfig.quiet && !lsAppsConfig.csv
 
 	if storageQueryIsNeeded() {
 		storageClt = MustGetPostgresClt(repo)
@@ -114,13 +114,13 @@ func ls(cmd *cobra.Command, args []string) {
 		headers = createHeader()
 	}
 
-	if appsLsConfig.csv {
+	if lsAppsConfig.csv {
 		formatter = csv.New(headers, os.Stdout)
 	} else {
 		formatter = table.New(headers, os.Stdout)
 	}
 
-	showProgress := len(apps) >= 5 && !appsLsConfig.quiet && !appsLsConfig.csv
+	showProgress := len(apps) >= 5 && !lsAppsConfig.quiet && !lsAppsConfig.csv
 
 	for i, app := range apps {
 		var row []interface{}
@@ -147,11 +147,11 @@ func ls(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if appsLsConfig.buildStatus.IsSet() && buildStatus != appsLsConfig.buildStatus.Status {
+		if lsAppsConfig.buildStatus.IsSet() && buildStatus != lsAppsConfig.buildStatus.Status {
 			continue
 		}
 
-		if appsLsConfig.quiet {
+		if lsAppsConfig.quiet {
 			row = assembleQuietRow(app)
 		} else {
 			row = assembleRow(app, build, buildStatus)
@@ -172,33 +172,33 @@ func assembleQuietRow(app *baur.App) []interface{} {
 }
 
 func storageQueryIsNeeded() bool {
-	return !appsLsConfig.quiet &&
-		(appsLsConfig.buildStatus.IsSet() ||
-			appsLsConfig.fields.IsSet(lsAppBuildIDParam) ||
-			appsLsConfig.fields.IsSet(lsAppBuildStatusParam) ||
-			appsLsConfig.fields.IsSet(lsAppGitCommitParam))
+	return !lsAppsConfig.quiet &&
+		(lsAppsConfig.buildStatus.IsSet() ||
+			lsAppsConfig.fields.IsSet(lsAppBuildIDParam) ||
+			lsAppsConfig.fields.IsSet(lsAppBuildStatusParam) ||
+			lsAppsConfig.fields.IsSet(lsAppGitCommitParam))
 }
 
 func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) []interface{} {
 	var row []interface{}
 
-	if appsLsConfig.fields.IsSet(lsAppNameParam) {
+	if lsAppsConfig.fields.IsSet(lsAppNameParam) {
 		row = append(row, app.Name)
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppPathParam) {
-		if appsLsConfig.absPaths {
+	if lsAppsConfig.fields.IsSet(lsAppPathParam) {
+		if lsAppsConfig.absPaths {
 			row = append(row, app.Path)
 		} else {
 			row = append(row, app.RelPath)
 		}
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppBuildStatusParam) {
+	if lsAppsConfig.fields.IsSet(lsAppBuildStatusParam) {
 		row = append(row, (buildStatus))
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppBuildIDParam) {
+	if lsAppsConfig.fields.IsSet(lsAppBuildIDParam) {
 		if buildStatus == baur.BuildStatusExist {
 			row = append(row, fmt.Sprint(build.ID))
 		} else {
@@ -207,7 +207,7 @@ func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStat
 		}
 	}
 
-	if appsLsConfig.fields.IsSet(lsAppGitCommitParam) {
+	if lsAppsConfig.fields.IsSet(lsAppGitCommitParam) {
 		if buildStatus == baur.BuildStatusExist {
 			row = append(row, fmt.Sprint(build.VCSState.CommitID))
 		} else {

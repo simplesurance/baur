@@ -14,40 +14,40 @@ import (
 	"github.com/simplesurance/baur/log"
 )
 
-type inputsShowConf struct {
+type lsInputsConf struct {
 	quiet      bool
 	showDigest bool
 	csv        bool
 }
 
-var inputsShowCmd = &cobra.Command{
-	Use:   "show [<APP-NAME>|<PATH>]",
-	Short: "show resolved build inputs of an application",
-	Run:   inputsShow,
+var lsInputsCmd = &cobra.Command{
+	Use:   "inputs [<APP-NAME>|<PATH>]",
+	Short: "list resolved build inputs of an application",
+	Run:   lsInputs,
 	Args:  cobra.ExactArgs(1),
 }
 
-var inputsShowConfig inputsShowConf
+var lsInputsConfig lsInputsConf
 
 func init() {
-	inputsShowCmd.Flags().BoolVar(&inputsShowConfig.csv, "csv", false,
+	lsInputsCmd.Flags().BoolVar(&lsInputsConfig.csv, "csv", false,
 		"Show output in RFC4180 CSV format")
 
-	inputsShowCmd.Flags().BoolVarP(&inputsShowConfig.quiet, "quiet", "q", false,
+	lsInputsCmd.Flags().BoolVarP(&lsInputsConfig.quiet, "quiet", "q", false,
 		"Only show filepaths")
 
-	inputsShowCmd.Flags().BoolVar(&inputsShowConfig.showDigest, "digests", false,
+	lsInputsCmd.Flags().BoolVar(&lsInputsConfig.showDigest, "digests", false,
 		"show digests")
 
-	inputsCmd.AddCommand(inputsShowCmd)
+	lsCmd.AddCommand(lsInputsCmd)
 }
-func inputsShow(cmd *cobra.Command, args []string) {
+func lsInputs(cmd *cobra.Command, args []string) {
 	var formatter format.Formatter
 	var headers []string
 
 	rep := MustFindRepository()
 	app := mustArgToApp(rep, args[0])
-	writeHeaders := !inputsShowConfig.quiet && !inputsShowConfig.csv
+	writeHeaders := !lsInputsConfig.quiet && !lsInputsConfig.csv
 
 	if len(app.BuildInputPaths) == 0 {
 		log.Fatalf("No build inputs are configured in %s of %s", baur.AppCfgFile, app.Name)
@@ -56,12 +56,12 @@ func inputsShow(cmd *cobra.Command, args []string) {
 	if writeHeaders {
 		headers = []string{"Path"}
 
-		if inputsShowConfig.showDigest {
+		if lsInputsConfig.showDigest {
 			headers = append(headers, "Digest")
 		}
 	}
 
-	if inputsShowConfig.csv {
+	if lsInputsConfig.csv {
 		formatter = csv.New(headers, os.Stdout)
 	} else {
 		formatter = table.New(headers, os.Stdout)
@@ -77,7 +77,7 @@ func inputsShow(cmd *cobra.Command, args []string) {
 	})
 
 	for _, input := range inputs {
-		if !inputsShowConfig.showDigest || inputsShowConfig.quiet {
+		if !lsInputsConfig.showDigest || lsInputsConfig.quiet {
 			mustWriteRow(formatter, []interface{}{input})
 			continue
 		}
@@ -94,7 +94,7 @@ func inputsShow(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	if inputsShowConfig.showDigest && !inputsShowConfig.quiet && !inputsShowConfig.csv {
+	if lsInputsConfig.showDigest && !lsInputsConfig.quiet && !lsInputsConfig.csv {
 		totalDigest, err := app.TotalInputDigest()
 		if err != nil {
 			log.Fatalln("calculating total input digest failed:", err)

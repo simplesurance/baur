@@ -14,7 +14,7 @@ import (
 )
 
 const verifyLongHelp = `
-Checks for issues in past builds.
+Check for issues in past builds.
 
 The command scans past builds for patterns that indicate issues in the
 Build.Input or Build.Output configuration of an application.
@@ -32,7 +32,7 @@ const verifyExitCodeIssuesFound int = 2
 var verifyFromDate string
 var verifyCmd = &cobra.Command{
 	Use:   "verify",
-	Short: "checks for issues in past builds",
+	Short: "check for issues in past builds",
 	Long:  strings.TrimSpace(verifyLongHelp),
 	Run:   verify,
 }
@@ -45,7 +45,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&verifyFromDate, "from", "s", verifyStartdateStr,
 		"start date, format: YYYY.MM.DD")
 
-	buildsCmd.AddCommand(verifyCmd)
+	rootCmd.AddCommand(verifyCmd)
 }
 
 func containsOnlyDockerIssues(issues []*storage.VerifyIssue) bool {

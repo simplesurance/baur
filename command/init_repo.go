@@ -13,16 +13,16 @@ import (
 )
 
 func init() {
-	repoCmd.AddCommand(initCmd)
+	initCmd.AddCommand(initRepoCmd)
 }
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "creates a repository config file in the current directory",
-	Run:   initRepositoryCfg,
+var initRepoCmd = &cobra.Command{
+	Use:   "repo",
+	Short: "create a repository config file in the current directory",
+	Run:   initRepo,
 }
 
-func initRepositoryCfg(cmd *cobra.Command, args []string) {
+func initRepo(cmd *cobra.Command, args []string) {
 	rep, err := baur.FindRepository()
 	if err == nil {
 		log.Fatalf("repository configuration %s already exist",

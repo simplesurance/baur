@@ -17,26 +17,22 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-const buildsLsExample = `
-baur builds ls -s duration-desc calc               list builds of the calc
-						   application, sorted by build duration
-baur builds ls --csv --after=2018.09.27-11:30 all  list builds in csv format that
-					           happened after 2018.09.27 11:30`
+const lsBuildsExample = `
+baur ls builds -s duration-desc calc               list builds of the calc
+												   application, sorted by
+												   build duration
+baur ls builds --csv --after=2018.09.27-11:30 all  list builds in csv format that
+												   happened after 2018.09.27 11:30`
 
-const buildsLsLongHelp = `
-baur builds ls allows to list builds of applications
-`
-
-var buildsLsCmd = &cobra.Command{
-	Use:     "ls <APP-NAME>|all",
-	Short:   "list builds",
-	Long:    strings.TrimSpace(buildsLsLongHelp),
-	Example: strings.TrimSpace(buildsLsExample),
+var lsBuildsCmd = &cobra.Command{
+	Use:     "builds <APP-NAME>|all",
+	Short:   "list builds for an application",
+	Example: strings.TrimSpace(lsBuildsExample),
 	Args:    cobra.ExactArgs(1),
 	Run:     runBuildLs,
 }
 
-type buildsLsConf struct {
+type lsBuildsConf struct {
 	app    string
 	csv    bool
 	after  flag.DateTimeFlagValue
@@ -45,30 +41,30 @@ type buildsLsConf struct {
 	quiet  bool
 }
 
-var buildsLsConfig buildsLsConf
+var lsBuildsConfig lsBuildsConf
 
 func init() {
-	buildsLsConfig.sort = flag.NewSort(map[string]storage.Field{
+	lsBuildsConfig.sort = flag.NewSort(map[string]storage.Field{
 		"time":     storage.FieldBuildStartTime,
 		"duration": storage.FieldBuildDuration,
 	})
 
-	buildsLsCmd.Flags().BoolVar(&buildsLsConfig.csv, "csv", false,
+	lsBuildsCmd.Flags().BoolVar(&lsBuildsConfig.csv, "csv", false,
 		"List builds in RFC4180 CSV format")
 
-	buildsLsCmd.Flags().BoolVarP(&buildsLsConfig.quiet, "quiet", "q", false,
+	lsBuildsCmd.Flags().BoolVarP(&lsBuildsConfig.quiet, "quiet", "q", false,
 		"Only print builds ids")
 
-	buildsLsCmd.Flags().VarP(buildsLsConfig.sort, "sort", "s",
-		buildsLsConfig.sort.Usage(highlight))
+	lsBuildsCmd.Flags().VarP(lsBuildsConfig.sort, "sort", "s",
+		lsBuildsConfig.sort.Usage(highlight))
 
-	buildsLsCmd.Flags().VarP(&buildsLsConfig.after, "after", "a",
+	lsBuildsCmd.Flags().VarP(&lsBuildsConfig.after, "after", "a",
 		fmt.Sprintf("Only show builds that were build after this datetime.\nFormat: %s", highlight(flag.DateTimeFormatDescr)))
 
-	buildsLsCmd.Flags().VarP(&buildsLsConfig.before, "before", "b",
+	lsBuildsCmd.Flags().VarP(&lsBuildsConfig.before, "before", "b",
 		fmt.Sprintf("Only show builds that were build before this datetime.\nFormat: %s", highlight(flag.DateTimeFormatDescr)))
 
-	buildsCmd.AddCommand(buildsLsCmd)
+	lsCmd.AddCommand(lsBuildsCmd)
 }
 
 func runBuildLs(cmd *cobra.Command, args []string) {
@@ -79,13 +75,13 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 		Order: storage.OrderDesc,
 	}
 
-	buildsLsConfig.app = args[0]
+	lsBuildsConfig.app = args[0]
 
 	repo := MustFindRepository()
 
-	filters := buildsLsConfig.getFilters()
-	if buildsLsConfig.sort.Value != (storage.Sorter{}) {
-		sorters = append(sorters, &buildsLsConfig.sort.Value)
+	filters := lsBuildsConfig.getFilters()
+	if lsBuildsConfig.sort.Value != (storage.Sorter{}) {
+		sorters = append(sorters, &lsBuildsConfig.sort.Value)
 	}
 
 	sorters = append(sorters, &defaultSorter)
@@ -97,7 +93,7 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 	var headers []string
 	var formatter format.Formatter
 	psql := MustGetPostgresClt(repo)
-	writeHeaders := !buildsLsConfig.quiet && !buildsLsConfig.csv
+	writeHeaders := !lsBuildsConfig.quiet && !lsBuildsConfig.csv
 
 	if writeHeaders {
 		headers = []string{
@@ -110,7 +106,7 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 
 	}
 
-	if buildsLsConfig.csv {
+	if lsBuildsConfig.csv {
 		formatter = csv.New(headers, os.Stdout)
 	} else {
 		formatter = table.New(headers, os.Stdout)
@@ -124,7 +120,7 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 	for _, build := range builds {
 		var row []interface{}
 
-		if buildsLsConfig.quiet {
+		if lsBuildsConfig.quiet {
 			row = []interface{}{build.ID}
 		} else {
 			row = []interface{}{
@@ -147,7 +143,7 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 	}
 }
 
-func (conf buildsLsConf) getFilters() (filters []*storage.Filter) {
+func (conf lsBuildsConf) getFilters() (filters []*storage.Filter) {
 	if conf.app != "all" {
 		filters = append(filters, &storage.Filter{
 			Field:    storage.FieldApplicationName,
