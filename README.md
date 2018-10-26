@@ -33,8 +33,15 @@ To build baur run `make`.
 The chapter describes a quick way to setup baur and dependencies for
 experimenting with it locally. It's not suitable for running baur in production.
 
-1. `docker run -p 5432:5432 -e POSTGRES_DB=baur postgres:latest`
-2. `psql -d "postgres://postgres@localhost:5432/baur?sslmode=disable" < storage/postgres/migrations/*.up.sql`
+
+1. Install baur by either:
+  - downloading and installing a release archive from https://github.com/simplesurance/baur/releases or
+  - running `go get -u https://github.com/simplesurance/baur` to install the
+    latest development version
+2. Start a PostgreSQL server in a docker container:
+   `docker run -p 5432:5432 -e POSTGRES_DB=baur postgres:latest`
+3. Create the baur tables in the PostgreSQL database:
+   `baur init db postgres://postgres@localhost:5432/baur?sslmode=disable`
 
 ## Configuration
 1. Setup your PostgreSQL baur database

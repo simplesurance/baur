@@ -20,11 +20,22 @@ var (
 	highlight = greenHighlight
 )
 
-// MustFindRepository must find repo
-func MustFindRepository() *baur.Repository {
+func findRepository() (*baur.Repository, error) {
 	log.Debugln("searching for repository root...")
 
-	rep, err := baur.FindRepository()
+	repo, err := baur.FindRepository()
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf("repository root found: %s", repo.Path)
+
+	return repo, nil
+}
+
+// MustFindRepository must find repo
+func MustFindRepository() *baur.Repository {
+	repo, err := findRepository()
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Fatalf("could not find repository root config file "+
@@ -35,9 +46,7 @@ func MustFindRepository() *baur.Repository {
 		log.Fatalln(err)
 	}
 
-	log.Debugf("repository root found: %s", rep.Path)
-
-	return rep
+	return repo
 }
 
 func isAppDir(arg string) bool {

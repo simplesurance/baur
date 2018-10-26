@@ -180,6 +180,8 @@ func (s *Sorter) String() string {
 
 // Storer is an interface for persisting informations about builds
 type Storer interface {
+	Init() error
+
 	GetLatestBuildByDigest(appName, totalInputDigest string) (*Build, error)
 	Save(b *Build) error
 	GetApps() ([]*Application, error)

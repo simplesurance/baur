@@ -1,3 +1,6 @@
+package postgres
+
+const initQuery = `
 CREATE TABLE application (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL UNIQUE
@@ -54,3 +57,11 @@ CREATE TABLE input_build (
 	input_id INTEGER REFERENCES input(id),
 	CONSTRAINT input_build_uniq UNIQUE(build_id, input_id)
 );
+`
+
+// Init creates the baur tables in the postgresql database
+func (c *Client) Init() error {
+	_, err := c.Db.Exec(initQuery)
+
+	return err
+}
