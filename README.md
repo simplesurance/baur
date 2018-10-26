@@ -72,8 +72,8 @@ precedence and overwrites the configuration set by other means.
 The following environment variables are supported:
 
 - `$BAUR_POSTGRES_URL`
-- `$DOCKER_USERNAME` 
-- `$DOCKER_PASSWORD`
+- `$BAUR_DOCKER_USERNAME`
+- `$BAUR_DOCKER_PASSWORD`
 - S3 environment variables described at https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
 
 ### Application configs (`app.toml`)
@@ -140,8 +140,9 @@ Baur supports to upload build results to S3 and docker images to a remote docker
 repository.
 Authentication information for output repositories are either read from the
 docker credentials helper or, if set, read from
-`DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
-`DOCKER_PASSWORD` can be the cleartext password or a valid authentication token.
+`BAUR_DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
+`BAUR_DOCKER_PASSWORD` can be the cleartext password or a valid authentication
+token.
 
 S3 configuration parameters are the same then for the aws CLI tool.
 See https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html.

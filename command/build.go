@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	dockerEnvUsernameVar = "DOCKER_USERNAME"
-	dockerEnvPasswordVar = "DOCKER_PASSWORD"
+	dockerEnvUsernameVar = "BAUR_DOCKER_USERNAME"
+	dockerEnvPasswordVar = "BAUR_DOCKER_PASSWORD"
 )
 
 const buildLongHelp = `
@@ -35,16 +35,15 @@ If no path or application name is passed, all applications in the repository are
 By default only applications with status "Outstanding" and "Inputs Undefined" are build.
 
 Environment Variables:
-The following environment variables configure credentials for output repositories:
-
+The following environment variables configure credentials for build output repositories:
   S3 Repositories:
     AWS_REGION
     AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY
 
   Docker Repositories:
-    DOCKER_USERNAME
-    DOCKER_PASSWORD
+    ` + dockerEnvUsernameVar + `
+    ` + dockerEnvPasswordVar + `
 `
 
 const buildExampleHelp = `
