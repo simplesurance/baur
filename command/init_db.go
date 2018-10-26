@@ -8,7 +8,6 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/log"
-	"github.com/simplesurance/baur/storage/postgres"
 )
 
 const initDbExample = `
@@ -17,14 +16,15 @@ baur init db postgres://postgres@localhost:5432/baur?sslmode=disable
 
 const initDbLongHelp = `
 Creates the baur tables in a PostgreSQL database.
-If no URI is passed, the postgres_uri from the repository config is used.
+If no URL is passed, and the $` + envVarPSQLURL + ` environment variable is set,
+it's value is used otherwise the postgres_uri from the repository config is used.
 `
 
 var initDbCmd = &cobra.Command{
-	Use:     "db [POSTGRES-URI]",
+	Use:     "db [POSTGRES-URL]",
 	Short:   "create baur tables in a PostgreSQL database",
 	Example: strings.TrimSpace(initDbExample),
-	Long:    initDbLongHelp,
+	Long:    strings.TrimSpace(initDbLongHelp),
 	Run:     initDb,
 	Args:    cobra.MaximumNArgs(1),
 }
@@ -34,7 +34,7 @@ func init() {
 }
 
 func initDb(cmd *cobra.Command, args []string) {
-	var dbURI string
+	var dbURL string
 
 	if len(args) == 0 {
 		repo, err := findRepository()
@@ -44,12 +44,12 @@ func initDb(cmd *cobra.Command, args []string) {
 				baur.RepositoryCfgFile)
 		}
 
-		dbURI = repo.PSQLURL
+		dbURL = repo.PSQLURL
 	} else {
-		dbURI = args[0]
+		dbURL = args[0]
 	}
 
-	storageClt, err := postgres.New(dbURI)
+	storageClt, err := getPostgresCltWithEnv(dbURL)
 	if err != nil {
 		log.Fatalln("establishing connection failed:", err.Error())
 	}

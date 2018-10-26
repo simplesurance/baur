@@ -14,6 +14,10 @@ import (
 	"github.com/simplesurance/baur/storage/postgres"
 )
 
+// envVarPSQLURL contains the name of an environment variable in that the
+// postgresql URI can be stored
+const envVarPSQLURL = "BAUR_POSTGRES_URL"
+
 var (
 	greenHighlight = color.New(color.FgGreen).SprintFunc()
 	underline      = color.New(color.Underline).SprintFunc()
@@ -81,9 +85,27 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	return app
 }
 
+// getPostgresCltWithEnv returns a new postresql storage client,
+// if the environment variable BAUR_PSQL_URI is set, this uri is used instead of
+// the configuration specified in the baur.Repository object
+func getPostgresCltWithEnv(psqlURI string) (*postgres.Client, error) {
+	uri := psqlURI
+
+	if envURI := os.Getenv(envVarPSQLURL); len(envURI) != 0 {
+		log.Debugf("using postgresql connection URL from $%s environment variable",
+			envVarPSQLURL)
+
+		uri = envURI
+	} else {
+		log.Debugf("environment variable $%s not set", envVarPSQLURL)
+	}
+
+	return postgres.New(uri)
+}
+
 // MustGetPostgresClt must return the PG client
 func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
-	clt, err := postgres.New(r.PSQLURL)
+	clt, err := getPostgresCltWithEnv(r.PSQLURL)
 	if err != nil {
 		log.Fatalf("could not establish connection to postgreSQL db: %s", err)
 	}

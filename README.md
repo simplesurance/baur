@@ -66,6 +66,16 @@ experimenting with it locally. It's not suitable for running baur in production.
 
 3. Specify in your `.app.toml` files the inputs and outputs of builds.
 
+### Environment Variables
+If a configuration is set via an environment variable it has the highest
+precedence and overwrites the configuration set by other means.
+The following environment variables are supported:
+
+- `$BAUR_POSTGRES_URL`
+- `$DOCKER_USERNAME` 
+- `$DOCKER_PASSWORD`
+- S3 environment variables described at https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
+
 ### Application configs (`app.toml`)
 #### Build Inputs
 To enable baur to reliably detect if an application needs to be rebuild, it
