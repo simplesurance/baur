@@ -153,11 +153,3 @@ func mustWriteRow(fmt format.Formatter, row []interface{}) {
 		log.Fatalln(err)
 	}
 }
-
-func fmtVertTitle(csvFormat bool, title string) string {
-	if csvFormat {
-		return title
-	}
-
-	return highlight(title + ":")
-}
