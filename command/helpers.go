@@ -16,6 +16,7 @@ import (
 
 var (
 	greenHighlight = color.New(color.FgGreen).SprintFunc()
+	underline      = color.New(color.Underline).SprintFunc()
 	// highlight is a function that highlights parts of strings in the cli output
 	highlight = greenHighlight
 )
