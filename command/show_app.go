@@ -29,14 +29,14 @@ func showApp(cmd *cobra.Command, args []string) {
 
 	formatter = table.New(nil, os.Stdout)
 
-	mustWriteRow(formatter, []interface{}{underline("General")})
+	mustWriteRow(formatter, []interface{}{underline("General:")})
 	mustWriteRow(formatter, []interface{}{"", "Name:", highlight(app.Name)})
 	mustWriteRow(formatter, []interface{}{"", "Path:", highlight(app.RelPath)})
 	mustWriteRow(formatter, []interface{}{"", "Build Command:", highlight(app.BuildCmd)})
 
 	if len(app.Outputs) != 0 {
 		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{underline("Outputs")})
+		mustWriteRow(formatter, []interface{}{underline("Outputs:")})
 
 		for i, art := range app.Outputs {
 			mustWriteRow(formatter, []interface{}{"", "Type:", highlight(art.Type())})
@@ -51,7 +51,7 @@ func showApp(cmd *cobra.Command, args []string) {
 
 	if len(app.BuildInputPaths) != 0 {
 		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{underline("Inputs")})
+		mustWriteRow(formatter, []interface{}{underline("Inputs:")})
 
 		for i, bi := range app.BuildInputPaths {
 			mustWriteRow(formatter, []interface{}{"", "Type:", highlight(bi.Type())})

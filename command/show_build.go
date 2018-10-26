@@ -63,7 +63,7 @@ func showBuild(cmd *cobra.Command, args []string) {
 
 	if len(build.Outputs) > 0 {
 		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{underline("Outputs")})
+		mustWriteRow(formatter, []interface{}{underline("Outputs:")})
 	}
 	for i, o := range build.Outputs {
 		mustWriteRow(formatter, []interface{}{"", "Type:", highlight(o.Type)})
