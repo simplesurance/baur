@@ -293,3 +293,8 @@ func Glob(path string) ([]string, error) {
 
 	return res, nil
 }
+
+// Mkdir creates recursively directories
+func Mkdir(path string) error {
+	return os.MkdirAll(path, os.FileMode(0755))
+}
