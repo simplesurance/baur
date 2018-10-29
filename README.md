@@ -139,10 +139,13 @@ described in the `[Build.Output]` section.
 Baur supports to upload build results to S3 and docker images to a remote docker
 repository.
 Authentication information for output repositories are either read from the
-docker credentials helper or, if set, read from
-`BAUR_DOCKER_USERNAME` and `DOCKER_PASSWORD` environment variables.
-`BAUR_DOCKER_PASSWORD` can be the cleartext password or a valid authentication
-token.
+environment variables `BAUR_DOCKER_USERNAME` and `BAUR_DOCKER_PASSWORD` or read
+from a Docker config file.
+The following files are checked in the order listed:
+- $DOCKER_CONFIG/config.json if DOCKER_CONFIG set in the environment,
+- $HOME/.docker/config.json
+- $HOME/.dockercfg
+
 
 S3 configuration parameters are the same then for the aws CLI tool.
 See https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html.

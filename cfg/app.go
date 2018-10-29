@@ -71,7 +71,7 @@ type FileOutput struct {
 // DockerImageRegistryUpload holds information about where the docker image
 // should be uploaded to
 type DockerImageRegistryUpload struct {
-	Repository string `toml:"repository" comment:"name of the docker repository" commented:"true"`
+	Repository string `toml:"repository" comment:"docker repository path, format: [<server[:port]>/]<owner>/<repository>:<tag>" commented:"true"`
 	Tag        string `toml:"tag" comment:"tag that is applied to the image, valid variables: $APPNAME, $UUID, $GITCOMMIT"  commented:"true"`
 }
 

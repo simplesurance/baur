@@ -255,10 +255,10 @@ func startBGUploader(outputCnt int, uploadChan chan *upload.Result) upload.Manag
 	if len(dockerUser) != 0 {
 		log.Debugf("using docker authentication data from $%s, $%s Environment variables, authenticating as '%s'",
 			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
-		dockerUploader, err = docker.NewClientwAuth(dockerUser, dockerPass)
+		dockerUploader, err = docker.NewClientwAuth(log.StdLogger.Debugf, dockerUser, dockerPass)
 	} else {
 		log.Debugf("environment variable $%s not set", dockerEnvUsernameVar)
-		dockerUploader, err = docker.NewClient()
+		dockerUploader, err = docker.NewClient(log.StdLogger.Debugf)
 	}
 	if err != nil {
 		log.Fatalln(err)
