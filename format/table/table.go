@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 	"io"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -29,17 +30,10 @@ func New(headers []string, out io.Writer) *Formatter {
 }
 
 func (f *Formatter) writeHeader(headers []string) error {
-	var header string
-
-	for i, h := range headers {
-		header += h
-
-		if i+1 < len(headers) {
-			header += "\t"
-		}
-	}
+	header := strings.Join(headers, "\t")
 
 	_, err := fmt.Fprintln(f.tabWriter, header)
+
 	return err
 }
 
