@@ -23,25 +23,17 @@ type Build struct {
 	Output  BuildOutput `comment:"specifies the outputs that the application build produces"`
 }
 
-// BuildInput contains information about inputs (sources, compiler, docker
-// images) for an build
+// BuildInput contains information about build inputs
 type BuildInput struct {
-	Files         FileInputs          `comment:"file paths, e.g: source files, the used compiler binary"`
-	GitFiles      GitFileInputs       `comment:"If the baur repository is part of a git repository, this option can be used to specify source files tracked by git."`
-	GolangSources GolangSources       `comment:"Directories containing Golang applications, all source files to build the application are located and added as inputs (excluding stdlib and test files)"`
-	DockerImage   []*DockerImageInput `comment:"docker images that are used to build the application or affect in other ways the produces artifact"`
+	Files         FileInputs    `comment:"file paths, e.g: source files, the used compiler binary"`
+	GitFiles      GitFileInputs `comment:"If the baur repository is part of a git repository, this option can be used to specify source files tracked by git."`
+	GolangSources GolangSources `comment:"Directories containing Golang applications, all source files to build the application are located and added as inputs (excluding stdlib and test files)"`
 }
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
 	Paths  []string `toml:"paths" comment:"paths to directories containing Golang source files" commented:"true"`
 	GoPath string   `toml:"go_path" comment:"specifies the GOPATH, that is used for source file discovery, if not set or empty the current GOPATH is used. The go_path is relative to the application directory." commented:"true"`
-}
-
-// DockerImageInput specifies a docker image as build source
-type DockerImageInput struct {
-	Repository string `toml:"repository" comment:"name of the docker repository" commented:"true"`
-	Digest     string `toml:"digest" comment:"the digest of the image" commented:"true"`
 }
 
 // FileInputs describes a file source
@@ -101,12 +93,6 @@ func ExampleApp(name string) *App {
 				GitFiles: GitFileInputs{
 					Paths: []string{"."},
 				},
-				DockerImage: []*DockerImageInput{
-					&DockerImageInput{
-						Repository: "simplesurance/alpine-build",
-						Digest:     "sha256:b1589cc882898e1e726994bbf9827953156b94d423dae8c89b56614ec298684e",
-					},
-				},
 				GolangSources: GolangSources{
 					Paths:  []string{"."},
 					GoPath: "../",
@@ -158,22 +144,13 @@ func AppFromFile(path string) (*App, error) {
 }
 
 // removeEmptySections removes elements from slices of the that are empty.
-// This is a woraround for https://github.com/pelletier/go-toml/issues/216
+// This is a workaround for https://github.com/pelletier/go-toml/issues/216
 // It prevents that slices are commented in created Example configurations.
 // To prevent that we have empty elements in the slice that we process later and
 // validate, remove them from the config
 func removeEmptySections(a *App) {
-	dockerImagesIn := make([]*DockerImageInput, 0, len(a.Build.Input.DockerImage))
 	fileOutputs := make([]*FileOutput, 0, len(a.Build.Output.File))
 	dockerImageOutputs := make([]*DockerImageOutput, 0, len(a.Build.Output.DockerImage))
-
-	for _, d := range a.Build.Input.DockerImage {
-		if d.IsEmpty() {
-			continue
-		}
-
-		dockerImagesIn = append(dockerImagesIn, d)
-	}
 
 	for _, f := range a.Build.Output.File {
 		if f.IsEmpty() {
@@ -191,7 +168,6 @@ func removeEmptySections(a *App) {
 		dockerImageOutputs = append(dockerImageOutputs, d)
 	}
 
-	a.Build.Input.DockerImage = dockerImagesIn
 	a.Build.Output.File = fileOutputs
 	a.Build.Output.DockerImage = dockerImageOutputs
 }
@@ -264,12 +240,6 @@ func (b *BuildInput) Validate() error {
 
 	// TODO: add validation for gitfiles section
 
-	for _, d := range b.DockerImage {
-		if err := d.Validate(); err != nil {
-			return errors.Wrap(err, "[[Build.Input.DockerImages]] section contains errors")
-		}
-	}
-
 	return nil
 }
 
@@ -325,7 +295,7 @@ func (d *DockerImageRegistryUpload) IsEmpty() bool {
 	return len(d.Repository) == 0 && len(d.Tag) == 0
 }
 
-// IsEmpty returns true if DockerImageInput is empty
+// IsEmpty returns true if DockerImageOutput is empty
 func (d *DockerImageOutput) IsEmpty() bool {
 	return len(d.IDFile) == 0 && d.RegistryUpload.IsEmpty()
 
@@ -365,34 +335,6 @@ func (d *DockerImageRegistryUpload) Validate() error {
 
 	if len(d.Tag) == 0 {
 		return errors.New("tag parameter can not be unset or empty")
-	}
-
-	return nil
-}
-
-// IsEmpty returns true if DockerImageInput is empty
-func (d *DockerImageInput) IsEmpty() bool {
-	if len(d.Digest) == 0 && len(d.Repository) == 0 {
-		return true
-	}
-
-	return false
-}
-
-// Validate validates a [[DockerImageInput]] section
-func (d *DockerImageInput) Validate() error {
-	if len(d.Repository) == 0 {
-		return errors.New("repository parameter can not be unset or empty")
-	}
-
-	if len(d.Digest) == 0 {
-		return errors.New("digest can not be empty")
-	}
-
-	// TODO: add a decent regex check
-	if len(d.Digest) != 71 {
-		return fmt.Errorf("digest is invalid, is %d chars long expected 71 characters, format: sha256:<hash>",
-			len(d.Digest))
 	}
 
 	return nil

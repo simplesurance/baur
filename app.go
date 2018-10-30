@@ -45,7 +45,7 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 }
 
 func (a *App) setInputsFromCfg(r *Repository, cfg *cfg.App) error {
-	sliceLen := len(cfg.Build.Input.Files.Paths) + len(cfg.Build.Input.DockerImage)
+	sliceLen := len(cfg.Build.Input.Files.Paths)
 
 	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
 		sliceLen++
@@ -64,10 +64,6 @@ func (a *App) setInputsFromCfg(r *Repository, cfg *cfg.App) error {
 	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
 		a.BuildInputPaths = append(a.BuildInputPaths,
 			NewGitPaths(r.Path, a.RelPath, cfg.Build.Input.GitFiles.Paths))
-	}
-
-	for _, d := range cfg.Build.Input.DockerImage {
-		a.BuildInputPaths = append(a.BuildInputPaths, &DockerImageRef{Repository: d.Repository, Digest: d.Digest})
 	}
 
 	if len(cfg.Build.Input.GolangSources.Paths) > 0 {

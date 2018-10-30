@@ -109,15 +109,8 @@ are ignored. Modified tracked files are considered.
 The section has a `paths` parameter that accepts a list of glob paths to source files.
 
 To make it easier to track changes in the build environment it's advised to
-build application in docker containers and define the docker image as build
-input.
-
-##### `[[Build.Input.DockerImages]]`
-Specifies a docker image as build input. This can be for example the docker
-image in that the application is build.
-The docker image is specified by it's manifest digest.
-The manifest digest for a docker image can be retrieved with
-`docker images --digests` or `docker inspect`
+build application in docker containers via a build script, reference the image
+by it's digest in the script and add the build-script as build input.
 
 #### `[Build.Input.GolangSources]`
 Allows to add Golang applications as inputs.
