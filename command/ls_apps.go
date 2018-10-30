@@ -74,24 +74,22 @@ func init() {
 func createHeader() []string {
 	var headers []string
 
-	if lsAppsConfig.fields.IsSet(lsAppNameParam) {
-		headers = append(headers, lsAppNameHeader)
-	}
+	for _, f := range lsAppsConfig.fields.Fields {
+		switch f {
+		case lsAppNameParam:
+			headers = append(headers, lsAppNameHeader)
+		case lsAppPathParam:
+			headers = append(headers, lsAppPathHeader)
+		case lsAppBuildStatusParam:
+			headers = append(headers, lsAppBuildStatusHeader)
+		case lsAppBuildIDParam:
+			headers = append(headers, lsAppBuildIDHeader)
+		case lsAppGitCommitParam:
+			headers = append(headers, lsAppGitCommitHeader)
+		default:
+			panic(fmt.Sprintf("unsupported value '%v' in fields parameter", f))
 
-	if lsAppsConfig.fields.IsSet(lsAppPathParam) {
-		headers = append(headers, lsAppPathHeader)
-	}
-
-	if lsAppsConfig.fields.IsSet(lsAppBuildStatusParam) {
-		headers = append(headers, lsAppBuildStatusHeader)
-	}
-
-	if lsAppsConfig.fields.IsSet(lsAppBuildIDParam) {
-		headers = append(headers, lsAppBuildIDHeader)
-	}
-
-	if lsAppsConfig.fields.IsSet(lsAppGitCommitParam) {
-		headers = append(headers, lsAppGitCommitHeader)
+		}
 	}
 
 	return headers
@@ -105,8 +103,9 @@ func ls(cmd *cobra.Command, args []string) {
 	repo := MustFindRepository()
 	apps := mustArgToApps(repo, args)
 	writeHeaders := !lsAppsConfig.quiet && !lsAppsConfig.csv
+	storageQueryNeeded := storageQueryIsNeeded()
 
-	if storageQueryIsNeeded() {
+	if storageQueryNeeded {
 		storageClt = MustGetPostgresClt(repo)
 	}
 
@@ -127,7 +126,7 @@ func ls(cmd *cobra.Command, args []string) {
 		var build *storage.Build
 		var buildStatus baur.BuildStatus
 
-		if storageQueryIsNeeded() {
+		if storageQueryNeeded {
 			var err error
 
 			buildStatus, build, err = baur.GetBuildStatus(storageClt, app)
@@ -172,46 +171,56 @@ func assembleQuietRow(app *baur.App) []interface{} {
 }
 
 func storageQueryIsNeeded() bool {
-	return !lsAppsConfig.quiet &&
-		(lsAppsConfig.buildStatus.IsSet() ||
-			lsAppsConfig.fields.IsSet(lsAppBuildIDParam) ||
-			lsAppsConfig.fields.IsSet(lsAppBuildStatusParam) ||
-			lsAppsConfig.fields.IsSet(lsAppGitCommitParam))
+	if lsAppsConfig.quiet {
+		return false
+	}
+
+	for _, f := range lsAppsConfig.fields.Fields {
+		switch f {
+		case lsAppBuildStatusParam:
+			return true
+		case lsAppBuildIDParam:
+			return true
+		case lsAppGitCommitParam:
+			return true
+		}
+	}
+
+	return false
 }
 
 func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) []interface{} {
 	var row []interface{}
 
-	if lsAppsConfig.fields.IsSet(lsAppNameParam) {
-		row = append(row, app.Name)
-	}
+	for _, f := range lsAppsConfig.fields.Fields {
+		switch f {
+		case lsAppNameParam:
+			row = append(row, app.Name)
 
-	if lsAppsConfig.fields.IsSet(lsAppPathParam) {
-		if lsAppsConfig.absPaths {
-			row = append(row, app.Path)
-		} else {
-			row = append(row, app.RelPath)
-		}
-	}
+		case lsAppPathParam:
+			if lsAppsConfig.absPaths {
+				row = append(row, app.Path)
+			} else {
+				row = append(row, app.RelPath)
+			}
 
-	if lsAppsConfig.fields.IsSet(lsAppBuildStatusParam) {
-		row = append(row, (buildStatus))
-	}
+		case lsAppBuildStatusParam:
+			row = append(row, (buildStatus))
 
-	if lsAppsConfig.fields.IsSet(lsAppBuildIDParam) {
-		if buildStatus == baur.BuildStatusExist {
-			row = append(row, fmt.Sprint(build.ID))
-		} else {
-			// no build exist, we don't have a build id
-			row = append(row, "")
-		}
-	}
+		case lsAppBuildIDParam:
+			if buildStatus == baur.BuildStatusExist {
+				row = append(row, fmt.Sprint(build.ID))
+			} else {
+				// no build exist, we don't have a build id
+				row = append(row, "")
+			}
 
-	if lsAppsConfig.fields.IsSet(lsAppGitCommitParam) {
-		if buildStatus == baur.BuildStatusExist {
-			row = append(row, fmt.Sprint(build.VCSState.CommitID))
-		} else {
-			row = append(row, "")
+		case lsAppGitCommitParam:
+			if buildStatus == baur.BuildStatusExist {
+				row = append(row, fmt.Sprint(build.VCSState.CommitID))
+			} else {
+				row = append(row, "")
+			}
 		}
 	}
 

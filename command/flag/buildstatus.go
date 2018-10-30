@@ -59,7 +59,7 @@ func (b *BuildStatus) Type() string {
 // highlightFn
 func (b *BuildStatus) Usage(highlightFn func(a ...interface{}) string) string {
 	return strings.TrimSpace(fmt.Sprintf(`
-Show applications with this build status
+Only show applications with this build status
 Format: %s
 where %s is one of: %s, %s, %s`,
 		highlightFn(b.Type()),
