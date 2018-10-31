@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/fatih/color"
 )
 
-const errorPrefix = "ERROR"
+var errorPrefix = color.New(color.FgRed).Sprint("ERROR: ")
 
 // Logger logs messages
 type Logger struct {
@@ -59,7 +61,7 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 // Fatalln logs a message to stderr and terminates the application with an error
 func (l *Logger) Fatalln(v ...interface{}) {
 	if len(v) != 0 {
-		v[0] = fmt.Sprintf("%s: %s", errorPrefix, v[0])
+		v[0] = fmt.Sprintf("%s %s", errorPrefix, v[0])
 	}
 
 	l.logger.Fatalln(v...)
@@ -67,13 +69,13 @@ func (l *Logger) Fatalln(v ...interface{}) {
 
 // Fatalf logs a message to stderr and terminates the application with an error
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-	l.logger.Fatalf(errorPrefix+": "+format, v...)
+	l.logger.Fatalf(errorPrefix+format, v...)
 }
 
 // Errorln logs a message to stderr
 func (l *Logger) Errorln(v ...interface{}) {
 	if len(v) != 0 {
-		v[0] = fmt.Sprintf("%s: %s", errorPrefix, v[0])
+		v[0] = fmt.Sprintf("%s %s", errorPrefix, v[0])
 	}
 
 	l.logger.Println(v...)
@@ -81,7 +83,7 @@ func (l *Logger) Errorln(v ...interface{}) {
 
 // Errorf logs a message to stderr
 func (l *Logger) Errorf(format string, v ...interface{}) {
-	l.logger.Printf(errorPrefix+": "+format, v...)
+	l.logger.Printf(errorPrefix+" "+format, v...)
 }
 
 // Infoln logs a message to stdout
