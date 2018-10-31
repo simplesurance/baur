@@ -53,7 +53,7 @@ func init() {
 		"List builds in RFC4180 CSV format")
 
 	lsBuildsCmd.Flags().BoolVarP(&lsBuildsConfig.quiet, "quiet", "q", false,
-		"Only print builds ids")
+		"Only print build IDs")
 
 	lsBuildsCmd.Flags().VarP(lsBuildsConfig.sort, "sort", "s",
 		lsBuildsConfig.sort.Usage(highlight))
