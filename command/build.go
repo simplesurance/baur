@@ -29,22 +29,42 @@ const (
 	dockerEnvPasswordVar = "BAUR_DOCKER_PASSWORD"
 )
 
-const buildLongHelp = `
+var buildLongHelp = fmt.Sprintf(`
 Build applications.
 If no path or application name is passed, all applications in the repository are build.
-By default only applications with status "Outstanding" and "Inputs Undefined" are build.
+By default only applications with status '%s' and '%s' are build.
 
 Environment Variables:
-The following environment variables configure credentials for build output repositories:
-  S3 Repositories:
-    AWS_REGION
-    AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY
+    %s
 
-  Docker Repositories:
-    ` + dockerEnvUsernameVar + `
-    ` + dockerEnvPasswordVar + `
-`
+  S3 Upload:
+    %s
+    %s
+    %s
+
+  Docker Registry Upload:
+    %s
+    %s
+    %s
+    %s
+    %s
+    %s
+`,
+	highlight("Outstanding"),
+	highlight("Input Undefined"),
+
+	highlight(envVarPSQLURL),
+
+	highlight("AWS_REGION"),
+	highlight("AWS_ACCESS_KEY_ID"),
+	highlight("AWS_SECRET_ACCESS_KEY"),
+
+	highlight(dockerEnvUsernameVar),
+	highlight(dockerEnvPasswordVar),
+	highlight("DOCKER_HOST"),
+	highlight("DOCKER_API_VERSION"),
+	highlight("DOCKER_CERT_PATH"),
+	highlight("DOCKER_TLS_VERIFY"))
 
 const buildExampleHelp = `
 build payment-service     build the application with the name payment-service
@@ -253,11 +273,11 @@ func startBGUploader(outputCnt int, uploadChan chan *upload.Result) upload.Manag
 
 	dockerUser, dockerPass := dockerAuthFromEnv()
 	if len(dockerUser) != 0 {
-		log.Debugf("using docker authentication data from $%s, $%s Environment variables, authenticating as '%s'",
+		log.Debugf("using docker authentication data from %s, %s Environment variables, authenticating as '%s'",
 			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
 		dockerUploader, err = docker.NewClientwAuth(log.StdLogger.Debugf, dockerUser, dockerPass)
 	} else {
-		log.Debugf("environment variable $%s not set", dockerEnvUsernameVar)
+		log.Debugf("environment variable %s not set", dockerEnvUsernameVar)
 		dockerUploader, err = docker.NewClient(log.StdLogger.Debugf)
 	}
 	if err != nil {
