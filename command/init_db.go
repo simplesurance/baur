@@ -14,11 +14,13 @@ const initDbExample = `
 baur init db postgres://postgres@localhost:5432/baur?sslmode=disable
 `
 
-const initDbLongHelp = `
+var initDbLongHelp = fmt.Sprintf(`
 Creates the baur tables in a PostgreSQL database.
-If no URL is passed, and the $` + envVarPSQLURL + ` environment variable is set,
-it's value is used otherwise the postgres_uri from the repository config is used.
-`
+
+The Postgres URL is read from the repository configuration file.
+Alternatively the URL can be passed as argument or
+by setting the '%s' environment variable.`,
+	highlight(envVarPSQLURL))
 
 var initDbCmd = &cobra.Command{
 	Use:     "db [POSTGRES-URL]",
@@ -40,8 +42,8 @@ func initDb(cmd *cobra.Command, args []string) {
 		repo, err := findRepository()
 		if err != nil {
 			log.Fatalf("could not find '%s' repository config file.\n"+
-				"Pass the Postgres URI as argument or run 'baur init repo' first.",
-				baur.RepositoryCfgFile)
+				"Run '%s' first or pass the Postgres URL as argument.",
+				highlight(baur.RepositoryCfgFile), highlight(cmdInitRepo))
 		}
 
 		dbURL = repo.PSQLURL
