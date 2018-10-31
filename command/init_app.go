@@ -59,6 +59,6 @@ func initApp(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("configuration file for %s was written to %s\n",
-		appName, baur.AppCfgFile)
+	fmt.Printf("configuration file written to %s\n",
+		highlight(baur.AppCfgFile))
 }

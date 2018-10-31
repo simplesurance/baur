@@ -28,7 +28,7 @@ var (
 func findRepository() (*baur.Repository, error) {
 	log.Debugln("searching for repository root...")
 
-	repo, err := baur.FindRepository()
+	repo, err := baur.FindRepositoryCwd()
 	if err != nil {
 		return nil, err
 	}

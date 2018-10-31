@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -16,35 +17,55 @@ func init() {
 	initCmd.AddCommand(initRepoCmd)
 }
 
+const initRepoLongHelp = `
+Create a new repository configuration file.
+This is the first command that should be run when setting up baur for a new repository.
+If no argument is passed, the file is created in the current directory.
+`
+
 var initRepoCmd = &cobra.Command{
-	Use:   "repo",
-	Short: "create a repository config file in the current directory",
+	Use:   "repo [DIR]",
+	Short: "create a repository config file",
+	Long:  strings.TrimSpace(initRepoLongHelp),
 	Run:   initRepo,
+	Args:  cobra.MaximumNArgs(1),
 }
 
 func initRepo(cmd *cobra.Command, args []string) {
-	rep, err := baur.FindRepository()
-	if err == nil {
-		log.Fatalf("repository configuration %s already exist",
-			path.Join(rep.Path, baur.RepositoryCfgFile))
+	var repoDir string
+	var err error
+
+	if len(args) == 1 {
+		repoDir = args[0]
+	} else {
+		repoDir, err = os.Getwd()
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
-	repCfg := cfg.ExampleRepository()
+	repoCfg := cfg.ExampleRepository()
+	repoCfgPath := path.Join(repoDir, baur.RepositoryCfgFile)
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = repCfg.ToFile(path.Join(cwd, baur.RepositoryCfgFile), false)
+	err = repoCfg.ToFile(repoCfgPath, false)
 	if err != nil {
 		if os.IsExist(err) {
-			log.Fatalf("%s already exist\n", baur.RepositoryCfgFile)
+			log.Fatalf("%s already exist\n", repoCfgPath)
 		}
 
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("written example repository configuration to %s\n",
-		baur.RepositoryCfgFile)
+	fmt.Printf("Written repository configuration to %s\n",
+		highlight(repoCfgPath))
+	fmt.Printf("\nNext Steps:\n"+
+		"1. Adapt your '%s' configuration file, ensure the '%s' parameter is correct\n"+
+		"2. Run '%s' to create the baur tables in the PostgreSQL database\n"+
+		"3. Run '%s' to create application configuration files\n"+
+		"Optional: Run '%s' to setup bash completion\n",
+		highlight(baur.RepositoryCfgFile),
+		highlight("postgresql_url"),
+		highlight(cmdInitDb),
+		highlight(cmdInitApp),
+		highlight(cmdInitBashComp))
 }

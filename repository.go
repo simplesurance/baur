@@ -23,21 +23,27 @@ type Repository struct {
 	PSQLURL            string
 }
 
-// FindRepository searches for a repository config file in the current directory
-// and all it's parents. If a repository config file is found it returns a
-// Repository
-func FindRepository() (*Repository, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	rootPath, err := fs.FindFileInParentDirs(cwd, RepositoryCfgFile)
+// FindRepository searches for a repository config file. The search starts in
+// the passed directory and traverses the parent directory down to '/'. The first found repository
+// configuration file is returned.
+func FindRepository(dir string) (*Repository, error) {
+	rootPath, err := fs.FindFileInParentDirs(dir, RepositoryCfgFile)
 	if err != nil {
 		return nil, err
 	}
 
 	return NewRepository(rootPath)
+}
+
+// FindRepositoryCwd searches for a repository config file in the current directory
+// and all it's parents. If a repository config file is found it returns a
+// Repository
+func FindRepositoryCwd() (*Repository, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	return FindRepository(cwd)
 }
 
 // NewRepository reads the configuration file and returns a Repository
