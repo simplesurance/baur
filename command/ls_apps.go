@@ -51,7 +51,7 @@ func init() {
 		"List applications in RFC4180 CSV format")
 
 	lsAppsCmd.Flags().BoolVarP(&lsAppsConfig.quiet, "quiet", "q", false,
-		"Only print application names")
+		"Suppress printing a header and progress dots")
 
 	lsAppsCmd.Flags().BoolVar(&lsAppsConfig.absPaths, "abs-path", false,
 		"Show absolute instead of relative paths")
@@ -155,11 +155,7 @@ func ls(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		if lsAppsConfig.quiet {
-			row = assembleQuietRow(app)
-		} else {
-			row = assembleRow(app, build, buildStatus)
-		}
+		row = assembleRow(app, build, buildStatus)
 
 		if err := formatter.WriteRow(row); err != nil {
 			log.Fatalln(err)
@@ -171,15 +167,7 @@ func ls(cmd *cobra.Command, args []string) {
 	}
 }
 
-func assembleQuietRow(app *baur.App) []interface{} {
-	return []interface{}{app.Name}
-}
-
 func storageQueryIsNeeded() bool {
-	if lsAppsConfig.quiet {
-		return false
-	}
-
 	for _, f := range lsAppsConfig.fields.Fields {
 		switch f {
 		case lsAppBuildStatusParam:
