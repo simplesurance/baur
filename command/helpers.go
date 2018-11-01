@@ -19,8 +19,10 @@ import (
 const envVarPSQLURL = "BAUR_POSTGRESQL_URL"
 
 var (
-	greenHighlight = color.New(color.FgGreen).SprintFunc()
-	underline      = color.New(color.Underline).SprintFunc()
+	greenHighlight  = color.New(color.FgGreen).SprintFunc()
+	redHighlight    = color.New(color.FgRed).SprintFunc()
+	yellowHighlight = color.New(color.FgYellow).SprintFunc()
+	underline       = color.New(color.Underline).SprintFunc()
 	// highlight is a function that highlights parts of strings in the cli output
 	highlight = greenHighlight
 )
@@ -189,5 +191,18 @@ func mustWriteRow(fmt format.Formatter, row []interface{}) {
 	err := fmt.WriteRow(row)
 	if err != nil {
 		log.Fatalln(err)
+	}
+}
+
+func coloredBuildStatus(status baur.BuildStatus) string {
+	switch status {
+	case baur.BuildStatusInputsUndefined:
+		return yellowHighlight(status.String())
+	case baur.BuildStatusExist:
+		return greenHighlight(status.String())
+	case baur.BuildStatusOutstanding:
+		return redHighlight(status.String())
+	default:
+		return status.String()
 	}
 }

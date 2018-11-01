@@ -383,7 +383,7 @@ func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 			res = append(res, app)
 		}
 
-		fmt.Printf("%-*s => %s\n", maxAppNameLen, app.Name, buildStatus.String())
+		fmt.Printf("%-*s => %s\n", maxAppNameLen, app.Name, coloredBuildStatus((buildStatus)))
 	}
 
 	fmt.Println()
