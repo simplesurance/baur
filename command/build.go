@@ -73,12 +73,12 @@ build --verbose ui/shop   build the application in the directory ui/shop with ve
 build --upload ui/shop    build the application in the directory ui/shop and upload it's outputs`
 
 var buildCmd = &cobra.Command{
-	Use:     "build [<PATH>|<APP-NAME>]",
+	Use:     "build [<PATH>|<APP-NAME>]...",
 	Short:   "build applications",
 	Long:    strings.TrimSpace(buildLongHelp),
 	Run:     buildRun,
 	Example: strings.TrimSpace(buildExampleHelp),
-	Args:    cobra.MaximumNArgs(1),
+	Args:    cobra.ArbitraryArgs,
 }
 
 var (
@@ -351,8 +351,30 @@ func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Resu
 	close(finished)
 }
 
+func maxAppNameLen(apps []*baur.App) int {
+	var maxLen int
+
+	for _, app := range apps {
+		if len(app.Name) > maxLen {
+			maxLen = len(app.Name)
+		}
+	}
+
+	return maxLen
+}
+
+func max(i, j int) int {
+	if i > j {
+		return i
+	}
+
+	return j
+}
+
 func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 	var res []*baur.App
+
+	maxAppNameLen := maxAppNameLen(apps) + 4
 
 	for _, app := range apps {
 		buildStatus, _, _ := mustGetBuildStatus(app, storage)
@@ -361,16 +383,10 @@ func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 			res = append(res, app)
 		}
 
-		if !verboseFlag {
-			fmt.Printf(".")
-		}
-
-		log.Debugf("\n%s: build status. %q\n", app, buildStatus)
+		fmt.Printf("%-*s => %s\n", maxAppNameLen, app.Name, buildStatus.String())
 	}
 
-	if !log.DebugEnabled() {
-		fmt.Println()
-	}
+	fmt.Println()
 
 	return res
 }
@@ -390,10 +406,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	}
 
 	if !buildForce {
-		fmt.Printf("identifying applications with outstanding builds")
-		if verboseFlag {
-			fmt.Println()
-		}
+		fmt.Printf("Identifying applications with outstanding builds:\n\n")
 		apps = outstandingBuilds(store, apps)
 	}
 
