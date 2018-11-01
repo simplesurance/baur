@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"os"
-	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -122,9 +121,7 @@ func ls(cmd *cobra.Command, args []string) {
 
 	showProgress := len(apps) >= 5 && !lsAppsConfig.quiet && !lsAppsConfig.csv
 
-	sort.Slice(apps, func(i, j int) bool {
-		return apps[i].Name < apps[j].Name
-	})
+	baur.SortAppsByName(apps)
 
 	for i, app := range apps {
 		var row []interface{}
