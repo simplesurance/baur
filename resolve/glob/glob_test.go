@@ -1,4 +1,4 @@
-package baur
+package glob
 
 import (
 	"os"
@@ -8,6 +8,41 @@ import (
 	"github.com/simplesurance/baur/testutils/fstest"
 	"github.com/simplesurance/baur/testutils/strtest"
 )
+
+func Test_FindAllSubDirs(t *testing.T) {
+	tempdir, cleanupFunc := fstest.CreateTempDir(t)
+	defer cleanupFunc()
+
+	expectedResults := []string{
+		tempdir,
+		filepath.Join(tempdir, "1"),
+		filepath.Join(tempdir, "1/2"),
+		filepath.Join(tempdir, "1/2/3/"),
+	}
+
+	err := os.MkdirAll(filepath.Join(tempdir, "1/2/3"), os.ModePerm)
+	if err != nil {
+		t.Fatal("creating subdirectories failed:", err)
+	}
+
+	res, err := findAllDirs(tempdir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(res) != len(expectedResults) {
+		t.Errorf("unexpected number of elements returned, expected: %q, got: %q",
+			expectedResults, res)
+	}
+
+	for _, er := range expectedResults {
+		if !strtest.InSlice(res, er) {
+			t.Errorf("%q is missing in result %q", er, res)
+		}
+	}
+
+	return
+}
 
 func createFiles(t *testing.T, basedir string, paths []string) {
 	for _, p := range paths {
@@ -21,12 +56,7 @@ func createFiles(t *testing.T, basedir string, paths []string) {
 	}
 }
 
-func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedBuildInput []BuildInput, tc *testcase) {
-	resolvedFiles := []*File{}
-	for _, i := range resolvedBuildInput {
-		resolvedFiles = append(resolvedFiles, i.(*File))
-	}
-
+func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []string, tc *testcase) {
 	if len(resolvedFiles) != len(tc.expectedMatches) {
 		t.Errorf("resolved to %d files (%v), expected %d (%+v)",
 			len(resolvedFiles), resolvedFiles,
@@ -34,9 +64,14 @@ func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedBuildInput 
 	}
 
 	for _, e := range resolvedFiles {
-		if !strtest.InSlice(tc.expectedMatches, e.RepoRelPath()) {
+		relPath, err := filepath.Rel(tempdir, e)
+		if err != nil {
+			t.Errorf("getting Relpath of %q to %q failed", e, tempdir)
+		}
+
+		if !strtest.InSlice(tc.expectedMatches, relPath) {
 			t.Errorf("%q (%q) was returned but is not in expected return slice (%+v), testcase: %+v",
-				e, e.RepoRelPath(), tc.expectedMatches, tc)
+				e, relPath, tc.expectedMatches, tc)
 		}
 	}
 }
@@ -49,7 +84,6 @@ type testcase struct {
 }
 
 func Test_Resolve(t *testing.T) {
-
 	testcases := []*testcase{
 		&testcase{
 			files: []string{
@@ -152,7 +186,7 @@ func Test_Resolve(t *testing.T) {
 
 		createFiles(t, tempdir, tc.files)
 
-		fs := NewFileGlobPath(tempdir, ".", tc.fileSrcGlobPath)
+		fs := NewResolver(tempdir, tc.fileSrcGlobPath)
 		resolvedFiles, err := fs.Resolve()
 		if err != nil {
 			t.Fatal("resolving glob path:", err)

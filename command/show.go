@@ -78,19 +78,44 @@ func showApp(arg string) {
 		}
 	}
 
-	if len(app.BuildInputPaths) != 0 {
+	if app.HasBuildInputs() {
+		var printNewLine bool
+
 		mustWriteRow(formatter, []interface{}{})
 		mustWriteRow(formatter, []interface{}{underline("Inputs:")})
 
-		for i, bi := range app.BuildInputPaths {
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight(bi.Type())})
-			mustWriteRow(formatter, []interface{}{"", "Configuration:", highlight(bi.String())})
+		if len(app.UnresolvedInputs.Files.Paths) > 0 {
+			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("File")})
+			mustWriteRow(formatter, []interface{}{"",
+				"Paths:", highlight(strings.Join(app.UnresolvedInputs.Files.Paths, ", ")),
+			})
 
-			if i+1 < len(app.BuildInputPaths) {
-				mustWriteRow(formatter, []interface{}{})
-			}
+			printNewLine = true
+
 		}
 
+		if len(app.UnresolvedInputs.GitFiles.Paths) > 0 {
+			if printNewLine {
+				mustWriteRow(formatter, []interface{}{})
+			}
+
+			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GitFile")})
+			mustWriteRow(formatter, []interface{}{"",
+				"Paths:", highlight(strings.Join(app.UnresolvedInputs.GitFiles.Paths, ", "))})
+
+			printNewLine = true
+		}
+
+		if len(app.UnresolvedInputs.GolangSources.Paths) > 0 {
+			if printNewLine {
+				mustWriteRow(formatter, []interface{}{})
+			}
+
+			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GolangSources")})
+			mustWriteRow(formatter, []interface{}{"",
+				"Paths:", highlight(strings.Join(app.UnresolvedInputs.GolangSources.Paths, ", "))})
+			mustWriteRow(formatter, []interface{}{"", "GoPath:", highlight(app.UnresolvedInputs.GolangSources.GoPath)})
+		}
 	}
 
 	if err := formatter.Flush(); err != nil {

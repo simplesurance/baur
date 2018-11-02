@@ -39,7 +39,7 @@ func (b BuildStatus) String() string {
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
 func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, *storage.BuildWithDuration, error) {
-	if len(app.BuildInputPaths) == 0 {
+	if !app.HasBuildInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
 

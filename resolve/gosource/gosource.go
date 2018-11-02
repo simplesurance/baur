@@ -1,7 +1,4 @@
-// Package golang determines all Go Source files that are imported by a Go-Files
-// in a directory.
-// Most of the code is based on a slightly modified version of https://github.com/rogpeppe/showdeps
-package golang
+package gosource
 
 import (
 	"os"
@@ -13,19 +10,41 @@ import (
 	"github.com/rogpeppe/godeps/build"
 )
 
-// SrcFiles returns the Go source files in the passed directories plus all
+// Resolver determines all Go Source files that are imported by Go-Files
+// in a directory.
+// The code is based on https://github.com/rogpeppe/showdeps
+type Resolver struct {
+	rootPath string
+	goPath   string
+	goDirs   []string
+}
+
+// NewResolver returns a resolver that resolves all go source files in the
+// GoDirs and it's imports to filepaths.
+// If gopath is an empty string, gopath is determined automatically.
+func NewResolver(path, gopath string, goDirs ...string) *Resolver {
+	return &Resolver{
+		rootPath: path,
+		goPath:   gopath,
+		goDirs:   goDirs,
+	}
+}
+
+// Resolve returns the Go source files in the passed directories plus all
 // source files of the imported packages.
 // Testfiles and stdlib dependencies are ignored.
-func SrcFiles(gopath string, dirs ...string) ([]string, error) {
+func (r *Resolver) Resolve() ([]string, error) {
 	var allFiles []string
 	ctx := build.Default
 
-	if len(gopath) > 0 {
-		ctx.GOPATH = gopath
+	if len(r.goPath) > 0 {
+		ctx.GOPATH = r.goPath
 	}
 
-	for _, d := range dirs {
-		files, err := resolve(ctx, d)
+	for _, dir := range r.goDirs {
+		absPath := filepath.Join(r.rootPath, dir)
+
+		files, err := resolve(ctx, absPath)
 		if err != nil {
 			return nil, err
 		}

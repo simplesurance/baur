@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"fmt"
 	"path"
 	"path/filepath"
 	"sort"
@@ -12,6 +13,10 @@ import (
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
+	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/resolve/gitpath"
+	"github.com/simplesurance/baur/resolve/glob"
+	"github.com/simplesurance/baur/resolve/gosource"
 )
 
 // App represents an application
@@ -22,9 +27,10 @@ type App struct {
 	BuildCmd         string
 	Repository       *Repository
 	Outputs          []BuildOutput
-	BuildInputPaths  []BuildInputPathResolver
-	buildInputs      []BuildInput
 	totalInputDigest *digest.Digest
+
+	UnresolvedInputs cfg.BuildInput
+	buildInputs      []*File
 }
 
 func replaceUUIDvar(in string) string {
@@ -42,42 +48,6 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 	}
 
 	return strings.Replace(in, "$GITCOMMIT", commitID, -1), nil
-}
-
-func (a *App) setInputsFromCfg(r *Repository, cfg *cfg.App) error {
-	sliceLen := len(cfg.Build.Input.Files.Paths)
-
-	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
-		sliceLen++
-	}
-
-	if len(cfg.Build.Input.GolangSources.Paths) > 0 {
-		sliceLen++
-	}
-
-	a.BuildInputPaths = make([]BuildInputPathResolver, 0, sliceLen)
-
-	for _, p := range cfg.Build.Input.Files.Paths {
-		a.BuildInputPaths = append(a.BuildInputPaths, NewFileGlobPath(r.Path, a.RelPath, p))
-	}
-
-	if len(cfg.Build.Input.GitFiles.Paths) > 0 {
-		a.BuildInputPaths = append(a.BuildInputPaths,
-			NewGitPaths(r.Path, a.RelPath, cfg.Build.Input.GitFiles.Paths))
-	}
-
-	if len(cfg.Build.Input.GolangSources.Paths) > 0 {
-		var gopath string
-
-		if len(cfg.Build.Input.GolangSources.GoPath) > 0 {
-			gopath = filepath.Join(a.Path, cfg.Build.Input.GolangSources.GoPath)
-		}
-
-		a.BuildInputPaths = append(a.BuildInputPaths,
-			NewGoSrcDirs(r.Path, a.RelPath, gopath, cfg.Build.Input.GolangSources.Paths))
-	}
-
-	return nil
 }
 
 func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
@@ -157,9 +127,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		return nil, errors.Wrap(err, "processing S3 output declarations failed")
 	}
 
-	if err := app.setInputsFromCfg(repository, cfg); err != nil {
-		return nil, errors.Wrap(err, "processing input declarations failed")
-	}
+	app.UnresolvedInputs = cfg.Build.Input
 
 	return &app, nil
 }
@@ -169,38 +137,151 @@ func (a *App) String() string {
 	return a.Name
 }
 
-// BuildInputs returns all deduplicated BuildInputs.
+func (a *App) pathsToUniqFiles(paths []string) ([]*File, error) {
+	dedupMap := map[string]struct{}{}
+	res := make([]*File, 0, len(paths))
+
+	for _, path := range paths {
+		if _, exist := dedupMap[path]; exist {
+			log.Debugf("%s: removed duplicate Build Input '%s'", a.Name, path)
+			continue
+		}
+		dedupMap[path] = struct{}{}
+
+		relPath, err := filepath.Rel(a.Repository.Path, path)
+		if err != nil {
+			return nil, errors.Wrapf(err, "resolving relative path to '%s' from '%s' failed", path, a.Repository.Path)
+		}
+
+		// TODO: should resolving the relative path be done in
+		// Newfile() instead?
+		res = append(res, NewFile(a.Repository.Path, relPath))
+	}
+
+	return res, nil
+}
+
+func (a *App) resolveGlobFileInputs() ([]string, error) {
+	var res []string
+
+	for _, globPath := range a.UnresolvedInputs.Files.Paths {
+		resolver := glob.NewResolver(a.Path, globPath)
+		paths, err := resolver.Resolve()
+		if err != nil {
+			return nil, errors.Wrap(err, globPath)
+		}
+
+		if len(paths) == 0 {
+			return nil, fmt.Errorf("'%s' matched 0 files", globPath)
+		}
+
+		res = append(res, paths...)
+	}
+
+	return res, nil
+}
+
+func (a *App) resolveGitFileInputs() ([]string, error) {
+	if len(a.UnresolvedInputs.GitFiles.Paths) == 0 {
+		return []string{}, nil
+	}
+
+	resolver := gitpath.NewResolver(a.Path, a.UnresolvedInputs.GitFiles.Paths...)
+	paths, err := resolver.Resolve()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(paths) == 0 {
+		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(a.UnresolvedInputs.GitFiles.Paths, ", "))
+	}
+
+	return paths, nil
+}
+
+func (a *App) resolveGoSrcInputs() ([]string, error) {
+	if len(a.UnresolvedInputs.GolangSources.Paths) == 0 {
+		return []string{}, nil
+	}
+
+	var gopath string
+	if a.UnresolvedInputs.GolangSources.GoPath != "" {
+		gopath = filepath.Join(a.Path, a.UnresolvedInputs.GolangSources.GoPath)
+	}
+
+	resolver := gosource.NewResolver(a.Path, gopath, a.UnresolvedInputs.GolangSources.Paths...)
+	paths, err := resolver.Resolve()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(paths) == 0 {
+		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(a.UnresolvedInputs.GitFiles.Paths, ", "))
+	}
+
+	return paths, nil
+}
+
+func (a *App) resolveBuildInputPaths() ([]string, error) {
+	globPaths, err := a.resolveGlobFileInputs()
+	if err != nil {
+		return nil, errors.Wrapf(err, "resolving File BuildInputs failed")
+	}
+
+	gitPaths, err := a.resolveGitFileInputs()
+	if err != nil {
+		return nil, errors.Wrapf(err, "resolving GitFile BuildInputs failed")
+	}
+
+	goSrcPaths, err := a.resolveGoSrcInputs()
+	if err != nil {
+		return nil, errors.Wrapf(err, "resolving GoLangSources BuildInputs failed")
+	}
+
+	paths := make([]string, 0, len(globPaths)+len(gitPaths)+len(goSrcPaths))
+	paths = append(paths, globPaths...)
+	paths = append(paths, gitPaths...)
+	paths = append(paths, goSrcPaths...)
+
+	return paths, nil
+}
+
+// HasBuildInputs returns true if BuildInputs are defined for the app
+func (a *App) HasBuildInputs() bool {
+	if len(a.UnresolvedInputs.Files.Paths) != 0 {
+		return true
+	}
+
+	if len(a.UnresolvedInputs.GitFiles.Paths) != 0 {
+		return true
+	}
+
+	if len(a.UnresolvedInputs.GolangSources.Paths) != 0 {
+		return true
+	}
+
+	return false
+}
+
+// BuildInputs resolves all build inputs of the app.
+// The BuildInputs are deduplicates before they are returned.
+// If one more resolved path does not match a file an error is generated.
+// If not build inputs are defined, an empty slice and no error is returned.
 // If the function is called the first time, the BuildInputPaths are resolved
 // and stored. On following calls the stored BuildInputs are returned.
-func (a *App) BuildInputs() ([]BuildInput, error) {
+func (a *App) BuildInputs() ([]*File, error) {
 	if a.buildInputs != nil {
 		return a.buildInputs, nil
 	}
 
-	if len(a.BuildInputPaths) == 0 {
-		a.buildInputs = []BuildInput{}
-		return a.buildInputs, nil
+	paths, err := a.resolveBuildInputPaths()
+	if err != nil {
+		return nil, err
 	}
 
-	dedupBuildInputs := map[string]BuildInput{}
-
-	for _, inputPath := range a.BuildInputPaths {
-		buildInputs, err := inputPath.Resolve()
-		if err != nil {
-			return nil, errors.Wrapf(err, "resolving %q failed", inputPath)
-		}
-
-		for _, bi := range buildInputs {
-			if _, exist := dedupBuildInputs[bi.URI()]; exist {
-				continue
-			}
-
-			dedupBuildInputs[bi.URI()] = bi
-		}
-	}
-
-	for _, bi := range dedupBuildInputs {
-		a.buildInputs = append(a.buildInputs, bi)
+	a.buildInputs, err = a.pathsToUniqFiles(paths)
+	if err != nil {
+		return nil, err
 	}
 
 	return a.buildInputs, nil

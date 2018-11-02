@@ -49,7 +49,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	app := mustArgToApp(rep, args[0])
 	writeHeaders := !lsInputsConfig.quiet && !lsInputsConfig.csv
 
-	if len(app.BuildInputPaths) == 0 {
+	if !app.HasBuildInputs() {
 		log.Fatalf("No build inputs are configured in %s of %s", baur.AppCfgFile, app.Name)
 	}
 
@@ -73,7 +73,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	}
 
 	sort.Slice(inputs, func(i, j int) bool {
-		return inputs[i].URI() < inputs[j].URI()
+		return inputs[i].RepoRelPath() < inputs[j].RepoRelPath()
 	})
 
 	for _, input := range inputs {

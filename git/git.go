@@ -9,6 +9,9 @@ import (
 	"github.com/simplesurance/baur/exec"
 )
 
+// ErrNotExist means that one or more files do not exist
+var ErrNotExist = errors.New("file(s) do not exist")
+
 // CommitID return the commit id of HEAD by running git rev-parse in the passed
 // directory
 func CommitID(dir string) (string, error) {
@@ -31,6 +34,7 @@ func CommitID(dir string) (string, error) {
 
 // LsFiles runs git ls-files in dir, passes args as argument and returns the
 // output
+// If no files match, ErrNotExist is returned
 func LsFiles(dir, args string) (string, error) {
 	cmd := "git ls-files --error-unmatch " + args
 
@@ -41,8 +45,7 @@ func LsFiles(dir, args string) (string, error) {
 
 	if exitCode != 0 {
 		if strings.Contains(out, "did not match any file(s)") {
-			splt := strings.Split(out, "Did you forget to 'git add'")
-			return "", errors.New(strings.Replace(splt[0], "\n", " ", -1))
+			return "", ErrNotExist
 		}
 
 		return "", fmt.Errorf("%q exited with code %d, output: %q", cmd, exitCode, out)

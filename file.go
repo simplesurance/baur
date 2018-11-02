@@ -57,11 +57,6 @@ func (f *File) RepoRelPath() string {
 	return f.relPath
 }
 
-// URI calls RepoRelPath()
-func (f *File) URI() string {
-	return f.RepoRelPath()
-}
-
 // String returns it's string representation
 func (f *File) String() string {
 	return f.RepoRelPath()
