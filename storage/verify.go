@@ -14,10 +14,10 @@ import (
 //
 // If the build  passed builds does not contain any outputs, the function
 // returns an empty slice
-func findMostCommonOutputsByDigests(builds []*Build) *Build {
+func findMostCommonOutputsByDigests(builds []*BuildWithDuration) *BuildWithDuration {
 	type entry struct {
 		cnt   int
-		build *Build
+		build *BuildWithDuration
 	}
 
 	var highestCnt int
@@ -84,13 +84,13 @@ const (
 
 // VerifyIssue describes a found issue during verification
 type VerifyIssue struct {
-	Build          *Build
+	Build          *BuildWithDuration
 	Output         *Output
-	ReferenceBuild *Build
+	ReferenceBuild *BuildWithDuration
 	Issue          Issue
 }
 
-func findOutputsWithDifferentDigest(refBuild *Build, builds []*Build) *VerifyIssue {
+func findOutputsWithDifferentDigest(refBuild *BuildWithDuration, builds []*BuildWithDuration) *VerifyIssue {
 	for _, b := range builds {
 		for _, o := range b.Outputs {
 			if !digestIsInOutputSlice(refBuild.Outputs, o.Digest) {
@@ -137,9 +137,14 @@ func VerifySameInputDigestSameOutputs(clt Storer, appName string, startTs time.T
 	}
 
 	for totalInputDigest, buildIDs := range builds {
-		builds, err := clt.GetBuildsWithoutInputs(buildIDs)
+		builds, err := clt.GetBuildsWithoutInputs([]*Filter{
+			&Filter{
+				Field:    FieldBuildID,
+				Operator: OpIN,
+				Value:    buildIDs,
+			}}, nil)
 		if err != nil {
-			return nil, errors.Wrapf(err, "rerieving builds for %s with TotalInputDigest %q failed", appName, totalInputDigest)
+			return nil, errors.Wrapf(err, "retrieving builds for %s with TotalInputDigest %q failed", appName, totalInputDigest)
 		}
 
 		refBuild := findMostCommonOutputsByDigests(builds)

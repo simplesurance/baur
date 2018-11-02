@@ -3,6 +3,9 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+
+	"github.com/lib/pq"
 
 	"github.com/simplesurance/baur/storage"
 )
@@ -12,6 +15,7 @@ var sqlFieldMap = map[storage.Field]string{
 	storage.FieldApplicationName: "application.name",
 	storage.FieldBuildDuration:   "duration",
 	storage.FieldBuildStartTime:  "build.start_timestamp",
+	storage.FieldBuildID:         "build.id",
 }
 
 // sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
@@ -19,6 +23,7 @@ var sqlOperatorMap = map[storage.Op]string{
 	storage.OpEQ: "=",
 	storage.OpGT: ">",
 	storage.OpLT: "<",
+	storage.OpIN: "= ANY",
 }
 
 // sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
@@ -35,6 +40,16 @@ type Query struct {
 	BaseQuery string
 	Filters   []*storage.Filter
 	Sorters   []*storage.Sorter
+}
+
+func toPQType(val interface{}) interface{} {
+	valType := reflect.TypeOf(val).Kind()
+
+	if valType == reflect.Slice || valType == reflect.Array {
+		return pq.Array(val)
+	}
+
+	return val
 }
 
 func (q *Query) compileFilterStr() (filterStr string, args []interface{}, err error) {
@@ -54,8 +69,10 @@ func (q *Query) compileFilterStr() (filterStr string, args []interface{}, err er
 			return "", nil, fmt.Errorf("no postgresql mapping for storage operator %s exists", f.Operator)
 		}
 
-		filterStr += fmt.Sprintf("%s %s $%d", field, op, i+1)
-		args = append(args, f.Value)
+		// the parenthesis around $%d are needed for the ANY query, the
+		// syntax is also valid for all other supported filters
+		filterStr += fmt.Sprintf("%s %s ($%d)", field, op, i+1)
+		args = append(args, toPQType(f.Value))
 
 		if i+1 < len(q.Filters) {
 			filterStr += " AND "

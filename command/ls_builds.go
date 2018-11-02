@@ -112,7 +112,7 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 		formatter = table.New(headers, os.Stdout)
 	}
 
-	builds, err := psql.GetBuilds(filters, sorters)
+	builds, err := psql.GetBuildsWithoutInputs(filters, sorters)
 	if err != nil {
 		log.Fatalln(err)
 	}

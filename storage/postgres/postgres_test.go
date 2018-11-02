@@ -48,9 +48,9 @@ var build = storage.Build{
 }
 
 func TestMain(m *testing.M) {
-	sqlConStr = os.Getenv("DB_URL")
+	sqlConStr = os.Getenv("BAUR_POSTGRESQL_URL")
 	if sqlConStr == "" {
-		fmt.Println("DB_URL environment variable not set")
+		fmt.Println("BAUR_POSTGRESQL_URL environment variable not set")
 		os.Exit(1)
 	}
 

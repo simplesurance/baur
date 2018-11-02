@@ -125,7 +125,7 @@ func ls(cmd *cobra.Command, args []string) {
 
 	for i, app := range apps {
 		var row []interface{}
-		var build *storage.Build
+		var build *storage.BuildWithDuration
 		var buildStatus baur.BuildStatus
 
 		if storageQueryNeeded {
@@ -179,7 +179,7 @@ func storageQueryIsNeeded() bool {
 	return false
 }
 
-func assembleRow(app *baur.App, build *storage.Build, buildStatus baur.BuildStatus) []interface{} {
+func assembleRow(app *baur.App, build *storage.BuildWithDuration, buildStatus baur.BuildStatus) []interface{} {
 	var row []interface{}
 
 	for _, f := range lsAppsConfig.fields.Fields {

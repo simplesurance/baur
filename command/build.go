@@ -502,7 +502,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	fmt.Printf("finished in %s\n", time.Since(startTs))
 }
 
-func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.Build, string) {
+func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.BuildWithDuration, string) {
 	var strBuildID string
 
 	status, build, err := baur.GetBuildStatus(storage, app)
