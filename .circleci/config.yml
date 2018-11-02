@@ -7,7 +7,7 @@ jobs:
       - image: circleci/golang:1
         environment:
           TEST_RESULTS: /tmp/test-results
-          DB_URL: "postgres://root@localhost:5432/baur?sslmode=disable"
+          BAUR_POSTGRESQL_URL: "postgres://root@localhost:5432/baur?sslmode=disable"
 
       - image: circleci/postgres:10
         environment:
@@ -38,7 +38,7 @@ jobs:
       - run:
           name: Creating Database Tables with baur init db
           command:
-            go run -mod=vendor cmd/baur/main.go init db -- $DB_URL
+            go run -mod=vendor cmd/baur/main.go init db -- $BAUR_POSTGRESQL_URL
 
       - run:
           name: Run Tests

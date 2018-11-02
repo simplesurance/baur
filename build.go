@@ -38,7 +38,7 @@ func (b BuildStatus) String() string {
 // storage if a build for this input digest already exist.
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
-func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, *storage.Build, error) {
+func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, *storage.BuildWithDuration, error) {
 	if len(app.BuildInputPaths) == 0 {
 		return BuildStatusInputsUndefined, nil, nil
 	}

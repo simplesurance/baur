@@ -80,6 +80,7 @@ const (
 	FieldApplicationName
 	FieldBuildDuration
 	FieldBuildStartTime
+	FieldBuildID
 )
 
 func (f Field) String() string {
@@ -90,6 +91,8 @@ func (f Field) String() string {
 		return "FieldBuildDuration"
 	case FieldBuildStartTime:
 		return "FieldBuildStartTime"
+	case FieldBuildID:
+		return "FieldBuildID"
 	default:
 		return "FieldUndefined"
 	}
@@ -119,6 +122,9 @@ const (
 	OpGT
 	// OpLT represents a smaller than (<) operator
 	OpLT
+	// OpIN represents a In operator, works like the SQL IN operator, the
+	// corresponding Value field in The filter struct must be a slice
+	OpIN
 )
 
 func (o Op) String() string {
@@ -181,14 +187,16 @@ func (s *Sorter) String() string {
 // Storer is an interface for persisting informations about builds
 type Storer interface {
 	Init() error
-
-	GetLatestBuildByDigest(appName, totalInputDigest string) (*Build, error)
 	Save(b *Build) error
+
 	GetApps() ([]*Application, error)
+
 	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
-	GetBuildWithoutInputs(id int) (*Build, error)
-	GetBuildsWithoutInputs(buildIDs []int) ([]*Build, error)
+	GetLatestBuildByDigest(appName, totalInputDigest string) (*BuildWithDuration, error)
 	GetBuildOutputs(buildID int) ([]*Output, error)
 
-	GetBuilds(filters []*Filter, sorters []*Sorter) ([]*BuildWithDuration, error)
+	// GetBuildWithoutInputs returns a single build, if no build with the ID
+	// exist ErrNotExist is returned
+	GetBuildWithoutInputs(id int) (*BuildWithDuration, error)
+	GetBuildsWithoutInputs(filters []*Filter, sorters []*Sorter) ([]*BuildWithDuration, error)
 }
