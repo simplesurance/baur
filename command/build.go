@@ -363,14 +363,6 @@ func maxAppNameLen(apps []*baur.App) int {
 	return maxLen
 }
 
-func max(i, j int) int {
-	if i > j {
-		return i
-	}
-
-	return j
-}
-
 func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 	var res []*baur.App
 
