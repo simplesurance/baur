@@ -10,7 +10,9 @@
 		"golint",
 		"ineffassign",
 		"misspell",
-		"vet"
+		"vet",
+		"goconst",
+		"gosec"
 	],
 	"Linters": {
 		"goimports": {"Command": "goimports -l -local github.com/simplesurance"}
