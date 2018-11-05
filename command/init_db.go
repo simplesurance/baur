@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,9 +42,12 @@ func initDb(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		repo, err := findRepository()
 		if err != nil {
-			log.Fatalf("could not find '%s' repository config file.\n"+
-				"Run '%s' first or pass the Postgres URL as argument.",
-				highlight(baur.RepositoryCfgFile), highlight(cmdInitRepo))
+			if os.IsNotExist(err) {
+				log.Fatalf("could not find '%s' repository config file.\n"+
+					"Run '%s' first or pass the Postgres URL as argument.",
+					highlight(baur.RepositoryCfgFile), highlight(cmdInitRepo))
+			}
+			log.Fatalln(err)
 		}
 
 		dbURL = repo.PSQLURL
