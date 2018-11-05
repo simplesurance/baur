@@ -1,194 +1,161 @@
-# baur
-baur manages builds and artifacts in mono repositories.
+# baur [![CircleCI](https://circleci.com/gh/simplesurance/baur.svg?style=svg&circle-token=8bc17577e45f5246cba2e1ea199ae504c8700eb6)](https://circleci.com/gh/simplesurance/baur)
 
-When Git repositories contain only a single applications the CI/CD jobs can be
-triggered on every new commit.
-Monorepositories can contain hundreds of apps and it becomes inefficient and
-slow to building, test and deploy all applications on every commit.
-A solution is required to detect which applications have changed and run CI/CD
-tasks only for those.
+baur is a build management tool for Git based
+[monolithic repositories](https://en.wikipedia.org/wiki/Monorepo).
 
-baur will implement:
-- discovery of applications in a repository,
-- management to store and retrieve build artifacts for applications,
-- detect if build artifacts for an application version already exist or if it's
-  need to be build
+Developers specify in a [TOML](https://github.com/toml-lang/toml) configuration
+- what the inputs for the build process are,
+- which command must be run to build the application,
+- which outputs are generated from the build,
+- and where they should be uploaded to.
 
-baur makes certain Assumptions:
-- the baur repository is part of a git repository,
-- an application directory only contains one application,
-- an application can be build by running a single command,
-  a build has to produce 1 or more build artifacts
+baur detects which applications need to be build by calculating digests of the
+application source files and keeps track of previous build artifacts in a
+database.
 
+It does not implement a full-fledged build system like
+[Bazel](https://github.com/bazelbuild/bazel) or
+[Please](https://github.com/thought-machine/please), instead you can continue
+use the build tool of your choice.
 
-## Build
-To build baur run `make`.
+## Content
+* [Example Repository](#Example-Repository)
+* [Quickstart](#Quickstart)
+* [Key Features](#Key-Features)
+* [Why?](#Why)
+* [Documentation](#Documentation)
+* [Graphana Dashboard](#Graphana-Dashboard)
+* [Status](#Status)
 
-## Dependencies
-- The git command lines tools are used to retrieve information in a baur
-  repository. The tools must be installed and be in one of the paths of the
-  `$PATH` environment variable.
+## Example Repository
+You can find an example monorepository that uses baur at
+<https://github.com/simplesurance/baur-example>.
 
-## Quickstart Guide
-The chapter describes a quick way to setup baur and dependencies for
-experimenting with it locally. It's not suitable for running baur in production.
+## Quickstart
+The chapter describes a quick way to setup baur for experimenting with it.
+For setting it up in a production environment see the chapter
+[Production Setup](https://github.com/simplesurance/baur/wiki/Configuration#production-setup).
 
+Install baur by either:
+- downloading a release archive from
+  [Release Page](https://github.com/simplesurance/baur/releases) and copying
+  `baur` into your `$PATH` or
+- install the latest development version by running
+```
+go get -u github.com/simplesurance/baur`
+```
 
-1. Install baur by either:
-  - downloading and installing a release archive from https://github.com/simplesurance/baur/releases or
-  - running `go get -u https://github.com/simplesurance/baur` to install the
-    latest development version
-2. Start a PostgreSQL server in a docker container:
-   `docker run -p 5432:5432 -e POSTGRES_DB=baur postgres:latest`
-3. Create the baur tables in the PostgreSQL database:
-   `baur init db postgres://postgres@localhost:5432/baur?sslmode=disable`
+baur uses a PostgreSQL database to store information about builds, the quickest
+way to setup a PostgreSQL for local testing is with docker:
+```
+docker run -p 5432:5432 -e POSTGRES_DB=baur postgres:latest
+```
 
-## Configuration
-1. Setup your PostgreSQL baur database
-1. Create a `baur.toml` file in the root of your repository by running
-   `baur init repo` in the repository root.
+Afterwards your are ready to create your baur repository configuration.
+Run in the root directory of your Git repository:
+```
+baur init repo
+```
+and then follow the printed steps.
 
-2. Adapt the configuration files to your needs:
-   - Add paths containing your applications to the `application_dirs` parameter.
-   - set the `command` parameter in the `Build` section to the command that
-     should be run to build your application directories
-   - set the `postgresql_url` to a valid connection string to a database that
-     will store information about builds, it's inputs and outputs.
-     If you do not want to store the password of your database user in the
-     `baur.toml` file. You can also put it in a `~/.pgpass` file
-    (https://www.postgresql.org/docs/9.3/static/libpq-pgpass.html).
-   - create the tables in the database by running the SQL-script
-     `storage/postgres/migrations/0001.up.sql`
+After creating the repository config, the database tables and the first
+configs for your applications you are ready to play around with baur.
+Some commands to start with are:
 
-2. Run `baur init app` in your application directories to create an `.app.toml`
-   file.
-   Every application that is build via `baur` must have an `.app.toml` file.
-
-3. Specify in your `.app.toml` files the inputs and outputs of builds.
-
-### Environment Variables
-If a configuration is set via an environment variable it has the highest
-precedence and overwrites the configuration set by other means.
-The following environment variables are supported:
-
-- `$BAUR_POSTGRESQL_URL`
-- `$BAUR_DOCKER_USERNAME`
-- `$BAUR_DOCKER_PASSWORD`
-- S3 environment variables described at https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
-
-### Application configs (`app.toml`)
-#### Build Inputs
-To enable baur to reliably detect if an application needs to be rebuild, it
-tracks all influencing factors as build inputs.
-Things that can change the output of an build can be e.g.:
-- build flags change
-- source file change,
-- the build tools change (e.g. update to a newer gcc version),
-- a docker image changes that is used to build the application
-
-It's important that the list of build inputs and outputs is complete. Otherwise
-it happens that baur won't rebuild an application despite it changed.
-
-Build Inputs must be configured per application in the `app.toml` file with the
-following directives
-
-##### `[Build.Input.GitFiles]`
-It's the preferred way to specify input files:
-- it's faster for large directories then `[Build.Input.Files]`,
-- it ignores untracked files like temporary build files that are in the
-    repository and probably not affect the build result,
-
-The baur repository has to be part of a checked out git repository to work.
-
-It's `paths` parameter accepts a list git path patterns that are relative to the
-application directory.
-It only matches files that are tracked by the git repository, untracked files
-are ignored. Modified tracked files are considered.
-
-##### `[Build.Input.Files]`
-The section has a `paths` parameter that accepts a list of glob paths to source files.
-
-To make it easier to track changes in the build environment it's advised to
-build application in docker containers via a build script, reference the image
-by it's digest in the script and add the build-script as build input.
-
-#### `[Build.Input.GolangSources]`
-Allows to add Golang applications as inputs.
-The `paths` parameters take a list of paths to directories relative to the
-application directory.
-In every directory `.go` files are discovered and the files they depend on.
-Imports in the `.go` files are evaluated, resolved to files and tracked as build
-inputs.
-Go test files and imports belong to the Golang stdlib are ignored.
-
-To be able to resolve the imports either the `GOPATH` environment variable must
-be set correctly or alternatively the `go_path` parameter in the config section
-must be set to the `GOPATH`. The `go_path` expects a path relative to the
-application directory.
-
-### Build Outputs
-Build outputs are the results that are produced by a build. They can be
-described in the `[Build.Output]` section.
-Baur supports to upload build results to S3 and docker images to a remote docker
-repository.
-Authentication information for output repositories are either read from the
-environment variables `BAUR_DOCKER_USERNAME` and `BAUR_DOCKER_PASSWORD` or read
-from a Docker config file.
-The following files are checked in the order listed:
-- $DOCKER_CONFIG/config.json if DOCKER_CONFIG set in the environment,
-- $HOME/.docker/config.json
-- $HOME/.dockercfg
-
-
-S3 configuration parameters are the same then for the aws CLI tool.
-See https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html.
-
-The `dest_file` parameter in the `[Build.Output.File.S3Upload]` sections and the
-`tag` parameter of `[Build.Output.DockerImage.RegistryUpload]` sections support
-variables in their values.
-The variables are replaced by baur during a run.
-
-The following variables are supported:
-- `$APPNAME` - is replaced with the name of the application
-- `$UUID` - is replaced with a generated UUID
-- `$GITCOMMIT` - is replaced with the current Git commit ID.
-                 The `.baur.toml` file must be part of a git repository and the
-                 `git` command must be in one of the directories in the `$PATH`
-                 environment variable.
-
-## Examples
-- List all applications in the repository with their build status:
-  `baur ls apps`
+- List applications in the repository with their build status:
+  ```
+  baur ls apps
+  ```
 - Build all applications with outstanding builds, upload their artifacts and
   records the results:
-  `baur build --upload`
-- Show information about an application called `currency-service`:
-  `baur show app currency-service`
-- Show inputs of an application called `claim-service` with their digests:
-  `baur show inputs --digests claim-server`
+  ```
+  baur build --upload
+  ```
+- List recorded builds:
+  ```
+  baur ls builds all
+  ```
+- Show information about an application called "currency-service":
+  ```
+  baur show currency-service
+  ```
+- Show inputs with their digests of an application called "shop-api":
+  ```
+  baur ls inputs --digests shop-api
+  ```
 
-## Commands
-### `baur verify`
-Verify can be used to check for inconsistencies in past builds.
-It can find builds that have the same totalinputdigest but produced different
-artifacts. This can either mean that the build output it not reproducible (same
-inputs don't produce the same output) or that the specified Inputs are not
-complete.
-The command only compares the digests of file outputs. Docker container digest
-always differ when the container is rebuild.
+To get more information about a command pass the `--help` parameter to baur.
 
-To analyze differences in build outputs the [https://diffoscope.org/](diffoscope)
-tool can be handy.
+## Key Features:
+* **Detecting Changed Applications**
+The inputs of applications are specified in the `.app.toml` config file for each
+application. baur calculates a SHA384 digest for all inputs and stores the
+digest in the database when an application was build and its artifacts uploaded
+(`baur build --upload`).
+The digest is used to detect if a previous build for the same input files exists.
+If a build exist, the application does not need to be rebuild otherwise a build
+is done.
+This allows to selectively run applications through a CI pipeline that changed
+in a given commit.
+This approach also prevents that applications are unnecessarily rebuild if
+commits are reverted in the Git repository.
 
-## Development
-### Create new Release
-1. Update the version number in the `ver` file and commit the change.
-2. Run `make release` to create the release `tar.xz` archives.
-3. Create a new git tag (follow the instructions printed by `make release`).
-4. Push the `ver` file change to the remote git repository.
-5. Create a new release on github.com and upload the binaries.
+* **Artifact Upload to S3 and Docker Registries**
+baur supports to upload File artifacts that are produced by a build to S3
+buckets and produced docker images to docker registries.
 
-## CI Status: [![CircleCI](https://circleci.com/gh/simplesurance/baur.svg?style=svg&circle-token=8bc17577e45f5246cba2e1ea199ae504c8700eb6)](https://circleci.com/gh/simplesurance/baur)
+* **Managing Applications:**
+baur can be used as management tool in monorepositories to list applications and
+find their locations.
+
+* **CI Optimized:**
+baur is aimed to be run in CI environments and allows to print relevant output
+in CSV format to be easily parsed by scripts.
+
+* **Build Statistics:**
+The data that baur stores in it's PostgreSQL database allows to graph statistics
+about builds like which application changes most, which produces the biggest
+build artifacts, which build runs the longest.
+
+## Why?
+Monorepositories come with new challenges in CI environments.
+When a Git repository contains only a single applications, every commit can
+trigger the whole CI workflow of builds, checks, tests and deployments.
+This is not effective anymore in Monorepositories when an repository can contain
+hundreds of different applications. Running the whole CI flow for all
+applications on every commit takes a lot of time and wastes resources.
+Therefore the CI environment has to detect which application changed to only run
+those through the CI flow.
+
+When all build inputs per applications are isolated in directories and CI
+artifacts are always produced for the reference branches, the git-history can be
+used to determine which files changed. Simpe Shell-Scripts or the
+[mbt](https://github.com/mbtproject/mbt) build tool can be used for it.
+
+When application in the monorepository share libraries, Protobuf or other files
+these solutions are not sufficient anymore.
+Full-fledged build tools like Bazel and pants exist to address those issues in
+Monorepositories but they come with complex configurations and complex usage.
+Developers have to get used to define the build steps in those tools instead of
+relying on their more simple favorite build tools.
+
+baur solves these problems by concentrating on tracking build inputs and build
+outputs while enabling to use the build tool of your choice.
 
 
-[modeline]: # ( vi:set tabstop=4 shiftwidth=4 tw=80 expandtab spell spl=en_us : )
+## Documentation
+Documentation is available in the
+[wiki](https://github.com/simplesurance/baur/wiki).
+
+## Graphana Dashboard
+![Graphana baur Dashboard](https://github.com/simplesurance/baur/wiki/media/graphana-dashboard.png "Graphana baur Dashboard")
+
+The dashboards is available at: <https://grafana.com/dashboards/8835>
+
+## Status
+baur is used in production CI setups since the first version.
+It's not considered as API-Stable yet, interface breaking changes can happen in
+any release.
+
+We are happy to receive Pull Requests, Feature Requests and Bug Reports to
+further improve baur.
