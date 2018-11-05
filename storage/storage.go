@@ -101,7 +101,6 @@ func (f Field) String() string {
 // Input represents a source of an artifact
 type Input struct {
 	URI    string
-	Type   ArtifactType
 	Digest string
 }
 

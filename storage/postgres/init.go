@@ -47,7 +47,6 @@ CREATE TABLE upload (
 CREATE TABLE input (
 	id SERIAL PRIMARY KEY,
 	uri TEXT NOT NULL,
-	type TEXT NOT NULL,
 	digest TEXT NOT NULL,
 	CONSTRAINT input_uniq UNIQUE(uri, digest)
 );
