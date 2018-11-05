@@ -1,5 +1,3 @@
-# vi:set tabstop=8 sts=8 shiftwidth=8 noexpandtab tw=80:
-
 GIT_COMMIT := $(shell git rev-parse HEAD)
 GIT_DIRTY := $(if $(shell git diff-files),wip)
 VERSION := $(shell cat ver)
