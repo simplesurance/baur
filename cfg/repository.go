@@ -20,20 +20,20 @@ const (
 
 // Repository contains the repository configuration.
 type Repository struct {
-	Discover      Discover `comment:"application discovery settings"`
-	ConfigVersion int      `toml:"config_version" comment:"internal, version of baur cfg file"`
-	Database      Database `toml:"Database" comment:"configures the database in which build informations are stored"`
+	Discover      Discover `comment:"Application discovery settings"`
+	ConfigVersion int      `toml:"config_version" comment:"Version of baur configuration format"`
+	Database      Database `toml:"Database"`
 }
 
 // Database contains database configuration
 type Database struct {
-	PGSQLURL string `toml:"postgresql_url" comment:"connection string to the PostgreSQL database, see https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING"`
+	PGSQLURL string `toml:"postgresql_url" comment:"Connection string to the PostgreSQL database, see https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING"`
 }
 
 // Discover stores the [Discover] section of the repository configuration.
 type Discover struct {
-	Dirs        []string `toml:"application_dirs" comment:"list of directories containing applications, example: ['go/code', 'shop/']"`
-	SearchDepth int      `toml:"search_depth" comment:"specifies the max. directory the application search recurses into subdirectories"`
+	Dirs        []string `toml:"application_dirs" comment:"List of directories containing applications, example: ['go/code', 'shop/']"`
+	SearchDepth int      `toml:"search_depth" comment:"Descend at most SearchDepth levels to find application configs"`
 }
 
 // RepositoryFromFile reads the repository config from a file and returns it.

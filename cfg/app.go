@@ -12,71 +12,70 @@ import (
 
 // App stores an application configuration.
 type App struct {
-	Name  string `toml:"name" comment:"name of the application"`
+	Name  string `toml:"name" comment:"Name of the application"`
 	Build Build  `toml:"Build"`
 }
 
 // Build the build section
 type Build struct {
-	Command string      `toml:"command" commented:"false" comment:"command to build the application"`
-	Input   BuildInput  `comment:"specifies the inputs for an build, an input is everything that affects the build output"`
-	Output  BuildOutput `comment:"specifies the outputs that the application build produces"`
+	Command string      `toml:"command" commented:"false" comment:"Command to build the application"`
+	Input   BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
+	Output  BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
 }
 
 // BuildInput contains information about build inputs
 type BuildInput struct {
-	Files         FileInputs    `comment:"file paths, e.g: source files, the used compiler binary"`
-	GitFiles      GitFileInputs `comment:"If the baur repository is part of a git repository, this option can be used to specify source files tracked by git."`
-	GolangSources GolangSources `comment:"Directories containing Golang applications, all source files to build the application are located and added as inputs (excluding stdlib and test files)"`
+	Files         FileInputs    `comment:"Inputs specified by file glob paths"`
+	GitFiles      GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
+	GolangSources GolangSources `comment:"Inputs specified by directories containing Golang applications"`
 }
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
-	Paths  []string `toml:"paths" comment:"paths to directories containing Golang source files" commented:"true"`
-	GoPath string   `toml:"go_path" comment:"specifies the GOPATH, that is used for source file discovery, if not set or empty the current GOPATH is used. The go_path is relative to the application directory." commented:"true"`
+	Paths  []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored." commented:"true"`
+	GoPath string   `toml:"go_path" comment:"GOPATH to use when discovering the source files\n The path is relative to the application directory\n If not set or empty the default GOPATH is used" commented:"true"`
 }
 
 // FileInputs describes a file source
 type FileInputs struct {
-	Paths []string `toml:"paths" commented:"false" comment:"relative path to source files,  supports Golang Glob syntax (https://golang.org/pkg/path/filepath/#Match) and ** to match files recursively"`
+	Paths []string `toml:"paths" commented:"false" comment:"Relative path to source files,\n supports Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match) and\n ** to match files recursively"`
 }
 
 // GitFileInputs describes source files that are in the git repository by git
 // pathnames
 type GitFileInputs struct {
-	// TODO: improve description
-	Paths []string `toml:"paths" commented:"false" comment:"Specifies relative paths to source files that are tracked in the git repository.\n All paths must be inside the git repository.\n All patterns in pathnames are supported that git commands support.\n Files that are not tracked by the git repository are ignored. Tracked but modified files are matched."`
+	Paths []string `toml:"paths" commented:"true" comment:"Relative paths to source files.\n Only files tracked by Git that are not in the .gitignore file are matched.\n The same patterns that git ls-files supports can be used."`
 }
 
 // BuildOutput the build output section
 type BuildOutput struct {
-	File        []*FileOutput        `comment:"a file that is produces by the build"`
-	DockerImage []*DockerImageOutput `comment:"a docker image that is produced by the build"`
+	File        []*FileOutput        `comment:"Files that are produces by the [Build.command]"`
+	DockerImage []*DockerImageOutput `comment:"Docker images that are produced by the [Build.command]"`
 }
 
 // FileOutput describes where a file artifact should be uploaded to
 type FileOutput struct {
-	Path     string   `toml:"path" comment:"path of the artifact" commented:"true"`
-	S3Upload S3Upload `comment:"defines an S3 location that the file is uploaded to"`
+	Path     string   `toml:"path" comment:"Path relative to the application directory" commented:"true"`
+	S3Upload S3Upload `comment:"S3 location where the file is uploaded to"`
 }
 
 // DockerImageRegistryUpload holds information about where the docker image
 // should be uploaded to
 type DockerImageRegistryUpload struct {
-	Repository string `toml:"repository" comment:"docker repository path, format: [<server[:port]>/]<owner>/<repository>:<tag>" commented:"true"`
-	Tag        string `toml:"tag" comment:"tag that is applied to the image, valid variables: $APPNAME, $UUID, $GITCOMMIT"  commented:"true"`
+	Repository string `toml:"repository" comment:"Repository path, format: [<server[:port]>/]<owner>/<repository>:<tag>" commented:"true"`
+	Tag        string `toml:"tag" comment:"Tag that is applied to the image, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
 }
 
 // S3Upload contains S3 upload information
 type S3Upload struct {
-	Bucket   string `toml:"bucket" comment:"S3 bucket name" commented:"true"`
-	DestFile string `toml:"dest_file" comment:"name of the uploaded file in the repository, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
+	Bucket   string `toml:"bucket" commented:"true"`
+	DestFile string `toml:"dest_file" comment:"Remote File Name, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
 }
 
 // DockerImageOutput describes where a docker container is uploaded to
 type DockerImageOutput struct {
-	IDFile         string                    `toml:"idfile" comment:"path to a text file that exist after the build and contains the docker image id (docker build --iidfile)" commented:"true"`
-	RegistryUpload DockerImageRegistryUpload `comment:"specifies where the image is uploaded to"`
+	IDFile         string                    `toml:"idfile" comment:"Path to a file that is created by [Build.Command] and contains the image ID of the produced image (docker build --iidfile)" commented:"true"`
+	RegistryUpload DockerImageRegistryUpload `comment:"Registry repository the image is uploaded to"`
 }
 
 // ExampleApp returns an exemplary app cfg struct with the name set to the given value
@@ -91,7 +90,7 @@ func ExampleApp(name string) *App {
 					Paths: []string{".app.toml"},
 				},
 				GitFiles: GitFileInputs{
-					Paths: []string{"."},
+					Paths: []string{"Makefile"},
 				},
 				GolangSources: GolangSources{
 					Paths:  []string{"."},
@@ -101,10 +100,17 @@ func ExampleApp(name string) *App {
 			Output: BuildOutput{
 				File: []*FileOutput{
 					&FileOutput{
-						Path: fmt.Sprintf("dist/%s.tar.xz", name),
+						Path: fmt.Sprintf("dist/%s-worker.tar.xz", name),
 						S3Upload: S3Upload{
-							Bucket:   "sisu-resources/binaries/sisu",
-							DestFile: "$APPNAME-$GITCOMMIT.tar.xz",
+							Bucket:   "go-artifacts/",
+							DestFile: "$APPNAME-worker-$GITCOMMIT.tar.xz",
+						},
+					},
+					&FileOutput{
+						Path: fmt.Sprintf("dist/%s-server.tar.xz", name),
+						S3Upload: S3Upload{
+							Bucket:   "go-artifacts/",
+							DestFile: "$APPNAME-server-$GITCOMMIT.tar.xz",
 						},
 					},
 				},
@@ -112,7 +118,7 @@ func ExampleApp(name string) *App {
 					&DockerImageOutput{
 						IDFile: fmt.Sprintf("%s-container.id", name),
 						RegistryUpload: DockerImageRegistryUpload{
-							Repository: fmt.Sprintf("simplesurance/%s", name),
+							Repository: fmt.Sprintf("my-company/%s", name),
 							Tag:        "$GITCOMMIT",
 						},
 					},
