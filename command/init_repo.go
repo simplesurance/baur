@@ -56,7 +56,7 @@ func initRepo(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("Written repository configuration to %s\n",
+	fmt.Printf("Repository configuration was written to %s\n",
 		highlight(repoCfgPath))
 	fmt.Printf("\nNext Steps:\n"+
 		"1. Adapt your '%s' configuration file, ensure the '%s' parameter is correct\n"+
