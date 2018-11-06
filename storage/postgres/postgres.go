@@ -160,3 +160,26 @@ func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs ti
 
 	return res, err
 }
+
+// GetBuild returns what the name says
+func (c *Client) GetBuild(id int) (build *storage.BuildWithDuration, err error) {
+	build = &storage.BuildWithDuration{}
+	row := c.Db.QueryRow(`SELECT build.id, build.start_timestamp, build.stop_timestamp, 
+       build.total_input_digest, vcs.commit, vcs.dirty,
+       (EXTRACT(EPOCH FROM (build.stop_timestamp - build.start_timestamp))::bigint * 1000000000) as duration
+       FROM build LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
+       WHERE build.id = $1`, id)
+	if err = row.Scan(
+		&build.ID,
+		&build.StartTimeStamp,
+		&build.StopTimeStamp,
+		&build.TotalInputDigest,
+		&build.VCSState.CommitID,
+		&build.VCSState.IsDirty,
+		&build.Duration,
+	); err != nil {
+		return nil, errors.Wrap(err, "query error")
+	}
+
+	return
+}

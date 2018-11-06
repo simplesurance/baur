@@ -11,6 +11,7 @@ import (
 )
 
 // sqlFieldMap contains a mapping from storage.Fields to table column names
+// todo inject fieldsMap in Compile() so one can set these manually each time
 var sqlFieldMap = map[storage.Field]string{
 	storage.FieldApplicationName: "application.name",
 	storage.FieldBuildDuration:   "duration",

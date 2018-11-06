@@ -192,9 +192,12 @@ type Storer interface {
 
 	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
 	GetLatestBuildByDigest(appName, totalInputDigest string) (*BuildWithDuration, error)
+
 	GetBuildOutputs(buildID int) ([]*Output, error)
 
-	// GetBuildWithoutInputs returns a single build, if no build with the ID
+	GetBuild(id int) (*BuildWithDuration, error)
+
+	// GetBuildWithoutInputsOutputs returns a single build, if no build with the ID
 	// exist ErrNotExist is returned
 	GetBuildWithoutInputsOutputs(id int) (*BuildWithDuration, error)
 	GetBuildsWithoutInputsOutputs(filters []*Filter, sorters []*Sorter) ([]*BuildWithDuration, error)

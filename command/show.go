@@ -122,6 +122,7 @@ func showApp(arg string) {
 		log.Fatalln(err)
 	}
 }
+
 func showBuild(buildID int) {
 	var formatter format.Formatter
 

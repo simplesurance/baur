@@ -132,13 +132,13 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 			}
 		}
 
-		if err := formatter.WriteRow(row); err != nil {
+		if err = formatter.WriteRow(row); err != nil {
 			log.Fatalln(err)
 		}
 
 	}
 
-	if err := formatter.Flush(); err != nil {
+	if err = formatter.Flush(); err != nil {
 		log.Fatalln(err)
 	}
 }
