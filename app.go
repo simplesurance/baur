@@ -216,7 +216,7 @@ func (a *App) resolveGoSrcInputs() ([]string, error) {
 	}
 
 	if len(paths) == 0 {
-		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(a.UnresolvedInputs.GitFiles.Paths, ", "))
+		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(a.UnresolvedInputs.GolangSources.Paths, ", "))
 	}
 
 	return paths, nil
