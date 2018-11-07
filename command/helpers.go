@@ -169,10 +169,10 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 		}
 
 		if len(apps) == 0 {
-			log.Fatalf("could not find any applications"+
+			log.Fatalf("could not find any applications\n"+
 				"- ensure the [Discover] section is correct in %s\n"+
 				"- ensure that you have >1 application dirs "+
-				"containing a %s file\n",
+				"containing a %s file",
 				repo.CfgPath, baur.AppCfgFile)
 		}
 
