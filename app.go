@@ -116,7 +116,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		Path:       path.Dir(cfgPath),
 		RelPath:    appRelPath,
 		Name:       cfg.Name,
-		BuildCmd:   cfg.Build.Command,
+		BuildCmd:   strings.TrimSpace(cfg.Build.Command),
 	}
 
 	if err := app.setDockerOutputsFromCfg(cfg); err != nil {
