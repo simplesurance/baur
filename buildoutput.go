@@ -2,13 +2,13 @@ package baur
 
 import (
 	"github.com/simplesurance/baur/digest"
-	"github.com/simplesurance/baur/upload"
+	"github.com/simplesurance/baur/upload/scheduler"
 )
 
 // BuildOutput is an interface for build artifacts
 type BuildOutput interface {
 	Exists() bool
-	UploadJob() (upload.Job, error)
+	UploadJob() (scheduler.Job, error)
 	Name() string
 	String() string
 	LocalPath() string

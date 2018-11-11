@@ -1,14 +1,13 @@
 package baur
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/fs"
-	"github.com/simplesurance/baur/upload"
+	"github.com/simplesurance/baur/upload/scheduler"
 )
 
 // DockerArtifact is a docker container artifact
@@ -38,13 +37,13 @@ func (d *DockerArtifact) ImageID() (string, error) {
 }
 
 // UploadJob returns a upload.DockerJob for the artifact
-func (d *DockerArtifact) UploadJob() (upload.Job, error) {
+func (d *DockerArtifact) UploadJob() (scheduler.Job, error) {
 	id, err := d.ImageID()
 	if err != nil {
 		return nil, err
 	}
 
-	return &upload.DockerJob{
+	return &scheduler.DockerJob{
 		ImageID:    id,
 		Repository: d.Repository,
 		Tag:        d.Tag,
@@ -93,7 +92,7 @@ func (d *DockerArtifact) Size(b *BuildOutputBackends) (int64, error) {
 		return -1, errors.Wrap(err, "reading imageID from file failed")
 	}
 
-	return b.DockerClt.Size(context.Background(), id)
+	return b.DockerClt.Size(id)
 }
 
 // Type returns "docker"
