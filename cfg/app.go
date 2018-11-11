@@ -107,10 +107,10 @@ func ExampleApp(name string) *App {
 						},
 					},
 					&FileOutput{
-						Path: fmt.Sprintf("dist/%s-server.tar.xz", name),
+						Path: fmt.Sprintf("dist/%s.tar.xz", name),
 						S3Upload: S3Upload{
 							Bucket:   "go-artifacts/",
-							DestFile: "$APPNAME-server-$GITCOMMIT.tar.xz",
+							DestFile: "$APPNAME-$GITCOMMIT.tar.xz",
 						},
 					},
 				},
