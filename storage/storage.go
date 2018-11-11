@@ -196,6 +196,6 @@ type Storer interface {
 
 	// GetBuildWithoutInputs returns a single build, if no build with the ID
 	// exist ErrNotExist is returned
-	GetBuildWithoutInputs(id int) (*BuildWithDuration, error)
-	GetBuildsWithoutInputs(filters []*Filter, sorters []*Sorter) ([]*BuildWithDuration, error)
+	GetBuildWithoutInputsOutputs(id int) (*BuildWithDuration, error)
+	GetBuildsWithoutInputsOutputs(filters []*Filter, sorters []*Sorter) ([]*BuildWithDuration, error)
 }

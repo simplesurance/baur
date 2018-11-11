@@ -137,7 +137,7 @@ func VerifySameInputDigestSameOutputs(clt Storer, appName string, startTs time.T
 	}
 
 	for totalInputDigest, buildIDs := range builds {
-		builds, err := clt.GetBuildsWithoutInputs([]*Filter{
+		builds, err := clt.GetBuildsWithoutInputsOutputs([]*Filter{
 			&Filter{
 				Field:    FieldBuildID,
 				Operator: OpIN,

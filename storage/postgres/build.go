@@ -18,8 +18,8 @@ FROM application
 JOIN build ON application.id = build.application_id
 LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id`
 
-// GetBuildsWithoutInputs returns builds from the database
-func (c *Client) GetBuildsWithoutInputs(filters []*storage.Filter, sorters []*storage.Sorter) (
+// GetBuildsWithoutInputsOutputs returns builds from the database
+func (c *Client) GetBuildsWithoutInputsOutputs(filters []*storage.Filter, sorters []*storage.Sorter) (
 	[]*storage.BuildWithDuration, error) {
 
 	var builds []*storage.BuildWithDuration
@@ -118,9 +118,9 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*stor
 	return build, err
 }
 
-// GetBuildWithoutInputs retrieves a single build from the database
-func (c *Client) GetBuildWithoutInputs(id int) (*storage.BuildWithDuration, error) {
-	builds, err := c.GetBuildsWithoutInputs([]*storage.Filter{
+// GetBuildWithoutInputsOutputs retrieves a single build from the database
+func (c *Client) GetBuildWithoutInputsOutputs(id int) (*storage.BuildWithDuration, error) {
+	builds, err := c.GetBuildsWithoutInputsOutputs([]*storage.Filter{
 		&storage.Filter{
 			Field:    storage.FieldBuildID,
 			Operator: storage.OpEQ,

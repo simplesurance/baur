@@ -128,7 +128,7 @@ func showBuild(buildID int) {
 	repo := MustFindRepository()
 	storageClt := MustGetPostgresClt(repo)
 
-	build, err := storageClt.GetBuildWithoutInputs(int(buildID))
+	build, err := storageClt.GetBuildWithoutInputsOutputs(int(buildID))
 	if err != nil {
 		if err == storage.ErrNotExist {
 			log.Fatalf("build with id %d does not exist\n", buildID)
@@ -137,11 +137,10 @@ func showBuild(buildID int) {
 		log.Fatalln(err)
 	}
 
-	outputs, err := storageClt.GetBuildOutputs(build.ID)
+	build.Outputs, err = storageClt.GetBuildOutputs(build.ID)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	build.Outputs = outputs
 
 	formatter = table.New(nil, os.Stdout)
 
