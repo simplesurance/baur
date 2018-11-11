@@ -9,6 +9,8 @@ const (
 	JobS3
 	// JobDocker is the type for Docker container uploader jobs
 	JobDocker
+	// JobFileCopy is a job for copying files from one place to another
+	JobFileCopy
 )
 
 // Job is the interface for upload jobs

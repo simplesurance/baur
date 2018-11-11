@@ -4,7 +4,7 @@ import (
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/fs"
-	"github.com/simplesurance/baur/upload"
+	"github.com/simplesurance/baur/upload/scheduler"
 )
 
 // FileArtifact is a file build artifact
@@ -13,6 +13,7 @@ type FileArtifact struct {
 	Path      string
 	DestFile  string
 	UploadURL string
+	uploadJob scheduler.Job
 }
 
 // Exists returns true if the artifact exist
@@ -26,11 +27,8 @@ func (f *FileArtifact) String() string {
 }
 
 // UploadJob returns a upload.DockerJob for the artifact
-func (f *FileArtifact) UploadJob() (upload.Job, error) {
-	return &upload.S3Job{
-		DestURL:  f.UploadURL,
-		FilePath: f.Path,
-	}, nil
+func (f *FileArtifact) UploadJob() (scheduler.Job, error) {
+	return f.uploadJob, nil
 }
 
 // LocalPath returns the local path to the artifact

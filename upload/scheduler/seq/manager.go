@@ -20,6 +20,7 @@ type Logger interface {
 
 // Uploader is a sequential uploader
 type Uploader struct {
+	filecopy       upload.Uploader
 	s3             upload.Uploader
 	docker         upload.Uploader
 	lock           sync.Mutex
@@ -31,7 +32,7 @@ type Uploader struct {
 
 // New initializes a sequential uploader
 // Status chan must have a buffer count > 1 otherwise a deadlock occurs
-func New(logger Logger, s3Uploader, dockerUploader upload.Uploader, status chan<- *scheduler.Result) *Uploader {
+func New(logger Logger, filecopyUploader, s3Uploader, dockerUploader upload.Uploader, status chan<- *scheduler.Result) *Uploader {
 	return &Uploader{
 		logger:     logger,
 		s3:         s3Uploader,
@@ -39,6 +40,7 @@ func New(logger Logger, s3Uploader, dockerUploader upload.Uploader, status chan<
 		lock:       sync.Mutex{},
 		queue:      []scheduler.Job{},
 		docker:     dockerUploader,
+		filecopy:   filecopyUploader,
 	}
 }
 
@@ -69,17 +71,23 @@ func (u *Uploader) Start() {
 			startTs := time.Now()
 
 			u.logger.Debugf("uploading %s", job)
-			if job.Type() == scheduler.JobS3 {
+			switch job.Type() {
+			case scheduler.JobFileCopy:
+				url, err = u.filecopy.Upload(job.LocalPath(), job.RemoteDest())
+				if err != nil {
+					err = errors.Wrap(err, "file copy failed")
+				}
+			case scheduler.JobS3:
 				url, err = u.s3.Upload(job.LocalPath(), job.RemoteDest())
 				if err != nil {
 					err = errors.Wrap(err, "S3 upload failed")
 				}
-			} else if job.Type() == scheduler.JobDocker {
+			case scheduler.JobDocker:
 				url, err = u.docker.Upload(job.LocalPath(), job.RemoteDest())
 				if err != nil {
 					err = errors.Wrap(err, "Docker upload failed")
 				}
-			} else {
+			default:
 				panic(fmt.Sprintf("invalid job %+v", job))
 			}
 

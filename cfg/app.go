@@ -57,6 +57,12 @@ type BuildOutput struct {
 type FileOutput struct {
 	Path     string   `toml:"path" comment:"Path relative to the application directory" commented:"true"`
 	S3Upload S3Upload `comment:"S3 location where the file is uploaded to"`
+	FileCopy FileCopy
+}
+
+// FileCopy describes where a file artifact should be copied to
+type FileCopy struct {
+	Path string `toml:"path" comment:"Path where the file copied to" commented:"true"`
 }
 
 // DockerImageRegistryUpload holds information about where the docker image
@@ -104,6 +110,10 @@ func ExampleApp(name string) *App {
 						S3Upload: S3Upload{
 							Bucket:   "go-artifacts/",
 							DestFile: "$APPNAME-worker-$GITCOMMIT.tar.xz",
+						},
+						FileCopy: FileCopy{
+
+							Path: "/mnt/fileserver/build_artifacts/$APPNAME-$GITCOMMIT.tar.xz",
 						},
 					},
 					&FileOutput{
@@ -277,9 +287,14 @@ func (b *BuildOutput) Validate() error {
 	return nil
 }
 
+// IsEmpty returns true if FileCopy is empty
+func (f *FileCopy) IsEmpty() bool {
+	return len(f.Path) == 0
+}
+
 // IsEmpty returns true if FileOutput is empty
 func (f *FileOutput) IsEmpty() bool {
-	return len(f.Path) == 0 && f.S3Upload.IsEmpty()
+	return f.FileCopy.IsEmpty() && f.S3Upload.IsEmpty()
 }
 
 // IsEmpty returns true if S3Upload is empty
