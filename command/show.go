@@ -137,6 +137,12 @@ func showBuild(buildID int) {
 		log.Fatalln(err)
 	}
 
+	outputs, err := storageClt.GetBuildOutputs(build.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	build.Outputs = outputs
+
 	formatter = table.New(nil, os.Stdout)
 
 	mustWriteRow(formatter, []interface{}{underline("General:")})
