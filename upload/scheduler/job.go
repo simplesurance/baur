@@ -1,4 +1,4 @@
-package upload
+package scheduler
 
 // JobType describes the type of a job
 type JobType int

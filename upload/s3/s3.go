@@ -18,7 +18,6 @@ type Client struct {
 
 // Logger defines the interface for an S3 logger
 type Logger interface {
-	Debugf(format string, v ...interface{})
 	Debugln(v ...interface{})
 	DebugEnabled() bool
 }

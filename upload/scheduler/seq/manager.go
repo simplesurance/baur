@@ -3,7 +3,6 @@
 package seq
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/upload"
+	"github.com/simplesurance/baur/upload/scheduler"
 )
 
 // Logger defines the logger interface
@@ -20,30 +20,30 @@ type Logger interface {
 
 // Uploader is a sequential uploader
 type Uploader struct {
-	s3             upload.S3Uploader
-	docker         upload.DockerUploader
+	s3             upload.Uploader
+	docker         upload.Uploader
 	lock           sync.Mutex
-	queue          []upload.Job
+	queue          []scheduler.Job
 	stopProcessing bool
-	statusChan     chan<- *upload.Result
+	statusChan     chan<- *scheduler.Result
 	logger         Logger
 }
 
 // New initializes a sequential uploader
 // Status chan must have a buffer count > 1 otherwise a deadlock occurs
-func New(logger Logger, s3Uploader upload.S3Uploader, dockerUploader upload.DockerUploader, status chan<- *upload.Result) *Uploader {
+func New(logger Logger, s3Uploader, dockerUploader upload.Uploader, status chan<- *scheduler.Result) *Uploader {
 	return &Uploader{
 		logger:     logger,
 		s3:         s3Uploader,
 		statusChan: status,
 		lock:       sync.Mutex{},
-		queue:      []upload.Job{},
+		queue:      []scheduler.Job{},
 		docker:     dockerUploader,
 	}
 }
 
 // Add adds a new upload job, can be called after Start()
-func (u *Uploader) Add(job upload.Job) {
+func (u *Uploader) Add(job scheduler.Job) {
 	u.lock.Lock()
 	defer u.lock.Unlock()
 
@@ -54,7 +54,7 @@ func (u *Uploader) Add(job upload.Job) {
 // If the statusChan buffer is full, uploading will be blocked.
 func (u *Uploader) Start() {
 	for {
-		var job upload.Job
+		var job scheduler.Job
 
 		u.lock.Lock()
 		if len(u.queue) > 0 {
@@ -69,13 +69,13 @@ func (u *Uploader) Start() {
 			startTs := time.Now()
 
 			u.logger.Debugf("uploading %s", job)
-			if job.Type() == upload.JobS3 {
+			if job.Type() == scheduler.JobS3 {
 				url, err = u.s3.Upload(job.LocalPath(), job.RemoteDest())
 				if err != nil {
 					err = errors.Wrap(err, "S3 upload failed")
 				}
-			} else if job.Type() == upload.JobDocker {
-				url, err = u.docker.Upload(context.Background(), job.LocalPath(), job.RemoteDest())
+			} else if job.Type() == scheduler.JobDocker {
+				url, err = u.docker.Upload(job.LocalPath(), job.RemoteDest())
 				if err != nil {
 					err = errors.Wrap(err, "Docker upload failed")
 				}
@@ -83,7 +83,7 @@ func (u *Uploader) Start() {
 				panic(fmt.Sprintf("invalid job %+v", job))
 			}
 
-			u.statusChan <- &upload.Result{
+			u.statusChan <- &scheduler.Result{
 				Err:      err,
 				URL:      url,
 				Duration: time.Since(startTs),

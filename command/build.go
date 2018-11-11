@@ -14,14 +14,14 @@ import (
 	"github.com/simplesurance/baur/build/seq"
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
-	"github.com/simplesurance/baur/docker"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/prettyprint"
-	"github.com/simplesurance/baur/s3"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/term"
-	"github.com/simplesurance/baur/upload"
-	sequploader "github.com/simplesurance/baur/upload/seq"
+	"github.com/simplesurance/baur/upload/docker"
+	"github.com/simplesurance/baur/upload/s3"
+	"github.com/simplesurance/baur/upload/scheduler"
+	sequploader "github.com/simplesurance/baur/upload/scheduler/seq"
 )
 
 const (
@@ -131,7 +131,7 @@ func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 
 }
 
-func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result) {
+func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Result) {
 	var arType storage.ArtifactType
 
 	resultLock.Lock()
@@ -142,9 +142,9 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *upload.Result
 		log.Fatalf("resultAddUploadResult: %q does not exist in build result map", appName)
 	}
 
-	if r.Job.Type() == upload.JobDocker {
+	if r.Job.Type() == scheduler.JobDocker {
 		arType = storage.DockerArtifact
-	} else if r.Job.Type() == upload.JobS3 {
+	} else if r.Job.Type() == scheduler.JobS3 {
 		arType = storage.FileArtifact
 	}
 
@@ -264,7 +264,7 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 	return buildJobs
 }
 
-func startBGUploader(outputCnt int, uploadChan chan *upload.Result) upload.Manager {
+func startBGUploader(outputCnt int, uploadChan chan *scheduler.Result) scheduler.Manager {
 	var dockerUploader *docker.Client
 	s3Uploader, err := s3.NewClient(log.StdLogger)
 	if err != nil {
@@ -311,7 +311,7 @@ func appsToString(apps []*baur.App) string {
 	return res
 }
 
-func waitPrintUploadStatus(uploader upload.Manager, uploadChan chan *upload.Result, finished chan struct{}, outputCnt int) {
+func waitPrintUploadStatus(uploader scheduler.Manager, uploadChan chan *scheduler.Result, finished chan struct{}, outputCnt int) {
 	var resultCnt int
 
 	for res := range uploadChan {
@@ -386,7 +386,7 @@ func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 func buildRun(cmd *cobra.Command, args []string) {
 	var apps []*baur.App
 	var uploadWatchFin chan struct{}
-	var uploader upload.Manager
+	var uploader scheduler.Manager
 
 	repo := MustFindRepository()
 	startTs := time.Now()
@@ -420,7 +420,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	outputCnt := outputCount(apps)
 
 	if buildUpload {
-		uploadChan := make(chan *upload.Result, outputCnt)
+		uploadChan := make(chan *scheduler.Result, outputCnt)
 		uploader = startBGUploader(outputCnt, uploadChan)
 		uploadWatchFin = make(chan struct{}, 1)
 		go waitPrintUploadStatus(uploader, uploadChan, uploadWatchFin, outputCnt)

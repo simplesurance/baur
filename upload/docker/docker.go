@@ -3,7 +3,6 @@ package docker
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -29,7 +28,7 @@ var defLogFn = func(string, ...interface{}) { return }
 
 // NewClientwAuth intializes a new docker client.
 // The username and password is used to authenticate at the registry for an
-// Upload() (= docker push) operation.
+// Upload() = docker push) operation.
 // The following environment variables are respected:
 // Use DOCKER_HOST to set the url to the docker server.
 // Use DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
@@ -174,7 +173,7 @@ func parseRepositoryURI(dest string) (server, repository, tag string, err error)
 
 // Upload tags and uploads an image into a docker registry repository
 // destURI format: [<server[:port]>/]<owner>/<repository>:<tag>
-func (c *Client) Upload(ctx context.Context, image, destURI string) (string, error) {
+func (c *Client) Upload(image, destURI string) (string, error) {
 	server, repository, tag, err := parseRepositoryURI(destURI)
 	if err != nil {
 		return "", err
@@ -217,7 +216,7 @@ func (c *Client) Upload(ctx context.Context, image, destURI string) (string, err
 }
 
 // Size returns the size of an image in Bytes
-func (c *Client) Size(ctx context.Context, imageID string) (int64, error) {
+func (c *Client) Size(imageID string) (int64, error) {
 	summaries, err := c.clt.ListImages(docker.ListImagesOptions{})
 	if err != nil {
 		return -1, errors.Wrap(err, "fetching imagelist failed")
