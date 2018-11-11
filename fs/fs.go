@@ -46,6 +46,7 @@ func DirsExist(paths []string) error {
 }
 
 // IsDir returns true if the path is a directory.
+// If the directory does not exist, the error from os.Stat() is returned.
 func IsDir(path string) (bool, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -53,6 +54,33 @@ func IsDir(path string) (bool, error) {
 	}
 
 	return fi.IsDir(), nil
+}
+
+// IsRegularFile returns true if path is a regular file.
+// If the directory does not exist, the error from os.Stat() is returned.
+func IsRegularFile(path string) (bool, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+
+	return fi.Mode().IsRegular(), nil
+}
+
+// SameFile calls os.Samefile(), if one of the files does not exist, the error
+// from os.Stat() is returned.
+func SameFile(a, b string) (bool, error) {
+	aFi, err := os.Stat(a)
+	if err != nil {
+		return false, err
+	}
+
+	bFi, err := os.Stat(b)
+	if err != nil {
+		return false, err
+	}
+
+	return os.SameFile(aFi, bFi), nil
 }
 
 // FindFileInParentDirs finds a directory that contains filename. The function

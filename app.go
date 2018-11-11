@@ -17,6 +17,7 @@ import (
 	"github.com/simplesurance/baur/resolve/gitpath"
 	"github.com/simplesurance/baur/resolve/glob"
 	"github.com/simplesurance/baur/resolve/gosource"
+	"github.com/simplesurance/baur/upload/scheduler"
 )
 
 // App represents an application
@@ -71,20 +72,50 @@ func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
 
 func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 	for _, f := range cfg.Build.Output.File {
-		destFile, err := replaceGitCommitVar(f.S3Upload.DestFile, a.Repository)
-		if err != nil {
-			return errors.Wrap(err, "replacing $GITCOMMIT in dest_file failed")
+		if !f.S3Upload.IsEmpty() {
+			destFile, err := replaceGitCommitVar(f.S3Upload.DestFile, a.Repository)
+			if err != nil {
+				return errors.Wrap(err, "replacing $GITCOMMIT in dest_file failed")
+			}
+
+			destFile = replaceUUIDvar(replaceAppNameVar(destFile, a.Name))
+			url := "s3://" + f.S3Upload.Bucket + "/" + destFile
+
+			src := path.Join(a.Path, f.Path)
+
+			a.Outputs = append(a.Outputs, &FileArtifact{
+				RelPath:   path.Join(a.RelPath, f.Path),
+				Path:      src,
+				DestFile:  destFile,
+				UploadURL: url,
+				uploadJob: &scheduler.S3Job{
+					DestURL:  url,
+					FilePath: src,
+				},
+			})
 		}
-		destFile = replaceUUIDvar(replaceAppNameVar(destFile, a.Name))
 
-		url := "s3://" + f.S3Upload.Bucket + "/" + destFile
+		if !f.FileCopy.IsEmpty() {
+			dest, err := replaceGitCommitVar(f.FileCopy.Path, a.Repository)
+			if err != nil {
+				return errors.Wrap(err, "replacing $GITCOMMIT in path failed")
+			}
 
-		a.Outputs = append(a.Outputs, &FileArtifact{
-			RelPath:   path.Join(a.RelPath, f.Path),
-			Path:      path.Join(a.Path, f.Path),
-			DestFile:  destFile,
-			UploadURL: url,
-		})
+			dest = replaceUUIDvar(replaceAppNameVar(dest, a.Name))
+			src := path.Join(a.Path, f.Path)
+
+			a.Outputs = append(a.Outputs, &FileArtifact{
+				RelPath:   path.Join(a.RelPath, f.Path),
+				Path:      src,
+				DestFile:  dest,
+				UploadURL: dest,
+				uploadJob: &scheduler.FileCopyJob{
+					Src: src,
+					Dst: dest,
+				},
+			})
+
+		}
 	}
 
 	return nil

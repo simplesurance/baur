@@ -19,6 +19,7 @@ import (
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/term"
 	"github.com/simplesurance/baur/upload/docker"
+	"github.com/simplesurance/baur/upload/filecopy"
 	"github.com/simplesurance/baur/upload/s3"
 	"github.com/simplesurance/baur/upload/scheduler"
 	sequploader "github.com/simplesurance/baur/upload/scheduler/seq"
@@ -142,10 +143,15 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Res
 		log.Fatalf("resultAddUploadResult: %q does not exist in build result map", appName)
 	}
 
-	if r.Job.Type() == scheduler.JobDocker {
+	switch r.Job.Type() {
+	case scheduler.JobDocker:
 		arType = storage.DockerArtifact
-	} else if r.Job.Type() == scheduler.JobS3 {
+	case scheduler.JobFileCopy:
+		fallthrough
+	case scheduler.JobS3:
 		arType = storage.FileArtifact
+	default:
+		panic(fmt.Sprintf("unknown job type %v", r.Job.Type()))
 	}
 
 	artDigest, err := ar.Digest()
@@ -284,7 +290,9 @@ func startBGUploader(outputCnt int, uploadChan chan *scheduler.Result) scheduler
 		log.Fatalln(err)
 	}
 
-	uploader := sequploader.New(log.StdLogger, s3Uploader, dockerUploader, uploadChan)
+	filecopyUploader := filecopy.New(log.Debugf)
+
+	uploader := sequploader.New(log.StdLogger, filecopyUploader, s3Uploader, dockerUploader, uploadChan)
 
 	outputBackends.DockerClt = dockerUploader
 
