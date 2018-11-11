@@ -56,13 +56,13 @@ type BuildOutput struct {
 // FileOutput describes where a file artifact should be uploaded to
 type FileOutput struct {
 	Path     string   `toml:"path" comment:"Path relative to the application directory" commented:"true"`
-	S3Upload S3Upload `comment:"S3 location where the file is uploaded to"`
-	FileCopy FileCopy
+	S3Upload S3Upload `comment:"Upload the file to S3"`
+	FileCopy FileCopy `comment:"Copy the file to a local directory"`
 }
 
 // FileCopy describes where a file artifact should be copied to
 type FileCopy struct {
-	Path string `toml:"path" comment:"Path where the file copied to" commented:"true"`
+	Path string `toml:"path" comment:"Destination directory" commented:"true"`
 }
 
 // DockerImageRegistryUpload holds information about where the docker image
@@ -324,6 +324,10 @@ func (d *DockerImageOutput) IsEmpty() bool {
 
 // Validate validates a [[Build.Output.File]] section
 func (s *S3Upload) Validate() error {
+	if s.IsEmpty() {
+		return nil
+	}
+
 	if len(s.DestFile) == 0 {
 		return errors.New("destfile parameter can not be unset or empty")
 	}
