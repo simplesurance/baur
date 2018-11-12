@@ -150,9 +150,9 @@ Documentation is available in the
 ## Graphana Dashboard
 ![Graphana baur Dashboard](https://github.com/simplesurance/baur/wiki/media/graphana-dashboard.png "Graphana baur Dashboard")
 
-The dashboards is available at: <https://grafana.com/dashboards/8835>
+The dashboard is available at: <https://grafana.com/dashboards/8835>
 
-## Status
+## Project Status
 baur is used in production CI setups since the first version.
 It's not considered as API-Stable yet, interface breaking changes can happen in
 any release.
