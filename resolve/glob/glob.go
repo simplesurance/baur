@@ -14,23 +14,63 @@ import (
 // filepath.Glob() with the addition that '**' is supported to match files
 // directories recursively.
 type Resolver struct {
-	path string
 	glob string
 }
 
 // NewResolver returns a resolver that resolves glob relative to path
-func NewResolver(path, glob string) *Resolver {
+func NewResolver(glob string) *Resolver {
 	return &Resolver{
-		path: path,
 		glob: glob,
 	}
 }
 
 // Resolve returns absolute paths to files that specify the glob path
+// glob does the same  then filepath.Glob() with 2 Exceptions:
+//- it also supports '**' to match files and directories recursively
+//- it and only returns paths to files, no directory paths
+// If a Glob doesn't match any files an empty []string is returned and error is
+// nil
 func (r *Resolver) Resolve() ([]string, error) {
-	absGlobPath := filepath.Join(r.path, r.glob)
+	var globPaths []string
 
-	return glob(absGlobPath)
+	if strings.Contains(r.glob, "**") {
+		expandedPaths, err := expandDoubleStarGlob(r.glob)
+		if err != nil {
+			return nil, errors.Wrap(err, "expanding '**' failed")
+		}
+
+		globPaths = expandedPaths
+	} else {
+		globPaths = []string{r.glob}
+	}
+
+	paths := make([]string, 0, len(globPaths))
+	for _, globPath := range globPaths {
+		path, err := filepath.Glob(globPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if path == nil {
+			continue
+		}
+
+		paths = append(paths, path...)
+	}
+
+	res := make([]string, 0, len(paths))
+	for _, p := range paths {
+		isFile, err := fs.IsFile(p)
+		if err != nil {
+			return nil, errors.Wrapf(err, "resolved path %q does not exist", p)
+		}
+
+		if isFile {
+			res = append(res, p)
+		}
+	}
+
+	return res, nil
 }
 
 func findAllDirsNoDups(result map[string]struct{}, path string) error {
@@ -114,52 +154,4 @@ func expandDoubleStarGlob(absGlobPath string) ([]string, error) {
 	}
 
 	return dirs, nil
-}
-
-// glob is similar then filepath.Glob() with 2 Exceptions:
-//- it also supports '**' to match files and directories recursively
-//- it and only returns paths to files, no directory paths
-// If a Glob doesn't match any files an empty []string is returned and error is
-// nil
-func glob(path string) ([]string, error) {
-	var globPaths []string
-
-	if strings.Contains(path, "**") {
-		expandedPaths, err := expandDoubleStarGlob(path)
-		if err != nil {
-			return nil, errors.Wrap(err, "expanding '**' failed")
-		}
-
-		globPaths = expandedPaths
-	} else {
-		globPaths = []string{path}
-	}
-
-	paths := make([]string, 0, len(globPaths))
-	for _, globPath := range globPaths {
-		path, err := filepath.Glob(globPath)
-		if err != nil {
-			return nil, err
-		}
-
-		if path == nil {
-			continue
-		}
-
-		paths = append(paths, path...)
-	}
-
-	res := make([]string, 0, len(paths))
-	for _, p := range paths {
-		isFile, err := fs.IsFile(p)
-		if err != nil {
-			return nil, errors.Wrapf(err, "resolved path %q does not exist", p)
-		}
-
-		if isFile {
-			res = append(res, p)
-		}
-	}
-
-	return res, nil
 }

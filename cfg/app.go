@@ -38,13 +38,13 @@ type GolangSources struct {
 
 // FileInputs describes a file source
 type FileInputs struct {
-	Paths []string `toml:"paths" commented:"false" comment:"Relative path to source files,\n supports Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match) and\n ** to match files recursively"`
+	Paths []string `toml:"paths" commented:"false" comment:"Relative path to source files,\n supports Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match) and\n ** to match files recursively\n Valid variables: $ROOT"`
 }
 
 // GitFileInputs describes source files that are in the git repository by git
 // pathnames
 type GitFileInputs struct {
-	Paths []string `toml:"paths" commented:"true" comment:"Relative paths to source files.\n Only files tracked by Git that are not in the .gitignore file are matched.\n The same patterns that git ls-files supports can be used."`
+	Paths []string `toml:"paths" commented:"true" comment:"Relative paths to source files.\n Only files tracked by Git that are not in the .gitignore file are matched.\n The same patterns that git ls-files supports can be used.\n Valid variables: $ROOT"`
 }
 
 // BuildOutput the build output section

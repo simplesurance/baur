@@ -35,10 +35,10 @@ func CommitID(dir string) (string, error) {
 // LsFiles runs git ls-files in dir, passes args as argument and returns the
 // output
 // If no files match, ErrNotExist is returned
-func LsFiles(dir, args string) (string, error) {
+func LsFiles(cwd, args string) (string, error) {
 	cmd := "git ls-files --error-unmatch " + args
 
-	out, exitCode, err := exec.Command(dir, cmd)
+	out, exitCode, err := exec.Command(cwd, cmd)
 	if err != nil {
 		return "", errors.Wrapf(err, "executing %q failed", cmd)
 	}

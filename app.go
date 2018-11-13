@@ -200,14 +200,22 @@ func (a *App) resolveGlobFileInputs() ([]string, error) {
 	var res []string
 
 	for _, globPath := range a.UnresolvedInputs.Files.Paths {
-		resolver := glob.NewResolver(a.Path, globPath)
+		var globPathSubst string
+
+		if strings.HasPrefix(globPath, "$ROOT") {
+			globPathSubst = filepath.Clean(replaceROOTvar(globPath, a.Repository))
+		} else {
+			globPathSubst = filepath.Join(a.Path, globPath)
+		}
+
+		resolver := glob.NewResolver(globPathSubst)
 		paths, err := resolver.Resolve()
 		if err != nil {
-			return nil, errors.Wrap(err, globPath)
+			return nil, errors.Wrap(err, globPathSubst)
 		}
 
 		if len(paths) == 0 {
-			return nil, fmt.Errorf("'%s' matched 0 files", globPath)
+			return nil, fmt.Errorf("'%s' matched 0 files", globPathSubst)
 		}
 
 		res = append(res, paths...)
@@ -221,14 +229,30 @@ func (a *App) resolveGitFileInputs() ([]string, error) {
 		return []string{}, nil
 	}
 
-	resolver := gitpath.NewResolver(a.Path, a.UnresolvedInputs.GitFiles.Paths...)
+	paths := make([]string, 0, len(a.UnresolvedInputs.GitFiles.Paths))
+	for _, path := range a.UnresolvedInputs.GitFiles.Paths {
+		if !strings.HasPrefix(path, "$ROOT") {
+			paths = append(paths, path)
+			continue
+		}
+
+		absPath := replaceROOTvar(path, a.Repository)
+		relPath, err := filepath.Rel(a.Path, absPath)
+		if err != nil {
+			return nil, err
+		}
+
+		paths = append(paths, relPath)
+	}
+
+	resolver := gitpath.NewResolver(a.Path, paths...)
 	paths, err := resolver.Resolve()
 	if err != nil {
 		return nil, err
 	}
 
 	if len(paths) == 0 {
-		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(a.UnresolvedInputs.GitFiles.Paths, ", "))
+		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(paths, ", "))
 	}
 
 	return paths, nil
@@ -257,7 +281,7 @@ func (a *App) resolveGoSrcInputs() ([]string, error) {
 	}
 
 	if len(paths) == 0 {
-		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(a.UnresolvedInputs.GolangSources.Paths, ", "))
+		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(paths, ", "))
 	}
 
 	return paths, nil
