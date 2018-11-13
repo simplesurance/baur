@@ -32,8 +32,8 @@ type BuildInput struct {
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
-	Paths  []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored." commented:"true"`
-	GoPath string   `toml:"go_path" comment:"GOPATH to use when discovering the source files\n The path is relative to the application directory\n If not set or empty the default GOPATH is used" commented:"true"`
+	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored." commented:"true"`
+	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT " commented:"true"`
 }
 
 // FileInputs describes a file source
@@ -99,8 +99,8 @@ func ExampleApp(name string) *App {
 					Paths: []string{"Makefile"},
 				},
 				GolangSources: GolangSources{
-					Paths:  []string{"."},
-					GoPath: "../",
+					Paths:       []string{"."},
+					Environment: []string{"GOFLAGS=-mod=vendor"},
 				},
 			},
 			Output: BuildOutput{
@@ -261,6 +261,10 @@ func (b *BuildInput) Validate() error {
 
 // Validate validates the GolangSources section
 func (g *GolangSources) Validate() error {
+	if len(g.Environment) != 0 && len(g.Paths) == 0 {
+		return errors.New("path must be set if environment is set")
+	}
+
 	for _, p := range g.Paths {
 		if len(p) == 0 {
 			return errors.New("a path can not be empty")

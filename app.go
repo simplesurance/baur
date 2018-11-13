@@ -38,6 +38,10 @@ func replaceUUIDvar(in string) string {
 	return strings.Replace(in, "$UUID", xid.New().String(), -1)
 }
 
+func replaceROOTvar(in string, r *Repository) string {
+	return strings.Replace(in, "$ROOT", r.Path, -1)
+}
+
 func replaceAppNameVar(in, appName string) string {
 	return strings.Replace(in, "$APPNAME", appName, -1)
 }
@@ -235,12 +239,18 @@ func (a *App) resolveGoSrcInputs() ([]string, error) {
 		return []string{}, nil
 	}
 
-	var gopath string
-	if a.UnresolvedInputs.GolangSources.GoPath != "" {
-		gopath = filepath.Join(a.Path, a.UnresolvedInputs.GolangSources.GoPath)
+	absGoSourcePaths := make([]string, 0, len(a.UnresolvedInputs.GolangSources.Paths))
+	for _, relGosrcpath := range a.UnresolvedInputs.GolangSources.Paths {
+		absPath := path.Join(a.Path, relGosrcpath)
+		absGoSourcePaths = append(absGoSourcePaths, absPath)
 	}
 
-	resolver := gosource.NewResolver(a.Path, gopath, a.UnresolvedInputs.GolangSources.Paths...)
+	goSrcEnv := make([]string, 0, len(a.UnresolvedInputs.GolangSources.Environment))
+	for _, val := range a.UnresolvedInputs.GolangSources.Environment {
+		goSrcEnv = append(goSrcEnv, path.Clean(replaceROOTvar(val, a.Repository)))
+	}
+
+	resolver := gosource.NewResolver(goSrcEnv, absGoSourcePaths...)
 	paths, err := resolver.Resolve()
 	if err != nil {
 		return nil, err

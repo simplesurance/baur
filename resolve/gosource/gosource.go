@@ -1,32 +1,29 @@
 package gosource
 
 import (
+	"fmt"
+	"go/build"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/kisielk/gotool"
-	"github.com/pkg/errors"
-	"github.com/rogpeppe/godeps/build"
+	"golang.org/x/tools/go/packages"
 )
 
 // Resolver determines all Go Source files that are imported by Go-Files
-// in a directory.
-// The code is based on https://github.com/rogpeppe/showdeps
+// in the passed paths
 type Resolver struct {
-	rootPath string
-	goPath   string
-	goDirs   []string
+	env    []string
+	goDirs []string
 }
 
 // NewResolver returns a resolver that resolves all go source files in the
 // GoDirs and it's imports to filepaths.
-// If gopath is an empty string, gopath is determined automatically.
-func NewResolver(path, gopath string, goDirs ...string) *Resolver {
+// env specifies the environment variables to use during resolving.
+// If empty or nil the default Go environment is used.
+func NewResolver(env []string, goDirs ...string) *Resolver {
 	return &Resolver{
-		rootPath: path,
-		goPath:   gopath,
-		goDirs:   goDirs,
+		env:    append(os.Environ(), env...),
+		goDirs: goDirs,
 	}
 }
 
@@ -35,16 +32,8 @@ func NewResolver(path, gopath string, goDirs ...string) *Resolver {
 // Testfiles and stdlib dependencies are ignored.
 func (r *Resolver) Resolve() ([]string, error) {
 	var allFiles []string
-	ctx := build.Default
-
-	if len(r.goPath) > 0 {
-		ctx.GOPATH = r.goPath
-	}
-
-	for _, dir := range r.goDirs {
-		absPath := filepath.Join(r.rootPath, dir)
-
-		files, err := resolve(ctx, absPath)
+	for _, path := range r.goDirs {
+		files, err := r.resolve(path)
 		if err != nil {
 			return nil, err
 		}
@@ -55,105 +44,80 @@ func (r *Resolver) Resolve() ([]string, error) {
 	return allFiles, nil
 }
 
-func resolve(ctx build.Context, path string) ([]string, error) {
-	recur := true
-	pkgs := []string{"./..."}
-
-	if err := os.Chdir(path); err != nil {
-		return nil, errors.Wrapf(err, "changing cwd to %q failed", path)
+func (r *Resolver) resolve(path string) ([]string, error) {
+	cfg := &packages.Config{
+		Mode: packages.LoadImports,
+		Dir:  path,
+		Env:  r.env,
 	}
 
-	pkgs = gotool.ImportPaths(pkgs)
-
-	rootPkgs := make(map[string]bool)
-	for _, pkg := range pkgs {
-		p, err := ctx.Import(pkg, path, build.FindOnly)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot find %q", pkg)
-		}
-
-		rootPkgs[p.ImportPath] = true
-	}
-
-	allPkgs := make(map[string][]string)
-	for pkg := range rootPkgs {
-		if err := findImports(ctx, pkg, path, recur, allPkgs, rootPkgs); err != nil {
-			return nil, errors.Wrapf(err, "cannot find imports from %q", pkg)
-		}
-	}
-
-	files := make([]string, 0, len(allPkgs))
-	for pkgName := range allPkgs {
-		pkg, err := ctx.Import(pkgName, path, 0)
-		if err != nil {
-			return nil, errors.Wrapf(err, "determining imports from %q (%q) failed", pkg.Name, pkg.ImportPath)
-		}
-
-		gofiles := absFilePaths(pkg, pkg.GoFiles)
-		cgofiles := absFilePaths(pkg, pkg.CgoFiles)
-
-		files = append(files, gofiles...)
-		files = append(files, cgofiles...)
-	}
-
-	return files, nil
-}
-
-func absFilePaths(pkg *build.Package, fs []string) []string {
-	res := make([]string, 0, len(fs))
-
-	for _, f := range fs {
-		res = append(res, filepath.Join(pkg.Dir, f))
-	}
-
-	return res
-}
-
-func isStdlib(pkg string) bool {
-	return !strings.Contains(strings.SplitN(pkg, "/", 2)[0], ".")
-}
-
-// findImports recursively adds all imported packages by the given
-// package (packageName) to the allPkgs map.
-func findImports(ctx build.Context, packageName, dir string, recur bool, allPkgs map[string][]string, rootPkgs map[string]bool) error {
-	if packageName == "C" {
-		return nil
-	}
-
-	pkg, err := ctx.Import(packageName, dir, 0)
+	lpkgs, err := packages.Load(cfg, "./...")
 	if err != nil {
-		return errors.Wrapf(err, "cannot find %q", packageName)
+		return nil, err
 	}
 
-	// Iterate through the imports in sorted order so that we provide
-	// deterministic results.
-	for _, name := range imports(pkg, rootPkgs[pkg.ImportPath]) {
-		if isStdlib(name) {
-			continue
-		}
+	// We can't use packages.All because
+	// we need an ordered traversal.
+	var all []*packages.Package // postorder
+	seen := make(map[*packages.Package]bool)
+	var visit func(*packages.Package)
+	visit = func(lpkg *packages.Package) {
+		if !seen[lpkg] {
+			seen[lpkg] = true
 
-		_, alreadyDone := allPkgs[name]
-		allPkgs[name] = append(allPkgs[name], pkg.ImportPath)
-		if recur && !alreadyDone {
-			if err := findImports(ctx, name, pkg.Dir, recur, allPkgs, rootPkgs); err != nil {
-				return err
+			// visit imports
+			var importPaths []string
+			for path := range lpkg.Imports {
+				importPaths = append(importPaths, path)
 			}
+			for _, path := range importPaths {
+				visit(lpkg.Imports[path])
+			}
+
+			all = append(all, lpkg)
+		}
+	}
+	for _, lpkg := range lpkgs {
+		visit(lpkg)
+	}
+	lpkgs = all
+
+	var srcFiles []string
+	for _, lpkg := range lpkgs {
+		srcFiles = append(srcFiles, sourceFiles(lpkg)...)
+
+		if len(lpkg.Errors) != 0 {
+			return nil, fmt.Errorf("parsing package %s failed: %+v", lpkg.Name, lpkg.Errors)
 		}
 	}
 
-	return nil
+	return srcFiles, nil
 }
 
-func imports(pkg *build.Package, isRoot bool) []string {
-	var res []string
+// sourceFiles returns GoFiles and OtherFiles of the package that are not part
+// of the stdlib
+func sourceFiles(pkg *packages.Package) []string {
+	paths := make([]string, 0, len(pkg.GoFiles)+len(pkg.OtherFiles))
 
-	for _, s := range pkg.Imports {
-		if isStdlib(s) {
+	for _, path := range pkg.GoFiles {
+		if isStdLib(path) {
 			continue
 		}
 
-		res = append(res, s)
+		paths = append(paths, path)
 	}
 
-	return res
+	for _, path := range pkg.OtherFiles {
+		if isStdLib(path) {
+			continue
+		}
+
+		paths = append(paths, path)
+	}
+
+	return paths
+}
+
+func isStdLib(path string) bool {
+	return strings.HasPrefix(path, build.Default.GOROOT)
 }

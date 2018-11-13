@@ -114,7 +114,8 @@ func showApp(arg string) {
 			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GolangSources")})
 			mustWriteRow(formatter, []interface{}{"",
 				"Paths:", highlight(strings.Join(app.UnresolvedInputs.GolangSources.Paths, ", "))})
-			mustWriteRow(formatter, []interface{}{"", "GoPath:", highlight(app.UnresolvedInputs.GolangSources.GoPath)})
+			mustWriteRow(formatter, []interface{}{"",
+				"Environment:", highlight(strings.Join(app.UnresolvedInputs.GolangSources.Environment, ", "))})
 		}
 	}
 
