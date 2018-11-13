@@ -161,25 +161,20 @@ func (c *Client) GetSameTotalInputDigestsForAppBuilds(appName string, startTs ti
 	return res, err
 }
 
-// GetBuild returns what the name says
-func (c *Client) GetBuild(id int) (build *storage.BuildWithDuration, err error) {
-	build = &storage.BuildWithDuration{}
-	row := c.Db.QueryRow(`SELECT build.id, build.start_timestamp, build.stop_timestamp, 
-       build.total_input_digest, vcs.commit, vcs.dirty,
-       (EXTRACT(EPOCH FROM (build.stop_timestamp - build.start_timestamp))::bigint * 1000000000) as duration
-       FROM build LEFT OUTER JOIN vcs ON vcs.id = build.vcs_id
-       WHERE build.id = $1`, id)
-	if err = row.Scan(
-		&build.ID,
-		&build.StartTimeStamp,
-		&build.StopTimeStamp,
-		&build.TotalInputDigest,
-		&build.VCSState.CommitID,
-		&build.VCSState.IsDirty,
-		&build.Duration,
-	); err != nil {
-		return nil, errors.Wrap(err, "query error")
+// BuildExist returns true if the build with the given ID exist.
+func (c *Client) BuildExist(id int) (bool, error) {
+	const query = "SELECT 1 from build where id = $1"
+	var val int
+
+	row := c.Db.QueryRow(query, id)
+	err := row.Scan(&val)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+
+		return false, err
 	}
 
-	return
+	return true, nil
 }

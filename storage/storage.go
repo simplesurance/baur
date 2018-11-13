@@ -194,8 +194,7 @@ type Storer interface {
 	GetLatestBuildByDigest(appName, totalInputDigest string) (*BuildWithDuration, error)
 
 	GetBuildOutputs(buildID int) ([]*Output, error)
-
-	GetBuild(id int) (*BuildWithDuration, error)
+	BuildExist(id int) (bool, error)
 
 	// GetBuildWithoutInputsOutputs returns a single build, if no build with the ID
 	// exist ErrNotExist is returned

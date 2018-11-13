@@ -1,22 +1,23 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/log"
-	"github.com/spf13/cobra"
 )
 
 var lsOutputsCmd = &cobra.Command{
-	Use:     "outputs <BUILD-ID>",
-	Short:   "lists outputs for a build",
-	Example: "baur ls outputs 13",
-	Run:     lsOutputs,
-	Args:    cobra.ExactArgs(1),
+	Use:   "outputs <BUILD-ID>",
+	Short: "list outputs for a build",
+	Run:   lsOutputs,
+	Args:  cobra.ExactArgs(1),
 }
 
 type lsOutputsConfig struct {
@@ -42,20 +43,28 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 
 	buildID, err := strconv.Atoi(args[0])
 	if err != nil {
-		log.Fatalln("First arg has to be the build ID")
-	} else if _, err2 := pgClient.GetBuild(buildID); err2 != nil {
-		log.Fatalf("Build %d doesn't exist", buildID)
+		log.Fatalf("'%s' is not a numeric build ID", args[0])
 	}
 
-	formatter := getLsOutputsFormatter(lsOutputsConf.quiet, lsOutputsConf.csv)
+	exist, err := pgClient.BuildExist(buildID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if !exist {
+		log.Fatalf("build with ID %d does not exist", buildID)
+	}
 
 	outputs, err := pgClient.GetBuildOutputs(buildID)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	formatter := getLsOutputsFormatter(lsOutputsConf.quiet, lsOutputsConf.csv)
+
 	for _, o := range outputs {
 		var row []interface{}
+
 		if lsOutputsConf.quiet {
 			row = []interface{}{o.Upload.URI}
 		} else {
@@ -63,29 +72,36 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 				o.Type,
 				o.Upload.URI,
 				o.Digest,
-				o.SizeBytes,
+				fmt.Sprintf("%.3f", float64(o.SizeBytes)/1024/1024),
 				o.Upload.UploadDuration,
 			}
 		}
 
-		formatter.WriteRow(row)
+		mustWriteRow(formatter, row)
 	}
-	formatter.Flush()
+
+	if err = formatter.Flush(); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func getLsOutputsFormatter(isQuiet, isCsv bool) format.Formatter {
 	var headers []string
-	if !isQuiet && !isCsv {
-		headers = []string{
-			"Type",
-			"URI",
-			"Digest",
-			"Size",
-			"Upload duration",
-		}
-	}
+
 	if isCsv {
 		return csv.New(headers, os.Stdout)
+	}
+
+	if isQuiet {
+		return table.New(headers, os.Stdout)
+	}
+
+	headers = []string{
+		"Type",
+		"URI",
+		"Digest",
+		"Size (MiB)",
+		"Upload Duration",
 	}
 
 	return table.New(headers, os.Stdout)
