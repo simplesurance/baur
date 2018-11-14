@@ -85,7 +85,7 @@ func (r *Repository) ToFile(filepath string, overwrite bool) error {
 		openFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
 	}
 
-	f, err := os.OpenFile(filepath, openFlags, 0664)
+	f, err := os.OpenFile(filepath, openFlags, 0640)
 	if err != nil {
 		return err
 	}

@@ -196,7 +196,7 @@ func (a *App) ToFile(filepath string) error {
 		return errors.Wrapf(err, "marshalling failed")
 	}
 
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0664)
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		return err
 	}
