@@ -63,7 +63,7 @@ func ExampleRepository() *Repository {
 		},
 
 		Database: Database{
-			PGSQLURL: "postgres://postgres@localhost:5432/baur?sslmode=disable",
+			PGSQLURL: "postgres://postgres@localhost:5432/baur?sslmode=disable&connect_timeout=5",
 		},
 	}
 }
