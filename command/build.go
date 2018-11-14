@@ -414,7 +414,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	if len(apps) == 0 {
 		fmt.Println()
 		term.PrintSep()
-		fmt.Println("Application build(s) already exist, nothing to build, see 'baur ls -b'.\n" +
+		fmt.Println("Application build(s) already exist, nothing to build.\n" +
 			"If you want to rebuild applications pass '-f' to 'baur build'")
 		os.Exit(0)
 	}
