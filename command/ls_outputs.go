@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -72,7 +71,7 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 				o.Type,
 				o.Upload.URI,
 				o.Digest,
-				fmt.Sprintf("%.3f", float64(o.SizeBytes)/1024/1024),
+				bytesToMib(int(o.SizeBytes)),
 				o.Upload.UploadDuration,
 			}
 		}

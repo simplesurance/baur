@@ -171,7 +171,7 @@ func showBuild(buildID int) {
 		mustWriteRow(formatter, []interface{}{
 			"",
 			"Size:",
-			highlight(fmt.Sprintf("%.2f MiB", float64(o.SizeBytes)/1024/1024)),
+			highlight(bytesToMib(int(o.SizeBytes))),
 		})
 		mustWriteRow(formatter, []interface{}{
 			"",

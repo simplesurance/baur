@@ -206,3 +206,7 @@ func coloredBuildStatus(status baur.BuildStatus) string {
 		return status.String()
 	}
 }
+
+func bytesToMib(bytes int) string {
+	return fmt.Sprintf("%.3f", float64(bytes)/1024/1024)
+}
