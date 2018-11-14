@@ -68,10 +68,11 @@ Environment Variables:
 	highlight("DOCKER_TLS_VERIFY"))
 
 const buildExampleHelp = `
-build payment-service     build the application with the name payment-service
-build ---force            rebuild all applications in the repository
-build --verbose ui/shop   build the application in the directory ui/shop with verbose output
-build --upload ui/shop    build the application in the directory ui/shop and upload it's outputs`
+build payment-service		build and upload the application with the name payment-service
+build --verbose --force		rebuild and upload all applications, enable verbose output
+build --skip-upload shop-ui	build the application with the name shop-ui, skip uploading it's build ouputs
+build ui/shop			build and upload the application in the directory ui/shop
+`
 
 var buildCmd = &cobra.Command{
 	Use:     "build [<PATH>|<APP-NAME>]...",
@@ -83,8 +84,8 @@ var buildCmd = &cobra.Command{
 }
 
 var (
-	buildUpload bool
-	buildForce  bool
+	buildSkipUpload bool
+	buildForce      bool
 
 	result     = map[string]*storage.Build{}
 	resultLock = sync.Mutex{}
@@ -105,8 +106,8 @@ type buildUserData struct {
 }
 
 func init() {
-	buildCmd.Flags().BoolVar(&buildUpload, "upload", false,
-		"upload build outputs after the application(s) was build")
+	buildCmd.Flags().BoolVarP(&buildSkipUpload, "skip-upload", "s", false,
+		"skip uploading build outputs and recording the build")
 	buildCmd.Flags().BoolVarP(&buildForce, "force", "f", false,
 		"force rebuilding of all applications")
 	rootCmd.AddCommand(buildCmd)
@@ -401,7 +402,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 
 	apps = mustArgToApps(repo, args)
 
-	if buildUpload || !buildForce {
+	if !buildSkipUpload || !buildForce {
 		store = MustGetPostgresClt(repo)
 	}
 
@@ -427,7 +428,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	builder := seq.New(buildJobs, buildChan)
 	outputCnt := outputCount(apps)
 
-	if buildUpload {
+	if !buildSkipUpload {
 		uploadChan := make(chan *scheduler.Result, outputCnt)
 		uploader = startBGUploader(outputCnt, uploadChan)
 		uploadWatchFin = make(chan struct{}, 1)
@@ -467,7 +468,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 					app, ar)
 			}
 
-			if buildUpload {
+			if !buildSkipUpload {
 				uj, err := ar.UploadJob()
 				if err != nil {
 					log.Fatalf("%s: could not get upload job for build output %s: %s",
@@ -493,7 +494,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 
 	}
 
-	if buildUpload && outputCnt > 0 {
+	if !buildSkipUpload && outputCnt > 0 {
 		fmt.Println("waiting for uploads to finish...")
 		<-uploadWatchFin
 	}

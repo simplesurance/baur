@@ -69,7 +69,7 @@ Some commands to start with are:
 - Build all applications with outstanding builds, upload their artifacts and
   records the results:
   ```
-  baur build --upload
+  baur build
   ```
 - List recorded builds:
   ```
@@ -91,7 +91,7 @@ To get more information about a command pass the `--help` parameter to baur.
 The inputs of applications are specified in the `.app.toml` config file for each
 application. baur calculates a SHA384 digest for all inputs and stores the
 digest in the database when an application was build and its artifacts uploaded
-(`baur build --upload`).
+(`baur build`).
 The digest is used to detect if a previous build for the same input files exists.
 If a build exist, the application does not need to be rebuild otherwise a build
 is done.
