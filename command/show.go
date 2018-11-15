@@ -176,7 +176,7 @@ func showBuild(buildID int) {
 		mustWriteRow(formatter, []interface{}{
 			"",
 			"Upload Duration:",
-			highlight(fmt.Sprintf("%.2f s", o.Upload.UploadDuration.Seconds())),
+			highlight(durationToStrSeconds(o.Upload.UploadDuration) + " s"),
 		})
 		mustWriteRow(formatter, []interface{}{"", "Type:", highlight(o.Type)})
 		mustWriteRow(formatter, []interface{}{"", "Upload Method:", highlight(o.Upload.Method)})

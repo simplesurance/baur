@@ -71,7 +71,7 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 				o.Upload.URI,
 				o.Digest,
 				bytesToMib(int(o.SizeBytes)),
-				o.Upload.UploadDuration,
+				durationToStrSeconds(o.Upload.UploadDuration),
 				o.Type,
 				o.Upload.Method,
 			}
@@ -100,7 +100,7 @@ func getLsOutputsFormatter(isQuiet, isCsv bool) format.Formatter {
 		"URI",
 		"Digest",
 		"Size (MiB)",
-		"Upload Duration",
+		"Upload Duration (s)",
 		"Output Type",
 		"Method",
 	}

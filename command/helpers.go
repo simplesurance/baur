@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"github.com/fatih/color"
 
@@ -209,4 +210,8 @@ func coloredBuildStatus(status baur.BuildStatus) string {
 
 func bytesToMib(bytes int) string {
 	return fmt.Sprintf("%.3f", float64(bytes)/1024/1024)
+}
+
+func durationToStrSeconds(duration time.Duration) string {
+	return fmt.Sprintf("%.3f", duration.Seconds())
 }
