@@ -78,6 +78,7 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 	lsBuildsConfig.app = args[0]
 
 	repo := MustFindRepository()
+	psql := MustGetPostgresClt(repo)
 
 	filters := lsBuildsConfig.getFilters()
 	if lsBuildsConfig.sort.Value != (storage.Sorter{}) {
@@ -86,13 +87,20 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	sorters = append(sorters, &defaultSorter)
 
-	printBuilds(repo, filters, sorters)
+	builds, err := psql.GetBuildsWithoutInputsOutputs(filters, sorters)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if len(builds) == 0 {
+		log.Fatalf("no builds for application '%s' exist", lsBuildsConfig.app)
+	}
+
+	printBuilds(repo, builds)
 }
 
-func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*storage.Sorter) {
+func printBuilds(repo *baur.Repository, builds []*storage.BuildWithDuration) {
 	var headers []string
 	var formatter format.Formatter
-	psql := MustGetPostgresClt(repo)
 	writeHeaders := !lsBuildsConfig.quiet && !lsBuildsConfig.csv
 
 	if writeHeaders {
@@ -112,11 +120,6 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 		formatter = table.New(headers, os.Stdout)
 	}
 
-	builds, err := psql.GetBuildsWithoutInputsOutputs(filters, sorters)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	for _, build := range builds {
 		var row []interface{}
 
@@ -132,13 +135,13 @@ func printBuilds(repo *baur.Repository, filters []*storage.Filter, sorters []*st
 			}
 		}
 
-		if err = formatter.WriteRow(row); err != nil {
+		if err := formatter.WriteRow(row); err != nil {
 			log.Fatalln(err)
 		}
 
 	}
 
-	if err = formatter.Flush(); err != nil {
+	if err := formatter.Flush(); err != nil {
 		log.Fatalln(err)
 	}
 }
