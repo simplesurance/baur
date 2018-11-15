@@ -40,7 +40,7 @@ func (c *Client) Close() {
 func (c *Client) GetBuildOutputs(buildID int) ([]*storage.Output, error) {
 	const stmt = `SELECT
 			output.name, output.digest, output.type, output.size_bytes,
-			upload.id, upload.uri, upload.upload_duration_ns
+			upload.id, upload.uri, upload.method, upload.upload_duration_ns
 		      FROM output
 		      JOIN build_output ON output.id = build_output.output_id
 		      JOIN upload ON upload.build_output_id = build_output.id
@@ -64,6 +64,7 @@ func (c *Client) GetBuildOutputs(buildID int) ([]*storage.Output, error) {
 			&output.SizeBytes,
 			&output.Upload.ID,
 			&output.Upload.URI,
+			&output.Upload.Method,
 			&output.Upload.UploadDuration,
 		)
 		if err != nil {

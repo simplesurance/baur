@@ -17,6 +17,16 @@ const (
 	FileArtifact ArtifactType = "file"
 )
 
+// UploadMethod describes the used upload mechanism
+type UploadMethod string
+
+// Description of UploadMethod Values
+const (
+	S3             UploadMethod = "s3"
+	DockerRegistry UploadMethod = "docker"
+	FileCopy       UploadMethod = "filecopy"
+)
+
 // ErrNotExist indicates that a record does not exist
 var ErrNotExist = errors.New("does not exist")
 
@@ -60,6 +70,7 @@ type Upload struct {
 	ID             int
 	UploadDuration time.Duration
 	URI            string
+	Method         UploadMethod
 }
 
 // Output represents a build output

@@ -135,6 +135,7 @@ func resultAddBuildResult(bud *buildUserData, r *build.Result) {
 
 func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Result) {
 	var arType storage.ArtifactType
+	var uploadMethod storage.UploadMethod
 
 	resultLock.Lock()
 	defer resultLock.Unlock()
@@ -147,10 +148,13 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Res
 	switch r.Job.Type() {
 	case scheduler.JobDocker:
 		arType = storage.DockerArtifact
+		uploadMethod = storage.DockerRegistry
 	case scheduler.JobFileCopy:
-		fallthrough
+		arType = storage.FileArtifact
+		uploadMethod = storage.FileCopy
 	case scheduler.JobS3:
 		arType = storage.FileArtifact
+		uploadMethod = storage.S3
 	default:
 		panic(fmt.Sprintf("unknown job type %v", r.Job.Type()))
 	}
@@ -171,6 +175,7 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Res
 		Type:      arType,
 		Upload: storage.Upload{
 			URI:            r.URL,
+			Method:         uploadMethod,
 			UploadDuration: r.Duration,
 		},
 		Digest: artDigest.String(),

@@ -41,6 +41,7 @@ CREATE TABLE upload (
 	id SERIAL PRIMARY KEY,
 	build_output_id INTEGER REFERENCES build_output (id) ON DELETE CASCADE,
 	uri TEXT NOT NULL,
+	method TEXT NOT NULL,
 	upload_duration_ns BIGINT NOT NULL
 );
 

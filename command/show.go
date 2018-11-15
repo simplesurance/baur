@@ -166,7 +166,6 @@ func showBuild(buildID int) {
 		mustWriteRow(formatter, []interface{}{underline("Outputs:")})
 	}
 	for i, o := range build.Outputs {
-		mustWriteRow(formatter, []interface{}{"", "Type:", highlight(o.Type)})
 		mustWriteRow(formatter, []interface{}{"", "URI:", highlight(o.Upload.URI)})
 		mustWriteRow(formatter, []interface{}{"", "Digest:", highlight(o.Digest)})
 		mustWriteRow(formatter, []interface{}{
@@ -179,6 +178,9 @@ func showBuild(buildID int) {
 			"Upload Duration:",
 			highlight(fmt.Sprintf("%.2f s", o.Upload.UploadDuration.Seconds())),
 		})
+		mustWriteRow(formatter, []interface{}{"", "Type:", highlight(o.Type)})
+		mustWriteRow(formatter, []interface{}{"", "Upload Method:", highlight(o.Upload.Method)})
+
 		if i+1 < len(build.Outputs) {
 			mustWriteRow(formatter, []interface{}{})
 		}

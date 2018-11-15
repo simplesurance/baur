@@ -118,7 +118,7 @@ func insertOutputsIfNotExist(tx *sql.Tx, outputs []*storage.Output) ([]int, erro
 
 func insertInputBuilds(tx *sql.Tx, buildID int, inputIDs []int) error {
 	const stmt1 = `
-		INSERT into input_build 
+		INSERT into input_build
 		(build_id, input_id)
 		VALUES
 	`
@@ -240,7 +240,7 @@ func insertAppIfNotExist(tx *sql.Tx, app *storage.Application) error {
 func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) error {
 	const stmt = `
 	INSERT into upload
-	(build_output_id, uri, upload_duration_ns)
+	(build_output_id, uri, method, upload_duration_ns)
 	VALUES
 	`
 
@@ -257,9 +257,9 @@ func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) 
 	}
 
 	for i, out := range outputs {
-		stmtVals += fmt.Sprintf("($%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2)
-		argCNT += 3
-		queryArgs = append(queryArgs, buildOutputIDs[i], out.Upload.URI, out.Upload.UploadDuration)
+		stmtVals += fmt.Sprintf("($%d, $%d,$%d, $%d)", argCNT, argCNT+1, argCNT+2, argCNT+3)
+		argCNT += 4
+		queryArgs = append(queryArgs, buildOutputIDs[i], out.Upload.URI, out.Upload.Method, out.Upload.UploadDuration)
 
 		if i < len(outputs)-1 {
 			stmtVals += ", "

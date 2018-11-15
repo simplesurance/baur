@@ -68,11 +68,12 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 			row = []interface{}{o.Upload.URI}
 		} else {
 			row = []interface{}{
-				o.Type,
 				o.Upload.URI,
 				o.Digest,
 				bytesToMib(int(o.SizeBytes)),
 				o.Upload.UploadDuration,
+				o.Type,
+				o.Upload.Method,
 			}
 		}
 
@@ -96,11 +97,12 @@ func getLsOutputsFormatter(isQuiet, isCsv bool) format.Formatter {
 	}
 
 	headers = []string{
-		"Type",
 		"URI",
 		"Digest",
 		"Size (MiB)",
 		"Upload Duration",
+		"Output Type",
+		"Method",
 	}
 
 	return table.New(headers, os.Stdout)
