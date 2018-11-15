@@ -42,7 +42,7 @@ Install baur by either:
   `baur` into your `$PATH` or
 - install the latest development version by running
 ```
-go get -u github.com/simplesurance/baur`
+go get -u github.com/simplesurance/baur/...
 ```
 
 baur uses a PostgreSQL database to store information about builds, the quickest
