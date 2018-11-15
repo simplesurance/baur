@@ -22,7 +22,7 @@ type Resolver struct {
 // If empty or nil the default Go environment is used.
 func NewResolver(env []string, goDirs ...string) *Resolver {
 	return &Resolver{
-		env:    append(os.Environ(), env...),
+		env:    env,
 		goDirs: goDirs,
 	}
 }
@@ -44,11 +44,45 @@ func (r *Resolver) Resolve() ([]string, error) {
 	return allFiles, nil
 }
 
+// whitelistedEnvVars returns whitelisted environment variables from the host
+// that are set during resolving.
+func whitelistedEnv() []string {
+	var env []string
+
+	// PATH might be required to locate the "go list" tool on the host
+	// system
+	if path, exist := os.LookupEnv("PATH"); exist {
+		env = append(env, "PATH="+path)
+	}
+
+	// The following variables are required for go list to determine the go
+	// build cache, see: https://github.com/golang/go/blob/release-branch.go1.11/src/cmd/go/internal/cache/default.go#L112.
+	// When those are not set, resolving fails because "go list -compiled" is called internally which requires a gocache dir
+	if gocache, exist := os.LookupEnv("GOCACHE"); exist {
+		env = append(env, "GOCACHE="+gocache)
+	}
+
+	if xdgCacheHome, exist := os.LookupEnv("XDG_CACHE_HOME"); exist {
+		env = append(env, "XDG_CACHE_HOME="+xdgCacheHome)
+	}
+
+	if home, exist := os.LookupEnv("HOME"); exist {
+		env = append(env, "HOME="+home)
+	}
+
+	// plan9 home env variable
+	if home, exist := os.LookupEnv("home"); exist {
+		env = append(env, "home="+home)
+	}
+
+	return env
+}
+
 func (r *Resolver) resolve(path string) ([]string, error) {
 	cfg := &packages.Config{
 		Mode: packages.LoadImports,
 		Dir:  path,
-		Env:  r.env,
+		Env:  append(whitelistedEnv(), r.env...),
 	}
 
 	lpkgs, err := packages.Load(cfg, "./...")
