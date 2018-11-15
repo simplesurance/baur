@@ -6,6 +6,7 @@ LDFLAGS := "-X github.com/simplesurance/baur/version.GitCommit=$(GIT_COMMIT) \
 	    -X github.com/simplesurance/baur/version.Appendix=$(GIT_DIRTY)"
 BUILDFLAGS := -mod=vendor
 TARFLAGS := --sort=name --mtime='2018-01-01 00:00:00' --owner=0 --group=0 --numeric-owner
+export GO111MODULE=on
 
 default: all
 
