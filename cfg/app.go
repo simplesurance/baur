@@ -100,7 +100,7 @@ func ExampleApp(name string) *App {
 				},
 				GolangSources: GolangSources{
 					Paths:       []string{"."},
-					Environment: []string{"GOFLAGS=-mod=vendor"},
+					Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
 				},
 			},
 			Output: BuildOutput{
