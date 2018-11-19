@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"go/build"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -118,7 +120,10 @@ func (r *Resolver) resolve(path string) ([]string, error) {
 
 	var srcFiles []string
 	for _, lpkg := range lpkgs {
-		srcFiles = append(srcFiles, sourceFiles(lpkg)...)
+		err = sourceFiles(&srcFiles, lpkg)
+		if err != nil {
+			return nil, errors.Wrapf(err, "resolving sourcefiles of package '%s' failed", lpkg.Name)
+		}
 
 		if len(lpkg.Errors) != 0 {
 			return nil, fmt.Errorf("parsing package %s failed: %+v", lpkg.Name, lpkg.Errors)
@@ -130,28 +135,33 @@ func (r *Resolver) resolve(path string) ([]string, error) {
 
 // sourceFiles returns GoFiles and OtherFiles of the package that are not part
 // of the stdlib
-func sourceFiles(pkg *packages.Package) []string {
-	paths := make([]string, 0, len(pkg.GoFiles)+len(pkg.OtherFiles))
-
-	for _, path := range pkg.GoFiles {
-		if isStdLib(path) {
-			continue
-		}
-
-		paths = append(paths, path)
+func sourceFiles(result *[]string, pkg *packages.Package) error {
+	err := withoutStdblibPackages(result, pkg.GoFiles)
+	if err != nil {
+		return err
 	}
 
-	for _, path := range pkg.OtherFiles {
-		if isStdLib(path) {
-			continue
-		}
-
-		paths = append(paths, path)
+	err = withoutStdblibPackages(result, pkg.OtherFiles)
+	if err != nil {
+		return err
 	}
 
-	return paths
+	return nil
 }
 
-func isStdLib(path string) bool {
-	return strings.HasPrefix(path, build.Default.GOROOT)
+func withoutStdblibPackages(result *[]string, paths []string) error {
+	for _, path := range paths {
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+
+		if strings.HasPrefix(abs, build.Default.GOROOT) {
+			continue
+		}
+
+		*result = append(*result, abs)
+	}
+
+	return nil
 }
