@@ -19,10 +19,10 @@ import (
 
 const lsBuildsExample = `
 baur ls builds -s duration-desc calc               list builds of the calc
-												   application, sorted by
-												   build duration
+						   application, sorted by
+						   build duration
 baur ls builds --csv --after=2018.09.27-11:30 all  list builds in csv format that
-												   happened after 2018.09.27 11:30`
+						   happened after 2018.09.27 11:30`
 
 var lsBuildsCmd = &cobra.Command{
 	Use:     "builds <APP-NAME>|all",
