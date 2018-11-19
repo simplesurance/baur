@@ -320,8 +320,8 @@ func waitPrintUploadStatus(uploader scheduler.Manager, uploadChan chan *schedule
 			log.Fatalf("upload of %q failed: %s\n", ud.Output, res.Err)
 		}
 
-		fmt.Printf("%s: %s uploaded to %s (%.3fs)\n",
-			ud.App.Name, ud.Output.LocalPath(), res.URL, res.Duration.Seconds())
+		fmt.Printf("%s: %s uploaded to %s (%ss)\n",
+			ud.App.Name, ud.Output.LocalPath(), res.URL, durationToStrSeconds(res.Duration))
 
 		resultAddUploadResult(ud.App.Name, ud.Output, res)
 
@@ -493,7 +493,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	}
 
 	term.PrintSep()
-	fmt.Printf("finished in %s\n", time.Since(startTs))
+	fmt.Printf("finished in %ss\n", durationToStrSeconds(time.Since(startTs)))
 }
 
 func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.BuildWithDuration, string) {
