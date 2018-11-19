@@ -4,8 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-
-	"github.com/simplesurance/baur/version"
 )
 
 func Test_ExampleRepository_IsValid(t *testing.T) {
@@ -16,13 +14,6 @@ func Test_ExampleRepository_IsValid(t *testing.T) {
 }
 
 func Test_ExampleRepository_WrittenAndReadCfgIsValid(t *testing.T) {
-	version.Version = "0.0.0"
-	sver, err := version.SemVerFromString(version.Version)
-	if err != nil {
-		t.Fatal("setting version failed")
-	}
-	version.CurSemVer = *sver
-
 	tmpfileFD, err := ioutil.TempFile("", "baur")
 	if err != nil {
 		t.Fatal("opening tmpfile failed: ", err)

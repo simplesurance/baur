@@ -1,10 +1,10 @@
 package version
 
 import (
-	"errors"
 	"fmt"
-	"strconv"
-	"strings"
+	"io"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -24,13 +24,17 @@ var (
 	CurSemVer = SemVer{}
 )
 
-func init() {
-	s, err := SemVerFromString(Version)
-	if err == nil {
-		CurSemVer = *s
+// LoadPackageVars parses the package variable and sets CurSemVer
+func LoadPackageVars() error {
+	s, err := FromString(Version)
+	if err != nil {
+		return errors.Wrapf(err, "parsing version '%s' failed", Version)
 	}
 
+	CurSemVer = *s
 	CurSemVer.GitCommit = GitCommit
+
+	return nil
 }
 
 // SemVer holds a semantic version
@@ -63,39 +67,20 @@ func (s *SemVer) Short() string {
 	return ver
 }
 
-// SemVerFromString returns the SemVer representation of a string
-func SemVerFromString(ver string) (*SemVer, error) {
+// FromString returns the SemVer representation of a string
+func FromString(ver string) (*SemVer, error) {
 	var appendix string
+	var major, minor, patch int
 
-	spl := strings.Split(ver, ".")
-	if len(spl) < 3 {
-		return nil, errors.New("invalid format, should be <Major>.<Minor>.<Patch>[-appendix]")
-	}
-
-	major, err := strconv.ParseInt(spl[0], 10, 32)
-	if err != nil {
-		return nil, errors.New("could not convert major nr to int")
-	}
-
-	minor, err := strconv.ParseInt(spl[1], 10, 32)
-	if err != nil {
-		return nil, errors.New("could not convert minor nr to int")
-	}
-
-	patch, err := strconv.ParseInt(spl[2], 10, 32)
-	if err != nil {
-		return nil, errors.New("could not convert patch nr to int")
-	}
-
-	spl = strings.SplitN(ver, "-", 2)
-	if len(spl) > 1 {
-		appendix = spl[1]
+	matches, err := fmt.Sscanf(ver, "%d.%d.%d-%s", &major, &minor, &patch, &appendix)
+	if (err != nil && err != io.ErrUnexpectedEOF) || matches < 1 {
+		return nil, errors.Wrapf(err, "invalid format, should be <Major>[.<Minor>[.<Patch>[-appendix]]]")
 	}
 
 	return &SemVer{
-		Major:    int(major),
-		Minor:    int(minor),
-		Patch:    int(patch),
+		Major:    major,
+		Minor:    minor,
+		Patch:    patch,
 		Appendix: appendix,
 	}, nil
 }
