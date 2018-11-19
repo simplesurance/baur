@@ -307,24 +307,6 @@ func startBGUploader(outputCnt int, uploadChan chan *scheduler.Result) scheduler
 	return uploader
 }
 
-func appsToString(apps []*baur.App) string {
-	var res string
-
-	for i, a := range apps {
-		res += a.Name
-
-		if i < len(apps)-1 {
-			res += ", "
-
-			if (i+1)%5 == 0 {
-				res += "\n"
-			}
-		}
-	}
-
-	return res
-}
-
 func waitPrintUploadStatus(uploader scheduler.Manager, uploadChan chan *scheduler.Result, finished chan struct{}, outputCnt int) {
 	var resultCnt int
 
@@ -418,7 +400,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	}
 
 	if !buildForce {
-		fmt.Printf("Identifying applications with outstanding builds:\n\n")
+		fmt.Printf("Evaluting build status of applications:\n")
 		apps = outstandingBuilds(store, apps)
 	}
 
@@ -445,11 +427,11 @@ func buildRun(cmd *cobra.Command, args []string) {
 		uploadWatchFin = make(chan struct{}, 1)
 		go waitPrintUploadStatus(uploader, uploadChan, uploadWatchFin, outputCnt)
 
-		fmt.Printf("building and uploading the following applications:\n%s\n",
-			appsToString(apps))
+		fmt.Printf("Building and uploading the applications with build status: %s\n",
+			coloredBuildStatus(baur.BuildStatusOutstanding))
 	} else {
-		fmt.Printf("building the following applications:\n%s\n",
-			appsToString(apps))
+		fmt.Printf("Building the applications with build status: %s, outputs are not uploaded\n",
+			coloredBuildStatus(baur.BuildStatusOutstanding))
 	}
 
 	term.PrintSep()
