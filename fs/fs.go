@@ -30,7 +30,7 @@ func FileExists(path string) bool {
 }
 
 // DirsExist runs DirExists for multiple paths.
-func DirsExist(paths []string) error {
+func DirsExist(paths ...string) error {
 	for _, path := range paths {
 		isDir, err := IsDir(path)
 		if os.IsNotExist(err) {

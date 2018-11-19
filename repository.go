@@ -68,7 +68,7 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		PSQLURL:       cfg.Database.PGSQLURL,
 	}
 
-	err = fs.DirsExist(r.AppSearchDirs)
+	err = fs.DirsExist(r.AppSearchDirs...)
 	if err != nil {
 		return nil, errors.Wrap(err, "application_dirs parameter is invalid")
 	}

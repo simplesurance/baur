@@ -9,6 +9,8 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
+
+	"github.com/simplesurance/baur/fs"
 )
 
 // Resolver determines all Go Source files that are imported by Go-Files
@@ -34,6 +36,13 @@ func NewResolver(env []string, goDirs ...string) *Resolver {
 // Testfiles and stdlib dependencies are ignored.
 func (r *Resolver) Resolve() ([]string, error) {
 	var allFiles []string
+	if err := fs.DirsExist(build.Default.GOROOT); err != nil {
+		return nil, fmt.Errorf(
+			"GOROOT directory '%s' does not exist, ensure the GOROOT env variable is set correctly",
+			build.Default.GOROOT,
+		)
+	}
+
 	for _, path := range r.goDirs {
 		files, err := r.resolve(path)
 		if err != nil {
