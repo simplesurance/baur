@@ -6,6 +6,7 @@ jobs:
     docker:
       - image: circleci/golang:1
         environment:
+          GOFLAGS: -mod=vendor
           TEST_RESULTS: /tmp/test-results
           BAUR_POSTGRESQL_URL: "postgres://root@localhost:5432/baur?sslmode=disable"
 
@@ -21,7 +22,7 @@ jobs:
       - run:
           name: Preparing Test Environment
           command: |
-            go get github.com/jstemmer/go-junit-report
+            GO111MODULE=off go get github.com/jstemmer/go-junit-report
 
             mkdir -p ${TEST_RESULTS}
 
@@ -38,7 +39,7 @@ jobs:
       - run:
           name: Creating Database Tables with baur init db
           command:
-            go run -mod=vendor cmd/baur/main.go init db -- $BAUR_POSTGRESQL_URL
+            go run cmd/baur/main.go init db -- $BAUR_POSTGRESQL_URL
 
       - run:
           name: Run Tests
