@@ -57,6 +57,10 @@ func whitelistedEnv() []string {
 		env = append(env, "PATH="+path)
 	}
 
+	if goroot, exist := os.LookupEnv("GOROOT"); exist {
+		env = append(env, "GOROOT="+goroot)
+	}
+
 	// The following variables are required for go list to determine the go
 	// build cache, see: https://github.com/golang/go/blob/release-branch.go1.11/src/cmd/go/internal/cache/default.go#L112.
 	// When those are not set, resolving fails because "go list -compiled" is called internally which requires a gocache dir
