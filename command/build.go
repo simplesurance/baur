@@ -383,13 +383,19 @@ func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 	maxAppNameLen := maxAppNameLen(apps) + 4
 
 	for _, app := range apps {
-		buildStatus, _, _ := mustGetBuildStatus(app, storage)
+		buildStatus, build, _ := mustGetBuildStatus(app, storage)
 
-		if buildStatus != baur.BuildStatusExist {
-			res = append(res, app)
+		if buildStatus == baur.BuildStatusExist {
+			fmt.Printf("%-*s => %s (%s)\n",
+				maxAppNameLen, app.Name, coloredBuildStatus(buildStatus), highlight(build.ID))
+			continue
 		}
 
-		fmt.Printf("%-*s => %s\n", maxAppNameLen, app.Name, coloredBuildStatus((buildStatus)))
+		fmt.Printf("%-*s => %s\n",
+			maxAppNameLen, app.Name, coloredBuildStatus(buildStatus))
+
+		res = append(res, app)
+
 	}
 
 	fmt.Println()
