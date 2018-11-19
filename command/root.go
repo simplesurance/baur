@@ -16,7 +16,6 @@ import (
 var rootCmd = &cobra.Command{
 	Use:              "baur",
 	Short:            "baur manages builds and artifacts in mono repositories.",
-	Version:          version.CurSemVer.String(),
 	PersistentPreRun: initSb,
 }
 
@@ -45,6 +44,11 @@ func initSb(_ *cobra.Command, _ []string) {
 
 // Execute parses commandline flags and execute their actions
 func Execute() {
+	if err := version.LoadPackageVars(); err != nil {
+		log.Errorln("setting version failed", err)
+	}
+	rootCmd.Version = version.CurSemVer.String()
+
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVar(&cpuProfilingFlag, "cpu-prof", false,
 		fmt.Sprintf("enable cpu profiling, result is written to %q", defCPUProfFile))
