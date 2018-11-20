@@ -33,9 +33,9 @@ const (
 var buildLongHelp = fmt.Sprintf(`
 Build applications.
 If no path or application name is passed, all applications in the repository are build.
-By default only applications with status '%s' and '%s' are build.
+By default only applications with status %s and %s are build.
 
-Environment Variables:
+The following Environment Variables are supported:
     %s
 
   S3 Upload:
@@ -51,8 +51,8 @@ Environment Variables:
     %s
     %s
 `,
-	highlight("Outstanding"),
-	highlight("Input Undefined"),
+	coloredBuildStatus(baur.BuildStatusOutstanding),
+	coloredBuildStatus(baur.BuildStatusInputsUndefined),
 
 	highlight(envVarPSQLURL),
 
