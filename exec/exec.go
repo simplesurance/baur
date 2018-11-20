@@ -5,8 +5,6 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
-
-	"github.com/pkg/errors"
 )
 
 var debugOutputFn = func(string, ...interface{}) { return }
@@ -20,7 +18,7 @@ func SetDebugOutputFn(fn func(format string, v ...interface{})) {
 // If the command exits with a code != 0, err is nil
 func Command(dir, command string) (output string, exitCode int, err error) {
 	cmd := exec.Command("sh", "-c", command)
-	debugOutputFn("running in %q \"%s %s\"\n", dir, cmd.Path, strings.Join(cmd.Args, " "))
+	debugOutputFn("exec: running cmd '%s %s' in directory '%s'\n", cmd.Path, strings.Join(cmd.Args, " "), dir)
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
@@ -32,14 +30,13 @@ func Command(dir, command string) (output string, exitCode int, err error) {
 
 	err = cmd.Start()
 	if err != nil {
-		err = errors.Wrapf(err, "running build command failed")
 		return
 	}
 
 	in := bufio.NewScanner(outReader)
 	for in.Scan() {
 		o := in.Text()
-		debugOutputFn(o)
+		debugOutputFn("exec: cmd output: '%s'\n", o)
 		output += o + "\n"
 	}
 
