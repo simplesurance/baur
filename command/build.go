@@ -501,7 +501,7 @@ func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus
 
 	status, build, err := baur.GetBuildStatus(storage, app)
 	if err != nil {
-		log.Fatalf("%s: evaluating build status of failed: %s", app, err)
+		log.Fatalf("%s: %s", err)
 	}
 
 	if build != nil {
