@@ -10,25 +10,79 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 
+	"github.com/simplesurance/baur/exec"
 	"github.com/simplesurance/baur/fs"
 )
+
+// goroot caches the GOROOT path when GOROOT() is called
+var goroot = ""
+
+var defLogFn = func(string, ...interface{}) { return }
 
 // Resolver determines all Go Source files that are imported by Go-Files
 // in the passed paths
 type Resolver struct {
 	env    []string
 	goDirs []string
+	logFn  func(string, ...interface{})
 }
 
 // NewResolver returns a resolver that resolves all go source files in the
 // GoDirs and it's imports to filepaths.
 // env specifies the environment variables to use during resolving.
 // If empty or nil the default Go environment is used.
-func NewResolver(env []string, goDirs ...string) *Resolver {
+func NewResolver(debugLogFn func(string, ...interface{}), env []string, goDirs ...string) *Resolver {
+	logFn := defLogFn
+	if debugLogFn != nil {
+		logFn = debugLogFn
+	}
+
 	return &Resolver{
+		logFn:  logFn,
 		env:    env,
 		goDirs: goDirs,
 	}
+}
+
+// GOROOT runs "go env GOROOT" to determine the GOROOT and returns it.
+// After the first call the path is cached in the goroot package variable and
+// the stored value is returned.
+func GOROOT() (string, error) {
+	const cmd = "go env GOROOT"
+
+	if goroot != "" {
+		return goroot, nil
+	}
+
+	out, rc, err := exec.Command("", cmd)
+	if err != nil {
+		return "", err
+	}
+
+	if rc != 0 {
+		return "", fmt.Errorf("'%s' exited with code %d, output: %s", cmd, rc, out)
+	}
+
+	goroot = strings.TrimSpace(out)
+	if goroot == "" {
+		return "", fmt.Errorf("%s did not print anything", cmd)
+	}
+
+	return goroot, nil
+}
+
+// getLastEnv iterates in reverse order through env and returns the value of
+// the first found environment variable with the given key.
+// If no environment variable with the key is found, an empty string is returned.
+func getLastEnv(env []string, key string) string {
+	for i := len(env) - 1; i >= 0; i-- {
+		idx := strings.Index(env[i], key+"=")
+		if idx != -1 {
+			return env[i][idx:]
+		}
+	}
+
+	return ""
 }
 
 // Resolve returns the Go source files in the passed directories plus all
@@ -36,15 +90,30 @@ func NewResolver(env []string, goDirs ...string) *Resolver {
 // Testfiles and stdlib dependencies are ignored.
 func (r *Resolver) Resolve() ([]string, error) {
 	var allFiles []string
-	if err := fs.DirsExist(build.Default.GOROOT); err != nil {
+	var err error
+
+	env := append(whitelistedEnv(), r.env...)
+	goroot := getLastEnv(env, "GOROOT")
+	if goroot == "" {
+		goroot, err = GOROOT()
+		if err != nil {
+			return nil, err
+		}
+
+		env = append(env, "GOROOT="+goroot)
+	}
+
+	if err := fs.DirsExist(goroot); err != nil {
 		return nil, fmt.Errorf(
-			"GOROOT directory '%s' does not exist, ensure the GOROOT env variable is set correctly",
+			"GOROOT directory '%s' does not exist, ensure the GOROOT env variable is set correctly or 'go env root' returns the right path",
 			build.Default.GOROOT,
 		)
 	}
 
+	r.logFn("gosource-resolver: environment: '%s'\n", env)
+
 	for _, path := range r.goDirs {
-		files, err := r.resolve(path)
+		files, err := r.resolve(path, goroot, env)
 		if err != nil {
 			return nil, err
 		}
@@ -64,10 +133,6 @@ func whitelistedEnv() []string {
 	// system
 	if path, exist := os.LookupEnv("PATH"); exist {
 		env = append(env, "PATH="+path)
-	}
-
-	if goroot, exist := os.LookupEnv("GOROOT"); exist {
-		env = append(env, "GOROOT="+goroot)
 	}
 
 	// The following variables are required for go list to determine the go
@@ -93,11 +158,11 @@ func whitelistedEnv() []string {
 	return env
 }
 
-func (r *Resolver) resolve(path string) ([]string, error) {
+func (r *Resolver) resolve(path, goroot string, env []string) ([]string, error) {
 	cfg := &packages.Config{
 		Mode: packages.LoadImports,
 		Dir:  path,
-		Env:  append(whitelistedEnv(), r.env...),
+		Env:  env,
 	}
 
 	lpkgs, err := packages.Load(cfg, "./...")
@@ -133,7 +198,7 @@ func (r *Resolver) resolve(path string) ([]string, error) {
 
 	var srcFiles []string
 	for _, lpkg := range lpkgs {
-		err = sourceFiles(&srcFiles, lpkg)
+		err = sourceFiles(&srcFiles, goroot, lpkg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "resolving sourcefiles of package '%s' failed", lpkg.Name)
 		}
@@ -148,13 +213,13 @@ func (r *Resolver) resolve(path string) ([]string, error) {
 
 // sourceFiles returns GoFiles and OtherFiles of the package that are not part
 // of the stdlib
-func sourceFiles(result *[]string, pkg *packages.Package) error {
-	err := withoutStdblibPackages(result, pkg.GoFiles)
+func sourceFiles(result *[]string, goroot string, pkg *packages.Package) error {
+	err := withoutStdblibPackages(result, goroot, pkg.GoFiles)
 	if err != nil {
 		return err
 	}
 
-	err = withoutStdblibPackages(result, pkg.OtherFiles)
+	err = withoutStdblibPackages(result, goroot, pkg.OtherFiles)
 	if err != nil {
 		return err
 	}
@@ -162,14 +227,14 @@ func sourceFiles(result *[]string, pkg *packages.Package) error {
 	return nil
 }
 
-func withoutStdblibPackages(result *[]string, paths []string) error {
+func withoutStdblibPackages(result *[]string, goroot string, paths []string) error {
 	for _, path := range paths {
 		abs, err := filepath.Abs(path)
 		if err != nil {
 			return err
 		}
 
-		if strings.HasPrefix(abs, build.Default.GOROOT) {
+		if strings.HasPrefix(abs, goroot) {
 			continue
 		}
 

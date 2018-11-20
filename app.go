@@ -274,7 +274,7 @@ func (a *App) resolveGoSrcInputs() ([]string, error) {
 		goSrcEnv = append(goSrcEnv, path.Clean(replaceROOTvar(val, a.Repository)))
 	}
 
-	resolver := gosource.NewResolver(goSrcEnv, absGoSourcePaths...)
+	resolver := gosource.NewResolver(log.Debugf, goSrcEnv, absGoSourcePaths...)
 	paths, err := resolver.Resolve()
 	if err != nil {
 		return nil, err

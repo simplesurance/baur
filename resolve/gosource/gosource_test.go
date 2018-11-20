@@ -71,6 +71,7 @@ func TestResolveWithGoPath(t *testing.T) {
 	defer cleanupFn()
 
 	resolver := NewResolver(
+		nil,
 		[]string{"GOPATH=" + tmpdir},
 		projectPath,
 	)
@@ -98,7 +99,7 @@ func TestResolveWithGoMod(t *testing.T) {
 	_, projectPath, filepaths, cleanupFn := createGoProject(t, "baur-test/", true)
 	defer cleanupFn()
 
-	resolver := NewResolver(nil, projectPath)
+	resolver := NewResolver(nil, nil, projectPath)
 	resolvedFiles, err := resolver.Resolve()
 	if err != nil {
 		t.Fatal(err)
