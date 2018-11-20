@@ -153,7 +153,7 @@ func showBuild(buildID int) {
 	mustWriteRow(formatter, []interface{}{"", "Started At:", highlight(build.StartTimeStamp)})
 	mustWriteRow(formatter, []interface{}{
 		"",
-		"Duration:",
+		"Build Duration:",
 		highlight(fmt.Sprintf("%.2f s", build.StopTimeStamp.Sub(build.StartTimeStamp).Seconds())),
 	})
 
