@@ -147,6 +147,13 @@ func VerifySameInputDigestSameOutputs(clt Storer, appName string, startTs time.T
 			return nil, errors.Wrapf(err, "retrieving builds for %s with TotalInputDigest %q failed", appName, totalInputDigest)
 		}
 
+		for _, build := range builds {
+			build.Outputs, err = clt.GetBuildOutputs(build.ID)
+			if err != nil {
+				return nil, errors.Wrapf(err, "retrieving build outputs for build %d failed", build.ID)
+			}
+		}
+
 		refBuild := findMostCommonOutputsByDigests(builds)
 
 		issue := findOutputsWithDifferentDigest(refBuild, builds)
