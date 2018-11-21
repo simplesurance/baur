@@ -13,10 +13,10 @@ baur detects which applications need to be build by calculating digests of the
 application source files and keeps track of previous build artifacts in a
 database.
 
-It does not implement a full-fledged build system like
-[Bazel](https://github.com/bazelbuild/bazel) or
-[Please](https://github.com/thought-machine/please), instead you can continue
-use the build tool of your choice.
+In contrast to build systems like [Bazel](https://github.com/bazelbuild/bazel)
+or [Please](https://github.com/thought-machine/please), baur does not provide
+the logic to build your software. Instead you can continue to use your existing
+build scripts.
 
 ## Content
 * [Example Repository](#Example-Repository)
@@ -28,11 +28,15 @@ use the build tool of your choice.
 * [Status](#Status)
 
 ## Example Repository
-You can find an example monorepository that uses baur at
+You can find an example monorepository that uses baur at:
 <https://github.com/simplesurance/baur-example>.
+To use it for trying baur please follow the quickstart guide at
+<https://github.com/simplesurance/baur-example#quickstart>.
 
 ## Quickstart
-The chapter describes a quick way to setup baur for experimenting with it.
+The chapter describes a quick way to setup baur for experimenting with it,
+without using the Example Repository.
+
 For setting it up in a production environment see the chapter
 [Production Setup](https://github.com/simplesurance/baur/wiki/Configuration#production-setup).
 
@@ -56,10 +60,8 @@ Run in the root directory of your Git repository:
 ```
 baur init repo
 ```
-and then follow the printed steps.
-
-After creating the repository config, the database tables and the first
-configs for your applications you are ready to play around with baur.
+and then follow the printed steps to create the database and application config
+files.
 Some commands to start with are:
 
 - List applications in the repository with their build status:
