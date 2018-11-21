@@ -78,7 +78,7 @@ func verify(cmd *cobra.Command, args []string) {
 		log.Fatalln("retrieving applications from storage failed:", err)
 	}
 
-	fmt.Printf("scanning for builds after %s with same inputs that produced different outputs...\n", startTs.Format(dateLayout))
+	fmt.Printf("Scanning for builds after %s with same inputs that produced different outputs...\n", startTs.Format(dateLayout))
 
 	var issuesFound bool
 	for _, app := range storedApps {
@@ -91,22 +91,30 @@ func verify(cmd *cobra.Command, args []string) {
 		// filesystem of the image change with every build, we
 		// can't verify them  currently :/
 		if len(issues) == 0 || containsOnlyDockerIssues(issues) {
+			fmt.Printf("%s: %s\n", app.Name, greenHighlight("OK"))
+
 			continue
 		}
 
-		fmt.Printf("%s:\n", app.Name)
+		fmt.Printf("%s: %s\n", app.Name, redHighlight("Issues found"))
 		for _, i := range issues {
 			issuesFound = true
-			fmt.Printf("- output %q of build %d differs from output of reference build %d: %s\n", i.Output.Name, i.Build.ID, i.ReferenceBuild.ID, i.Issue)
+			fmt.Printf("- %s: build %d and %d have same inputs, but digest of output %s differs\n",
+				i.Issue, i.Build.ID, i.ReferenceBuild.ID, i.Output.Name)
 		}
+
 	}
 
 	if issuesFound {
 		term.PrintSep()
-		fmt.Println("Possible reason:")
+		fmt.Println(redHighlight("Issues found"))
+		fmt.Printf("\nPossible reasons:\n")
 		fmt.Println("- builds are not reproducible, ensure a builds with the same inputs produce outputs with the same digest")
 		fmt.Println("- specified inputs of the build are incomplete")
 
 		os.Exit(verifyExitCodeIssuesFound)
 	}
+
+	term.PrintSep()
+	fmt.Println(greenHighlight("No issues found"))
 }
