@@ -1,5 +1,7 @@
 # baur [![CircleCI](https://circleci.com/gh/simplesurance/baur.svg?style=svg&circle-token=8bc17577e45f5246cba2e1ea199ae504c8700eb6)](https://circleci.com/gh/simplesurance/baur)
 
+![baur png](https://github.com/simplesurance/baur/wiki/media/baur.png)
+
 baur is a build management tool for Git based
 [monolithic repositories](https://en.wikipedia.org/wiki/Monorepo).
 
@@ -16,7 +18,7 @@ database.
 In contrast to build systems like [Bazel](https://github.com/bazelbuild/bazel)
 or [Please](https://github.com/thought-machine/please), baur does not provide
 the logic to build your software. Instead you can continue to use your existing
-build scripts.
+build scripts.1
 
 ## Content
 * [Example Repository](#Example-Repository)
