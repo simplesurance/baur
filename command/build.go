@@ -51,7 +51,7 @@ The following Environment Variables are supported:
     %s
     %s
 `,
-	coloredBuildStatus(baur.BuildStatusOutstanding),
+	coloredBuildStatus(baur.BuildStatusPending),
 	coloredBuildStatus(baur.BuildStatusInputsUndefined),
 
 	highlight(envVarPSQLURL),
@@ -359,7 +359,7 @@ func maxAppNameLen(apps []*baur.App) int {
 	return maxLen
 }
 
-func outstandingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
+func pendingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 	var res []*baur.App
 
 	maxAppNameLen := maxAppNameLen(apps) + 4
@@ -401,7 +401,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 
 	if !buildForce {
 		fmt.Printf("Evaluting build status of applications:\n")
-		apps = outstandingBuilds(store, apps)
+		apps = pendingBuilds(store, apps)
 	}
 
 	if len(apps) == 0 {
@@ -428,10 +428,10 @@ func buildRun(cmd *cobra.Command, args []string) {
 		go waitPrintUploadStatus(uploader, uploadChan, uploadWatchFin, outputCnt)
 
 		fmt.Printf("Building and uploading the applications with build status: %s\n",
-			coloredBuildStatus(baur.BuildStatusOutstanding))
+			coloredBuildStatus(baur.BuildStatusPending))
 	} else {
 		fmt.Printf("Building the applications with build status: %s, outputs are not uploaded\n",
-			coloredBuildStatus(baur.BuildStatusOutstanding))
+			coloredBuildStatus(baur.BuildStatusPending))
 	}
 
 	term.PrintSep()

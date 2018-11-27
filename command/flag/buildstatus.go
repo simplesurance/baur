@@ -11,14 +11,14 @@ import (
 // Valid commandline values
 const (
 	buildStatusExist          = "exist"
-	buildStatusOutstanding    = "outstanding"
+	buildStatusPending        = "pending"
 	buildStatusInputUndefined = "inputs-undefined"
 )
 
 // BuildStatusFormatDescription is the format description for the flag
 const BuildStatusFormatDescription string = "one of " +
 	buildStatusExist + ", " +
-	buildStatusOutstanding + ", " +
+	buildStatusPending + ", " +
 	buildStatusInputUndefined
 
 // BuildStatus is a commandline parameter to specify build status filters
@@ -39,10 +39,10 @@ func (b *BuildStatus) Set(val string) error {
 	switch strings.ToLower(val) {
 	case buildStatusExist:
 		b.Status = baur.BuildStatusExist
-	case buildStatusOutstanding:
-		b.Status = baur.BuildStatusOutstanding
+	case buildStatusPending:
+		b.Status = baur.BuildStatusPending
 	case buildStatusInputUndefined:
-		b.Status = baur.BuildStatusOutstanding
+		b.Status = baur.BuildStatusPending
 	default:
 		return errors.New("status must be " + BuildStatusFormatDescription)
 	}
@@ -65,7 +65,7 @@ where %s is one of: %s, %s, %s`,
 		highlightFn(b.Type()),
 		highlightFn("STATUS"),
 		highlightFn(buildStatusExist),
-		highlightFn(buildStatusOutstanding),
+		highlightFn(buildStatusPending),
 		highlightFn(buildStatusInputUndefined),
 	))
 }

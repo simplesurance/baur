@@ -17,8 +17,8 @@ const (
 	BuildStatusInputsUndefined
 	// BuildStatusExist a build exist
 	BuildStatusExist
-	// BuildStatusOutstanding no build exist
-	BuildStatusOutstanding
+	// BuildStatusPending no build exist
+	BuildStatusPending
 )
 
 func (b BuildStatus) String() string {
@@ -27,8 +27,8 @@ func (b BuildStatus) String() string {
 		return "Inputs Undefined"
 	case BuildStatusExist:
 		return "Exist"
-	case BuildStatusOutstanding:
-		return "Outstanding"
+	case BuildStatusPending:
+		return "Pending"
 	default:
 		panic(fmt.Sprintf("incompatible BuildStatus value: %d", b))
 	}
@@ -51,7 +51,7 @@ func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, *storage.Buil
 	build, err := storer.GetLatestBuildByDigest(app.Name, d.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
-			return BuildStatusOutstanding, nil, nil
+			return BuildStatusPending, nil, nil
 		}
 
 		return -1, nil, errors.Wrap(err, "fetching latest build failed")

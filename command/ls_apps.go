@@ -195,7 +195,7 @@ func assembleRow(app *baur.App, build *storage.BuildWithDuration, buildStatus ba
 			}
 
 		case lsAppBuildStatusParam:
-			row = append(row, (buildStatus))
+			row = append(row, buildStatus)
 
 		case lsAppBuildIDParam:
 			if buildStatus == baur.BuildStatusExist {

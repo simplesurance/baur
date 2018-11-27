@@ -71,7 +71,7 @@ Some commands to start with are:
   ```
   baur ls apps
   ```
-- Build all applications with outstanding builds, upload their artifacts and
+- Build all applications with pending builds, upload their artifacts and
   records the results:
   ```
   baur build

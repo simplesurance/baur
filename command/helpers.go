@@ -201,7 +201,7 @@ func coloredBuildStatus(status baur.BuildStatus) string {
 		return yellowHighlight(status.String())
 	case baur.BuildStatusExist:
 		return greenHighlight(status.String())
-	case baur.BuildStatusOutstanding:
+	case baur.BuildStatusPending:
 		return redHighlight(status.String())
 	default:
 		return status.String()
