@@ -1,7 +1,9 @@
 package git
 
 import (
+	"bufio"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -9,8 +11,7 @@ import (
 	"github.com/simplesurance/baur/exec"
 )
 
-// ErrNotExist means that one or more files do not exist
-var ErrNotExist = errors.New("file(s) do not exist")
+var gitLsPathSpecErrRe = regexp.MustCompile(`pathspec ('.+') did not match any file\(s\) known to git`)
 
 // CommitID return the commit id of HEAD by running git rev-parse in the passed
 // directory
@@ -44,8 +45,24 @@ func LsFiles(cwd, args string) (string, error) {
 	}
 
 	if exitCode != 0 {
-		if strings.Contains(out, "did not match any file(s)") {
-			return "", ErrNotExist
+		var errMsgs []string
+
+		scanner := bufio.NewScanner(strings.NewReader(out))
+		for scanner.Scan() {
+			matches := gitLsPathSpecErrRe.FindStringSubmatch(scanner.Text())
+			if len(matches) == 0 {
+				continue
+			}
+
+			errMsgs = append(errMsgs, matches[1:]...)
+		}
+
+		if err := scanner.Err(); err != nil {
+			return "", errors.Wrap(err, "scanning cmd output failed")
+		}
+
+		if len(errMsgs) != 0 {
+			return "", errors.New("the following paths did not match any files: " + strings.Join(errMsgs, ", "))
 		}
 
 		return "", fmt.Errorf("%q exited with code %d, output: %q", cmd, exitCode, out)
