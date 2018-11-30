@@ -427,11 +427,19 @@ func buildRun(cmd *cobra.Command, args []string) {
 		uploadWatchFin = make(chan struct{}, 1)
 		go waitPrintUploadStatus(uploader, uploadChan, uploadWatchFin, outputCnt)
 
-		fmt.Printf("Building and uploading the applications with build status: %s\n",
-			coloredBuildStatus(baur.BuildStatusPending))
+		if buildForce {
+			fmt.Println("Building and uploading all applications")
+		} else {
+			fmt.Printf("Building and uploading the applications with build status: %s\n",
+				coloredBuildStatus(baur.BuildStatusPending))
+		}
 	} else {
-		fmt.Printf("Building the applications with build status: %s, outputs are not uploaded\n",
-			coloredBuildStatus(baur.BuildStatusPending))
+		if buildForce {
+			fmt.Println("Building all applications, outputs are not uploaded")
+		} else {
+			fmt.Printf("Building the applications with build status: %s, outputs are not uploaded\n",
+				coloredBuildStatus(baur.BuildStatusPending))
+		}
 	}
 
 	term.PrintSep()
