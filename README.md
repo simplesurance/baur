@@ -14,12 +14,8 @@ Developers specify in a [TOML](https://github.com/toml-lang/toml) configuration 
 baur detects which applications need to be build by calculating a digest of the
 application's build inputs and comparing them with digests from previous builds.
 If a build with the same build input digest was done in the past, a build is not necessary.
-If the build input digest differs from the stored ones, baur builds the application.
-
-In contrast to build systems like [Bazel](https://github.com/bazelbuild/bazel)
-or [Please](https://github.com/thought-machine/please), baur does not provide
-the logic to build your software. Instead you can continue to use your existing
-build scripts.1
+If the build input digest differs from the stored ones, baur runs a
+user-specified command to build the application.
 
 ## Content
 * [Example Repository](#Example-Repository)
