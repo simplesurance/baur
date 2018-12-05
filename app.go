@@ -200,22 +200,22 @@ func (a *App) resolveGlobFileInputs() ([]string, error) {
 	var res []string
 
 	for _, globPath := range a.UnresolvedInputs.Files.Paths {
-		var globPathSubst string
-
 		if strings.HasPrefix(globPath, "$ROOT") {
-			globPathSubst = filepath.Clean(replaceROOTvar(globPath, a.Repository))
-		} else {
-			globPathSubst = filepath.Join(a.Path, globPath)
+			globPath = filepath.Clean(replaceROOTvar(globPath, a.Repository))
 		}
 
-		resolver := glob.NewResolver(globPathSubst)
+		if !filepath.IsAbs(globPath) {
+			globPath = filepath.Join(a.Path, globPath)
+		}
+
+		resolver := glob.NewResolver(globPath)
 		paths, err := resolver.Resolve()
 		if err != nil {
-			return nil, errors.Wrap(err, globPathSubst)
+			return nil, errors.Wrap(err, globPath)
 		}
 
 		if len(paths) == 0 {
-			return nil, fmt.Errorf("'%s' matched 0 files", globPathSubst)
+			return nil, fmt.Errorf("'%s' matched 0 files", globPath)
 		}
 
 		res = append(res, paths...)
