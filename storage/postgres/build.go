@@ -11,7 +11,7 @@ import (
 
 const buildQueryWithoutInputsOutputs = `
 SELECT application.id, application.name,
-       build.id, build.start_timestamp, build.stop_timestamp, build.total_input_digest, 
+       build.id, build.start_timestamp, build.stop_timestamp, build.total_input_digest,
        vcs.commit, vcs.dirty,
        (EXTRACT(EPOCH FROM (build.stop_timestamp - build.start_timestamp))::bigint * 1000000000) as duration
 FROM application
@@ -121,7 +121,7 @@ func (c *Client) GetLatestBuildByDigest(appName, totalInputDigest string) (*stor
 // GetBuildWithoutInputsOutputs retrieves a single build from the database
 func (c *Client) GetBuildWithoutInputsOutputs(id int) (*storage.BuildWithDuration, error) {
 	builds, err := c.GetBuildsWithoutInputsOutputs([]*storage.Filter{
-		&storage.Filter{
+		{
 			Field:    storage.FieldBuildID,
 			Operator: storage.OpEQ,
 			Value:    id,

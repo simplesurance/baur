@@ -86,7 +86,7 @@ type testcase struct {
 
 func Test_Resolve(t *testing.T) {
 	testcases := []*testcase{
-		&testcase{
+		{
 			files: []string{
 				"a.go",
 				"hello.go",
@@ -102,7 +102,7 @@ func Test_Resolve(t *testing.T) {
 			fileSrcGlobPath: "*.go",
 		},
 
-		&testcase{
+		{
 			files: []string{
 				"thisnot",
 				"1/notme.og",
@@ -117,7 +117,7 @@ func Test_Resolve(t *testing.T) {
 			fileSrcGlobPath: "*.b??",
 		},
 
-		&testcase{
+		{
 			files: []string{
 				"1/2/3/a.go",
 				"1/hello.go",
@@ -136,7 +136,7 @@ func Test_Resolve(t *testing.T) {
 			fileSrcGlobPath: "**/*.go",
 		},
 
-		&testcase{
+		{
 			files: []string{
 				"base.go",
 				"1/yo.go",
@@ -155,7 +155,7 @@ func Test_Resolve(t *testing.T) {
 			fileSrcGlobPath: "**",
 		},
 
-		&testcase{
+		{
 			files: []string{
 				"base.go",
 				"1/yo.go",

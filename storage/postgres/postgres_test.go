@@ -18,7 +18,7 @@ var build = storage.Build{
 	StartTimeStamp: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 	StopTimeStamp:  time.Date(2018, 1, 1, 2, 1, 1, 1, time.UTC),
 	Outputs: []*storage.Output{
-		&storage.Output{
+		{
 			Name: "baur-unittest/dist/artifact.tar.xz",
 			Type: storage.FileArtifact,
 			Upload: storage.Upload{
@@ -30,12 +30,12 @@ var build = storage.Build{
 		},
 	},
 	Inputs: []*storage.Input{
-		&storage.Input{
+		{
 			Digest: "890",
 			URI:    "baur-unittest/file1.xyz",
 		},
 
-		&storage.Input{
+		{
 			Digest: "a3",
 			URI:    "baur-unittest/file2.xyz",
 		},
