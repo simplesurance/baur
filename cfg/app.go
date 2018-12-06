@@ -105,7 +105,7 @@ func ExampleApp(name string) *App {
 			},
 			Output: BuildOutput{
 				File: []*FileOutput{
-					&FileOutput{
+					{
 						Path: fmt.Sprintf("dist/%s.tar.xz", name),
 						S3Upload: S3Upload{
 							Bucket:   "go-artifacts/",
@@ -118,7 +118,7 @@ func ExampleApp(name string) *App {
 					},
 				},
 				DockerImage: []*DockerImageOutput{
-					&DockerImageOutput{
+					{
 						IDFile: fmt.Sprintf("%s-container.id", name),
 						RegistryUpload: DockerImageRegistryUpload{
 							Repository: fmt.Sprintf("my-company/%s", name),
