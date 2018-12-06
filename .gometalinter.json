@@ -6,6 +6,7 @@
 	"Warn-Unmatched-Nolint": true,
 	"Enable": [
 		"deadcode",
+		"gofmt",
 		"goimports",
 		"golint",
 		"ineffassign",
