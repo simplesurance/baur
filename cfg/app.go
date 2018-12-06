@@ -213,12 +213,7 @@ func (a *App) Validate() error {
 		return errors.New("name parameter can not be empty")
 	}
 
-	if err := a.Build.Validate(); err != nil {
-		return err
-	}
-
-	return nil
-
+	return a.Build.Validate()
 }
 
 // Validate validates the build section
@@ -230,11 +225,7 @@ func (b *Build) Validate() error {
 		return err
 	}
 
-	if err := b.Output.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return b.Output.Validate()
 }
 
 // Validate validates the BuildInput section
