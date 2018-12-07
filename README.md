@@ -17,6 +17,8 @@ If a build with the same build input digest was done in the past, a build is not
 If the build input digest differs from the stored ones, baur runs a
 user-specified command to build the application.
 
+[![asciicast](https://asciinema.org/a/215653.svg)](https://asciinema.org/a/215653?rows=30&speed=1.5)
+
 ## Content
 * [Example Repository](#Example-Repository)
 * [Quickstart](#Quickstart)
