@@ -173,7 +173,7 @@ func (a *App) String() string {
 }
 
 func (a *App) pathsToUniqFiles(paths []string) ([]*File, error) {
-	dedupMap := map[string]struct{}{}
+	dedupMap := make(map[string]struct{}, len(paths))
 	res := make([]*File, 0, len(paths))
 
 	for _, path := range paths {
