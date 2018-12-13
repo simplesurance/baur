@@ -180,8 +180,15 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 		return apps
 	}
 
+	dedupMap := make(map[string]struct{}, len(args))
 	apps := make([]*baur.App, 0, len(args))
 	for _, arg := range args {
+		app := mustArgToApp(repo, arg)
+		if _, exist := dedupMap[app.Path]; exist {
+			continue
+		}
+
+		dedupMap[app.Path] = struct{}{}
 		apps = append(apps, mustArgToApp(repo, arg))
 	}
 
