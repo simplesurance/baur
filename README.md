@@ -42,16 +42,12 @@ without using the Example Repository.
 For setting it up in a production environment see the chapter
 [Production Setup](https://github.com/simplesurance/baur/wiki/Configuration#production-setup).
 
-Install baur by either:
-- downloading a release archive from
-  the [Release Page](https://github.com/simplesurance/baur/releases) and copying
-  `baur` into your `$PATH`
-- installing the latest development version by running
+### Installation
+Install baur by downloading a release archive from
+the [Release Page](https://github.com/simplesurance/baur/releases) and
+extracting `baur` into your `$PATH`
 
-```
-go get -u github.com/simplesurance/baur/...
-```
-
+### Setup
 baur uses a PostgreSQL database to store information about builds, the quickest
 way to setup a PostgreSQL for local testing is with docker:
 
@@ -69,6 +65,8 @@ baur init repo
 
 Next, follow the printed steps to create the database and application config
 files.
+
+### First Steps
 Some commands to start with are:
 
 | command                             | action                                                                                    |
