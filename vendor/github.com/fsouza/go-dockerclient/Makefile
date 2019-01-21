@@ -1,29 +1,31 @@
 .PHONY: \
 	all \
-	lint \
-	vet \
+	staticcheck \
 	fmtcheck \
 	pretest \
 	test \
 	integration
 
+DEP_TOOL ?= dep
+
 all: test
 
-lint:
-	@ go get -v golang.org/x/lint/golint
-	[ -z "$$(golint . | grep -v 'type name will be used as docker.DockerInfo' | grep -v 'context.Context should be the first' | tee /dev/stderr)" ]
-
-vet:
-	go vet ./...
+staticcheck:
+	GO111MODULE=off go get -v honnef.co/go/tools/cmd/staticcheck
+	staticcheck ./...
 
 fmtcheck:
 	if [ -z "$${SKIP_FMT_CHECK}" ]; then [ -z "$$(gofmt -s -d *.go ./testing | tee /dev/stderr)" ]; fi
 
 testdeps:
-	go get -u github.com/golang/dep/cmd/dep
+ifeq ($(DEP_TOOL), dep)
+	GO111MODULE=off go get -u github.com/golang/dep/cmd/dep
 	dep ensure -v
+else
+	go mod download
+endif
 
-pretest: testdeps lint vet fmtcheck
+pretest: testdeps staticcheck fmtcheck
 
 gotest:
 	go test -race ./...

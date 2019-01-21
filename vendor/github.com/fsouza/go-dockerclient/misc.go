@@ -17,7 +17,7 @@ import (
 //
 // See https://goo.gl/mU7yje for more details.
 func (c *Client) Version() (*Env, error) {
-	return c.VersionWithContext(nil)
+	return c.VersionWithContext(context.TODO())
 }
 
 // VersionWithContext returns version information about the docker server.
@@ -85,12 +85,21 @@ type DockerInfo struct {
 	Labels             []string
 	ServerVersion      string
 	ClusterStore       string
+	Runtimes           map[string]Runtime
 	ClusterAdvertise   string
 	Isolation          string
 	InitBinary         string
 	DefaultRuntime     string
 	LiveRestoreEnabled bool
 	Swarm              swarm.Info
+}
+
+// Runtime describes an OCI runtime
+//
+// for more information, see: https://dockr.ly/2NKM8qq
+type Runtime struct {
+	Path string
+	Args []string `json:"runtimeArgs"`
 }
 
 // PluginsInfo is a struct with the plugins registered with the docker daemon

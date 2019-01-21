@@ -3,9 +3,7 @@ github.com/Azure/go-ansiterm/winterm
 github.com/Azure/go-ansiterm
 # github.com/Microsoft/go-winio v0.4.11
 github.com/Microsoft/go-winio
-# github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5
-github.com/Nvveen/Gotty
-# github.com/aws/aws-sdk-go v1.16.5
+# github.com/aws/aws-sdk-go v1.16.22
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/session
 github.com/aws/aws-sdk-go/service/s3/s3manager
@@ -44,7 +42,7 @@ github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 # github.com/containerd/continuity v0.0.0-20181203112020-004b46473808
 github.com/containerd/continuity/pathdriver
-# github.com/docker/docker v0.7.3-0.20180827131323-0c5f8d2b9b23
+# github.com/docker/docker v0.7.3-0.20190111153827-295413c9d0e1
 github.com/docker/docker/api/types/registry
 github.com/docker/docker/api/types/swarm
 github.com/docker/docker/opts
@@ -75,13 +73,15 @@ github.com/docker/go-units
 github.com/docker/libnetwork/ipamutils
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
-# github.com/fsouza/go-dockerclient v1.3.1
+# github.com/fsouza/go-dockerclient v1.3.5
 github.com/fsouza/go-dockerclient
 github.com/fsouza/go-dockerclient/internal/archive
 github.com/fsouza/go-dockerclient/internal/jsonmessage
 github.com/fsouza/go-dockerclient/internal/term
 # github.com/gogo/protobuf v1.2.0
 github.com/gogo/protobuf/proto
+# github.com/ijc/Gotty v0.0.0-20170406111628-a8b993ba6abd
+github.com/ijc/Gotty
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
@@ -104,25 +104,26 @@ github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/runc/libcontainer/user
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
-# github.com/pkg/errors v0.8.0
+# github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/rs/xid v1.2.1
 github.com/rs/xid
-# github.com/sirupsen/logrus v1.2.0
+# github.com/sirupsen/logrus v1.3.0
 github.com/sirupsen/logrus
 # github.com/spf13/cobra v0.0.3
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
+# golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/sys v0.0.0-20181213200352-4d1cda033e06
+# golang.org/x/sys v0.0.0-20190121090251-770c60269bf0
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/tools v0.0.0-20181213210126-fe2443f7b950
+# golang.org/x/tools v0.0.0-20190118193359-16909d206f00
 golang.org/x/tools/go/packages
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/cgo
+golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/semver
 golang.org/x/tools/go/internal/gcimporter

@@ -3,19 +3,21 @@ sudo: required
 go:
   - 1.10.x
   - 1.11.x
+  - 1.12beta2
 os:
   - linux
   - osx
 env:
   matrix:
-    - GOARCH=amd64 DOCKER_PKG_VERSION=18.03.0~ce-0~ubuntu
-    - GOARCH=386   DOCKER_PKG_VERSION=18.03.0~ce-0~ubuntu
-    - GOARCH=amd64 DOCKER_PKG_VERSION=18.02.0~ce-0~ubuntu
-    - GOARCH=386   DOCKER_PKG_VERSION=18.02.0~ce-0~ubuntu
+    - GOARCH=amd64 DEP_TOOL=mod GO111MODULE=on
+    - GOARCH=386 DEP_TOOL=mod GO111MODULE=on
+    - GOARCH=amd64 DEP_TOOL=dep GO111MODULE=off
+    - GOARCH=386 DEP_TOOL=dep GO111MODULE=off
   global:
     - DOCKER_HOST=tcp://127.0.0.1:2375
+    - DOCKER_PKG_VERSION=18.06.1~ce~3-0~ubuntu
 install:
-  - make testdeps
+  - make testdeps DEP_TOOL=${DEP_TOOL}
   - travis_retry travis-scripts/install-docker.bash
 script:
   - travis-scripts/run-tests.bash
@@ -24,7 +26,7 @@ services:
 matrix:
   fast_finish: true
   exclude:
-    - os: osx
-      env: GOARCH=amd64 DOCKER_PKG_VERSION=18.02.0~ce-0~ubuntu
-    - os: osx
-      env: GOARCH=386   DOCKER_PKG_VERSION=18.02.0~ce-0~ubuntu
+    - go: 1.10.x
+      env: GOARCH=amd64 DEP_TOOL=mod GO111MODULE=on
+    - go: 1.10.x
+      env: GOARCH=386 DEP_TOOL=mod GO111MODULE=on
