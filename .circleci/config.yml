@@ -73,7 +73,7 @@ jobs:
       - run:
           name: Preparing Test Environment
           command: |
-            GOMETALINTER_VER=2.0.11
+            GOMETALINTER_VER=3.0.0
 
             curl -fsSL https://github.com/alecthomas/gometalinter/releases/download/v${GOMETALINTER_VER}/gometalinter-${GOMETALINTER_VER}-linux-amd64.tar.gz | tar zxvf -
             sudo mv gometalinter-${GOMETALINTER_VER}-linux-amd64/* /usr/local/bin/
