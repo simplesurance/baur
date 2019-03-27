@@ -1,5 +1,7 @@
 module github.com/simplesurance/baur
 
+go 1.12
+
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/aws/aws-sdk-go v1.16.5
