@@ -37,7 +37,7 @@ func CommitID(dir string) (string, error) {
 // output
 // If no files match, ErrNotExist is returned
 func LsFiles(cwd, args string) (string, error) {
-	cmd := "git ls-files --error-unmatch " + args
+	cmd := "git -c core.quotepath=off ls-files --error-unmatch " + args
 
 	out, exitCode, err := exec.Command(cwd, cmd)
 	if err != nil {
