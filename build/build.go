@@ -17,9 +17,10 @@ type Result struct {
 
 // Job describes abuild job
 type Job struct {
-	Directory string
-	Command   string
-	UserData  interface{}
+	Application string
+	Directory   string
+	Command     string
+	UserData    interface{}
 }
 
 // Builder is an interface for builders

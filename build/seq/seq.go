@@ -5,6 +5,8 @@ package seq
 import (
 	"time"
 
+	"github.com/fatih/color"
+
 	"github.com/simplesurance/baur/build"
 	"github.com/simplesurance/baur/exec"
 )
@@ -25,12 +27,13 @@ func New(jobs []*build.Job, status chan<- *build.Result) build.Builder {
 
 // Start starts building applications
 func (b *Builder) Start() {
-	// TODO: support canceling the build via ctx.Done()
 	for _, j := range b.jobs {
 		startTime := time.Now()
 
-		// TODO: add the application name as .DebugPrefix()
-		cmdRes, err := exec.ShellCommand(j.Command).Directory(j.Directory).Run()
+		cmdRes, err := exec.ShellCommand(j.Command).
+			Directory(j.Directory).
+			DebugfPrefix(color.YellowString(j.Application + ": ")).
+			Run()
 		res := build.Result{
 			Job:      j,
 			Error:    err,
