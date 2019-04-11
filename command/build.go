@@ -263,8 +263,9 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 		log.Debugf("%s: total input digest: %s\n", app, totalDigest)
 
 		buildJobs = append(buildJobs, &build.Job{
-			Directory: app.Path,
-			Command:   app.BuildCmd,
+			Application: app.Name,
+			Directory:   app.Path,
+			Command:     app.BuildCmd,
 			UserData: &buildUserData{
 				App:              app,
 				Inputs:           buildInputs,
