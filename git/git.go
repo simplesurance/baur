@@ -2,7 +2,7 @@ package git
 
 import (
 	"bufio"
-	"fmt"
+	"bytes"
 	"regexp"
 	"strings"
 
@@ -16,16 +16,12 @@ var gitLsPathSpecErrRe = regexp.MustCompile(`pathspec ('.+') did not match any f
 // CommitID return the commit id of HEAD by running git rev-parse in the passed
 // directory
 func CommitID(dir string) (string, error) {
-	out, exitCode, err := exec.Command(dir, "git rev-parse HEAD")
+	res, err := exec.Command("git", "rev-parse", "HEAD").Directory(dir).ExpectSuccess().Run()
 	if err != nil {
-		return "", errors.Wrap(err, "executing git rev-parse HEAD failed")
+		return "", err
 	}
 
-	if exitCode != 0 {
-		return "", errors.Wrapf(err, "executing git rev-parse HEAD failed, output: %q", out)
-	}
-
-	commitID := strings.TrimSpace(out)
+	commitID := strings.TrimSpace(res.StrOutput())
 	if len(commitID) == 0 {
 		return "", errors.Wrap(err, "executing git rev-parse HEAD failed, no Stdout output")
 	}
@@ -39,15 +35,15 @@ func CommitID(dir string) (string, error) {
 func LsFiles(cwd, args string) (string, error) {
 	cmd := "git -c core.quotepath=off ls-files --error-unmatch " + args
 
-	out, exitCode, err := exec.Command(cwd, cmd)
+	res, err := exec.ShellCommand(cmd).Directory(cwd).Run()
 	if err != nil {
-		return "", errors.Wrapf(err, "executing %q failed", cmd)
+		return "", err
 	}
 
-	if exitCode != 0 {
+	if res.ExitCode != 0 {
 		var errMsgs []string
 
-		scanner := bufio.NewScanner(strings.NewReader(out))
+		scanner := bufio.NewScanner(bytes.NewReader(res.Output))
 		for scanner.Scan() {
 			matches := gitLsPathSpecErrRe.FindStringSubmatch(scanner.Text())
 			if len(matches) == 0 {
@@ -65,10 +61,10 @@ func LsFiles(cwd, args string) (string, error) {
 			return "", errors.New("the following paths did not match any files: " + strings.Join(errMsgs, ", "))
 		}
 
-		return "", fmt.Errorf("%q exited with code %d, output: %q", cmd, exitCode, out)
+		return "", res.ExpectSuccess()
 	}
 
-	return out, nil
+	return res.StrOutput(), nil
 }
 
 // WorkTreeIsDirty returns true if the repository contains modified files,
@@ -76,16 +72,12 @@ func LsFiles(cwd, args string) (string, error) {
 func WorkTreeIsDirty(dir string) (bool, error) {
 	const cmd = "git status -s"
 
-	out, exitCode, err := exec.Command(dir, cmd)
+	res, err := exec.Command("git", "status", "-s").Directory(dir).ExpectSuccess().Run()
 	if err != nil {
-		return false, errors.Wrapf(err, "executing %q failed", cmd)
+		return false, err
 	}
 
-	if exitCode != 0 {
-		return false, fmt.Errorf("%q exited with code %d, output: %q", cmd, exitCode, out)
-	}
-
-	if len(out) == 0 {
+	if len(res.Output) == 0 {
 		return false, nil
 	}
 

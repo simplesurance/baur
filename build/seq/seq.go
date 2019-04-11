@@ -29,14 +29,15 @@ func (b *Builder) Start() {
 	for _, j := range b.jobs {
 		startTime := time.Now()
 
-		out, exitCode, err := exec.Command(j.Directory, j.Command)
+		// TODO: add the application name as .DebugPrefix()
+		cmdRes, err := exec.ShellCommand(j.Command).Directory(j.Directory).Run()
 		res := build.Result{
 			Job:      j,
 			Error:    err,
 			StartTs:  startTime,
 			StopTs:   time.Now(),
-			ExitCode: exitCode,
-			Output:   out,
+			ExitCode: cmdRes.ExitCode,
+			Output:   cmdRes.StrOutput(),
 		}
 
 		b.statusChan <- &res

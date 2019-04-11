@@ -48,24 +48,18 @@ func NewResolver(debugLogFn func(string, ...interface{}), env []string, goDirs .
 // After the first call the path is cached in the goroot package variable and
 // the stored value is returned.
 func GOROOT() (string, error) {
-	const cmd = "go env GOROOT"
-
 	if goroot != "" {
 		return goroot, nil
 	}
 
-	out, rc, err := exec.Command("", cmd)
+	res, err := exec.Command("go", "env", "GOROOT").ExpectSuccess().Run()
 	if err != nil {
 		return "", err
 	}
 
-	if rc != 0 {
-		return "", fmt.Errorf("'%s' exited with code %d, output: %s", cmd, rc, out)
-	}
-
-	goroot = strings.TrimSpace(out)
+	goroot = strings.TrimSpace(res.StrOutput())
 	if goroot == "" {
-		return "", fmt.Errorf("%s did not print anything", cmd)
+		return "", fmt.Errorf("%s did not print anything", res.Command)
 	}
 
 	return goroot, nil
