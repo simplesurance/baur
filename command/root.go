@@ -27,7 +27,7 @@ var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
 func initSb(_ *cobra.Command, _ []string) {
 	if verboseFlag {
 		log.StdLogger.EnableDebug(verboseFlag)
-		exec.SetDebugOutputFn(log.StdLogger.Debugf)
+		exec.DefaultDebugfFn = log.StdLogger.Debugf
 	}
 
 	if cpuProfilingFlag {
