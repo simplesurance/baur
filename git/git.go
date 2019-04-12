@@ -32,10 +32,10 @@ func CommitID(dir string) (string, error) {
 // LsFiles runs git ls-files in dir, passes args as argument and returns the
 // output
 // If no files match, ErrNotExist is returned
-func LsFiles(cwd, args string) (string, error) {
-	cmd := "git -c core.quotepath=off ls-files --error-unmatch " + args
+func LsFiles(dir string, arg ...string) (string, error) {
+	args := append([]string{"-c", "core.quotepath=off", "ls-files", "error-unmatch"}, arg...)
 
-	res, err := exec.ShellCommand(cmd).Directory(cwd).Run()
+	res, err := exec.Command("git", args...).Directory(dir).Run()
 	if err != nil {
 		return "", err
 	}

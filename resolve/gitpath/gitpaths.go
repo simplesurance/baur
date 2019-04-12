@@ -28,8 +28,7 @@ func NewResolver(path string, globs ...string) *Resolver {
 // Resolve the glob paths to absolute file paths by calling
 // git ls-files
 func (r *Resolver) Resolve() ([]string, error) {
-	arg := strings.Join(r.globs, " ")
-	out, err := git.LsFiles(r.path, arg)
+	out, err := git.LsFiles(r.path, r.globs...)
 	if err != nil {
 		return nil, err
 	}
