@@ -360,6 +360,26 @@ func maxAppNameLen(apps []*baur.App) int {
 	return maxLen
 }
 
+func appsWithBuildCommand(apps []*baur.App) []*baur.App {
+	res := make([]*baur.App, 0, len(apps))
+
+	maxAppNameLen := maxAppNameLen(apps) + 4
+
+	for _, app := range apps {
+		if len(app.BuildCmd) == 0 {
+			fmt.Printf("%-*s => %s\n",
+				maxAppNameLen, app.Name, coloredBuildStatus(baur.BuildStatusBuildCommandUndefined))
+			continue
+		}
+
+		fmt.Printf("%-*s => %s\n",
+			maxAppNameLen, app.Name, coloredBuildStatus(baur.BuildStatusPending))
+		res = append(res, app)
+	}
+
+	return res
+}
+
 func pendingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 	var res []*baur.App
 
@@ -377,11 +397,13 @@ func pendingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 		fmt.Printf("%-*s => %s\n",
 			maxAppNameLen, app.Name, coloredBuildStatus(buildStatus))
 
+		if buildStatus == baur.BuildStatusBuildCommandUndefined {
+			continue
+		}
+
 		res = append(res, app)
 
 	}
-
-	fmt.Println()
 
 	return res
 }
@@ -392,28 +414,40 @@ func buildRun(cmd *cobra.Command, args []string) {
 	var uploader scheduler.Manager
 
 	repo := MustFindRepository()
-	startTs := time.Now()
-
-	apps = mustArgToApps(repo, args)
 
 	if !buildSkipUpload || !buildForce {
 		store = MustGetPostgresClt(repo)
 	}
 
-	if !buildForce {
-		fmt.Printf("Evaluting build status of applications:\n")
+	startTs := time.Now()
+
+	apps = mustArgToApps(repo, args)
+	baur.SortAppsByName(apps)
+
+	fmt.Printf("Evaluating build status of applications:\n")
+	if buildForce {
+		apps = appsWithBuildCommand(apps)
+	} else {
 		apps = pendingBuilds(store, apps)
 	}
 
-	if len(apps) == 0 {
-		fmt.Println()
-		term.PrintSep()
-		fmt.Println("Application build(s) already exist, nothing to build.\n" +
-			"If you want to rebuild applications pass '-f' to 'baur build'")
-		os.Exit(0)
+	fmt.Println()
+	fmt.Printf("Building applications with build status: %s\n",
+		coloredBuildStatus(baur.BuildStatusPending))
+
+	if buildSkipUpload {
+		fmt.Println("Outputs are not uploaded.")
 	}
 
-	baur.SortAppsByName(apps)
+	if len(apps) == 0 {
+		term.PrintSep()
+
+		if !buildForce {
+			fmt.Println("If you want to rebuild applications pass '-f' to 'baur build'.")
+		}
+
+		os.Exit(0)
+	}
 
 	repo.GitCommitID()
 
@@ -427,20 +461,6 @@ func buildRun(cmd *cobra.Command, args []string) {
 		uploader = startBGUploader(outputCnt, uploadChan)
 		uploadWatchFin = make(chan struct{}, 1)
 		go waitPrintUploadStatus(uploader, uploadChan, uploadWatchFin, outputCnt)
-
-		if buildForce {
-			fmt.Println("Building and uploading all applications")
-		} else {
-			fmt.Printf("Building and uploading the applications with build status: %s\n",
-				coloredBuildStatus(baur.BuildStatusPending))
-		}
-	} else {
-		if buildForce {
-			fmt.Println("Building all applications, outputs are not uploaded")
-		} else {
-			fmt.Printf("Building the applications with build status: %s, outputs are not uploaded\n",
-				coloredBuildStatus(baur.BuildStatusPending))
-		}
 	}
 
 	term.PrintSep()

@@ -15,6 +15,8 @@ const (
 	_ BuildStatus = iota
 	// BuildStatusInputsUndefined inputs of the application are undefined,
 	BuildStatusInputsUndefined
+	// BuildStatusBuildCommandUndefined build.command of the application is undefined,
+	BuildStatusBuildCommandUndefined
 	// BuildStatusExist a build exist
 	BuildStatusExist
 	// BuildStatusPending no build exist
@@ -29,6 +31,8 @@ func (b BuildStatus) String() string {
 		return "Exist"
 	case BuildStatusPending:
 		return "Pending"
+	case BuildStatusBuildCommandUndefined:
+		return "Build Command Undefined"
 	default:
 		panic(fmt.Sprintf("incompatible BuildStatus value: %d", b))
 	}
@@ -39,6 +43,10 @@ func (b BuildStatus) String() string {
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
 func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, *storage.BuildWithDuration, error) {
+	if len(app.BuildCmd) == 0 {
+		return BuildStatusBuildCommandUndefined, nil, nil
+	}
+
 	if !app.HasBuildInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
