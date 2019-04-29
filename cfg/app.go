@@ -219,8 +219,9 @@ func (a *App) Validate() error {
 // Validate validates the build section
 func (b *Build) Validate() error {
 	if len(b.Command) == 0 {
-		return errors.New("[Build] section contains errors: command can not be empty")
+		return nil
 	}
+
 	if err := b.Input.Validate(); err != nil {
 		return err
 	}
