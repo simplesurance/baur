@@ -28,6 +28,9 @@ import (
 const (
 	dockerEnvUsernameVar = "BAUR_DOCKER_USERNAME"
 	dockerEnvPasswordVar = "BAUR_DOCKER_PASSWORD"
+
+	appColSep = " => "
+	sepLen    = len(appColSep)
 )
 
 var buildLongHelp = fmt.Sprintf(`
@@ -363,17 +366,17 @@ func maxAppNameLen(apps []*baur.App) int {
 func appsWithBuildCommand(apps []*baur.App) []*baur.App {
 	res := make([]*baur.App, 0, len(apps))
 
-	maxAppNameLen := maxAppNameLen(apps) + 4
+	appNameColLen := maxAppNameLen(apps) + sepLen
 
 	for _, app := range apps {
 		if len(app.BuildCmd) == 0 {
-			fmt.Printf("%-*s => %s\n",
-				maxAppNameLen, app.Name, coloredBuildStatus(baur.BuildStatusBuildCommandUndefined))
+			fmt.Printf("%-*s%s%s\n",
+				appNameColLen, app.Name, appColSep, coloredBuildStatus(baur.BuildStatusBuildCommandUndefined))
 			continue
 		}
 
-		fmt.Printf("%-*s => %s\n",
-			maxAppNameLen, app.Name, coloredBuildStatus(baur.BuildStatusPending))
+		fmt.Printf("%-*s%s%s\n",
+			appNameColLen, app.Name, appColSep, coloredBuildStatus(baur.BuildStatusPending))
 		res = append(res, app)
 	}
 
@@ -383,19 +386,19 @@ func appsWithBuildCommand(apps []*baur.App) []*baur.App {
 func pendingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
 	var res []*baur.App
 
-	maxAppNameLen := maxAppNameLen(apps) + 4
+	appNameColLen := maxAppNameLen(apps) + sepLen
 
 	for _, app := range apps {
 		buildStatus, build, _ := mustGetBuildStatus(app, storage)
 
 		if buildStatus == baur.BuildStatusExist {
-			fmt.Printf("%-*s => %s (%s)\n",
-				maxAppNameLen, app.Name, coloredBuildStatus(buildStatus), highlight(build.ID))
+			fmt.Printf("%-*s%s%s (%s)\n",
+				appNameColLen, app.Name, appColSep, coloredBuildStatus(buildStatus), highlight(build.ID))
 			continue
 		}
 
-		fmt.Printf("%-*s => %s\n",
-			maxAppNameLen, app.Name, coloredBuildStatus(buildStatus))
+		fmt.Printf("%-*s%s%s\n",
+			appNameColLen, app.Name, appColSep, coloredBuildStatus(buildStatus))
 
 		if buildStatus == baur.BuildStatusBuildCommandUndefined {
 			continue
