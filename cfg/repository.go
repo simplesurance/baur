@@ -15,7 +15,7 @@ const (
 	// configVersion identifies the format of the configuration files,
 	// whenever an incompatible change is made, this number has to be
 	// increased
-	configVersion int = 1
+	configVersion int = 2
 )
 
 // Repository contains the repository configuration.
