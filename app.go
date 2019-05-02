@@ -129,7 +129,8 @@ func (a *App) addIncludes(appCfg *cfg.App) error {
 	for _, includeID := range appCfg.Build.InputIncludes {
 		include, exist := a.Repository.Includes[includeID]
 		if !exist {
-			return fmt.Errorf("can not find include with id '%s'", includeID)
+			return fmt.Errorf("include '%s' listed in 'input_includes' does not exist'",
+				includeID)
 		}
 
 		bi := include.ToBuildInput()
@@ -157,7 +158,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	appAbsPath := path.Dir(cfgPath)
 	appRelPath, err := filepath.Rel(repository.Path, appAbsPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "resolving repository relative application path failed")
+		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
 	}
 
 	app := App{
@@ -169,18 +170,18 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	}
 
 	if err := app.setDockerOutputsFromCfg(appCfg); err != nil {
-		return nil, errors.Wrap(err, "processing docker output declarations failed")
+		return nil, errors.Wrapf(err, "%s: processing docker output declarations failed", app.Name)
 	}
 
 	if err := app.setFileOutputsFromCFG(appCfg); err != nil {
-		return nil, errors.Wrap(err, "processing S3 output declarations failed")
+		return nil, errors.Wrapf(err, "%s: processing S3 output declarations failed", app.Name)
 	}
 
 	app.UnresolvedInputs = []*cfg.BuildInput{&appCfg.Build.Input}
 
 	err = app.addIncludes(appCfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "parsing Build.Input includes failed")
+		return nil, errors.Wrapf(err, "%s: processing includes failed", app.Name)
 	}
 
 	return &app, nil
