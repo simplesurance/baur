@@ -30,7 +30,7 @@ type App struct {
 	Outputs          []BuildOutput
 	totalInputDigest *digest.Digest
 
-	UnresolvedInputs cfg.BuildInput
+	UnresolvedInputs []*cfg.BuildInput
 	buildInputs      []*File
 }
 
@@ -125,15 +125,29 @@ func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 	return nil
 }
 
+func (a *App) addIncludes(appCfg *cfg.App) error {
+	for _, includeID := range appCfg.Build.InputIncludes {
+		include, exist := a.Repository.Includes[includeID]
+		if !exist {
+			return fmt.Errorf("can not find include with id '%s'", includeID)
+		}
+
+		bi := include.ToBuildInput()
+		a.UnresolvedInputs = append(a.UnresolvedInputs, &bi)
+	}
+
+	return nil
+}
+
 // NewApp reads the configuration file and returns a new App
 func NewApp(repository *Repository, cfgPath string) (*App, error) {
-	cfg, err := cfg.AppFromFile(cfgPath)
+	appCfg, err := cfg.AppFromFile(cfgPath)
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"reading application config %s failed", cfgPath)
 	}
 
-	err = cfg.Validate()
+	err = appCfg.Validate()
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"validating application config %s failed",
@@ -150,19 +164,24 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		Repository: repository,
 		Path:       path.Dir(cfgPath),
 		RelPath:    appRelPath,
-		Name:       cfg.Name,
-		BuildCmd:   strings.TrimSpace(cfg.Build.Command),
+		Name:       appCfg.Name,
+		BuildCmd:   strings.TrimSpace(appCfg.Build.Command),
 	}
 
-	if err := app.setDockerOutputsFromCfg(cfg); err != nil {
+	if err := app.setDockerOutputsFromCfg(appCfg); err != nil {
 		return nil, errors.Wrap(err, "processing docker output declarations failed")
 	}
 
-	if err := app.setFileOutputsFromCFG(cfg); err != nil {
+	if err := app.setFileOutputsFromCFG(appCfg); err != nil {
 		return nil, errors.Wrap(err, "processing S3 output declarations failed")
 	}
 
-	app.UnresolvedInputs = cfg.Build.Input
+	app.UnresolvedInputs = []*cfg.BuildInput{&appCfg.Build.Input}
+
+	err = app.addIncludes(appCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing Build.Input includes failed")
+	}
 
 	return &app, nil
 }
@@ -199,92 +218,105 @@ func (a *App) pathsToUniqFiles(paths []string) ([]*File, error) {
 func (a *App) resolveGlobFileInputs() ([]string, error) {
 	var res []string
 
-	for _, globPath := range a.UnresolvedInputs.Files.Paths {
-		if strings.HasPrefix(globPath, "$ROOT") {
-			globPath = filepath.Clean(replaceROOTvar(globPath, a.Repository))
-		}
+	for _, bi := range a.UnresolvedInputs {
+		for _, globPath := range bi.Files.Paths {
+			if strings.HasPrefix(globPath, "$ROOT") {
+				globPath = filepath.Clean(replaceROOTvar(globPath, a.Repository))
+			}
 
-		if !filepath.IsAbs(globPath) {
-			globPath = filepath.Join(a.Path, globPath)
-		}
+			if !filepath.IsAbs(globPath) {
+				globPath = filepath.Join(a.Path, globPath)
+			}
 
-		resolver := glob.NewResolver(globPath)
-		paths, err := resolver.Resolve()
-		if err != nil {
-			return nil, errors.Wrap(err, globPath)
-		}
+			resolver := glob.NewResolver(globPath)
+			paths, err := resolver.Resolve()
+			if err != nil {
+				return nil, errors.Wrap(err, globPath)
+			}
 
-		if len(paths) == 0 {
-			return nil, fmt.Errorf("'%s' matched 0 files", globPath)
-		}
+			if len(paths) == 0 {
+				return nil, fmt.Errorf("'%s' matched 0 files", globPath)
+			}
 
-		res = append(res, paths...)
+			res = append(res, paths...)
+		}
 	}
 
 	return res, nil
 }
 
 func (a *App) resolveGitFileInputs() ([]string, error) {
-	if len(a.UnresolvedInputs.GitFiles.Paths) == 0 {
-		return []string{}, nil
-	}
+	var res []string
 
-	paths := make([]string, 0, len(a.UnresolvedInputs.GitFiles.Paths))
-	for _, path := range a.UnresolvedInputs.GitFiles.Paths {
-		if !strings.HasPrefix(path, "$ROOT") {
-			paths = append(paths, path)
+	for _, bi := range a.UnresolvedInputs {
+		if len(bi.GitFiles.Paths) == 0 {
 			continue
 		}
 
-		absPath := replaceROOTvar(path, a.Repository)
-		relPath, err := filepath.Rel(a.Path, absPath)
+		paths := make([]string, 0, len(bi.GitFiles.Paths))
+		for _, path := range bi.GitFiles.Paths {
+			if !strings.HasPrefix(path, "$ROOT") {
+				paths = append(paths, path)
+				continue
+			}
+
+			absPath := replaceROOTvar(path, a.Repository)
+			relPath, err := filepath.Rel(a.Path, absPath)
+			if err != nil {
+				return nil, err
+			}
+
+			paths = append(paths, relPath)
+		}
+
+		resolver := gitpath.NewResolver(a.Path, paths...)
+		paths, err := resolver.Resolve()
 		if err != nil {
 			return nil, err
 		}
 
-		paths = append(paths, relPath)
+		if len(paths) == 0 {
+			return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(paths, ", "))
+		}
+		res = append(res, paths...)
 	}
 
-	resolver := gitpath.NewResolver(a.Path, paths...)
-	paths, err := resolver.Resolve()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(paths) == 0 {
-		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(paths, ", "))
-	}
-
-	return paths, nil
+	return res, nil
 }
 
 func (a *App) resolveGoSrcInputs() ([]string, error) {
-	if len(a.UnresolvedInputs.GolangSources.Paths) == 0 {
-		return []string{}, nil
+	var res []string
+
+	for _, bi := range a.UnresolvedInputs {
+		if len(bi.GolangSources.Paths) == 0 {
+			continue
+		}
+
+		absGoSourcePaths := make([]string, 0, len(bi.GolangSources.Paths))
+		for _, relGosrcpath := range bi.GolangSources.Paths {
+			absPath := path.Join(a.Path, relGosrcpath)
+			absGoSourcePaths = append(absGoSourcePaths, absPath)
+		}
+
+		goSrcEnv := make([]string, 0, len(bi.GolangSources.Environment))
+		for _, val := range bi.GolangSources.Environment {
+			goSrcEnv = append(goSrcEnv, path.Clean(replaceROOTvar(val, a.Repository)))
+		}
+
+		resolver := gosource.NewResolver(log.Debugf, goSrcEnv, absGoSourcePaths...)
+		paths, err := resolver.Resolve()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(paths) == 0 {
+			return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(paths, ", "))
+		}
+
+		res = append(res, paths...)
 	}
 
-	absGoSourcePaths := make([]string, 0, len(a.UnresolvedInputs.GolangSources.Paths))
-	for _, relGosrcpath := range a.UnresolvedInputs.GolangSources.Paths {
-		absPath := path.Join(a.Path, relGosrcpath)
-		absGoSourcePaths = append(absGoSourcePaths, absPath)
-	}
-
-	goSrcEnv := make([]string, 0, len(a.UnresolvedInputs.GolangSources.Environment))
-	for _, val := range a.UnresolvedInputs.GolangSources.Environment {
-		goSrcEnv = append(goSrcEnv, path.Clean(replaceROOTvar(val, a.Repository)))
-	}
-
-	resolver := gosource.NewResolver(log.Debugf, goSrcEnv, absGoSourcePaths...)
-	paths, err := resolver.Resolve()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(paths) == 0 {
-		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(paths, ", "))
-	}
-
-	return paths, nil
+	return res, nil
 }
 
 func (a *App) resolveBuildInputPaths() ([]string, error) {
@@ -313,16 +345,18 @@ func (a *App) resolveBuildInputPaths() ([]string, error) {
 
 // HasBuildInputs returns true if BuildInputs are defined for the app
 func (a *App) HasBuildInputs() bool {
-	if len(a.UnresolvedInputs.Files.Paths) != 0 {
-		return true
-	}
+	for _, bi := range a.UnresolvedInputs {
+		if len(bi.Files.Paths) != 0 {
+			return true
+		}
 
-	if len(a.UnresolvedInputs.GitFiles.Paths) != 0 {
-		return true
-	}
+		if len(bi.GitFiles.Paths) != 0 {
+			return true
+		}
 
-	if len(a.UnresolvedInputs.GolangSources.Paths) != 0 {
-		return true
+		if len(bi.GolangSources.Paths) != 0 {
+			return true
+		}
 	}
 
 	return false

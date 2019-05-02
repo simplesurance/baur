@@ -20,6 +20,7 @@ const (
 // Repository contains the repository configuration.
 type Repository struct {
 	ConfigVersion int      `toml:"config_version" comment:"Version of baur configuration format"`
+	IncludeDirs   []string `toml:"include_dirs" commented:"true" comment:"Directories that contain include files for app.toml files"`
 	Database      Database `toml:"Database"`
 	Discover      Discover `comment:"Application discovery settings"`
 }
@@ -56,6 +57,11 @@ func RepositoryFromFile(cfgPath string) (*Repository, error) {
 func ExampleRepository() *Repository {
 	return &Repository{
 		ConfigVersion: configVersion,
+
+		IncludeDirs: []string{
+			"baur_includes/",
+		},
+
 		Discover: Discover{
 			Dirs:        []string{"."},
 			SearchDepth: 1,
