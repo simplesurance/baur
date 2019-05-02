@@ -11,11 +11,6 @@ import (
 func toFile(data interface{}, filepath string, overwrite bool) error {
 	var openFlags int
 
-	tomlData, err := toml.Marshal(data)
-	if err != nil {
-		return errors.Wrapf(err, "marshalling failed")
-	}
-
 	if overwrite {
 		openFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 	} else {
@@ -27,9 +22,12 @@ func toFile(data interface{}, filepath string, overwrite bool) error {
 		return err
 	}
 
-	_, err = f.Write(tomlData)
+	encoder := toml.NewEncoder(f)
+	encoder.Order(toml.OrderPreserve)
+	err = encoder.Encode(data)
 	if err != nil {
-		return errors.Wrap(err, "writing to file failed")
+		f.Close()
+		return err
 	}
 
 	err = f.Close()
