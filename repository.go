@@ -113,7 +113,8 @@ func NewRepository(cfgPath string) (*Repository, error) {
 
 	err = fs.DirsExist(r.AppSearchDirs...)
 	if err != nil {
-		return nil, errors.Wrap(err, "application_dirs parameter is invalid")
+		return nil, errors.Wrapf(err, "validating repository config %q failed, "+
+			"application_dirs parameter is invalid", cfgPath)
 	}
 
 	err = r.populateIncludes(cfg)
