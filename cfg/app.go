@@ -17,9 +17,10 @@ type App struct {
 
 // Build the build section
 type Build struct {
-	Command string      `toml:"command" commented:"false" comment:"Command to build the application"`
-	Input   BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
-	Output  BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
+	Command       string      `toml:"command" commented:"false" comment:"Command to build the application"`
+	InputIncludes []string    `toml:"input_includes" comment:"IDs of BuildInput includes that the Build inherits."`
+	Input         BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
+	Output        BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
 }
 
 // BuildInput contains information about build inputs

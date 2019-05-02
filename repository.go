@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,6 +22,7 @@ type Repository struct {
 	gitCommitID        string
 	gitWorktreeIsDirty *bool
 	PSQLURL            string
+	Includes           map[string]cfg.BuildInputInclude
 }
 
 // FindRepository searches for a repository config file. The search starts in
@@ -44,6 +46,47 @@ func FindRepositoryCwd() (*Repository, error) {
 		return nil, err
 	}
 	return FindRepository(cwd)
+}
+
+func (r *Repository) populateIncludes(repoCfg *cfg.Repository) error {
+	var includeFilePaths []string
+
+	if len(repoCfg.IncludeDirs) == 0 {
+		return nil
+	}
+
+	for _, incDir := range repoCfg.IncludeDirs {
+		absIncDir := path.Join(r.Path, incDir)
+
+		err := fs.DirsExist(absIncDir)
+		if err != nil {
+			return fmt.Errorf("include_dir %s does not exist in repository", incDir)
+		}
+
+		incFiles, err := fs.FindFilesInSubDir(absIncDir, "*.toml", 0)
+		if err != nil {
+			return errors.Wrap(err, "finding include files failed")
+		}
+
+		includeFilePaths = append(includeFilePaths, incFiles...)
+	}
+
+	r.Includes = make(map[string]cfg.BuildInputInclude, len(includeFilePaths))
+	for _, incFile := range includeFilePaths {
+		includeCfg, err := cfg.IncludeFromFile(incFile)
+		if err != nil {
+			return fmt.Errorf("reading include file %s failed", incFile)
+		}
+
+		for _, include := range includeCfg.BuildInput {
+			if _, exist := r.Includes[include.ID]; exist {
+				return fmt.Errorf("include id '%s' is used multiple times, include ids must be unique", include.ID)
+			}
+			r.Includes[include.ID] = include
+		}
+	}
+
+	return nil
 }
 
 // NewRepository reads the configuration file and returns a Repository
@@ -71,6 +114,11 @@ func NewRepository(cfgPath string) (*Repository, error) {
 	err = fs.DirsExist(r.AppSearchDirs...)
 	if err != nil {
 		return nil, errors.Wrap(err, "application_dirs parameter is invalid")
+	}
+
+	err = r.populateIncludes(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "loading include files failed")
 	}
 
 	return &r, nil

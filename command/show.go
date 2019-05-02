@@ -84,38 +84,45 @@ func showApp(arg string) {
 		mustWriteRow(formatter, []interface{}{})
 		mustWriteRow(formatter, []interface{}{underline("Inputs:")})
 
-		if len(app.UnresolvedInputs.Files.Paths) > 0 {
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("File")})
-			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", highlight(strings.Join(app.UnresolvedInputs.Files.Paths, ", ")),
-			})
+		for _, bi := range app.UnresolvedInputs {
+			if len(bi.Files.Paths) > 0 {
+				if printNewLine {
+					mustWriteRow(formatter, []interface{}{})
+				}
 
-			printNewLine = true
+				mustWriteRow(formatter, []interface{}{"", "Type:", highlight("File")})
+				mustWriteRow(formatter, []interface{}{"",
+					"Paths:", highlight(strings.Join(bi.Files.Paths, ", ")),
+				})
 
-		}
-
-		if len(app.UnresolvedInputs.GitFiles.Paths) > 0 {
-			if printNewLine {
-				mustWriteRow(formatter, []interface{}{})
+				printNewLine = true
 			}
 
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GitFile")})
-			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", highlight(strings.Join(app.UnresolvedInputs.GitFiles.Paths, ", "))})
+			if len(bi.GitFiles.Paths) > 0 {
+				if printNewLine {
+					mustWriteRow(formatter, []interface{}{})
+				}
 
-			printNewLine = true
-		}
+				mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GitFile")})
+				mustWriteRow(formatter, []interface{}{"",
+					"Paths:", highlight(strings.Join(bi.GitFiles.Paths, ", "))})
 
-		if len(app.UnresolvedInputs.GolangSources.Paths) > 0 {
-			if printNewLine {
-				mustWriteRow(formatter, []interface{}{})
+				printNewLine = true
 			}
 
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GolangSources")})
-			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", highlight(strings.Join(app.UnresolvedInputs.GolangSources.Paths, ", "))})
-			mustWriteRow(formatter, []interface{}{"",
-				"Environment:", highlight(strings.Join(app.UnresolvedInputs.GolangSources.Environment, ", "))})
+			if len(bi.GolangSources.Paths) > 0 {
+				if printNewLine {
+					mustWriteRow(formatter, []interface{}{})
+				}
+
+				mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GolangSources")})
+				mustWriteRow(formatter, []interface{}{"",
+					"Paths:", highlight(strings.Join(bi.GolangSources.Paths, ", "))})
+				mustWriteRow(formatter, []interface{}{"",
+					"Environment:", highlight(strings.Join(bi.GolangSources.Environment, ", "))})
+
+				printNewLine = true
+			}
 		}
 	}
 
