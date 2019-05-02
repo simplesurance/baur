@@ -3,7 +3,6 @@ package cfg
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
@@ -72,35 +71,7 @@ func ExampleRepository() *Repository {
 // If overwrite is true an existent file will be overwriten. If it's false the
 // function returns an error if the file exist.
 func (r *Repository) ToFile(filepath string, overwrite bool) error {
-	var openFlags int
-
-	data, err := toml.Marshal(*r)
-	if err != nil {
-		return errors.Wrap(err, "marshalling config failed")
-	}
-
-	if overwrite {
-		openFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	} else {
-		openFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
-	}
-
-	f, err := os.OpenFile(filepath, openFlags, 0640)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(data)
-	if err != nil {
-		return errors.Wrap(err, "writing to file failed")
-	}
-
-	err = f.Close()
-	if err != nil {
-		return errors.Wrap(err, "closing file failed")
-	}
-
-	return err
+	return toFile(r, filepath, overwrite)
 }
 
 // Validate validates a repository configuration

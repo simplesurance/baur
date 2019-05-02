@@ -3,7 +3,6 @@ package cfg
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/pelletier/go-toml"
@@ -184,27 +183,7 @@ func removeEmptySections(a *App) {
 // ToFile writes an exemplary Application configuration file to
 // filepath. The name setting is set to appName
 func (a *App) ToFile(filepath string) error {
-	data, err := toml.Marshal(*a)
-	if err != nil {
-		return errors.Wrapf(err, "marshalling failed")
-	}
-
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(data)
-	if err != nil {
-		return errors.Wrap(err, "writing to file failed")
-	}
-
-	err = f.Close()
-	if err != nil {
-		return errors.Wrap(err, "closing file failed")
-	}
-
-	return err
+	return toFile(a, filepath, false)
 }
 
 // Validate validates a App configuration
