@@ -19,9 +19,9 @@ const (
 
 // Repository contains the repository configuration.
 type Repository struct {
-	Discover      Discover `comment:"Application discovery settings"`
 	ConfigVersion int      `toml:"config_version" comment:"Version of baur configuration format"`
 	Database      Database `toml:"Database"`
+	Discover      Discover `comment:"Application discovery settings"`
 }
 
 // Database contains database configuration

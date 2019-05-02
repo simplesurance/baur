@@ -31,8 +31,8 @@ type BuildInput struct {
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
-	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored." commented:"true"`
 	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT " commented:"true"`
+	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored." commented:"true"`
 }
 
 // FileInputs describes a file source
@@ -48,15 +48,15 @@ type GitFileInputs struct {
 
 // BuildOutput the build output section
 type BuildOutput struct {
-	File        []*FileOutput        `comment:"Files that are produces by the [Build.command]"`
 	DockerImage []*DockerImageOutput `comment:"Docker images that are produced by the [Build.command]"`
+	File        []*FileOutput        `comment:"Files that are produces by the [Build.command]"`
 }
 
 // FileOutput describes where a file artifact should be uploaded to
 type FileOutput struct {
 	Path     string   `toml:"path" comment:"Path relative to the application directory" commented:"true"`
-	S3Upload S3Upload `comment:"Upload the file to S3"`
 	FileCopy FileCopy `comment:"Copy the file to a local directory"`
+	S3Upload S3Upload `comment:"Upload the file to S3"`
 }
 
 // FileCopy describes where a file artifact should be copied to
