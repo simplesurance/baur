@@ -23,6 +23,7 @@ type Repository struct {
 	gitWorktreeIsDirty *bool
 	PSQLURL            string
 	Includes           map[string]cfg.BuildInputInclude
+	IncludeDirs        []string
 }
 
 // FindRepository searches for a repository config file. The search starts in
@@ -109,6 +110,7 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		AppSearchDirs: fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
 		SearchDepth:   cfg.Discover.SearchDepth,
 		PSQLURL:       cfg.Database.PGSQLURL,
+		IncludeDirs:   fs.PathsJoin(path.Dir(cfgPath), cfg.IncludeDirs),
 	}
 
 	err = fs.DirsExist(r.AppSearchDirs...)

@@ -9,6 +9,7 @@ import (
 )
 
 var errorPrefix = color.New(color.FgRed).Sprint("ERROR: ")
+var warnPrefix = color.New(color.FgYellow).Sprint("WARN: ")
 
 // Logger logs messages
 type Logger struct {
@@ -86,6 +87,11 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 	l.logger.Printf(errorPrefix+" "+format, v...)
 }
 
+// Warnf logs a message to stderr
+func (l *Logger) Warnf(format string, v ...interface{}) {
+	l.logger.Printf(warnPrefix+format, v...)
+}
+
 // Infoln logs a message to stdout
 /*
 func (l *Logger) Infoln(v ...interface{}) {
@@ -135,6 +141,11 @@ func Errorln(v ...interface{}) {
 // Errorf logs a message to stderr
 func Errorf(format string, v ...interface{}) {
 	StdLogger.Errorf(format, v...)
+}
+
+// Warnf logs a message to stderr
+func Warnf(format string, v ...interface{}) {
+	StdLogger.Warnf(format, v...)
 }
 
 // Infoln logs a message to stdout

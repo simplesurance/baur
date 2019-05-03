@@ -193,3 +193,27 @@ func FileSize(path string) (int64, error) {
 func Mkdir(path string) error {
 	return os.MkdirAll(path, os.FileMode(0755))
 }
+
+// PathIsInDirectories returns true if path is in one the directories.
+// It does not resolve symlinks.
+func PathIsInDirectories(path string, directory ...string) bool {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+
+	for _, dir := range directory {
+		absDir := filepath.Clean(dir)
+
+		if absPath == absDir {
+			return true
+		}
+
+		if filepath.Dir(absPath) == absDir {
+			return true
+		}
+
+	}
+
+	return false
+}
