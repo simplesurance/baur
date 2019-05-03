@@ -7,7 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -30,8 +32,9 @@ var initIncludeCmd = &cobra.Command{
 }
 
 func initInclude(cmd *cobra.Command, args []string) {
-	// TODO: Warn if an include file is created in a directory that is not listed in the IncludeDirs directive of the .baur.toml file?
 	var filename string
+
+	repo := MustFindRepository()
 
 	if len(args) == 1 {
 		filename = args[0]
@@ -51,4 +54,11 @@ func initInclude(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("Include configuration file was written to %s\n",
 		highlight(filename))
+
+	if !fs.PathIsInDirectories(filename, repo.IncludeDirs...) {
+		log.Warnf("File is not in the '%s' defined in the %s file.\n"+
+			"baur will not be able to find the include file.",
+			highlight("include_dirs"),
+			highlight(baur.RepositoryCfgFile))
+	}
 }
