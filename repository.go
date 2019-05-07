@@ -22,7 +22,8 @@ type Repository struct {
 	gitCommitID        string
 	gitWorktreeIsDirty *bool
 	PSQLURL            string
-	Includes           map[string]cfg.BuildInputInclude
+	InputIncludes      map[string]cfg.BuildInputInclude
+	OutputIncludes     map[string]cfg.BuildOutputInclude
 	IncludeDirs        []string
 }
 
@@ -49,11 +50,11 @@ func FindRepositoryCwd() (*Repository, error) {
 	return FindRepository(cwd)
 }
 
-func (r *Repository) populateIncludes(repoCfg *cfg.Repository) error {
-	var includeFilePaths []string
+func (r *Repository) discoverIncludeFiles(repoCfg *cfg.Repository) ([]string, error) {
+	var res []string
 
 	if len(repoCfg.IncludeDirs) == 0 {
-		return nil
+		return res, nil
 	}
 
 	for _, incDir := range repoCfg.IncludeDirs {
@@ -61,29 +62,49 @@ func (r *Repository) populateIncludes(repoCfg *cfg.Repository) error {
 
 		err := fs.DirsExist(absIncDir)
 		if err != nil {
-			return fmt.Errorf("include_dir %s does not exist in repository", incDir)
+			return nil, fmt.Errorf("include_dir %s does not exist in repository", incDir)
 		}
 
 		incFiles, err := fs.FindFilesInSubDir(absIncDir, "*.toml", 0)
 		if err != nil {
-			return errors.Wrap(err, "finding include files failed")
+			return nil, errors.Wrap(err, "finding include files failed")
 		}
 
-		includeFilePaths = append(includeFilePaths, incFiles...)
+		res = append(res, incFiles...)
 	}
 
-	r.Includes = make(map[string]cfg.BuildInputInclude, len(includeFilePaths))
+	return res, nil
+}
+
+func (r *Repository) populateIncludes(repoCfg *cfg.Repository) error {
+	includeFilePaths, err := r.discoverIncludeFiles(repoCfg)
+	if err != nil {
+		return err
+	}
+
+	r.InputIncludes = map[string]cfg.BuildInputInclude{}
+	r.OutputIncludes = map[string]cfg.BuildOutputInclude{}
+
 	for _, incFile := range includeFilePaths {
 		includeCfg, err := cfg.IncludeFromFile(incFile)
 		if err != nil {
 			return fmt.Errorf("reading include file %s failed", incFile)
 		}
 
-		for _, include := range includeCfg.BuildInput {
-			if _, exist := r.Includes[include.ID]; exist {
-				return fmt.Errorf("include id '%s' is used multiple times, include ids must be unique", include.ID)
+		for _, inputInclude := range includeCfg.BuildInput {
+			if _, exist := r.InputIncludes[inputInclude.ID]; exist {
+				return fmt.Errorf("include id for Build.Input '%s' is used multiple times, include ids must be unique", inputInclude.ID)
 			}
-			r.Includes[include.ID] = include
+
+			r.InputIncludes[inputInclude.ID] = inputInclude
+		}
+
+		for _, outputInclude := range includeCfg.BuildOutput {
+			if _, exist := r.InputIncludes[outputInclude.ID]; exist {
+				return fmt.Errorf("include id for Build.Output '%s' is used multiple times, include ids must be unique", outputInclude.ID)
+			}
+
+			r.OutputIncludes[outputInclude.ID] = outputInclude
 		}
 	}
 
