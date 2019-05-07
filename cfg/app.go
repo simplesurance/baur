@@ -55,7 +55,7 @@ type BuildOutput struct {
 
 // FileOutput describes where a file artifact should be uploaded to
 type FileOutput struct {
-	Path     string   `toml:"path" comment:"Path relative to the application directory" commented:"true"`
+	Path     string   `toml:"path" comment:"Path relative to the application directory, valid variables: $APPNAME" commented:"true"`
 	FileCopy FileCopy `comment:"Copy the file to a local directory"`
 	S3Upload S3Upload `comment:"Upload the file to S3"`
 }
@@ -68,13 +68,13 @@ type FileCopy struct {
 // DockerImageRegistryUpload holds information about where the docker image
 // should be uploaded to
 type DockerImageRegistryUpload struct {
-	Repository string `toml:"repository" comment:"Repository path, format: [<server[:port]>/]<owner>/<repository>:<tag>" commented:"true"`
+	Repository string `toml:"repository" comment:"Repository path, format: [<server[:port]>/]<owner>/<repository>:<tag>, valid variables: $APPNAME" commented:"true"`
 	Tag        string `toml:"tag" comment:"Tag that is applied to the image, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
 }
 
 // S3Upload contains S3 upload information
 type S3Upload struct {
-	Bucket   string `toml:"bucket" commented:"true"`
+	Bucket   string `toml:"bucket" comment:"Bucket name, valid variables: $APPNAME" commented:"true"`
 	DestFile string `toml:"dest_file" comment:"Remote File Name, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
 }
 
