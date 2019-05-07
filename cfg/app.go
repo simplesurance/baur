@@ -17,11 +17,10 @@ type App struct {
 
 // Build the build section
 type Build struct {
-	Command        string      `toml:"command" commented:"false" comment:"Command to build the application"`
-	InputIncludes  []string    `toml:"input_includes" comment:"IDs of BuildInput includes that the Build inherits."`
-	OutputIncludes []string    `toml:"output_includes" comment:"IDs of BuildOutput includes that the Build inherits."`
-	Input          BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
-	Output         BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
+	Command  string      `toml:"command" commented:"false" comment:"Command to build the application"`
+	Includes []string    `toml:"includes" comment:"Repository relative paths to baur include files that the build inherits.\n Valid variables: $ROOT"`
+	Input    BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
+	Output   BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
 }
 
 // BuildInput contains information about build inputs
@@ -85,6 +84,48 @@ type DockerImageOutput struct {
 	RegistryUpload DockerImageRegistryUpload `comment:"Registry repository the image is uploaded to"`
 }
 
+func exampleBuildInput() BuildInput {
+	return BuildInput{
+		Files: FileInputs{
+			Paths: []string{"dbmigrations/*.sql"},
+		},
+		GitFiles: GitFileInputs{
+			Paths: []string{"Makefile"},
+		},
+		GolangSources: GolangSources{
+			Paths:       []string{"."},
+			Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
+		},
+	}
+}
+
+func exampleBuildOutput() BuildOutput {
+	return BuildOutput{
+		File: []*FileOutput{
+			{
+				Path: "dist/$APPNAME.tar.xz",
+				S3Upload: S3Upload{
+					Bucket:   "go-artifacts/",
+					DestFile: "$APPNAME-$GITCOMMIT.tar.xz",
+				},
+				FileCopy: FileCopy{
+
+					Path: "/mnt/fileserver/build_artifacts/$APPNAME-$GITCOMMIT.tar.xz",
+				},
+			},
+		},
+		DockerImage: []*DockerImageOutput{
+			{
+				IDFile: fmt.Sprintf("$APPNAME-container.id"),
+				RegistryUpload: DockerImageRegistryUpload{
+					Repository: "my-company/$APPNAME",
+					Tag:        "$GITCOMMIT",
+				},
+			},
+		},
+	}
+}
+
 // ExampleApp returns an exemplary app cfg struct with the name set to the given value
 func ExampleApp(name string) *App {
 	return &App{
@@ -92,42 +133,8 @@ func ExampleApp(name string) *App {
 
 		Build: Build{
 			Command: "make dist",
-			Input: BuildInput{
-				Files: FileInputs{
-					Paths: []string{".app.toml"},
-				},
-				GitFiles: GitFileInputs{
-					Paths: []string{"Makefile"},
-				},
-				GolangSources: GolangSources{
-					Paths:       []string{"."},
-					Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
-				},
-			},
-			Output: BuildOutput{
-				File: []*FileOutput{
-					{
-						Path: fmt.Sprintf("dist/%s.tar.xz", name),
-						S3Upload: S3Upload{
-							Bucket:   "go-artifacts/",
-							DestFile: "$APPNAME-$GITCOMMIT.tar.xz",
-						},
-						FileCopy: FileCopy{
-
-							Path: "/mnt/fileserver/build_artifacts/$APPNAME-$GITCOMMIT.tar.xz",
-						},
-					},
-				},
-				DockerImage: []*DockerImageOutput{
-					{
-						IDFile: fmt.Sprintf("%s-container.id", name),
-						RegistryUpload: DockerImageRegistryUpload{
-							Repository: fmt.Sprintf("my-company/%s", name),
-							Tag:        "$GITCOMMIT",
-						},
-					},
-				},
-			},
+			Input:   exampleBuildInput(),
+			Output:  exampleBuildOutput(),
 		},
 	}
 }
@@ -204,20 +211,24 @@ func (b *Build) Validate() error {
 	}
 
 	if err := b.Input.Validate(); err != nil {
-		return err
+		return errors.Wrap(err, "[Build.Input] section contains errors")
 	}
 
-	return b.Output.Validate()
+	if err := b.Output.Validate(); err != nil {
+		return errors.Wrap(err, "[Build.Output] section contains errors")
+	}
+
+	return nil
 }
 
 // Validate validates the BuildInput section
 func (b *BuildInput) Validate() error {
 	if err := b.Files.Validate(); err != nil {
-		return errors.Wrap(err, "[Build.Input.Files] section contains errors")
+		return errors.Wrap(err, "Files")
 	}
 
 	if err := b.GolangSources.Validate(); err != nil {
-		return errors.Wrap(err, "[Build.Input.Files] section contains errors")
+		return errors.Wrap(err, "GolangSources")
 	}
 
 	// TODO: add validation for gitfiles section
@@ -244,13 +255,13 @@ func (g *GolangSources) Validate() error {
 func (b *BuildOutput) Validate() error {
 	for _, f := range b.File {
 		if err := f.Validate(); err != nil {
-			return errors.Wrap(err, "[[Build.Output.File]] section contains errors")
+			return errors.Wrap(err, "File")
 		}
 	}
 
 	for _, d := range b.DockerImage {
 		if err := d.Validate(); err != nil {
-			return errors.Wrap(err, "[[Build.Output.DockerImage]] section contains errors")
+			return errors.Wrap(err, "DockerImage")
 		}
 	}
 
