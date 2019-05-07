@@ -55,8 +55,20 @@ func replaceGitCommitVar(in string, r *Repository) (string, error) {
 	return strings.Replace(in, "$GITCOMMIT", commitID, -1), nil
 }
 
-func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
-	for _, di := range cfg.Build.Output.DockerImage {
+func (a *App) addBuildOutput(buildOutput *cfg.BuildOutput) error {
+	if err := a.addDockerBuildOutputs(buildOutput); err != nil {
+		return errors.Wrap(err, "error in DockerImage section")
+	}
+
+	if err := a.addFileOutputs(buildOutput); err != nil {
+		return errors.Wrap(err, "error in File section")
+	}
+
+	return nil
+}
+
+func (a *App) addDockerBuildOutputs(buildOutput *cfg.BuildOutput) error {
+	for _, di := range buildOutput.DockerImage {
 		tag, err := replaceGitCommitVar(di.RegistryUpload.Tag, a.Repository)
 		if err != nil {
 			return errors.Wrap(err, "replacing $GITCOMMIT in tag failed")
@@ -75,8 +87,8 @@ func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
 	return nil
 }
 
-func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
-	for _, f := range cfg.Build.Output.File {
+func (a *App) addFileOutputs(buildOutput *cfg.BuildOutput) error {
+	for _, f := range buildOutput.File {
 		filePath := replaceAppNameVar(f.Path, a.Name)
 		if !f.S3Upload.IsEmpty() {
 			destFile, err := replaceGitCommitVar(f.S3Upload.DestFile, a.Repository)
@@ -130,7 +142,7 @@ func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 
 func (a *App) addIncludes(appCfg *cfg.App) error {
 	for _, includeID := range appCfg.Build.InputIncludes {
-		include, exist := a.Repository.Includes[includeID]
+		include, exist := a.Repository.InputIncludes[includeID]
 		if !exist {
 			return fmt.Errorf("include '%s' listed in 'input_includes' does not exist'",
 				includeID)
@@ -138,6 +150,21 @@ func (a *App) addIncludes(appCfg *cfg.App) error {
 
 		bi := include.ToBuildInput()
 		a.UnresolvedInputs = append(a.UnresolvedInputs, &bi)
+	}
+
+	for _, includeID := range appCfg.Build.OutputIncludes {
+		include, exist := a.Repository.OutputIncludes[includeID]
+		if !exist {
+			return fmt.Errorf("include '%s' listed in 'output_includes' does not exist'",
+				includeID)
+		}
+
+		bo := include.ToBuildOutput()
+
+		err := a.addBuildOutput(&bo)
+		if err != nil {
+			return errors.Wrapf(err, "processing Build.Output section of include '%s' failed", includeID)
+		}
 	}
 
 	return nil
@@ -172,12 +199,9 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		BuildCmd:   strings.TrimSpace(appCfg.Build.Command),
 	}
 
-	if err := app.setDockerOutputsFromCfg(appCfg); err != nil {
-		return nil, errors.Wrapf(err, "%s: processing docker output declarations failed", app.Name)
-	}
-
-	if err := app.setFileOutputsFromCFG(appCfg); err != nil {
-		return nil, errors.Wrapf(err, "%s: processing S3 output declarations failed", app.Name)
+	err = app.addBuildOutput(&appCfg.Build.Output)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s: processing Build.Output section failed", app.Name)
 	}
 
 	app.UnresolvedInputs = []*cfg.BuildInput{&appCfg.Build.Input}
