@@ -17,11 +17,10 @@ type App struct {
 
 // Build the build section
 type Build struct {
-	Command        string      `toml:"command" commented:"false" comment:"Command to build the application"`
-	InputIncludes  []string    `toml:"input_includes" comment:"IDs of BuildInput includes that the Build inherits."`
-	OutputIncludes []string    `toml:"output_includes" comment:"IDs of BuildOutput includes that the Build inherits."`
-	Input          BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
-	Output         BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
+	Command  string      `toml:"command" commented:"false" comment:"Command to build the application"`
+	Includes []string    `toml:"includes" comment:"Repository relative paths to baur include files that the build inherits.\n Valid variables: $ROOT"`
+	Input    BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
+	Output   BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
 }
 
 // BuildInput contains information about build inputs
@@ -204,20 +203,24 @@ func (b *Build) Validate() error {
 	}
 
 	if err := b.Input.Validate(); err != nil {
-		return err
+		return errors.Wrap(err, "[Build.Input] section contains errors")
 	}
 
-	return b.Output.Validate()
+	if err := b.Output.Validate(); err != nil {
+		return errors.Wrap(err, "[Build.Output] section contains errors")
+	}
+
+	return nil
 }
 
 // Validate validates the BuildInput section
 func (b *BuildInput) Validate() error {
 	if err := b.Files.Validate(); err != nil {
-		return errors.Wrap(err, "[Build.Input.Files] section contains errors")
+		return errors.Wrap(err, "Files")
 	}
 
 	if err := b.GolangSources.Validate(); err != nil {
-		return errors.Wrap(err, "[Build.Input.Files] section contains errors")
+		return errors.Wrap(err, "GolangSources")
 	}
 
 	// TODO: add validation for gitfiles section
@@ -244,13 +247,13 @@ func (g *GolangSources) Validate() error {
 func (b *BuildOutput) Validate() error {
 	for _, f := range b.File {
 		if err := f.Validate(); err != nil {
-			return errors.Wrap(err, "[[Build.Output.File]] section contains errors")
+			return errors.Wrap(err, "File")
 		}
 	}
 
 	for _, d := range b.DockerImage {
 		if err := d.Validate(); err != nil {
-			return errors.Wrap(err, "[[Build.Output.DockerImage]] section contains errors")
+			return errors.Wrap(err, "DockerImage")
 		}
 	}
 

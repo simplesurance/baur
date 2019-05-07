@@ -140,31 +140,29 @@ func (a *App) addFileOutputs(buildOutput *cfg.BuildOutput) error {
 	return nil
 }
 
-func (a *App) addIncludes(appCfg *cfg.App) error {
-	for _, includeID := range appCfg.Build.InputIncludes {
-		include, exist := a.Repository.InputIncludes[includeID]
-		if !exist {
-			return fmt.Errorf("include '%s' listed in 'input_includes' does not exist'",
-				includeID)
-		}
-
-		bi := include.ToBuildInput()
-		a.UnresolvedInputs = append(a.UnresolvedInputs, &bi)
+func (a *App) include(inc *cfg.Include) {
+	for _, input := range inc.BuildInput {
+		a.UnresolvedInputs = append(a.UnresolvedInputs, &input)
 	}
 
-	for _, includeID := range appCfg.Build.OutputIncludes {
-		include, exist := a.Repository.OutputIncludes[includeID]
-		if !exist {
-			return fmt.Errorf("include '%s' listed in 'output_includes' does not exist'",
-				includeID)
+	for _, output := range inc.BuildOutput {
+		a.addBuildOutput(&output)
+	}
+}
+
+func (a *App) loadIncludes(appCfg *cfg.App) error {
+	for _, includePath := range appCfg.Build.Includes {
+		path := replaceROOTvar(includePath, a.Repository)
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(a.Path, path)
 		}
 
-		bo := include.ToBuildOutput()
-
-		err := a.addBuildOutput(&bo)
+		inc, err := a.Repository.includeCache.load(path)
 		if err != nil {
-			return errors.Wrapf(err, "processing Build.Output section of include '%s' failed", includeID)
+			return errors.Wrapf(err, "loading include '%s' failed", includePath)
 		}
+
+		a.include(inc)
 	}
 
 	return nil
@@ -206,9 +204,9 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 
 	app.UnresolvedInputs = []*cfg.BuildInput{&appCfg.Build.Input}
 
-	err = app.addIncludes(appCfg)
+	err = app.loadIncludes(appCfg)
 	if err != nil {
-		return nil, errors.Wrapf(err, "%s: processing includes failed", app.Name)
+		return nil, errors.Wrapf(err, "%s: processing application config failed failed", app.Name)
 	}
 
 	return &app, nil

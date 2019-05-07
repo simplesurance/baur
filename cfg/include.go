@@ -4,37 +4,20 @@ import (
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml"
+	"github.com/pkg/errors"
 )
 
 // Include represents an include configuration file.
 type Include struct {
-	BuildInput  []BuildInputInclude
-	BuildOutput []BuildOutputInclude
-}
-
-// TODO: how to prevent duplicating the comment and name  tags here, how to reuse it from the BuildInput struct?
-
-// BuildInputInclude contains information about an includeable BuildInput section.
-type BuildInputInclude struct {
-	ID            string        `toml:"id" comment:"Identifier to reference the include"`
-	Files         FileInputs    `comment:"Inputs specified by file glob paths"`
-	GitFiles      GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
-	GolangSources GolangSources `comment:"Inputs specified by directories containing Golang applications"`
-}
-
-// BuildOutputInclude is BuildOutput definition in an include file.
-type BuildOutputInclude struct {
-	ID          string               `toml:"id" comment:"Identifier to reference the include"`
-	DockerImage []*DockerImageOutput `comment:"Docker images that are produced by the [Build.command]"`
-	File        []*FileOutput        `comment:"Files that are produces by the [Build.command]"`
+	BuildInput  []BuildInput
+	BuildOutput []BuildOutput
 }
 
 // ExampleInclude returns an Include struct with exemplary values.
 func ExampleInclude() *Include {
 	return &Include{
-		BuildInput: []BuildInputInclude{
+		BuildInput: []BuildInput{
 			{
-				ID: "go_app_build_inputs",
 				GolangSources: GolangSources{
 					Paths:       []string{"."},
 					Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
@@ -44,7 +27,6 @@ func ExampleInclude() *Include {
 				},
 			},
 			{
-				ID: "c_app_build_inputs",
 				Files: FileInputs{
 					Paths: []string{".app.toml"},
 				},
@@ -53,9 +35,8 @@ func ExampleInclude() *Include {
 				},
 			},
 		},
-		BuildOutput: []BuildOutputInclude{
+		BuildOutput: []BuildOutput{
 			{
-				ID: "tar_default_output",
 				File: []*FileOutput{
 					{
 						Path: "dist/dist.tar.xz",
@@ -95,39 +76,19 @@ func IncludeFromFile(path string) (*Include, error) {
 	return &config, err
 }
 
-// ToBuildInput returns a BuildInput struct with values set to the same then in the BuildInputInclude
-func (bi *BuildInputInclude) ToBuildInput() BuildInput {
-	return BuildInput{
-		Files:         bi.Files,
-		GitFiles:      bi.GitFiles,
-		GolangSources: bi.GolangSources,
-	}
-}
-
-// ToBuildOutput returns a BuildOutput representation.
-func (bo *BuildOutputInclude) ToBuildOutput() BuildOutput {
-	return BuildOutput{
-		DockerImage: bo.DockerImage,
-		File:        bo.File,
-	}
-}
-
-/*
 // Validate validates an Include configuration struct.
-func (i *Include) Validate() error {
-	if err := i.BuildInput.Validate(); err != nil {
-		return errors.New(err, "[[BuildInput]] section contains errors")
+func (in *Include) Validate() error {
+	for _, bi := range in.BuildInput {
+		if err := bi.Validate(); err != nil {
+			return errors.Wrap(err, "[[BuildInput]] section contains errors")
+		}
 	}
 
-	if err := i.BuildOutput.Validate(); err != nil {
-		return errors.New(err, "[[BuildOutput]] section contains errors")
+	for _, bo := range in.BuildOutput {
+		if err := bo.Validate(); err != nil {
+			return errors.Wrap(err, "[[BuildOutput]] section contains errors")
+		}
 	}
 
 	return nil
-
 }
-
-func (bi *BuildInputInclude) Validate() error {
-	bi.Files
-}
-*/
