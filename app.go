@@ -63,11 +63,12 @@ func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
 		}
 
 		tag = replaceUUIDvar(tag)
+		repository := replaceAppNameVar(di.RegistryUpload.Repository, a.Name)
 
 		a.Outputs = append(a.Outputs, &DockerArtifact{
-			ImageIDFile: path.Join(a.Path, di.IDFile),
+			ImageIDFile: path.Join(a.Path, replaceAppNameVar(di.IDFile, a.Name)),
 			Tag:         tag,
-			Repository:  di.RegistryUpload.Repository,
+			Repository:  repository,
 		})
 	}
 
@@ -76,6 +77,7 @@ func (a *App) setDockerOutputsFromCfg(cfg *cfg.App) error {
 
 func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 	for _, f := range cfg.Build.Output.File {
+		filePath := replaceAppNameVar(f.Path, a.Name)
 		if !f.S3Upload.IsEmpty() {
 			destFile, err := replaceGitCommitVar(f.S3Upload.DestFile, a.Repository)
 			if err != nil {
@@ -83,12 +85,13 @@ func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 			}
 
 			destFile = replaceUUIDvar(replaceAppNameVar(destFile, a.Name))
-			url := "s3://" + f.S3Upload.Bucket + "/" + destFile
+			s3Bucket := replaceAppNameVar(f.S3Upload.Bucket, a.Name)
+			url := "s3://" + s3Bucket + "/" + destFile
 
-			src := path.Join(a.Path, f.Path)
+			src := path.Join(a.Path, filePath)
 
 			a.Outputs = append(a.Outputs, &FileArtifact{
-				RelPath:   path.Join(a.RelPath, f.Path),
+				RelPath:   path.Join(a.RelPath, filePath),
 				Path:      src,
 				DestFile:  destFile,
 				UploadURL: url,
@@ -106,10 +109,10 @@ func (a *App) setFileOutputsFromCFG(cfg *cfg.App) error {
 			}
 
 			dest = replaceUUIDvar(replaceAppNameVar(dest, a.Name))
-			src := path.Join(a.Path, f.Path)
+			src := path.Join(a.Path, filePath)
 
 			a.Outputs = append(a.Outputs, &FileArtifact{
-				RelPath:   path.Join(a.RelPath, f.Path),
+				RelPath:   path.Join(a.RelPath, filePath),
 				Path:      src,
 				DestFile:  dest,
 				UploadURL: dest,
