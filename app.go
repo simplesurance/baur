@@ -78,7 +78,7 @@ func (a *App) addDockerBuildOutputs(buildOutput *cfg.BuildOutput) error {
 		repository := replaceAppNameVar(di.RegistryUpload.Repository, a.Name)
 
 		a.Outputs = append(a.Outputs, &DockerArtifact{
-			ImageIDFile: path.Join(a.Path, di.IDFile),
+			ImageIDFile: path.Join(a.Path, replaceAppNameVar(di.IDFile, a.Name)),
 			Tag:         tag,
 			Repository:  repository,
 		})

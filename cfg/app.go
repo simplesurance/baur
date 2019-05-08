@@ -80,7 +80,7 @@ type S3Upload struct {
 
 // DockerImageOutput describes where a docker container is uploaded to
 type DockerImageOutput struct {
-	IDFile         string                    `toml:"idfile" comment:"Path to a file that is created by [Build.Command] and contains the image ID of the produced image (docker build --iidfile)" commented:"true"`
+	IDFile         string                    `toml:"idfile" comment:"Path to a file that is created by [Build.Command] and contains the image ID of the produced image (docker build --iidfile), valid variables: $APPNAME" commented:"true"`
 	RegistryUpload DockerImageRegistryUpload `comment:"Registry repository the image is uploaded to"`
 }
 
