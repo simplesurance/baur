@@ -168,6 +168,14 @@ func (a *App) loadIncludes(appCfg *cfg.App) error {
 	return nil
 }
 
+func (a *App) addCfgsToBuildInputs(appCfg *cfg.App) {
+	buildInput := cfg.BuildInput{}
+	buildInput.Files.Paths = append(buildInput.Files.Paths, AppCfgFile)
+	buildInput.Files.Paths = append(buildInput.Files.Paths, appCfg.Build.Includes...)
+
+	a.UnresolvedInputs = append(a.UnresolvedInputs, &buildInput)
+}
+
 // NewApp reads the configuration file and returns a new App
 func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	appCfg, err := cfg.AppFromFile(cfgPath)
@@ -203,6 +211,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	}
 
 	app.UnresolvedInputs = []*cfg.BuildInput{&appCfg.Build.Input}
+	app.addCfgsToBuildInputs(appCfg)
 
 	err = app.loadIncludes(appCfg)
 	if err != nil {
