@@ -38,7 +38,7 @@ type GolangSources struct {
 
 // FileInputs describes a file source
 type FileInputs struct {
-	Paths []string `toml:"paths" commented:"false" comment:"Relative path to source files,\n supports Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match) and\n ** to match files recursively\n Valid variables: $ROOT"`
+	Paths []string `toml:"paths" commented:"true" comment:"Relative path to source files,\n supports Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match) and\n ** to match files recursively\n Valid variables: $ROOT"`
 }
 
 // GitFileInputs describes source files that are in the git repository by git
