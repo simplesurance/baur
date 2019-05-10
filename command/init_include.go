@@ -18,8 +18,8 @@ func init() {
 const defIncludeFilename = "includes.toml"
 
 const initIncludeLongHelp = `
-Create an include config file in the current directory.
-If no argument is passed, the file is named +` + defIncludeFilename + `.`
+Create an include config file.
+If no FILENAME argument is passed, the filename will be '` + defIncludeFilename + `'.`
 
 var initIncludeCmd = &cobra.Command{
 	Use:   "include [<FILENAME>]",
