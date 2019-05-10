@@ -155,7 +155,7 @@ func AppFromFile(path string) (*App, error) {
 		return nil, err
 	}
 
-	removeEmptySections(&config)
+	removeEmptySections(&config.Build.Output)
 
 	return &config, err
 }
@@ -165,11 +165,11 @@ func AppFromFile(path string) (*App, error) {
 // It prevents that slices are commented in created Example configurations.
 // To prevent that we have empty elements in the slice that we process later and
 // validate, remove them from the config
-func removeEmptySections(a *App) {
-	fileOutputs := make([]*FileOutput, 0, len(a.Build.Output.File))
-	dockerImageOutputs := make([]*DockerImageOutput, 0, len(a.Build.Output.DockerImage))
+func removeEmptySections(buildOutput *BuildOutput) {
+	fileOutputs := make([]*FileOutput, 0, len(buildOutput.File))
+	dockerImageOutputs := make([]*DockerImageOutput, 0, len(buildOutput.DockerImage))
 
-	for _, f := range a.Build.Output.File {
+	for _, f := range buildOutput.File {
 		if f.IsEmpty() {
 			continue
 		}
@@ -177,7 +177,7 @@ func removeEmptySections(a *App) {
 		fileOutputs = append(fileOutputs, f)
 	}
 
-	for _, d := range a.Build.Output.DockerImage {
+	for _, d := range buildOutput.DockerImage {
 		if d.IsEmpty() {
 			continue
 		}
@@ -185,8 +185,8 @@ func removeEmptySections(a *App) {
 		dockerImageOutputs = append(dockerImageOutputs, d)
 	}
 
-	a.Build.Output.File = fileOutputs
-	a.Build.Output.DockerImage = dockerImageOutputs
+	buildOutput.File = fileOutputs
+	buildOutput.DockerImage = dockerImageOutputs
 }
 
 // ToFile writes an exemplary Application configuration file to

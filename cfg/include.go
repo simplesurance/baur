@@ -40,6 +40,8 @@ func IncludeFromFile(path string) (*Include, error) {
 		return nil, err
 	}
 
+	removeEmptySections(&config.BuildOutput)
+
 	return &config, err
 }
 
