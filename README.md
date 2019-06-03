@@ -1,7 +1,19 @@
 # baur [![CircleCI](https://circleci.com/gh/simplesurance/baur.svg?style=svg&circle-token=8bc17577e45f5246cba2e1ea199ae504c8700eb6)](https://circleci.com/gh/simplesurance/baur) [![Go Report Card](https://goreportcard.com/badge/github.com/simplesurance/baur)](https://goreportcard.com/report/github.com/simplesurance/baur)
 
-![baur png](https://github.com/simplesurance/baur/wiki/media/baur.png)
+<img src="https://github.com/simplesurance/baur/wiki/media/baur.png" width="256" height="256">
 
+
+## Content
+* [About](#About)
+* [Quickstart](#Quickstart)
+* [Key Features](#Key-Features)
+* [Why?](#Why)
+* [Documentation](#Documentation)
+* [Example Repository](#Example-Repository)
+* [Graphana Dashboard](#Graphana-Dashboard)
+* [Status](#Status)
+
+## About
 baur is a build management tool for Git based
 [monolithic repositories](https://en.wikipedia.org/wiki/Monorepo).
 
@@ -18,22 +30,8 @@ If a build with the same build input digest was done previously, a build is not 
 If the build input digest differs from the stored ones, baur runs a
 user-specified command to build the application.
 
-[![asciicast](https://asciinema.org/a/215653.svg)](https://asciinema.org/a/215653?rows=30&speed=1.5)
+<a href="https://asciinema.org/a/215653?rows=30&speed=1.5" target="_blank"><img src="https://asciinema.org/a/215653.svg" height="250" /></a>
 
-## Content
-* [Example Repository](#Example-Repository)
-* [Quickstart](#Quickstart)
-* [Key Features](#Key-Features)
-* [Why?](#Why)
-* [Documentation](#Documentation)
-* [Graphana Dashboard](#Graphana-Dashboard)
-* [Status](#Status)
-
-## Example Repository
-You can find an example monorepository that uses baur at:
-<https://github.com/simplesurance/baur-example>.
-Please follow the [quickstart guide](https://github.com/simplesurance/baur-example#quickstart)
-for the example repository.
 
 ## Quickstart
 This chapter describes a quick way to setup baur for experimenting with it
@@ -45,7 +43,7 @@ For setting it up in a production environment see the chapter
 ### Installation
 Install baur by downloading a release archive from
 the [Release Page](https://github.com/simplesurance/baur/releases) and
-extracting `baur` into your `$PATH`
+extracting `baur` into your `$PATH`.
 
 ### Setup
 baur uses a PostgreSQL database to store information about builds, the quickest
@@ -140,6 +138,14 @@ outputs while enabling to use the build tool of your choice.
 ## Documentation
 Documentation is available in the
 [wiki](https://github.com/simplesurance/baur/wiki).
+
+
+## Example Repository
+You can find an example monorepository that uses baur at:
+<https://github.com/simplesurance/baur-example>.
+Please follow the [quickstart guide](https://github.com/simplesurance/baur-example#quickstart)
+for the example repository.
+
 
 ## Graphana Dashboard
 ![Graphana baur Dashboard](https://github.com/simplesurance/baur/wiki/media/graphana-dashboard.png "Graphana baur Dashboard")
