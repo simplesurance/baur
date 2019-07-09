@@ -10,7 +10,7 @@
 * [Why?](#Why)
 * [Documentation](#Documentation)
 * [Example Repository](#Example-Repository)
-* [Graphana Dashboard](#Graphana-Dashboard)
+* [Grafana Dashboard](#Grafana-Dashboard)
 * [Status](#Status)
 
 ## About
@@ -147,8 +147,8 @@ Please follow the [quickstart guide](https://github.com/simplesurance/baur-examp
 for the example repository.
 
 
-## Graphana Dashboard
-![Graphana baur Dashboard](https://github.com/simplesurance/baur/wiki/media/graphana-dashboard.png "Graphana baur Dashboard")
+## Grafana Dashboard
+![Grafana baur Dashboard](https://github.com/simplesurance/baur/wiki/media/graphana-dashboard.png "Grafana baur Dashboard")
 
 The dashboard is available at: <https://grafana.com/dashboards/8835>
 
