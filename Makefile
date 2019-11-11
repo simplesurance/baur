@@ -60,7 +60,7 @@ release: clean dirty_worktree_check dist/linux_amd64/baur dist/darwin_amd64/baur
 .PHONY: check
 check:
 	$(info * running static code checks)
-	@gometalinter ./...
+	@golangci-lint run
 
 .PHONY: clean
 clean:

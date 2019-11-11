@@ -64,24 +64,15 @@ jobs:
 
   static_analysis:
     docker:
-      - image: circleci/golang:1
+      - image: golangci/golangci-lint:v1.21.0
 
     working_directory: ~/baur
     steps:
       - checkout
 
       - run:
-          name: Preparing Test Environment
-          command: |
-            GOMETALINTER_VER=3.0.0
-
-            curl -fsSL https://github.com/alecthomas/gometalinter/releases/download/v${GOMETALINTER_VER}/gometalinter-${GOMETALINTER_VER}-linux-amd64.tar.gz | tar zxvf -
-            sudo mv gometalinter-${GOMETALINTER_VER}-linux-amd64/* /usr/local/bin/
-            rm -rf gometalinter-${GOMETALINTER_VER}-linux-amd64/
-
-      - run:
           name: Running Static Code Analysis
-          command: make check
+          command: golangci-lint run
 
 workflows:
   version: 2
