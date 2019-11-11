@@ -24,7 +24,7 @@ type Client struct {
 	debugLogFn func(string, ...interface{})
 }
 
-var defLogFn = func(string, ...interface{}) { return }
+var defLogFn = func(string, ...interface{}) {}
 
 // NewClientwAuth intializes a new docker client.
 // The username and password is used to authenticate at the registry for an

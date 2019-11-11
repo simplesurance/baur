@@ -10,7 +10,7 @@ import (
 	"github.com/simplesurance/baur/fs"
 )
 
-var defLogFn = func(string, ...interface{}) { return }
+var defLogFn = func(string, ...interface{}) {}
 
 // Client copies files from one path to another
 type Client struct {
@@ -33,6 +33,9 @@ func copyFile(src, dst string) error {
 		return errors.Wrapf(err, "opening %s failed", src)
 	}
 
+	// nolint: errcheck
+	defer srcFd.Close()
+
 	srcFi, err := os.Stat(src)
 	if err != nil {
 		return errors.Wrapf(err, "stat %s failed", src)
@@ -42,24 +45,17 @@ func copyFile(src, dst string) error {
 
 	dstFd, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcFileMode)
 	if err != nil {
-		srcFd.Close()
 		return errors.Wrapf(err, "opening %s failed", dst)
 	}
 
 	_, err = io.Copy(dstFd, srcFd)
 	if err != nil {
+		_ = dstFd.Close()
+
 		return err
 	}
 
-	if err = srcFd.Close(); err != nil {
-		return err
-	}
-
-	if err = dstFd.Close(); err != nil {
-		return err
-	}
-
-	return err
+	return dstFd.Close()
 }
 
 // Upload copies the file with src path to the dst path.

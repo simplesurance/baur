@@ -140,9 +140,10 @@ func (a *App) addFileOutputs(buildOutput *cfg.BuildOutput) error {
 	return nil
 }
 
-func (a *App) include(inc *cfg.Include) {
+func (a *App) include(inc *cfg.Include) error {
 	a.UnresolvedInputs = append(a.UnresolvedInputs, &inc.BuildInput)
-	a.addBuildOutput(&inc.BuildOutput)
+
+	return a.addBuildOutput(&inc.BuildOutput)
 }
 
 func (a *App) loadIncludes(appCfg *cfg.App) error {
@@ -157,7 +158,10 @@ func (a *App) loadIncludes(appCfg *cfg.App) error {
 			return errors.Wrapf(err, "loading include '%s' failed", includePath)
 		}
 
-		a.include(inc)
+		err = a.include(inc)
+		if err != nil {
+			return errors.Wrapf(err, "including '%s' failed", includePath)
+		}
 	}
 
 	return nil

@@ -60,11 +60,8 @@ func MustFindRepository() *baur.Repository {
 func isAppDir(arg string) bool {
 	cfgPath := path.Join(arg, baur.AppCfgFile)
 	_, err := os.Stat(cfgPath)
-	if err == nil {
-		return true
-	}
 
-	return false
+	return err == nil
 }
 
 func mustArgToApp(repo *baur.Repository, arg string) *baur.App {

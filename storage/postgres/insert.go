@@ -287,9 +287,13 @@ func (c *Client) Save(b *storage.Build) error {
 
 	defer func() {
 		if err != nil {
-			tx.Rollback()
-		} else {
-			tx.Commit()
+			_ = tx.Rollback()
+			return
+		}
+
+		commitErr := tx.Commit()
+		if commitErr != nil {
+			err = errors.Wrap(err, "committing transaction failed")
 		}
 	}()
 

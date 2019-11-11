@@ -12,7 +12,7 @@ import (
 
 var (
 	// DefaultDebugfFn is the default debug print function.
-	DefaultDebugfFn = func(string, ...interface{}) { return }
+	DefaultDebugfFn = func(string, ...interface{}) {}
 	// DefaultDebugPrefix is the default prefix that is prepended to messages passed to the debugf function.
 	DefaultDebugPrefix = "exec: "
 )
@@ -167,7 +167,7 @@ func (c *Cmd) Run() (*Result, error) {
 	}
 
 	if err := in.Err(); err != nil {
-		cmd.Wait()
+		_ = cmd.Wait()
 
 		return nil, err
 	}
