@@ -70,8 +70,6 @@ func LsFiles(dir string, arg ...string) (string, error) {
 // WorkTreeIsDirty returns true if the repository contains modified files,
 // untracked files are considered, files in .gitignore are ignored
 func WorkTreeIsDirty(dir string) (bool, error) {
-	const cmd = "git status -s"
-
 	res, err := exec.Command("git", "status", "-s").Directory(dir).ExpectSuccess().Run()
 	if err != nil {
 		return false, err

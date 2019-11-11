@@ -23,7 +23,7 @@ var build = storage.Build{
 			Type: storage.FileArtifact,
 			Upload: storage.Upload{
 				URI:            "http://test.de",
-				UploadDuration: time.Duration(5 * time.Second),
+				UploadDuration: 5 * time.Second,
 			},
 			Digest:    "sha384:c825bb06739ba6b41f6cc0c123a5956bd65be9e22d51640a0460e0b16eb4523af4d68a1b56d63fd67dab484a0796fc69",
 			SizeBytes: 64,
@@ -73,6 +73,7 @@ func TestInsertAppIfNotExist(t *testing.T) {
 		t.Fatal("starting transaction failed:", err)
 	}
 
+	// nolint: errcheck
 	defer tx.Rollback()
 
 	err = insertAppIfNotExist(tx, &app)

@@ -41,8 +41,6 @@ func Test_FindAllSubDirs(t *testing.T) {
 			t.Errorf("%q is missing in result %q", er, res)
 		}
 	}
-
-	return
 }
 
 func createFiles(t *testing.T, basedir string, paths []string) {

@@ -17,7 +17,7 @@ import (
 // goroot caches the GOROOT path when GOROOT() is called
 var goroot = ""
 
-var defLogFn = func(string, ...interface{}) { return }
+var defLogFn = func(string, ...interface{}) {}
 
 // Resolver determines all Go Source files that are imported by Go-Files
 // in the passed paths
