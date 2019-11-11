@@ -1,0 +1,21 @@
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - goimports
+    - golint
+    - gosimple
+    - ineffassign
+    - interfacer
+    - misspell
+    - structcheck
+    - typecheck
+    - unconvert
+    - unused
+    - varcheck
+    - vet
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/simplesurance/baur
