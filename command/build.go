@@ -452,8 +452,6 @@ func buildRun(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	repo.GitCommitID()
-
 	buildJobs := createBuildJobs(apps)
 	buildChan := make(chan *build.Result, len(apps))
 	builder := seq.New(buildJobs, buildChan)
