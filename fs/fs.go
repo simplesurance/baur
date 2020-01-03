@@ -19,7 +19,7 @@ func IsFile(path string) (bool, error) {
 		return false, err
 	}
 
-	return !fi.IsDir(), nil
+	return fi.Mode().IsRegular(), nil
 }
 
 // FileExists returns true if path exist and is a file
