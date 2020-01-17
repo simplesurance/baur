@@ -3,10 +3,8 @@ package docker
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"net/url"
-	"os"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
@@ -196,21 +194,12 @@ func (c *Client) Upload(image, registryAddr, repository, tag string) (string, er
 	return destURI, nil
 }
 
-// Size returns the size of an image in Bytes
+// Size returns the size of an image in Bytes.
 func (c *Client) Size(imageID string) (int64, error) {
-	summaries, err := c.clt.ListImages(docker.ListImagesOptions{})
+	img, err := c.clt.InspectImage(imageID)
 	if err != nil {
-		return -1, errors.Wrap(err, "fetching imagelist failed")
+		return -1, err
 	}
 
-	for _, sum := range summaries {
-		if sum.ID == imageID {
-			if sum.VirtualSize <= 0 {
-				return -1, fmt.Errorf("docker returned invalid image size %q", sum.VirtualSize)
-			}
-			return sum.VirtualSize, nil
-		}
-	}
-
-	return -1, os.ErrNotExist
+	return img.VirtualSize, nil
 }
