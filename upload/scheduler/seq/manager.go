@@ -9,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/simplesurance/baur/upload"
 	"github.com/simplesurance/baur/upload/scheduler"
 )
 
@@ -18,11 +17,21 @@ type Logger interface {
 	Debugf(format string, v ...interface{})
 }
 
+// DockerUploader is a client for uploading docker images to a registry
+type DockerUploader interface {
+	Upload(image, registryAddr, repository, tag string) (string, error)
+}
+
+//FileUploader is an interface for storing files in another place
+type FileUploader interface {
+	Upload(from, to string) (string, error)
+}
+
 // Uploader is a sequential uploader
 type Uploader struct {
-	filecopy       upload.Uploader
-	s3             upload.Uploader
-	docker         upload.Uploader
+	filecopy       FileUploader
+	s3             FileUploader
+	docker         DockerUploader
 	lock           sync.Mutex
 	queue          []scheduler.Job
 	stopProcessing bool
@@ -32,7 +41,7 @@ type Uploader struct {
 
 // New initializes a sequential uploader
 // Status chan must have a buffer count > 1 otherwise a deadlock occurs
-func New(logger Logger, filecopyUploader, s3Uploader, dockerUploader upload.Uploader, status chan<- *scheduler.Result) *Uploader {
+func New(logger Logger, filecopyUploader, s3Uploader FileUploader, dockerUploader DockerUploader, status chan<- *scheduler.Result) *Uploader {
 	return &Uploader{
 		logger:     logger,
 		s3:         s3Uploader,
@@ -71,24 +80,26 @@ func (u *Uploader) Start() {
 			startTs := time.Now()
 
 			u.logger.Debugf("uploading %s", job)
-			switch job.Type() {
-			case scheduler.JobFileCopy:
-				url, err = u.filecopy.Upload(job.LocalPath(), job.RemoteDest())
+			switch j := job.(type) {
+			case *scheduler.FileCopyJob:
+				url, err = u.filecopy.Upload(j.Src, j.Dst)
 				if err != nil {
 					err = errors.Wrap(err, "file copy failed")
 				}
-			case scheduler.JobS3:
-				url, err = u.s3.Upload(job.LocalPath(), job.RemoteDest())
+
+			case *scheduler.S3Job:
+				url, err = u.s3.Upload(j.FilePath, j.DestURL)
 				if err != nil {
 					err = errors.Wrap(err, "S3 upload failed")
 				}
-			case scheduler.JobDocker:
-				url, err = u.docker.Upload(job.LocalPath(), job.RemoteDest())
+
+			case *scheduler.DockerJob:
+				url, err = u.docker.Upload(j.ImageID, j.Registry, j.Repository, j.Tag)
 				if err != nil {
 					err = errors.Wrap(err, "Docker upload failed")
 				}
 			default:
-				panic(fmt.Sprintf("invalid job %+v", job))
+				panic(fmt.Sprintf("job has unsupported type %+v", job))
 			}
 
 			u.statusChan <- &scheduler.Result{

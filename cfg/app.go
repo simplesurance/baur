@@ -68,6 +68,7 @@ type FileCopy struct {
 // DockerImageRegistryUpload holds information about where the docker image
 // should be uploaded to
 type DockerImageRegistryUpload struct {
+	Registry   string `toml:"registry" comment:"Registry address in the format <HOST>:[<PORT>], if empty the default from the docker agent is used" commented:"true"`
 	Repository string `toml:"repository" comment:"Repository path, format: [<server[:port]>/]<owner>/<repository>:<tag>, valid variables: $APPNAME" commented:"true"`
 	Tag        string `toml:"tag" comment:"Tag that is applied to the image, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
 }

@@ -9,16 +9,6 @@ type FileCopyJob struct {
 	Dst      string
 }
 
-// LocalPath returns the local path of the file that is uploaded
-func (f *FileCopyJob) LocalPath() string {
-	return f.Src
-}
-
-// RemoteDest returns the destination path
-func (f *FileCopyJob) RemoteDest() string {
-	return f.Dst
-}
-
 // Type returns JobFileCopy
 func (f *FileCopyJob) Type() JobType {
 	return JobFileCopy
