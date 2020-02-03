@@ -193,7 +193,7 @@ func (c *Client) Upload(image, destURI string) (string, error) {
 	outStream := bufio.NewWriter(&outBuf)
 
 	err = c.clt.PushImage(docker.PushImageOptions{
-        Registry:   server,
+		Registry:  		server,
 		Name:         repository,
 		Tag:          tag,
 		OutputStream: outStream,
