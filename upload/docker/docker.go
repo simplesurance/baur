@@ -146,35 +146,23 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 }
 
 // parseRepositoryURI splits a URI in the format:
-// [<host[:port]>]/<owner>/<repository>:<tag> into it's parts
-func parseRepositoryURI(dest string) (server, repository, tag string, err error) {
-	spl := strings.SplitN(dest, "/", 3)
-	if len(spl) == 3 {
-		server = spl[0]
-		repository = spl[1] + "/" + spl[2]
-	} else if len(spl) == 2 {
-		repository = spl[0] + "/" + spl[1]
-	} else {
-		return "", "", "", errors.New("invalid repository URI")
+// <repository>:<tag> into it's parts.
+// <repository> can contain multiple path components, separated with slashes as
+// described in
+// https://github.com/docker/distribution/blob/master/docs/spec/api.md#overview
+func parseRepositoryURI(dest string) (repository, tag string, err error) {
+	spl := strings.Split(dest, ":")
+	if len(spl) != 2 {
+		return "", "", fmt.Errorf("parsing URI failed, expected 1 ':' char, got %d", len(spl)-1)
 	}
 
-	spl = strings.Split(repository, ":")
-	// can contain up to 2 colons, one for the port in the server address,
-	// one for the tag
-	if len(spl) < 2 {
-		return "", "", "", errors.New("parsing tag failed")
-	}
-
-	tag = spl[len(spl)-1]
-	repository = spl[len(spl)-2]
-
-	return
+	return spl[0], spl[1], nil
 }
 
 // Upload tags and uploads an image into a docker registry repository
-// destURI format: [<server[:port]>/]<owner>/<repository>:<tag>
+// destURI format: <repository>:<tag>
 func (c *Client) Upload(image, destURI string) (string, error) {
-	server, repository, tag, err := parseRepositoryURI(destURI)
+	repository, tag, err := parseRepositoryURI(destURI)
 	if err != nil {
 		return "", err
 	}
@@ -187,13 +175,12 @@ func (c *Client) Upload(image, destURI string) (string, error) {
 		return "", errors.Wrapf(err, "tagging image failed")
 	}
 
-	auth := c.getAuth(server)
+	auth := c.getAuth("")
 
 	var outBuf bytes.Buffer
 	outStream := bufio.NewWriter(&outBuf)
 
 	err = c.clt.PushImage(docker.PushImageOptions{
-		Registry:  		server,
 		Name:         repository,
 		Tag:          tag,
 		OutputStream: outStream,
