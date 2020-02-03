@@ -145,8 +145,8 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 	panic("docker: could not find any auth data in a config.json")
 }
 
-// parseRepositoryURI splits a URI in the format:
-// <repository>:<tag> into it's parts.
+// parseRepositoryURI splits a URI in the format: <repository>:<tag> into it's
+// parts.
 // <repository> can contain multiple path components, separated with slashes as
 // described in
 // https://github.com/docker/distribution/blob/master/docs/spec/api.md#overview
