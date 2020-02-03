@@ -148,7 +148,7 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 // parseRepositoryURI splits a URI in the format:
 // [<host[:port]>]/<owner>/<repository>:<tag> into it's parts
 func parseRepositoryURI(dest string) (server, repository, tag string, err error) {
-	spl := strings.Split(dest, "/")
+	spl := strings.SplitN(dest, "/", 3)
 	if len(spl) == 3 {
 		server = spl[0]
 		repository = spl[1] + "/" + spl[2]
@@ -193,6 +193,7 @@ func (c *Client) Upload(image, destURI string) (string, error) {
 	outStream := bufio.NewWriter(&outBuf)
 
 	err = c.clt.PushImage(docker.PushImageOptions{
+        Registry:   server,
 		Name:         repository,
 		Tag:          tag,
 		OutputStream: outStream,

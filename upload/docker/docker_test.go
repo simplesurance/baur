@@ -36,7 +36,13 @@ func Test_parseRepositoryURI(t *testing.T) {
 			wantRepository: "simplesurance/calculator",
 			wantTag:        "latest",
 		},
-
+		{
+			name:           "serverWithPortLongRepo",
+			destArg:        "localhost/simplesurance/app/calculator:latest",
+			wantServer:     "localhost",
+			wantRepository: "simplesurance/app/calculator",
+			wantTag:        "latest",
+		},
 		{
 			name:    "emptyArg",
 			wantErr: true,
