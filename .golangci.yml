@@ -9,6 +9,7 @@ linters:
     - ineffassign
     - interfacer
     - misspell
+    - rowserrcheck
     - structcheck
     - typecheck
     - unconvert
