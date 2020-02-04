@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/Microsoft/go-winio v0.4.12 // indirect
-	github.com/aws/aws-sdk-go v1.19.12
+	github.com/aws/aws-sdk-go v1.28.9
 	github.com/fatih/color v1.7.0
 	github.com/fsouza/go-dockerclient v1.3.6
 	github.com/gogo/protobuf v1.2.1 // indirect
