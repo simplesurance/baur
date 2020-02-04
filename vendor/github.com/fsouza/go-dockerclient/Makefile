@@ -1,34 +1,20 @@
 .PHONY: \
 	all \
-	staticcheck \
-	fmtcheck \
+	lint \
 	pretest \
 	test \
 	integration
 
-DEP_TOOL ?= dep
-
 all: test
 
-staticcheck:
-	GO111MODULE=off go get honnef.co/go/tools/cmd/staticcheck
-	staticcheck ./...
+lint:
+	cd /tmp && GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	golangci-lint run
 
-fmtcheck:
-	if [ -z "$${SKIP_FMT_CHECK}" ]; then [ -z "$$(gofmt -s -d *.go ./testing | tee /dev/stderr)" ]; fi
-
-testdeps:
-ifeq ($(DEP_TOOL), dep)
-	GO111MODULE=off go get -u github.com/golang/dep/cmd/dep
-	dep ensure -v
-else
-	go mod download
-endif
-
-pretest: testdeps staticcheck fmtcheck
+pretest: lint
 
 gotest:
-	go test -race ./...
+	go test -race -vet all ./...
 
 test: pretest gotest
 
