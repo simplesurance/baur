@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/command/flag"
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
+	"github.com/simplesurance/baur/internal/command/flag"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
