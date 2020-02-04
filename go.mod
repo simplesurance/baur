@@ -27,7 +27,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
-	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135
+	golang.org/x/tools v0.0.0-20200204074204-1cc6d1ef6c74
 	google.golang.org/genproto v0.0.0-20200203223152-ff9e8190c2f5 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
