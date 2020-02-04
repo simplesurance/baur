@@ -9,16 +9,6 @@ type S3Job struct {
 	DestURL  string
 }
 
-// LocalPath returns the local path of the file that is uploaded
-func (s *S3Job) LocalPath() string {
-	return s.FilePath
-}
-
-// RemoteDest returns the path in S3
-func (s *S3Job) RemoteDest() string {
-	return s.DestURL
-}
-
 // Type returns JobS3
 func (s *S3Job) Type() JobType {
 	return JobS3

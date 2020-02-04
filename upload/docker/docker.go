@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"strings"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
@@ -145,55 +144,37 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 	panic("docker: could not find any auth data in a config.json")
 }
 
-// parseRepositoryURI splits a URI in the format:
-// [<host[:port]>]/<owner>/<repository>:<tag> into it's parts
-func parseRepositoryURI(dest string) (server, repository, tag string, err error) {
-	spl := strings.Split(dest, "/")
-	if len(spl) == 3 {
-		server = spl[0]
-		repository = spl[1] + "/" + spl[2]
-	} else if len(spl) == 2 {
-		repository = spl[0] + "/" + spl[1]
-	} else {
-		return "", "", "", errors.New("invalid repository URI")
-	}
-
-	spl = strings.Split(repository, ":")
-	// can contain up to 2 colons, one for the port in the server address,
-	// one for the tag
-	if len(spl) < 2 {
-		return "", "", "", errors.New("parsing tag failed")
-	}
-
-	tag = spl[len(spl)-1]
-	repository = spl[len(spl)-2]
-
-	return
-}
-
 // Upload tags and uploads an image into a docker registry repository
-// destURI format: [<server[:port]>/]<owner>/<repository>:<tag>
-func (c *Client) Upload(image, destURI string) (string, error) {
-	server, repository, tag, err := parseRepositoryURI(destURI)
-	if err != nil {
-		return "", err
+// destURI format: <repository>:<tag>
+func (c *Client) Upload(image, registryAddr, repository, tag string) (string, error) {
+	var addrRepo string
+	var destURI string
+
+	if registryAddr == "" {
+		addrRepo = repository
+		destURI = repository + ":" + tag
+	} else {
+		addrRepo = registryAddr + "/" + repository
+		destURI = registryAddr + "/" + repository + ":" + tag
 	}
 
-	err = c.clt.TagImage(image, docker.TagImageOptions{
-		Repo: repository,
+	c.debugLogFn("docker: creating tag, repo: %q, tag: %q referring to image %q", addrRepo, tag, image)
+	err := c.clt.TagImage(image, docker.TagImageOptions{
+		Repo: addrRepo,
 		Tag:  tag,
 	})
 	if err != nil {
 		return "", errors.Wrapf(err, "tagging image failed")
 	}
 
-	auth := c.getAuth(server)
+	auth := c.getAuth(registryAddr)
 
 	var outBuf bytes.Buffer
 	outStream := bufio.NewWriter(&outBuf)
 
+	c.debugLogFn("docker: pushing image, name: %q, tag: %q", addrRepo, tag)
 	err = c.clt.PushImage(docker.PushImageOptions{
-		Name:         repository,
+		Name:         addrRepo,
 		Tag:          tag,
 		OutputStream: outStream,
 	}, auth)

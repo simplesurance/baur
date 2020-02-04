@@ -15,6 +15,7 @@ type DockerArtifact struct {
 	ImageIDFile string
 	Tag         string
 	Repository  string
+	Registry    string
 }
 
 // Exists returns true if the ImageIDFile exists
@@ -45,6 +46,7 @@ func (d *DockerArtifact) UploadJob() (scheduler.Job, error) {
 
 	return &scheduler.DockerJob{
 		ImageID:    id,
+		Registry:   d.Registry,
 		Repository: d.Repository,
 		Tag:        d.Tag,
 	}, nil
@@ -67,7 +69,11 @@ func (d *DockerArtifact) Name() string {
 
 // UploadDestination returns the upload destination
 func (d *DockerArtifact) UploadDestination() string {
-	return fmt.Sprintf("%s:%s", d.Repository, d.Tag)
+	if d.Registry != "" {
+		return fmt.Sprintf("%s:%s", d.Repository, d.Tag)
+	}
+
+	return fmt.Sprintf("%s/%s:%s", d.Registry, d.Repository, d.Tag)
 }
 
 // Digest returns the image ID as Digest object

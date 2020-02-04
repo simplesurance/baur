@@ -81,6 +81,7 @@ func (a *App) addDockerBuildOutputs(buildOutput *cfg.BuildOutput) error {
 			ImageIDFile: path.Join(a.Path, replaceAppNameVar(di.IDFile, a.Name)),
 			Tag:         tag,
 			Repository:  repository,
+			Registry:    di.RegistryUpload.Registry,
 		})
 	}
 

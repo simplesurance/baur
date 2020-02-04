@@ -15,8 +15,6 @@ const (
 
 // Job is the interface for upload jobs
 type Job interface {
-	LocalPath() string
-	RemoteDest() string
 	Type() JobType
 	GetUserData() interface{}
 	SetUserData(interface{})

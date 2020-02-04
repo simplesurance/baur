@@ -6,18 +6,9 @@ import "fmt"
 type DockerJob struct {
 	UserData   interface{}
 	ImageID    string
+	Registry   string
 	Repository string
 	Tag        string
-}
-
-// LocalPath returns the image id of the container
-func (d *DockerJob) LocalPath() string {
-	return d.ImageID
-}
-
-// RemoteDest returns the upload path in the docker registry
-func (d *DockerJob) RemoteDest() string {
-	return d.Repository + ":" + d.Tag
 }
 
 // Type returns the JobDocker
@@ -37,5 +28,9 @@ func (d *DockerJob) SetUserData(u interface{}) {
 
 // String returns the string representation
 func (d *DockerJob) String() string {
-	return fmt.Sprintf("docker image: %s:%s", d.Repository, d.Tag)
+	if d.Registry == "" {
+		return fmt.Sprintf("docker: %s:%s", d.Repository, d.Tag)
+	}
+
+	return fmt.Sprintf("docker: %s/%s:%s", d.Registry, d.Repository, d.Tag)
 }
