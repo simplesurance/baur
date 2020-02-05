@@ -38,7 +38,7 @@ func initInclude(cmd *cobra.Command, args []string) {
 		filename = defIncludeFilename
 	}
 
-	cfg := cfg.ExampleInclude()
+	cfg := cfg.ExampleInclude("example")
 	err := cfg.IncludeToFile(filename)
 	if err != nil {
 		if os.IsExist(err) {

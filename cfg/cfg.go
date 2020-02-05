@@ -1,13 +1,13 @@
 package cfg
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/pelletier/go-toml"
-	"github.com/pkg/errors"
 )
 
-// toFile serializes a struct to TOML format and writes it to a file.
+// toFile marshals a struct to TOML format and writes it to a file.
 func toFile(data interface{}, filepath string, overwrite bool) error {
 	var openFlags int
 
@@ -32,7 +32,7 @@ func toFile(data interface{}, filepath string, overwrite bool) error {
 
 	err = f.Close()
 	if err != nil {
-		return errors.Wrap(err, "closing file failed")
+		return fmt.Errorf("closing file failed: %w", err)
 	}
 
 	return err

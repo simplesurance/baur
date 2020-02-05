@@ -45,12 +45,6 @@ func findRepository() (*baur.Repository, error) {
 func MustFindRepository() *baur.Repository {
 	repo, err := findRepository()
 	if err != nil {
-		if os.IsNotExist(err) {
-			log.Fatalf("could not find repository root config file "+
-				"ensure the file '%s' exist in the root",
-				baur.RepositoryCfgFile)
-		}
-
 		log.Fatalln(err)
 	}
 
@@ -68,7 +62,7 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	if isAppDir(arg) {
 		app, err := repo.AppByDir(arg)
 		if err != nil {
-			log.Fatalf("could not find application in dir '%s': %s", arg, err)
+			log.Fatalln(err)
 		}
 
 		return app
@@ -76,9 +70,6 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 
 	app, err := repo.AppByName(arg)
 	if err != nil {
-		if os.IsNotExist(err) {
-			log.Fatalf("could not find application with name '%s'", arg)
-		}
 		log.Fatalln(err)
 	}
 

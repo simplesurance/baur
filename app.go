@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/rs/xid"
 
 	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/cfg/resolver"
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/log"
@@ -30,32 +30,11 @@ type App struct {
 	Outputs          []BuildOutput
 	totalInputDigest *digest.Digest
 
-	UnresolvedInputs []*cfg.BuildInput
+	UnresolvedInputs []*cfg.Input
 	buildInputs      []*File
 }
 
-func replaceUUIDvar(in string) string {
-	return strings.Replace(in, "$UUID", xid.New().String(), -1)
-}
-
-func replaceROOTvar(in string, r *Repository) string {
-	return strings.Replace(in, "$ROOT", r.Path, -1)
-}
-
-func replaceAppNameVar(in, appName string) string {
-	return strings.Replace(in, "$APPNAME", appName, -1)
-}
-
-func replaceGitCommitVar(in string, r *Repository) (string, error) {
-	commitID, err := r.GitCommitID()
-	if err != nil {
-		return "", err
-	}
-
-	return strings.Replace(in, "$GITCOMMIT", commitID, -1), nil
-}
-
-func (a *App) addBuildOutput(buildOutput *cfg.BuildOutput) error {
+func (a *App) addBuildOutput(buildOutput *cfg.Output) error {
 	if err := a.addDockerBuildOutputs(buildOutput); err != nil {
 		return errors.Wrap(err, "error in DockerImage section")
 	}
@@ -67,20 +46,12 @@ func (a *App) addBuildOutput(buildOutput *cfg.BuildOutput) error {
 	return nil
 }
 
-func (a *App) addDockerBuildOutputs(buildOutput *cfg.BuildOutput) error {
+func (a *App) addDockerBuildOutputs(buildOutput *cfg.Output) error {
 	for _, di := range buildOutput.DockerImage {
-		tag, err := replaceGitCommitVar(di.RegistryUpload.Tag, a.Repository)
-		if err != nil {
-			return errors.Wrap(err, "replacing $GITCOMMIT in tag failed")
-		}
-
-		tag = replaceUUIDvar(tag)
-		repository := replaceAppNameVar(di.RegistryUpload.Repository, a.Name)
-
 		a.Outputs = append(a.Outputs, &DockerArtifact{
-			ImageIDFile: path.Join(a.Path, replaceAppNameVar(di.IDFile, a.Name)),
-			Tag:         tag,
-			Repository:  repository,
+			ImageIDFile: path.Join(a.Path, di.IDFile),
+			Tag:         di.RegistryUpload.Tag,
+			Repository:  di.RegistryUpload.Repository,
 			Registry:    di.RegistryUpload.Registry,
 		})
 	}
@@ -88,25 +59,18 @@ func (a *App) addDockerBuildOutputs(buildOutput *cfg.BuildOutput) error {
 	return nil
 }
 
-func (a *App) addFileOutputs(buildOutput *cfg.BuildOutput) error {
+func (a *App) addFileOutputs(buildOutput *cfg.Output) error {
 	for _, f := range buildOutput.File {
-		filePath := replaceAppNameVar(f.Path, a.Name)
+		filePath := f.Path
 		if !f.S3Upload.IsEmpty() {
-			destFile, err := replaceGitCommitVar(f.S3Upload.DestFile, a.Repository)
-			if err != nil {
-				return errors.Wrap(err, "replacing $GITCOMMIT in dest_file failed")
-			}
-
-			destFile = replaceUUIDvar(replaceAppNameVar(destFile, a.Name))
-			s3Bucket := replaceAppNameVar(f.S3Upload.Bucket, a.Name)
-			url := "s3://" + s3Bucket + "/" + destFile
+			url := "s3://" + f.S3Upload.Bucket + "/" + f.S3Upload.DestFile
 
 			src := path.Join(a.Path, filePath)
 
 			a.Outputs = append(a.Outputs, &FileArtifact{
 				RelPath:   path.Join(a.RelPath, filePath),
 				Path:      src,
-				DestFile:  destFile,
+				DestFile:  f.S3Upload.DestFile,
 				UploadURL: url,
 				uploadJob: &scheduler.S3Job{
 					DestURL:  url,
@@ -116,52 +80,18 @@ func (a *App) addFileOutputs(buildOutput *cfg.BuildOutput) error {
 		}
 
 		if !f.FileCopy.IsEmpty() {
-			dest, err := replaceGitCommitVar(f.FileCopy.Path, a.Repository)
-			if err != nil {
-				return errors.Wrap(err, "replacing $GITCOMMIT in path failed")
-			}
-
-			dest = replaceUUIDvar(replaceAppNameVar(dest, a.Name))
 			src := path.Join(a.Path, filePath)
 
 			a.Outputs = append(a.Outputs, &FileArtifact{
 				RelPath:   path.Join(a.RelPath, filePath),
 				Path:      src,
-				DestFile:  dest,
-				UploadURL: dest,
+				DestFile:  f.FileCopy.Path,
+				UploadURL: f.FileCopy.Path,
 				uploadJob: &scheduler.FileCopyJob{
 					Src: src,
-					Dst: dest,
+					Dst: f.FileCopy.Path,
 				},
 			})
-
-		}
-	}
-
-	return nil
-}
-
-func (a *App) include(inc *cfg.Include) error {
-	a.UnresolvedInputs = append(a.UnresolvedInputs, &inc.BuildInput)
-
-	return a.addBuildOutput(&inc.BuildOutput)
-}
-
-func (a *App) loadIncludes(appCfg *cfg.App) error {
-	for _, includePath := range appCfg.Build.Includes {
-		path := replaceROOTvar(includePath, a.Repository)
-		if !filepath.IsAbs(path) {
-			path = filepath.Join(a.Path, path)
-		}
-
-		inc, err := a.Repository.includeCache.load(path)
-		if err != nil {
-			return errors.Wrapf(err, "loading include '%s' failed", includePath)
-		}
-
-		err = a.include(inc)
-		if err != nil {
-			return errors.Wrapf(err, "including '%s' failed", includePath)
 		}
 	}
 
@@ -169,9 +99,8 @@ func (a *App) loadIncludes(appCfg *cfg.App) error {
 }
 
 func (a *App) addCfgsToBuildInputs(appCfg *cfg.App) {
-	buildInput := cfg.BuildInput{}
+	buildInput := cfg.Input{}
 	buildInput.Files.Paths = append(buildInput.Files.Paths, AppCfgFile)
-	buildInput.Files.Paths = append(buildInput.Files.Paths, appCfg.Build.Includes...)
 
 	a.UnresolvedInputs = append(a.UnresolvedInputs, &buildInput)
 }
@@ -184,11 +113,30 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 			"reading application config %s failed", cfgPath)
 	}
 
+	var errAppName string
+	if appCfg.Name != "" {
+		errAppName = appCfg.Name
+	} else {
+		errAppName = cfgPath
+	}
+
+	err = appCfg.Merge(repository.includeDB, &resolver.StrReplacement{Old: rootVarName, New: repository.Path})
+	if err != nil {
+		return nil, errors.Wrapf(err,
+			"%s: merging includes failed", errAppName)
+	}
+
+	resolvers := DefaultAppCfgResolvers(repository.Path, appCfg.Name, repository.GitCommitID)
+	err = appCfg.Resolve(resolvers)
+	if err != nil {
+		return nil, errors.Wrapf(err,
+			"%s: resolving variables in config failed", errAppName)
+	}
+
 	err = appCfg.Validate()
 	if err != nil {
 		return nil, errors.Wrapf(err,
-			"validating application config %s failed",
-			cfgPath)
+			"validating application config %s failed", cfgPath)
 	}
 
 	appAbsPath := path.Dir(cfgPath)
@@ -197,26 +145,41 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
 	}
 
+	var buildCommand string
+	if len(appCfg.Tasks) > 1 {
+		return nil, fmt.Errorf("%s: has >1 tasks defined, only 1 task definition with name 'build' is currently allowed", appCfg.Name)
+	}
+
+	var buildTask *cfg.Task
+	if len(appCfg.Tasks) == 1 {
+		buildTask = appCfg.Tasks[0]
+
+		if buildTask.Name != "build" {
+			return nil, fmt.Errorf("%s: has a task defined with name %q, only 1 task definition with name 'build' is currently allowed", appCfg.Name, buildTask.Name)
+		}
+
+		buildCommand = buildTask.Command
+	}
+
 	app := App{
 		Repository: repository,
 		Path:       path.Dir(cfgPath),
 		RelPath:    appRelPath,
 		Name:       appCfg.Name,
-		BuildCmd:   strings.TrimSpace(appCfg.Build.Command),
+		BuildCmd:   strings.TrimSpace(buildCommand),
 	}
 
-	err = app.addBuildOutput(&appCfg.Build.Output)
+	if buildTask == nil {
+		return &app, nil
+	}
+
+	err = app.addBuildOutput(&buildTask.Output)
 	if err != nil {
-		return nil, errors.Wrapf(err, "%s: processing Build.Output section failed", app.Name)
+		return nil, errors.Wrapf(err, "%s: processing Task.Output section failed", app.Name)
 	}
 
-	app.UnresolvedInputs = []*cfg.BuildInput{&appCfg.Build.Input}
+	app.UnresolvedInputs = []*cfg.Input{&buildTask.Input}
 	app.addCfgsToBuildInputs(appCfg)
-
-	err = app.loadIncludes(appCfg)
-	if err != nil {
-		return nil, errors.Wrapf(err, "%s: processing application config failed failed", app.Name)
-	}
 
 	return &app, nil
 }
@@ -255,10 +218,6 @@ func (a *App) resolveGlobFileInputs() ([]string, error) {
 
 	for _, bi := range a.UnresolvedInputs {
 		for _, globPath := range bi.Files.Paths {
-			if strings.HasPrefix(globPath, "$ROOT") {
-				globPath = filepath.Clean(replaceROOTvar(globPath, a.Repository))
-			}
-
 			if !filepath.IsAbs(globPath) {
 				globPath = filepath.Join(a.Path, globPath)
 			}
@@ -288,23 +247,7 @@ func (a *App) resolveGitFileInputs() ([]string, error) {
 			continue
 		}
 
-		paths := make([]string, 0, len(bi.GitFiles.Paths))
-		for _, path := range bi.GitFiles.Paths {
-			if !strings.HasPrefix(path, "$ROOT") {
-				paths = append(paths, path)
-				continue
-			}
-
-			absPath := replaceROOTvar(path, a.Repository)
-			relPath, err := filepath.Rel(a.Path, absPath)
-			if err != nil {
-				return nil, err
-			}
-
-			paths = append(paths, relPath)
-		}
-
-		resolver := gitpath.NewResolver(a.Path, paths...)
+		resolver := gitpath.NewResolver(a.Path, bi.GitFiles.Paths...)
 		paths, err := resolver.Resolve()
 		if err != nil {
 			return nil, err
@@ -333,12 +276,7 @@ func (a *App) resolveGoSrcInputs() ([]string, error) {
 			absGoSourcePaths = append(absGoSourcePaths, absPath)
 		}
 
-		goSrcEnv := make([]string, 0, len(bi.GolangSources.Environment))
-		for _, val := range bi.GolangSources.Environment {
-			goSrcEnv = append(goSrcEnv, path.Clean(replaceROOTvar(val, a.Repository)))
-		}
-
-		resolver := gosource.NewResolver(log.Debugf, goSrcEnv, absGoSourcePaths...)
+		resolver := gosource.NewResolver(log.Debugf, bi.GolangSourcesInputs().Environment, absGoSourcePaths...)
 		paths, err := resolver.Resolve()
 		if err != nil {
 			return nil, err

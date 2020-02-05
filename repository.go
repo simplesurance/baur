@@ -10,6 +10,7 @@ import (
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/fs"
 	"github.com/simplesurance/baur/git"
+	"github.com/simplesurance/baur/log"
 )
 
 // Repository represents an repository containing applications
@@ -21,7 +22,7 @@ type Repository struct {
 	gitCommitID        string
 	gitWorktreeIsDirty *bool
 	PSQLURL            string
-	includeCache       *includeCache
+	includeDB          *cfg.IncludeDB
 }
 
 // FindRepository searches for a repository config file. The search starts in
@@ -49,13 +50,13 @@ func FindRepositoryCwd() (*Repository, error) {
 
 // NewRepository reads the configuration file and returns a Repository
 func NewRepository(cfgPath string) (*Repository, error) {
-	cfg, err := cfg.RepositoryFromFile(cfgPath)
+	repoCfg, err := cfg.RepositoryFromFile(cfgPath)
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"reading repository config %s failed", cfgPath)
 	}
 
-	err = cfg.Validate()
+	err = repoCfg.Validate()
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"validating repository config %q failed", cfgPath)
@@ -64,10 +65,10 @@ func NewRepository(cfgPath string) (*Repository, error) {
 	r := Repository{
 		CfgPath:       cfgPath,
 		Path:          path.Dir(cfgPath),
-		AppSearchDirs: fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
-		SearchDepth:   cfg.Discover.SearchDepth,
-		PSQLURL:       cfg.Database.PGSQLURL,
-		includeCache:  newIncludeCache(),
+		AppSearchDirs: fs.PathsJoin(path.Dir(cfgPath), repoCfg.Discover.Dirs),
+		SearchDepth:   repoCfg.Discover.SearchDepth,
+		PSQLURL:       repoCfg.Database.PGSQLURL,
+		includeDB:     cfg.NewIncludeDB(log.StdLogger),
 	}
 
 	err = fs.DirsExist(r.AppSearchDirs...)

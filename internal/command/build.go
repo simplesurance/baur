@@ -34,8 +34,8 @@ const (
 )
 
 var buildLongHelp = fmt.Sprintf(`
-Build applications.
-If no path or application name is passed, all applications in the repository are build.
+Execute the 'build' task of applications.
+If no path or application name is passed, the build task of all applications in the repository are run.
 By default only applications with status %s and %s are build.
 
 The following Environment Variables are supported:
