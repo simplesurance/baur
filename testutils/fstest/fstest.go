@@ -4,6 +4,7 @@ package fstest
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -20,11 +21,20 @@ func CreateTempDir(t *testing.T) (string, func()) {
 	return dir, func() { os.RemoveAll(dir) }
 }
 
-// WriteToFile writes data to a file, calls t.Fatal() on an error
+// WriteToFile writes data to a file.
+// Directories that are in the path but do not exist are created.
+// If an error happens, t.Fatal() is called.
 func WriteToFile(t *testing.T, data []byte, path string) {
 	t.Helper()
 
-	err := ioutil.WriteFile(path, data, 0644)
+	dir := filepath.Dir(path)
+
+	err := os.MkdirAll(dir, 0775)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(path, data, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

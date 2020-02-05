@@ -3,15 +3,16 @@ package cfg
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
-)
 
-func Test_ExampleApp_IsValid(t *testing.T) {
-	a := ExampleApp("shop")
-	if err := a.Validate(); err != nil {
-		t.Error("example app conf fails validation: ", err)
-	}
-}
+	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/testutils/fstest"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
 
 func Test_ExampleApp_WrittenAndReadCfgIsValid(t *testing.T) {
 	tmpfileFD, err := ioutil.TempFile("", "baur")
@@ -38,6 +39,59 @@ func Test_ExampleApp_WrittenAndReadCfgIsValid(t *testing.T) {
 	}
 
 	if err := rRead.Validate(); err != nil {
-		t.Error("validating conf from file failed: ", err)
+		t.Errorf("validating conf from file failed: %s\nFile Content: %+v", err, rRead)
 	}
+}
+
+func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
+	taskInclFilename := "tasks.toml"
+
+	app := ExampleApp("testapp")
+	taskName := app.Tasks[0].Name
+	app.Includes = []string{taskInclFilename + "#" + taskName}
+
+	require.NoError(t, app.Validate())
+
+	taskIncl := Include{
+		Task: TaskIncludes{
+			&TaskInclude{
+				IncludeID: taskName,
+				Name:      taskName,
+				Command:   "make",
+
+				Input: Input{
+					Files: FileInputs{Paths: []string{"*.go"}},
+				},
+				Output: Output{
+					File: []*FileOutput{
+						{
+							Path:     "a.out",
+							FileCopy: FileCopy{Path: "/tmp/"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	require.NoError(t, taskIncl.Task.Validate())
+
+	tmpdir, cleanupFN := fstest.CreateTempDir(t)
+	defer cleanupFN()
+
+	appCfgPath := filepath.Join(tmpdir, ".app.toml")
+	err := app.ToFile(appCfgPath)
+	require.NoError(t, err)
+
+	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
+
+	loadedApp, err := AppFromFile(appCfgPath)
+	require.NoError(t, err)
+
+	log.StdLogger.EnableDebug(true)
+	includeDB := NewIncludeDB(log.StdLogger)
+	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
+	require.NoError(t, err)
+
+	assert.Error(t, loadedApp.Validate())
 }

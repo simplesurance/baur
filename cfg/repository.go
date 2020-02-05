@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -19,9 +18,12 @@ const (
 
 // Repository contains the repository configuration.
 type Repository struct {
-	ConfigVersion int      `toml:"config_version" comment:"Version of baur configuration format"`
-	Database      Database `toml:"Database"`
-	Discover      Discover `comment:"Application discovery settings"`
+	ConfigVersion int `toml:"config_version" comment:"Version of baur configuration format"`
+
+	Database Database
+	Discover Discover `toml:"Discover" comment:"Application discovery settings"`
+
+	filePath string
 }
 
 // Database contains database configuration
@@ -49,6 +51,8 @@ func RepositoryFromFile(cfgPath string) (*Repository, error) {
 		return nil, err
 	}
 
+	config.filePath = cfgPath
+
 	return &config, err
 }
 
@@ -75,20 +79,27 @@ func (r *Repository) ToFile(filepath string, overwrite bool) error {
 	return toFile(r, filepath, overwrite)
 }
 
+func (r *Repository) FilePath() string {
+	return r.filePath
+}
+
 // Validate validates a repository configuration
 func (r *Repository) Validate() error {
 	if r.ConfigVersion == 0 {
-		return fmt.Errorf("config_version value is unset or 0")
+		return NewFieldError("can not be unset or 0", "config_version")
 	}
 	if r.ConfigVersion != configVersion {
-		return fmt.Errorf("incompatible configuration files\n"+
-			"config_version value is %d, expecting version: %d\n"+
-			"Update your baur configuration files or downgrade baur.", r.ConfigVersion, configVersion)
+		return NewFieldError(
+			fmt.Sprintf("incompatible configuration files\n"+
+				"config_version value is %d, expecting version: %d\n"+
+				"Update your baur configuration files or downgrade baur.", r.ConfigVersion, configVersion),
+			"config_version",
+		)
 	}
 
 	err := r.Discover.Validate()
 	if err != nil {
-		return errors.Wrap(err, "[Discover] section contains errors")
+		return FieldErrorWrap(err, "Discover")
 	}
 
 	return nil
@@ -97,12 +108,14 @@ func (r *Repository) Validate() error {
 // Validate validates the Discover section and sets defaults.
 func (d *Discover) Validate() error {
 	if len(d.Dirs) == 0 {
-		return errors.New("application_dirs parameter is empty")
+		return NewFieldError("can not be empty", "application_dirs")
 	}
 
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {
-		return fmt.Errorf("search_depth parameter must be in range (%d, %d]",
-			minSearchDepth, maxSearchDepth)
+		return NewFieldError(fmt.Sprintf("search_depth parameter must be in range (%d, %d]",
+			minSearchDepth, maxSearchDepth),
+			"search_depth",
+		)
 	}
 
 	return nil
