@@ -120,24 +120,6 @@ func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
 	return clt
 }
 
-func mustGetCommitID(r *baur.Repository) string {
-	commitID, err := r.GitCommitID()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return commitID
-}
-
-func mustGetGitWorktreeIsDirty(r *baur.Repository) bool {
-	isDirty, err := r.GitWorkTreeIsDirty()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return isDirty
-}
-
 func vcsStr(v *storage.VCSState) string {
 	if len(v.CommitID) == 0 {
 		return ""

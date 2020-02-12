@@ -10,11 +10,11 @@ const (
 )
 
 // DefaultAppCfgResolvers returns the default set of resolvers that is applied on application configs.
-func DefaultAppCfgResolvers(rootPath, appName string, gitCommitFn func() (string, error)) resolver.Resolver {
+func DefaultAppCfgResolvers(rootPath, appName, gitCommit string) resolver.Resolver {
 	return resolver.List{
 		&resolver.StrReplacement{Old: appVarName, New: appName},
 		&resolver.StrReplacement{Old: rootVarName, New: rootPath},
 		&resolver.UUIDVar{Old: uuidVarname},
-		&resolver.CallbackReplacement{Old: gitCommitVarname, NewFunc: gitCommitFn},
+		&resolver.StrReplacement{Old: gitCommitVarname, New: gitCommit},
 	}
 }

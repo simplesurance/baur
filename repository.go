@@ -19,10 +19,10 @@ type Repository struct {
 	CfgPath            string
 	AppSearchDirs      []string
 	SearchDepth        int
-	gitCommitID        string
-	gitWorktreeIsDirty *bool
 	PSQLURL            string
 	includeDB          *cfg.IncludeDB
+	GitCommitID        string
+	GitWorktreeIsDirty bool
 }
 
 // FindRepository searches for a repository config file. The search starts in
@@ -61,14 +61,31 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		return nil, errors.Wrapf(err,
 			"validating repository config %q failed", cfgPath)
 	}
+	repoPath := path.Dir(cfgPath)
+
+	gitCommit, err := git.CommitID(repoPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "determining Git commit ID failed, "+
+			"ensure that the git command is in a directory in $PATH and "+
+			"that the .baur.toml file is part of a git repository")
+	}
+
+	worktreeIsDirty, err := git.WorktreeIsDirty(repoPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "determining Git worktree state failed, "+
+			"ensure that the git command is in a directory in $PATH and "+
+			"that the .baur.toml file is part of a git repository")
+	}
 
 	r := Repository{
-		CfgPath:       cfgPath,
-		Path:          path.Dir(cfgPath),
-		AppSearchDirs: fs.PathsJoin(path.Dir(cfgPath), repoCfg.Discover.Dirs),
-		SearchDepth:   repoCfg.Discover.SearchDepth,
-		PSQLURL:       repoCfg.Database.PGSQLURL,
-		includeDB:     cfg.NewIncludeDB(log.StdLogger),
+		CfgPath:            cfgPath,
+		Path:               repoPath,
+		AppSearchDirs:      fs.PathsJoin(path.Dir(cfgPath), repoCfg.Discover.Dirs),
+		SearchDepth:        repoCfg.Discover.SearchDepth,
+		PSQLURL:            repoCfg.Database.PGSQLURL,
+		includeDB:          cfg.NewIncludeDB(log.StdLogger),
+		GitCommitID:        gitCommit,
+		GitWorktreeIsDirty: worktreeIsDirty,
 	}
 
 	err = fs.DirsExist(r.AppSearchDirs...)
@@ -92,7 +109,7 @@ func (r *Repository) FindApps() ([]*App, error) {
 		}
 
 		for _, appCfgPath := range appsCfgPaths {
-			a, err := NewApp(r, appCfgPath)
+			a, err := NewApp(r.includeDB, r.Path, appCfgPath, r.GitCommitID)
 			if err != nil {
 				return nil, err
 			}
@@ -114,7 +131,7 @@ func (r *Repository) AppByDir(appDir string) (*App, error) {
 		return nil, err
 	}
 
-	return NewApp(r, cfgPath)
+	return NewApp(r.includeDB, r.Path, cfgPath, r.GitCommitID)
 }
 
 // AppByName searches for an App with the given name in the repository and
@@ -127,7 +144,7 @@ func (r *Repository) AppByName(name string) (*App, error) {
 		}
 
 		for _, appCfgPath := range appsCfgPaths {
-			a, err := NewApp(r, appCfgPath)
+			a, err := NewApp(r.includeDB, r.Path, appCfgPath, r.GitCommitID)
 			if err != nil {
 				return nil, err
 			}
@@ -138,41 +155,4 @@ func (r *Repository) AppByName(name string) (*App, error) {
 	}
 
 	return nil, os.ErrNotExist
-}
-
-// GitCommitID returns the Git commit ID in the baur repository root
-func (r *Repository) GitCommitID() (string, error) {
-	if len(r.gitCommitID) != 0 {
-		return r.gitCommitID, nil
-	}
-
-	commit, err := git.CommitID(r.Path)
-	if err != nil {
-		return "", errors.Wrap(err, "determining Git commit ID failed, "+
-			"ensure that the git command is in a directory in $PATH and "+
-			"that the .baur.toml file is part of a git repository")
-	}
-
-	r.gitCommitID = commit
-
-	return commit, nil
-}
-
-// GitWorkTreeIsDirty returns true if the git repository contains untracked
-// changes
-func (r *Repository) GitWorkTreeIsDirty() (bool, error) {
-	if r.gitWorktreeIsDirty != nil {
-		return *r.gitWorktreeIsDirty, nil
-	}
-
-	isDirty, err := git.WorkTreeIsDirty(r.Path)
-	if err != nil {
-		return false, errors.Wrap(err, "determining Git worktree state failed, "+
-			"ensure that the git command is in a directory in $PATH and "+
-			"that the .baur.toml file is part of a git repository")
-	}
-
-	r.gitWorktreeIsDirty = &isDirty
-
-	return isDirty, nil
 }

@@ -116,15 +116,15 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 }
 
-func resultAddBuildResult(bud *buildUserData, r *build.Result) {
+func resultAddBuildResult(repo *baur.Repository, bud *buildUserData, r *build.Result) {
 	resultLock.Lock()
 	defer resultLock.Unlock()
 
 	b := storage.Build{
 		Application: storage.Application{Name: bud.App.Name},
 		VCSState: storage.VCSState{
-			CommitID: mustGetCommitID(bud.App.Repository),
-			IsDirty:  mustGetGitWorktreeIsDirty(bud.App.Repository),
+			CommitID: repo.GitCommitID,
+			IsDirty:  repo.GitWorktreeIsDirty,
 		},
 		StartTimeStamp:   r.StartTs,
 		StopTimeStamp:    r.StopTs,
@@ -462,6 +462,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 		uploader = startBGUploader(outputCnt, uploadChan)
 		uploadWatchFin = make(chan struct{}, 1)
 		go waitPrintUploadStatus(uploader, uploadChan, uploadWatchFin, outputCnt)
+
 	}
 
 	term.PrintSep()
@@ -483,7 +484,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Printf("%s: build successful (%.3fs)\n", app.Name, status.StopTs.Sub(status.StartTs).Seconds())
-		resultAddBuildResult(bud, status)
+		resultAddBuildResult(repo, bud, status)
 
 		for _, ar := range app.Outputs {
 			if !ar.Exists() {

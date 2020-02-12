@@ -26,12 +26,13 @@ type App struct {
 	Path             string
 	Name             string
 	BuildCmd         string
-	Repository       *Repository
 	Outputs          []BuildOutput
 	totalInputDigest *digest.Digest
 
 	UnresolvedInputs []*cfg.Input
 	buildInputs      []*File
+
+	repositoryRootPath string
 }
 
 func (a *App) addBuildOutput(buildOutput *cfg.Output) error {
@@ -106,7 +107,7 @@ func (a *App) addCfgsToBuildInputs(appCfg *cfg.App) {
 }
 
 // NewApp reads the configuration file and returns a new App
-func NewApp(repository *Repository, cfgPath string) (*App, error) {
+func NewApp(includeDB *cfg.IncludeDB, repositoryRootPath, cfgPath, curGitCommit string) (*App, error) {
 	appCfg, err := cfg.AppFromFile(cfgPath)
 	if err != nil {
 		return nil, errors.Wrapf(err,
@@ -120,13 +121,13 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		errAppName = cfgPath
 	}
 
-	err = appCfg.Merge(repository.includeDB, &resolver.StrReplacement{Old: rootVarName, New: repository.Path})
+	err = appCfg.Merge(includeDB, &resolver.StrReplacement{Old: rootVarName, New: repositoryRootPath})
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"%s: merging includes failed", errAppName)
 	}
 
-	resolvers := DefaultAppCfgResolvers(repository.Path, appCfg.Name, repository.GitCommitID)
+	resolvers := DefaultAppCfgResolvers(repositoryRootPath, appCfg.Name, curGitCommit)
 	err = appCfg.Resolve(resolvers)
 	if err != nil {
 		return nil, errors.Wrapf(err,
@@ -140,7 +141,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	}
 
 	appAbsPath := path.Dir(cfgPath)
-	appRelPath, err := filepath.Rel(repository.Path, appAbsPath)
+	appRelPath, err := filepath.Rel(repositoryRootPath, appAbsPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
 	}
@@ -162,11 +163,11 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 	}
 
 	app := App{
-		Repository: repository,
-		Path:       path.Dir(cfgPath),
-		RelPath:    appRelPath,
-		Name:       appCfg.Name,
-		BuildCmd:   strings.TrimSpace(buildCommand),
+		Path:               path.Dir(cfgPath),
+		RelPath:            appRelPath,
+		Name:               appCfg.Name,
+		BuildCmd:           strings.TrimSpace(buildCommand),
+		repositoryRootPath: repositoryRootPath,
 	}
 
 	if buildTask == nil {
@@ -189,7 +190,7 @@ func (a *App) String() string {
 	return a.Name
 }
 
-func (a *App) pathsToUniqFiles(paths []string) ([]*File, error) {
+func (a *App) pathsToUniqFiles(workingDir string, paths []string) ([]*File, error) {
 	dedupMap := make(map[string]struct{}, len(paths))
 	res := make([]*File, 0, len(paths))
 
@@ -200,14 +201,14 @@ func (a *App) pathsToUniqFiles(paths []string) ([]*File, error) {
 		}
 		dedupMap[path] = struct{}{}
 
-		relPath, err := filepath.Rel(a.Repository.Path, path)
+		relPath, err := filepath.Rel(workingDir, path)
 		if err != nil {
-			return nil, errors.Wrapf(err, "resolving relative path to '%s' from '%s' failed", path, a.Repository.Path)
+			return nil, err
 		}
 
 		// TODO: should resolving the relative path be done in
 		// Newfile() instead?
-		res = append(res, NewFile(a.Repository.Path, relPath))
+		res = append(res, NewFile(workingDir, relPath))
 	}
 
 	return res, nil
@@ -351,7 +352,7 @@ func (a *App) BuildInputs() ([]*File, error) {
 		return nil, err
 	}
 
-	a.buildInputs, err = a.pathsToUniqFiles(paths)
+	a.buildInputs, err = a.pathsToUniqFiles(a.repositoryRootPath, paths)
 	if err != nil {
 		return nil, err
 	}
