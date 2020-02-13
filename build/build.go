@@ -15,7 +15,7 @@ type Result struct {
 	Output   string
 }
 
-// Job describes abuild job
+// Job describes a build job
 type Job struct {
 	Application string
 	Directory   string

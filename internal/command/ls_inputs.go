@@ -47,10 +47,11 @@ func lsInputs(cmd *cobra.Command, args []string) {
 
 	rep := MustFindRepository()
 	app := mustArgToApp(rep, args[0])
+	task := app.Task()
 	writeHeaders := !lsInputsConfig.quiet && !lsInputsConfig.csv
 
-	if !app.HasBuildInputs() {
-		log.Fatalf("No build inputs are configured in %s of %s", baur.AppCfgFile, app.Name)
+	if !task.HasInputs() {
+		log.Fatalf("No inputs are configured in %s of %s", baur.AppCfgFile, app.Name)
 	}
 
 	if writeHeaders {
@@ -67,7 +68,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 		formatter = table.New(headers, os.Stdout)
 	}
 
-	inputs, err := app.BuildInputs()
+	inputs, err := task.Inputs()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -95,7 +96,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	}
 
 	if lsInputsConfig.showDigest && !lsInputsConfig.quiet && !lsInputsConfig.csv {
-		totalDigest, err := app.TotalInputDigest()
+		totalDigest, err := task.TotalInputDigest()
 		if err != nil {
 			log.Fatalln("calculating total input digest failed:", err)
 		}
