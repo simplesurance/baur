@@ -30,7 +30,7 @@ func (in *InputInclude) Validate() error {
 		return err
 	}
 
-	if inputsIsEmpty(in) {
+	if InputsAreEmpty(in) {
 		return nil
 	}
 
