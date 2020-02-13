@@ -193,3 +193,15 @@ func FileSize(path string) (int64, error) {
 func Mkdir(path string) error {
 	return os.MkdirAll(path, os.FileMode(0755))
 }
+
+// AbsPaths prepends to all paths in relPaths the passed rootPath.
+func AbsPaths(rootPath string, relPaths []string) []string {
+	result := make([]string, 0, len(rootPath))
+
+	for _, relPath := range relPaths {
+		absPath := filepath.Join(rootPath, relPath)
+		result = append(result, absPath)
+	}
+
+	return result
+}
