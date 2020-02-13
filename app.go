@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/cfg/resolver"
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/log"
@@ -107,51 +106,21 @@ func (a *App) addCfgsToBuildInputs(appCfg *cfg.App) {
 }
 
 // NewApp reads the configuration file and returns a new App
-func NewApp(includeDB *cfg.IncludeDB, repositoryRootPath, cfgPath, curGitCommit string) (*App, error) {
-	appCfg, err := cfg.AppFromFile(cfgPath)
-	if err != nil {
-		return nil, errors.Wrapf(err,
-			"reading application config %s failed", cfgPath)
-	}
+func NewApp(appCfg *cfg.App, repositoryRootPath string) (*App, error) {
+	var buildCommand string
+	var buildTask *cfg.Task
 
-	var errAppName string
-	if appCfg.Name != "" {
-		errAppName = appCfg.Name
-	} else {
-		errAppName = cfgPath
-	}
+	appDir := path.Dir(appCfg.FilePath())
 
-	err = appCfg.Merge(includeDB, &resolver.StrReplacement{Old: rootVarName, New: repositoryRootPath})
-	if err != nil {
-		return nil, errors.Wrapf(err,
-			"%s: merging includes failed", errAppName)
-	}
-
-	resolvers := DefaultAppCfgResolvers(repositoryRootPath, appCfg.Name, curGitCommit)
-	err = appCfg.Resolve(resolvers)
-	if err != nil {
-		return nil, errors.Wrapf(err,
-			"%s: resolving variables in config failed", errAppName)
-	}
-
-	err = appCfg.Validate()
-	if err != nil {
-		return nil, errors.Wrapf(err,
-			"validating application config %s failed", cfgPath)
-	}
-
-	appAbsPath := path.Dir(cfgPath)
-	appRelPath, err := filepath.Rel(repositoryRootPath, appAbsPath)
+	appRelPath, err := filepath.Rel(repositoryRootPath, appDir)
 	if err != nil {
 		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
 	}
 
-	var buildCommand string
 	if len(appCfg.Tasks) > 1 {
 		return nil, fmt.Errorf("%s: has >1 tasks defined, only 1 task definition with name 'build' is currently allowed", appCfg.Name)
 	}
 
-	var buildTask *cfg.Task
 	if len(appCfg.Tasks) == 1 {
 		buildTask = appCfg.Tasks[0]
 
@@ -163,7 +132,7 @@ func NewApp(includeDB *cfg.IncludeDB, repositoryRootPath, cfgPath, curGitCommit 
 	}
 
 	app := App{
-		Path:               path.Dir(cfgPath),
+		Path:               appDir,
 		RelPath:            appRelPath,
 		Name:               appCfg.Name,
 		BuildCmd:           strings.TrimSpace(buildCommand),

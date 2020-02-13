@@ -3,13 +3,13 @@ package command
 import (
 	"fmt"
 	"os"
-	"path"
 	"time"
 
 	"github.com/fatih/color"
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/format"
+	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
@@ -51,29 +51,14 @@ func MustFindRepository() *baur.Repository {
 	return repo
 }
 
-func isAppDir(arg string) bool {
-	cfgPath := path.Join(arg, baur.AppCfgFile)
-	_, err := os.Stat(cfgPath)
-
-	return err == nil
-}
-
 func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
-	if isAppDir(arg) {
-		app, err := repo.AppByDir(arg)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		return app
+	apps := mustArgToApps(repo, []string{arg})
+	if len(apps) > 1 {
+		log.Fatalf("argument %q matches multiple apps, must match only 1 app\n", arg)
 	}
 
-	app, err := repo.AppByName(arg)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return app
+	// mustArgToApps ensures that >=1 apps are returned
+	return apps[0]
 }
 
 // getPostgresCltWithEnv returns a new postresql storage client,
@@ -133,33 +118,31 @@ func vcsStr(v *storage.VCSState) string {
 }
 
 func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
-	if len(args) == 0 {
-		apps, err := repo.FindApps()
-		if err != nil {
-			log.Fatalln(err)
-		}
+	var apps []*baur.App
 
-		if len(apps) == 0 {
-			log.Fatalf("could not find any applications\n"+
-				"- ensure the [Discover] section is correct in %s\n"+
-				"- ensure that you have >1 application dirs "+
-				"containing a %s file",
-				repo.CfgPath, baur.AppCfgFile)
-		}
+	repoState := git.NewRepositoryState(repo.Path)
 
-		return apps
+	appLoader, err := baur.NewAppLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	dedupMap := make(map[string]struct{}, len(args))
-	apps := make([]*baur.App, 0, len(args))
-	for _, arg := range args {
-		app := mustArgToApp(repo, arg)
-		if _, exist := dedupMap[app.Path]; exist {
-			continue
-		}
+	if len(args) == 0 {
+		apps, err = appLoader.All()
+	} else {
+		apps, err = appLoader.Load(args...)
+	}
 
-		dedupMap[app.Path] = struct{}{}
-		apps = append(apps, mustArgToApp(repo, arg))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if len(apps) == 0 {
+		log.Fatalf("could not find any applications\n"+
+			"- ensure the [Discover] section is correct in %s\n"+
+			"- ensure that you have >1 application dirs "+
+			"containing a %s file",
+			repo.CfgPath, baur.AppCfgFile)
 	}
 
 	return apps

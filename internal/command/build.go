@@ -14,6 +14,7 @@ import (
 	"github.com/simplesurance/baur/build/seq"
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
+	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/prettyprint"
 	"github.com/simplesurance/baur/storage"
@@ -116,15 +117,15 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 }
 
-func resultAddBuildResult(repo *baur.Repository, bud *buildUserData, r *build.Result) {
+func resultAddBuildResult(repo *baur.Repository, bud *buildUserData, r *build.Result, gitCommitID string, gitWorktreeIsDirty bool) {
 	resultLock.Lock()
 	defer resultLock.Unlock()
 
 	b := storage.Build{
 		Application: storage.Application{Name: bud.App.Name},
 		VCSState: storage.VCSState{
-			CommitID: repo.GitCommitID,
-			IsDirty:  repo.GitWorktreeIsDirty,
+			CommitID: gitCommitID,
+			IsDirty:  gitWorktreeIsDirty,
 		},
 		StartTimeStamp:   r.StartTs,
 		StopTimeStamp:    r.StopTs,
@@ -469,6 +470,21 @@ func buildRun(cmd *cobra.Command, args []string) {
 
 	go builder.Start()
 
+	gitCommitID, err := git.CommitID(repo.Path)
+	if err != nil {
+		log.Fatalf("determining Git commit ID failed, "+
+			"ensure that the git command is in a directory in $PATH and "+
+			"that the .baur.toml file is part of a git repository.\n%s", err.Error())
+	}
+
+	gitWorktreeIsDirty, err := git.WorktreeIsDirty(repo.Path)
+	if err != nil {
+		log.Fatalf("determining Git worktree state failed, "+
+			"ensure that the git command is in a directory in $PATH and "+
+			"that the .baur.toml file is part of a git repository.\n%s", err.Error())
+
+	}
+
 	for status := range buildChan {
 		bud := status.Job.UserData.(*buildUserData)
 		app := bud.App
@@ -484,7 +500,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Printf("%s: build successful (%.3fs)\n", app.Name, status.StopTs.Sub(status.StartTs).Seconds())
-		resultAddBuildResult(repo, bud, status)
+		resultAddBuildResult(repo, bud, status, gitCommitID, gitWorktreeIsDirty)
 
 		for _, ar := range app.Outputs {
 			if !ar.Exists() {
