@@ -128,10 +128,12 @@ func ls(cmd *cobra.Command, args []string) {
 		var build *storage.BuildWithDuration
 		var buildStatus baur.BuildStatus
 
+		task := app.Task()
+
 		if storageQueryNeeded {
 			var err error
 
-			buildStatus, build, err = baur.GetBuildStatus(storageClt, app)
+			buildStatus, build, err = baur.GetBuildStatus(storageClt, task)
 			if err != nil {
 				log.Fatalf("gathering informations for %s failed: %s", app, err)
 			}

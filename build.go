@@ -42,21 +42,21 @@ func (b BuildStatus) String() string {
 // storage if a build for this input digest already exist.
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
-func GetBuildStatus(storer storage.Storer, app *App) (BuildStatus, *storage.BuildWithDuration, error) {
-	if len(app.BuildCmd) == 0 {
+func GetBuildStatus(storer storage.Storer, task *Task) (BuildStatus, *storage.BuildWithDuration, error) {
+	if len(task.Command) == 0 {
 		return BuildStatusBuildCommandUndefined, nil, nil
 	}
 
-	if !app.HasBuildInputs() {
+	if !task.HasInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
 
-	d, err := app.TotalInputDigest()
+	d, err := task.TotalInputDigest()
 	if err != nil {
 		return -1, nil, errors.Wrap(err, "calculating total input digest failed")
 	}
 
-	build, err := storer.GetLatestBuildByDigest(app.Name, d.String())
+	build, err := storer.GetLatestBuildByDigest(task.AppName, d.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
 			return BuildStatusPending, nil, nil

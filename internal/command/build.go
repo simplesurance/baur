@@ -186,16 +186,16 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Res
 	})
 }
 
-func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
+func recordResultIsComplete(task *baur.Task) (bool, *storage.Build) {
 	resultLock.Lock()
 	defer resultLock.Unlock()
 
-	b, exist := result[app.Name]
+	b, exist := result[task.AppName]
 	if !exist {
-		log.Fatalf("recordResultIfComplete: %q does not exist in build result map", app.Name)
+		log.Fatalf("recordResultIfComplete: %q does not exist in build result map", task.AppName)
 	}
 
-	if len(app.Outputs) == len(b.Outputs) {
+	if taskOutputCount(task) == len(b.Outputs) {
 		return true, b
 	}
 
@@ -203,11 +203,15 @@ func recordResultIsComplete(app *baur.App) (bool, *storage.Build) {
 
 }
 
+func taskOutputCount(task *baur.Task) int {
+	return len(task.Outputs.DockerImage) + len(task.Outputs.File)
+}
+
 func outputCount(apps []*baur.App) int {
 	var cnt int
 
 	for _, a := range apps {
-		cnt += len(a.Outputs)
+		cnt += taskOutputCount(a.Task())
 	}
 
 	return cnt
@@ -228,12 +232,12 @@ func calcDigests(app *baur.App) ([]*storage.Input, string) {
 	// instead to later fill the struct for the db
 
 	log.Debugf("%s: resolving build inputs and calculating digests...", app)
-	buildInputs, err := app.BuildInputs()
+	inputs, err := app.Task().Inputs()
 	if err != nil {
-		log.Fatalf("%s: resolving build input paths failed: %s\n", app, err)
+		log.Fatalf("%s: resolving inputs failed: %s\n", app, err)
 	}
 
-	for _, s := range buildInputs {
+	for _, s := range inputs {
 		d, err := s.Digest()
 		if err != nil {
 			log.Fatalf("%s: calculating build input digest failed: %s", app, err)
@@ -269,7 +273,7 @@ func createBuildJobs(apps []*baur.App) []*build.Job {
 		buildJobs = append(buildJobs, &build.Job{
 			Application: app.Name,
 			Directory:   app.Path,
-			Command:     app.BuildCmd,
+			Command:     app.Task().Command,
 			UserData: &buildUserData{
 				App:              app,
 				Inputs:           buildInputs,
@@ -330,7 +334,7 @@ func waitPrintUploadStatus(uploader scheduler.Manager, uploadChan chan *schedule
 
 		resultAddUploadResult(ud.App.Name, ud.Output, res)
 
-		complete, build := recordResultIsComplete(ud.App)
+		complete, build := recordResultIsComplete(ud.App.Task())
 		if complete {
 			log.Debugf("%s: storing build information in database\n", ud.App)
 			if err := store.Save(build); err != nil {
@@ -370,7 +374,7 @@ func appsWithBuildCommand(apps []*baur.App) []*baur.App {
 	appNameColLen := maxAppNameLen(apps) + sepLen
 
 	for _, app := range apps {
-		if len(app.BuildCmd) == 0 {
+		if len(app.Task().Command) == 0 {
 			fmt.Printf("%-*s%s%s\n",
 				appNameColLen, app.Name, appColSep, coloredBuildStatus(baur.BuildStatusBuildCommandUndefined))
 			continue
@@ -502,7 +506,13 @@ func buildRun(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s: build successful (%.3fs)\n", app.Name, status.StopTs.Sub(status.StartTs).Seconds())
 		resultAddBuildResult(repo, bud, status, gitCommitID, gitWorktreeIsDirty)
 
-		for _, ar := range app.Outputs {
+		task := app.Task()
+		outputs, err := task.BuildOutputs()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		for _, ar := range outputs {
 			if !ar.Exists() {
 				log.Fatalf("%s: build output %q did not exist after build",
 					app, ar)
@@ -546,7 +556,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.BuildWithDuration, string) {
 	var strBuildID string
 
-	status, build, err := baur.GetBuildStatus(storage, app)
+	status, build, err := baur.GetBuildStatus(storage, app.Task())
 	if err != nil {
 		log.Fatalf("%s: %s", app.Name, err)
 	}
