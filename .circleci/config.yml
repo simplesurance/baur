@@ -10,7 +10,7 @@ jobs:
           TEST_RESULTS: /tmp/test-results
           BAUR_POSTGRESQL_URL: "postgres://root@localhost:5432/baur?sslmode=disable"
 
-      - image: circleci/postgres:10
+      - image: circleci/postgres:12
         environment:
           POSTGRES_USER: root
           POSTGRES_DB: baur
