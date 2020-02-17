@@ -146,7 +146,7 @@ func (a *AppLoader) AppNames(names ...string) ([]*App, error) {
 	}
 
 	if len(notFoundApps) != 0 {
-		return nil, fmt.Errorf("could not find the following apps: %s", strings.Join(names, ", "))
+		return nil, fmt.Errorf("could not find the following apps: %s", strings.Join(notFoundApps, ", "))
 	}
 
 	return result, nil
