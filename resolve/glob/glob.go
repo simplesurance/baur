@@ -13,35 +13,40 @@ import (
 // Resolver resolves a glob path to files. The functionality is the same then
 // filepath.Glob() with the addition that '**' is supported to match files
 // directories recursively.
-type Resolver struct {
-	glob string
-}
+type Resolver struct{}
 
-// NewResolver returns a resolver that resolves glob relative to path
-func NewResolver(glob string) *Resolver {
-	return &Resolver{
-		glob: glob,
+// Resolve resolves the globPath to absolute file paths.
+// Files are resolved in the same way then filepath.Glob() does, with 2 Exceptions:
+// - it also supports '**' to match files and directories recursively,
+// - it only returns paths to files, no directory paths,
+// If a globPath doesn't match any files an empty []string is returned and
+// error is nil
+func (r *Resolver) Resolve(globPaths ...string) ([]string, error) {
+	var result []string
+
+	for _, globPath := range globPaths {
+		paths, err := r.resolve(globPath)
+		if err != nil {
+			return nil, fmt.Errorf("resolving %q failed: %w", globPath, err)
+		}
+		result = append(result, paths...)
 	}
-}
 
-// Resolve returns absolute paths to files that specify the glob path
-// glob does the same  then filepath.Glob() with 2 Exceptions:
-//- it also supports '**' to match files and directories recursively
-//- it and only returns paths to files, no directory paths
-// If a Glob doesn't match any files an empty []string is returned and error is
-// nil
-func (r *Resolver) Resolve() ([]string, error) {
+	return result, nil
+
+}
+func (r *Resolver) resolve(globPath string) ([]string, error) {
 	var globPaths []string
 
-	if strings.Contains(r.glob, "**") {
-		expandedPaths, err := expandDoubleStarGlob(r.glob)
+	if strings.Contains(globPath, "**") {
+		expandedPaths, err := expandDoubleStarGlob(globPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "expanding '**' failed")
 		}
 
 		globPaths = expandedPaths
 	} else {
-		globPaths = []string{r.glob}
+		globPaths = []string{globPath}
 	}
 
 	paths := make([]string, 0, len(globPaths))

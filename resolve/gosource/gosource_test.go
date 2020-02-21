@@ -72,11 +72,9 @@ func TestResolveWithGoPath(t *testing.T) {
 
 	resolver := NewResolver(
 		nil,
-		[]string{"GOPATH=" + tmpdir},
-		projectPath,
 	)
 
-	resolvedFiles, err := resolver.Resolve()
+	resolvedFiles, err := resolver.Resolve([]string{"GOPATH=" + tmpdir}, projectPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,8 +97,8 @@ func TestResolveWithGoMod(t *testing.T) {
 	_, projectPath, filepaths, cleanupFn := createGoProject(t, "baur-test/", true)
 	defer cleanupFn()
 
-	resolver := NewResolver(nil, nil, projectPath)
-	resolvedFiles, err := resolver.Resolve()
+	resolver := NewResolver(nil)
+	resolvedFiles, err := resolver.Resolve(nil, projectPath)
 	if err != nil {
 		t.Fatal(err)
 	}
