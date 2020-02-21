@@ -37,7 +37,7 @@ func (f *File) Digest() (digest.Digest, error) {
 		return digest.Digest{}, err
 	}
 
-	err = sha.AddFile(filepath.Join(f.absPath))
+	err = sha.AddFile(f.absPath)
 	if err != nil {
 		return digest.Digest{}, err
 	}

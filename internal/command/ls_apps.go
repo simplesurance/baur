@@ -126,14 +126,14 @@ func ls(cmd *cobra.Command, args []string) {
 	for i, app := range apps {
 		var row []interface{}
 		var build *storage.BuildWithDuration
-		var buildStatus baur.BuildStatus
+		var taskStatus baur.BuildStatus
 
 		task := app.Task()
 
 		if storageQueryNeeded {
 			var err error
 
-			buildStatus, build, err = baur.GetBuildStatus(storageClt, task)
+			taskStatus, build, err = baur.TaskRunStatus(task, repo.Path, storageClt)
 			if err != nil {
 				log.Fatalf("gathering informations for %s failed: %s", app, err)
 			}
@@ -150,11 +150,11 @@ func ls(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if lsAppsConfig.buildStatus.IsSet() && buildStatus != lsAppsConfig.buildStatus.Status {
+		if lsAppsConfig.buildStatus.IsSet() && taskStatus != lsAppsConfig.buildStatus.Status {
 			continue
 		}
 
-		row = assembleRow(app, build, buildStatus)
+		row = assembleRow(app, build, taskStatus)
 
 		if err := formatter.WriteRow(row); err != nil {
 			log.Fatalln(err)

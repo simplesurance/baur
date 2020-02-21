@@ -3,8 +3,6 @@ package baur
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	"github.com/simplesurance/baur/storage"
 )
 
@@ -13,18 +11,18 @@ type BuildStatus int
 
 const (
 	_ BuildStatus = iota
-	// BuildStatusInputsUndefined inputs of the application are undefined,
+	BuildStatusUndefined
 	BuildStatusInputsUndefined
-	// BuildStatusBuildCommandUndefined build.command of the application is undefined,
+	// TODO: is BuildStatusBuildCommandUndefined used/needed?
 	BuildStatusBuildCommandUndefined
-	// BuildStatusExist a build exist
 	BuildStatusExist
-	// BuildStatusPending no build exist
 	BuildStatusPending
 )
 
-func (b BuildStatus) String() string {
-	switch b {
+func (t BuildStatus) String() string {
+	switch t {
+	case BuildStatusUndefined:
+		return "undefined"
 	case BuildStatusInputsUndefined:
 		return "Inputs Undefined"
 	case BuildStatusExist:
@@ -32,18 +30,18 @@ func (b BuildStatus) String() string {
 	case BuildStatusPending:
 		return "Pending"
 	case BuildStatusBuildCommandUndefined:
-		return "Build Command Undefined"
+		return "Command Undefined"
 	default:
-		panic(fmt.Sprintf("incompatible BuildStatus value: %d", b))
+		panic(fmt.Sprintf("incompatible TaskStatus value: %d", t))
 	}
 }
 
-// GetBuildStatus calculates the total input digest of the app and checks in the
-// storage if a build for this input digest already exist.
+// TaskRunStatus resolves the file inputs of the task, calculates the total input digestand checks in the
+// store if a run for this input digest already exist.
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
-func GetBuildStatus(storer storage.Storer, task *Task) (BuildStatus, *storage.BuildWithDuration, error) {
-	if len(task.Command) == 0 {
+func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+	if task.Command == "" {
 		return BuildStatusBuildCommandUndefined, nil, nil
 	}
 
@@ -51,19 +49,42 @@ func GetBuildStatus(storer storage.Storer, task *Task) (BuildStatus, *storage.Bu
 		return BuildStatusInputsUndefined, nil, nil
 	}
 
-	d, err := task.TotalInputDigest()
+	resolver := NewInputResolver()
+
+	inputs, err := resolver.Resolve(repositoryDir, task)
 	if err != nil {
-		return -1, nil, errors.Wrap(err, "calculating total input digest failed")
+		return BuildStatusUndefined, nil, err
 	}
 
-	build, err := storer.GetLatestBuildByDigest(task.AppName, d.String())
+	return taskStatusFromDB(task.AppName, inputs, store)
+}
+
+func TaskRunStatusInputs(task *Task, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+	if task.Command == "" {
+		return BuildStatusBuildCommandUndefined, nil, nil
+	}
+
+	if !task.HasInputs() {
+		return BuildStatusInputsUndefined, nil, nil
+	}
+
+	return taskStatusFromDB(task.AppName, inputs, store)
+}
+
+func taskStatusFromDB(appName string, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+	digest, err := inputs.Digest()
+	if err != nil {
+		return BuildStatusUndefined, nil, err
+	}
+
+	existingBuild, err := store.GetLatestBuildByDigest(appName, digest.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
-			return BuildStatusPending, nil, nil
+			return BuildStatusExist, nil, nil
 		}
 
-		return -1, nil, errors.Wrap(err, "fetching latest build failed")
+		return BuildStatusUndefined, nil, err
 	}
 
-	return BuildStatusExist, build, nil
+	return BuildStatusExist, existingBuild, nil
 }
