@@ -12,8 +12,6 @@ import (
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/build"
 	"github.com/simplesurance/baur/build/seq"
-	"github.com/simplesurance/baur/digest"
-	"github.com/simplesurance/baur/digest/sha384"
 	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/prettyprint"
@@ -104,6 +102,7 @@ type uploadUserData struct {
 }
 
 type buildUserData struct {
+	// TODO: change App to Task
 	App              *baur.App
 	Inputs           []*storage.Input
 	TotalInputDigest string
@@ -207,11 +206,12 @@ func taskOutputCount(task *baur.Task) int {
 	return len(task.Outputs.DockerImage) + len(task.Outputs.File)
 }
 
-func outputCount(apps []*baur.App) int {
+func outputCount(jobs []*build.Job) int {
 	var cnt int
 
-	for _, a := range apps {
-		cnt += taskOutputCount(a.Task())
+	for _, j := range jobs {
+		bud := j.UserData.(*buildUserData)
+		cnt += taskOutputCount(bud.App.Task())
 	}
 
 	return cnt
@@ -219,70 +219,6 @@ func outputCount(apps []*baur.App) int {
 
 func dockerAuthFromEnv() (string, string) {
 	return os.Getenv(dockerEnvUsernameVar), os.Getenv(dockerEnvPasswordVar)
-}
-
-func calcDigests(app *baur.App) ([]*storage.Input, string) {
-	var totalDigest string
-	var storageInputs []*storage.Input
-	inputDigests := []*digest.Digest{}
-
-	// TODO: refactor this functions, most is obsolete and can be replaced
-	// by App.TotalInputDigests()
-	// The storageInputs can be removed, apps.BuildInputs() can be used
-	// instead to later fill the struct for the db
-
-	log.Debugf("%s: resolving build inputs and calculating digests...", app)
-	inputs, err := app.Task().Inputs()
-	if err != nil {
-		log.Fatalf("%s: resolving inputs failed: %s\n", app, err)
-	}
-
-	for _, s := range inputs {
-		d, err := s.Digest()
-		if err != nil {
-			log.Fatalf("%s: calculating build input digest failed: %s", app, err)
-		}
-
-		storageInputs = append(storageInputs, &storage.Input{
-			Digest: d.String(),
-			URI:    s.RepoRelPath(),
-		})
-
-		inputDigests = append(inputDigests, &d)
-	}
-
-	if len(inputDigests) > 0 {
-		td, err := sha384.Sum(inputDigests)
-		if err != nil {
-			log.Fatalf("%s: calculating total input digest failed: %s", app, err)
-		}
-
-		totalDigest = td.String()
-	}
-
-	return storageInputs, totalDigest
-}
-
-func createBuildJobs(apps []*baur.App) []*build.Job {
-	buildJobs := make([]*build.Job, 0, len(apps))
-
-	for _, app := range apps {
-		buildInputs, totalDigest := calcDigests(app)
-		log.Debugf("%s: total input digest: %s\n", app, totalDigest)
-
-		buildJobs = append(buildJobs, &build.Job{
-			Application: app.Name,
-			Directory:   app.Path,
-			Command:     app.Task().Command,
-			UserData: &buildUserData{
-				App:              app,
-				Inputs:           buildInputs,
-				TotalInputDigest: totalDigest,
-			},
-		})
-	}
-
-	return buildJobs
 }
 
 func startBGUploader(outputCnt int, uploadChan chan *scheduler.Result) scheduler.Manager {
@@ -368,49 +304,85 @@ func maxAppNameLen(apps []*baur.App) int {
 	return maxLen
 }
 
-func appsWithBuildCommand(apps []*baur.App) []*baur.App {
-	res := make([]*baur.App, 0, len(apps))
+func filesToStorageInputs(inputs *baur.Inputs) ([]*storage.Input, error) {
+	result := make([]*storage.Input, len(inputs.Files))
 
-	appNameColLen := maxAppNameLen(apps) + sepLen
-
-	for _, app := range apps {
-		if len(app.Task().Command) == 0 {
-			fmt.Printf("%-*s%s%s\n",
-				appNameColLen, app.Name, appColSep, coloredBuildStatus(baur.BuildStatusBuildCommandUndefined))
-			continue
+	for i, file := range inputs.Files {
+		digest, err := file.Digest()
+		if err != nil {
+			// should never happen because the digest is already calculated before and here file should only return the stored value
+			return nil, err
 		}
 
-		fmt.Printf("%-*s%s%s\n",
-			appNameColLen, app.Name, appColSep, coloredBuildStatus(baur.BuildStatusPending))
-		res = append(res, app)
+		result[i] = &storage.Input{
+			Digest: digest.String(),
+			URI:    file.RepoRelPath(),
+		}
 	}
 
-	return res
+	return result, nil
 }
 
-func pendingBuilds(storage storage.Storer, apps []*baur.App) []*baur.App {
-	var res []*baur.App
+func pendingBuilds(storer storage.Storer, apps []*baur.App, repositoryRootDir string, rebuildExisting bool) []*build.Job {
+	var res []*build.Job
 
 	appNameColLen := maxAppNameLen(apps) + sepLen
+	inputResolver := baur.NewInputResolver()
 
 	for _, app := range apps {
-		buildStatus, build, _ := mustGetBuildStatus(app, storage)
+		task := app.Task()
 
-		if buildStatus == baur.BuildStatusExist {
+		log.Debugf("%s: resolving build inputs and calculating digests...", task)
+		inputs, err := inputResolver.Resolve(repositoryRootDir, task)
+		if err != nil {
+			log.Fatalf("%s: resolving input failed: %s\n", task, err)
+		}
+
+		digest, err := inputs.Digest()
+		if err != nil {
+			log.Fatalf("%s: calculating total input digest failed: %s\n", task, err)
+		}
+
+		status, existingBuild, err := baur.TaskRunStatusInputs(task, inputs, storer)
+		if err != nil {
+			log.Fatalf("fetching build from database failed: %s\n", err)
+		}
+
+		if status == baur.BuildStatusUndefined {
+			panic(fmt.Sprintf("task status is %s and err is not nil (%s) \n", status, err))
+		}
+
+		if status == baur.BuildStatusExist {
 			fmt.Printf("%-*s%s%s (%s)\n",
-				appNameColLen, app.Name, appColSep, coloredBuildStatus(buildStatus), highlight(build.ID))
+				appNameColLen, app.Name, appColSep, coloredBuildStatus(status), highlight(existingBuild.ID))
+		} else {
+			fmt.Printf("%-*s%s%s\n",
+				appNameColLen, app.Name, appColSep, coloredBuildStatus(status))
+		}
+
+		if status == baur.BuildStatusInputsUndefined || status == baur.BuildStatusBuildCommandUndefined {
 			continue
 		}
 
-		fmt.Printf("%-*s%s%s\n",
-			appNameColLen, app.Name, appColSep, coloredBuildStatus(buildStatus))
-
-		if buildStatus == baur.BuildStatusBuildCommandUndefined {
+		if !rebuildExisting && status == baur.BuildStatusExist {
 			continue
 		}
 
-		res = append(res, app)
+		storageInputs, err := filesToStorageInputs(inputs)
+		if err != nil {
+			log.Fatalf("%s: %s\n", task, err)
+		}
 
+		res = append(res, &build.Job{
+			Application: app.Name,
+			Directory:   app.Path,
+			Command:     app.Task().Command,
+			UserData: &buildUserData{
+				App:              app,
+				Inputs:           storageInputs,
+				TotalInputDigest: digest.String(),
+			},
+		})
 	}
 
 	return res
@@ -420,28 +392,26 @@ func buildRun(cmd *cobra.Command, args []string) {
 	var apps []*baur.App
 	var uploadWatchFin chan struct{}
 	var uploader scheduler.Manager
+	var buildJobs []*build.Job
 
 	repo := MustFindRepository()
-
-	if !buildSkipUpload || !buildForce {
-		store = MustGetPostgresClt(repo)
-	}
-
-	startTs := time.Now()
+	store = MustGetPostgresClt(repo)
 
 	apps = mustArgToApps(repo, args)
 	baur.SortAppsByName(apps)
 
-	fmt.Printf("Evaluating build status of applications:\n")
-	if buildForce {
-		apps = appsWithBuildCommand(apps)
-	} else {
-		apps = pendingBuilds(store, apps)
-	}
+	startTs := time.Now()
 
-	fmt.Println()
-	fmt.Printf("Building applications with build status: %s\n",
-		coloredBuildStatus(baur.BuildStatusPending))
+	fmt.Printf("Evaluating build status of applications:\n")
+	buildJobs = pendingBuilds(store, apps, repo.Path, buildForce)
+
+	if buildForce {
+		fmt.Printf("\nBuilding applications with build status: %s or %s\n",
+			coloredBuildStatus(baur.BuildStatusPending), coloredBuildStatus(baur.BuildStatusExist))
+	} else {
+		fmt.Printf("\nBuilding applications with build status: %s\n",
+			coloredBuildStatus(baur.BuildStatusPending))
+	}
 
 	if buildSkipUpload {
 		fmt.Println("Outputs are not uploaded.")
@@ -457,10 +427,9 @@ func buildRun(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	buildJobs := createBuildJobs(apps)
-	buildChan := make(chan *build.Result, len(apps))
+	buildChan := make(chan *build.Result, len(buildJobs))
 	builder := seq.New(buildJobs, buildChan)
-	outputCnt := outputCount(apps)
+	outputCnt := outputCount(buildJobs)
 
 	if !buildSkipUpload {
 		uploadChan := make(chan *scheduler.Result, outputCnt)
@@ -551,19 +520,4 @@ func buildRun(cmd *cobra.Command, args []string) {
 
 	term.PrintSep()
 	fmt.Printf("finished in %ss\n", durationToStrSeconds(time.Since(startTs)))
-}
-
-func mustGetBuildStatus(app *baur.App, storage storage.Storer) (baur.BuildStatus, *storage.BuildWithDuration, string) {
-	var strBuildID string
-
-	status, build, err := baur.GetBuildStatus(storage, app.Task())
-	if err != nil {
-		log.Fatalf("%s: %s", app.Name, err)
-	}
-
-	if build != nil {
-		strBuildID = fmt.Sprint(build.ID)
-	}
-
-	return status, build, strBuildID
 }
