@@ -360,7 +360,7 @@ func pendingBuilds(storer storage.Storer, apps []*baur.App, repositoryRootDir st
 				appNameColLen, app.Name, appColSep, coloredBuildStatus(status))
 		}
 
-		if status == baur.BuildStatusInputsUndefined || status == baur.BuildStatusBuildCommandUndefined {
+		if status == baur.BuildStatusInputsUndefined {
 			continue
 		}
 

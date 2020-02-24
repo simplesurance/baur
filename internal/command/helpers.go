@@ -159,8 +159,6 @@ func coloredBuildStatus(status baur.BuildStatus) string {
 	switch status {
 	case baur.BuildStatusInputsUndefined:
 		return yellowHighlight(status.String())
-	case baur.BuildStatusBuildCommandUndefined:
-		return yellowHighlight(status.String())
 	case baur.BuildStatusExist:
 		return greenHighlight(status.String())
 	case baur.BuildStatusPending:

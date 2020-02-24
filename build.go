@@ -14,7 +14,6 @@ const (
 	BuildStatusUndefined
 	BuildStatusInputsUndefined
 	// TODO: is BuildStatusBuildCommandUndefined used/needed?
-	BuildStatusBuildCommandUndefined
 	BuildStatusExist
 	BuildStatusPending
 )
@@ -29,8 +28,6 @@ func (t BuildStatus) String() string {
 		return "Exist"
 	case BuildStatusPending:
 		return "Pending"
-	case BuildStatusBuildCommandUndefined:
-		return "Command Undefined"
 	default:
 		panic(fmt.Sprintf("incompatible TaskStatus value: %d", t))
 	}
@@ -41,10 +38,6 @@ func (t BuildStatus) String() string {
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
 func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
-	if task.Command == "" {
-		return BuildStatusBuildCommandUndefined, nil, nil
-	}
-
 	if !task.HasInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
@@ -60,10 +53,6 @@ func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer) (Buil
 }
 
 func TaskRunStatusInputs(task *Task, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
-	if task.Command == "" {
-		return BuildStatusBuildCommandUndefined, nil, nil
-	}
-
 	if !task.HasInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
@@ -80,7 +69,7 @@ func taskStatusFromDB(appName string, inputs *Inputs, store storage.Storer) (Bui
 	existingBuild, err := store.GetLatestBuildByDigest(appName, digest.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
-			return BuildStatusExist, nil, nil
+			return BuildStatusPending, nil, nil
 		}
 
 		return BuildStatusUndefined, nil, err
