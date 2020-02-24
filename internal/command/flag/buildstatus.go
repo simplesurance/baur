@@ -10,18 +10,16 @@ import (
 
 // Valid commandline values
 const (
-	buildStatusExist                 = "exist"
-	buildStatusPending               = "pending"
-	buildStatusInputUndefined        = "inputs-undefined"
-	buildStatusBuildCommandUndefined = "build-command-undefined"
+	buildStatusExist          = "exist"
+	buildStatusPending        = "pending"
+	buildStatusInputUndefined = "inputs-undefined"
 )
 
 // BuildStatusFormatDescription is the format description for the flag
 const BuildStatusFormatDescription string = "one of " +
 	buildStatusExist + ", " +
 	buildStatusPending + ", " +
-	buildStatusInputUndefined + ", " +
-	buildStatusBuildCommandUndefined
+	buildStatusInputUndefined
 
 // BuildStatus is a commandline parameter to specify build status filters
 type BuildStatus struct {
@@ -45,8 +43,6 @@ func (b *BuildStatus) Set(val string) error {
 		b.Status = baur.BuildStatusPending
 	case buildStatusInputUndefined:
 		b.Status = baur.BuildStatusPending
-	case buildStatusBuildCommandUndefined:
-		b.Status = baur.BuildStatusBuildCommandUndefined
 	default:
 		return errors.New("status must be " + BuildStatusFormatDescription)
 	}
@@ -65,13 +61,12 @@ func (b *BuildStatus) Usage(highlightFn func(a ...interface{}) string) string {
 	return strings.TrimSpace(fmt.Sprintf(`
 Only show applications with this build status
 Format: %s
-where %s is one of: %s, %s, %s, %s`,
+where %s is one of: %s, %s, %s`,
 		highlightFn(b.Type()),
 		highlightFn("STATUS"),
 		highlightFn(buildStatusExist),
 		highlightFn(buildStatusPending),
 		highlightFn(buildStatusInputUndefined),
-		highlightFn(buildStatusBuildCommandUndefined),
 	))
 }
 
