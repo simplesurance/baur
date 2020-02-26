@@ -518,6 +518,8 @@ func buildRun(cmd *cobra.Command, args []string) {
 		<-uploadWatchFin
 	}
 
-	term.PrintSep()
+	if len(buildJobs) > 0 {
+		term.PrintSep()
+	}
 	fmt.Printf("finished in %ss\n", durationToStrSeconds(time.Since(startTs)))
 }
