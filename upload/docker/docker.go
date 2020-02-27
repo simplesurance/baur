@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"net/url"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
@@ -104,21 +103,12 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 
 	if len(server) != 0 {
 		for registry, v := range c.auths.Configs {
-			url, err := url.Parse(registry)
-			if err != nil {
-				c.debugLogFn("docker: could not parse registry URL '%s' from docker auth config: %s", registry, err)
-				continue
-			}
-
-			registryAddr := url.Host
-			if url.Port() != "" {
-				registryAddr += ":" + url.Port()
-			}
-
-			if registryAddr == server {
-				c.debugLogFn("docker: using auth data for registry '%s'", registryAddr)
+			if registry == server {
+				c.debugLogFn("docker: using auth data for registry '%s'", registry)
 				return v
 			}
+
+			c.debugLogFn("docker: found credentials for registry %q, searching %q credentials", registry, server)
 		}
 	}
 
