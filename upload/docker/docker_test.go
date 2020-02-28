@@ -46,7 +46,7 @@ func TestGetAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	client := &Client{
-		debugLogFn: func(string, ...interface{}) { return },
+		debugLogFn: func(string, ...interface{}) {},
 		auths:      authCfg,
 	}
 
