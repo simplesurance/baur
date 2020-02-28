@@ -55,6 +55,8 @@ github.com/containerd/containerd/errdefs
 github.com/containerd/continuity/fs
 github.com/containerd/continuity/syscallx
 github.com/containerd/continuity/sysx
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/docker/distribution v2.7.1+incompatible
 github.com/docker/distribution/registry/api/errcode
 # github.com/docker/docker v1.4.2-0.20191101170500-ac7306503d23
@@ -126,6 +128,8 @@ github.com/opencontainers/runc/libcontainer/user
 github.com/pelletier/go-toml
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/rs/xid v1.2.1
 github.com/rs/xid
 # github.com/sirupsen/logrus v1.4.2
@@ -134,6 +138,9 @@ github.com/sirupsen/logrus
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
+# github.com/stretchr/testify v1.4.0
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
@@ -153,3 +160,5 @@ google.golang.org/grpc/connectivity
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/internal
 google.golang.org/grpc/status
+# gopkg.in/yaml.v2 v2.2.2
+gopkg.in/yaml.v2
