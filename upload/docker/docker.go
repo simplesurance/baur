@@ -86,12 +86,10 @@ func NewClient(debugLogFn func(string, ...interface{})) (*Client, error) {
 	}, nil
 }
 
-// getAuth returns c.auth if it's not nil otherwise the matching authentication
-// data for the server from docker's config.json
-// if server is empty the first found entry is returned
-// We do not have to care about name resolution, the docker CLI tools also
-// don't do it, if you want to addressa server via and via IP you have to do
-// "docker login" with each and the passed address ends up in the config.json
+// getAuth returns c.auth if it's not nil otherwise:
+// if the client has no authentication data (c.auths is empty), an empty AuthConfiguration is returned.
+// If server is not empty, the authentication data for the server is returned if it exist.
+// If server is an empty string, the authentication data for DefaultRegistry is returned if it exists.
 func (c *Client) getAuth(server string) docker.AuthConfiguration {
 	if c.auth != nil {
 		return *c.auth
