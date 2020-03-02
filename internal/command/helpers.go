@@ -122,15 +122,15 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 
 	repoState := git.NewRepositoryState(repo.Path)
 
-	appLoader, err := baur.NewAppLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
+	appLoader, err := baur.NewLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	if len(args) == 0 {
-		apps, err = appLoader.All()
+		apps, err = appLoader.AllApps()
 	} else {
-		apps, err = appLoader.Load(args...)
+		apps, err = appLoader.LoadApps(args...)
 	}
 
 	if err != nil {
