@@ -68,16 +68,21 @@ func splitSpecifiers(specifiers []string) (names, cfgPaths []string, star bool) 
 }
 
 // LoadTasks loads the tasks of apps that match the passed specifier.
-// Specifier format is <APP-SPEC>[.<TASK-SPEC>]
+// Specifier format is <APP-SPEC>[.<TASK-SPEC>].
 // <APP-SPEC> is:
 //   - <APP-NAME> or
 //   - '*'
 // <TASK-SPEC> is:
 //   - Task Name or
 //   - '*'
+// If no specifier is passed all tasks of all apps are returned.
 // If multiple specifiers match the same task, it's only returned 1x in the returned slice.
 func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
 	var result []*Task
+
+	if len(specifier) == 0 {
+		specifier = []string{"*"}
+	}
 
 	for _, spec := range specifier {
 		spl := strings.Split(spec, ".")
@@ -113,12 +118,13 @@ func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
 // - application directory path
 // - <APP-NAME>
 // - '*'
+// If no specifier is passed all apps are returned.
 // If multiple specifiers match the same app, it's only returned 1x in the returned slice.
 func (a *Loader) LoadApps(specifier ...string) ([]*App, error) {
 	names, cfgPaths, star := splitSpecifiers(specifier)
 
-	if star {
-		return a.AllApps()
+	if star || len(specifier) == 0 {
+		return a.allApps()
 	}
 
 	result := make([]*App, 0, len(specifier))
@@ -193,8 +199,7 @@ func (a *Loader) AppNames(names ...string) ([]*App, error) {
 	return result, nil
 }
 
-// AllApps loads all apps in the repository.
-func (a *Loader) AllApps() ([]*App, error) {
+func (a *Loader) allApps() ([]*App, error) {
 	a.logger.Debugf("loader: loading all apps")
 
 	result := make([]*App, 0, len(a.appConfigPaths))

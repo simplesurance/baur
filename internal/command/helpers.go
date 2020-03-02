@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
@@ -127,12 +128,7 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 		log.Fatalln(err)
 	}
 
-	if len(args) == 0 {
-		apps, err = appLoader.AllApps()
-	} else {
-		apps, err = appLoader.LoadApps(args...)
-	}
-
+	apps, err = appLoader.LoadApps(args...)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -174,4 +170,36 @@ func bytesToMib(bytes int) string {
 
 func durationToStrSeconds(duration time.Duration) string {
 	return fmt.Sprintf("%.3f", duration.Seconds())
+}
+
+var errorPrefix = color.New(color.FgRed).Sprint("ERROR: ")
+
+func exitOnErrf(err error, format string, v ...interface{}) {
+	if err == nil {
+		return
+	}
+
+	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
+
+	os.Exit(1)
+}
+
+func exitOnErr(err error, msg ...interface{}) {
+	if err == nil {
+		return
+	}
+
+	if len(msg) != 0 {
+		msg[0] = fmt.Sprintf("%s%s", errorPrefix, msg[0])
+		fmt.Fprintln(os.Stderr, msg...)
+	}
+
+	os.Exit(1)
+}
+
+func mustTaskRepoRelPath(repositoryDir string, task *baur.Task) string {
+	path, err := filepath.Rel(repositoryDir, task.Directory)
+	exitOnErr(err)
+
+	return path
 }
