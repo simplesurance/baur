@@ -14,8 +14,8 @@ type Logger interface {
 	Debugf(format string, v ...interface{})
 }
 
-// AppLoader discovers and instantiates apps in a repository.
-type AppLoader struct {
+// Loader discovers and instantiates apps and tasks.
+type Loader struct {
 	logger          Logger
 	includeDB       *cfg.IncludeDB
 	repositoryRoot  string
@@ -23,11 +23,11 @@ type AppLoader struct {
 	gitCommitIDFunc func() (string, error)
 }
 
-// NewAppLoader instantiates an AppLoader.
+// NewLoader instantiates a Loader.
 // When an app config is loaded the DefaultResolvers are applied on the content
-// before they are merged with their includes.
-// The gitCommitIDFunc is used as config resolved to resolve $GITCOMMIT variables.
-func NewAppLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), logger Logger) (*AppLoader, error) {
+// before they are merged with their includes.  The gitCommitIDFunc is used as
+// config resolved to resolve $GITCOMMIT variables.
+func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), logger Logger) (*Loader, error) {
 	repositoryRootDir := filepath.Dir(repoCfg.FilePath())
 
 	appConfigPaths, err := findAppConfigs(fs.AbsPaths(repositoryRootDir, repoCfg.Discover.Dirs), repoCfg.Discover.SearchDepth)
@@ -35,9 +35,9 @@ func NewAppLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error
 		return nil, fmt.Errorf("discovering application config files failed: %w", err)
 	}
 
-	logger.Debugf("apploader: found the following application configs:\n%s", strings.Join(appConfigPaths, "\n"))
+	logger.Debugf("loader: found the following application configs:\n%s", strings.Join(appConfigPaths, "\n"))
 
-	return &AppLoader{
+	return &Loader{
 		logger:          logger,
 		repositoryRoot:  repositoryRootDir,
 		includeDB:       cfg.NewIncludeDB(logger),
@@ -67,22 +67,63 @@ func splitSpecifiers(specifiers []string) (names, cfgPaths []string, star bool) 
 	return names, cfgPaths, false
 }
 
-// Load loads the apps that match the passed specifiers.
+// LoadTasks loads the tasks of apps that match the passed specifier.
+// Specifier format is <APP-SPEC>[.<TASK-SPEC>]
+// <APP-SPEC> is:
+//   - <APP-NAME> or
+//   - '*'
+// <TASK-SPEC> is:
+//   - Task Name or
+//   - '*'
+// If multiple specifiers match the same task, it's only returned 1x in the returned slice.
+func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
+	var result []*Task
+
+	for _, spec := range specifier {
+		spl := strings.Split(spec, ".")
+
+		if len(spl) == 0 {
+			// impossible condition
+			panic(fmt.Sprintf("strings.Split(\"%s\", \".\") returned empty slice", spec))
+		}
+
+		if len(spl) > 2 {
+			return nil, fmt.Errorf("specifier: %q contains > 1 dots ", specifier)
+		}
+
+		apps, err := a.LoadApps(spl[0])
+		if err != nil {
+			return nil, err
+		}
+
+		// specifier contains only <APP-SPEC>
+		if len(spl) == 1 {
+			result = append(result, a.taskSpec(apps, "*")...)
+			continue
+		}
+
+		result = append(result, a.taskSpec(apps, spl[1])...)
+	}
+
+	return result, nil
+}
+
+// LoadApps loads the apps that match the passed specifiers.
 // Valid specifiers are:
 // - application directory path
 // - <APP-NAME>
 // - '*'
 // If multiple specifiers match the same app, it's only returned 1x in the returned slice.
-func (a *AppLoader) Load(specifier ...string) ([]*App, error) {
+func (a *Loader) LoadApps(specifier ...string) ([]*App, error) {
 	names, cfgPaths, star := splitSpecifiers(specifier)
 
 	if star {
-		return a.All()
+		return a.AllApps()
 	}
 
 	result := make([]*App, 0, len(specifier))
 	for _, path := range cfgPaths {
-		app, err := a.Path(path)
+		app, err := a.AppPath(path)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}
@@ -101,11 +142,11 @@ func (a *AppLoader) Load(specifier ...string) ([]*App, error) {
 }
 
 // AppNames discovers and loads the apps with the given names.
-func (a *AppLoader) AppNames(names ...string) ([]*App, error) {
+func (a *Loader) AppNames(names ...string) ([]*App, error) {
 	namesMap := make(map[string]struct{}, len(names))
 	result := make([]*App, 0, len(names))
 
-	a.logger.Debugf("apploader: loading app %q", names)
+	a.logger.Debugf("loader: loading app %q", names)
 
 	for _, name := range names {
 		namesMap[name] = struct{}{}
@@ -152,14 +193,14 @@ func (a *AppLoader) AppNames(names ...string) ([]*App, error) {
 	return result, nil
 }
 
-// All loads all apps in the repository.
-func (a *AppLoader) All() ([]*App, error) {
-	a.logger.Debugf("apploader: loading all apps")
+// AllApps loads all apps in the repository.
+func (a *Loader) AllApps() ([]*App, error) {
+	a.logger.Debugf("loader: loading all apps")
 
 	result := make([]*App, 0, len(a.appConfigPaths))
 
 	for _, path := range a.appConfigPaths {
-		app, err := a.Path(path)
+		app, err := a.AppPath(path)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}
@@ -170,9 +211,9 @@ func (a *AppLoader) All() ([]*App, error) {
 	return result, nil
 }
 
-// Path loads the app from the config file.
-func (a *AppLoader) Path(appConfigPath string) (*App, error) {
-	a.logger.Debugf("apploader: loading app from %q", appConfigPath)
+// AppPath loads the app from the config file.
+func (a *Loader) AppPath(appConfigPath string) (*App, error) {
+	a.logger.Debugf("loader: loading app from %q", appConfigPath)
 
 	appConfigPath, err := filepath.Abs(appConfigPath)
 	if err != nil {
@@ -187,7 +228,27 @@ func (a *AppLoader) Path(appConfigPath string) (*App, error) {
 	return a.fromCfg(appCfg)
 }
 
-func (a *AppLoader) fromCfg(appCfg *cfg.App) (*App, error) {
+func (a *Loader) taskSpec(apps []*App, spec string) []*Task {
+	var result []*Task
+
+	for _, app := range apps {
+		if spec == "*" {
+			result = append(result, app.Task())
+
+			continue
+		}
+
+		task := app.Task()
+
+		if task.Name == spec {
+			result = append(result, app.Task())
+		}
+	}
+
+	return result
+}
+
+func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
 	includeResolvers := IncludeCfgVarResolvers(a.repositoryRoot, appCfg.Name)
 
 	err := appCfg.Merge(a.includeDB, includeResolvers)
