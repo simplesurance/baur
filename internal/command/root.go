@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime/pprof"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/exec"
@@ -21,6 +22,7 @@ var rootCmd = &cobra.Command{
 
 var verboseFlag bool
 var cpuProfilingFlag bool
+var noColorFlag bool
 
 var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
 
@@ -28,6 +30,10 @@ func initSb(_ *cobra.Command, _ []string) {
 	if verboseFlag {
 		log.StdLogger.EnableDebug(verboseFlag)
 		exec.DefaultDebugfFn = log.StdLogger.Debugf
+	}
+
+	if noColorFlag {
+		color.NoColor = true
 	}
 
 	if cpuProfilingFlag {
@@ -52,6 +58,7 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVar(&cpuProfilingFlag, "cpu-prof", false,
 		fmt.Sprintf("enable cpu profiling, result is written to %q", defCPUProfFile))
+	rootCmd.PersistentFlags().BoolVar(&noColorFlag, "no-color", false, "disable color output")
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)
