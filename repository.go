@@ -22,27 +22,23 @@ type Repository struct {
 	includeDB     *cfg.IncludeDB
 }
 
-// FindRepository searches for a repository config file. The search starts in
-// the passed directory and traverses the parent directory down to '/'. The first found repository
-// configuration file is returned.
-func FindRepository(dir string) (*Repository, error) {
-	rootPath, err := fs.FindFileInParentDirs(dir, RepositoryCfgFile)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewRepository(rootPath)
+// FindRepositoryCfg searches for a repository config file. The search starts in
+// the passed directory and traverses the parent directory down to '/'.
+// It returns the path to the first found repository configuration file.
+func FindRepositoryCfg(dir string) (string, error) {
+	return fs.FindFileInParentDirs(dir, RepositoryCfgFile)
 }
 
-// FindRepositoryCwd searches for a repository config file in the current directory
-// and all it's parents. If a repository config file is found it returns a
-// Repository
-func FindRepositoryCwd() (*Repository, error) {
+// FindRepositoryCfgCwd searches for a repository config file in the current directory
+// and all it's parents.
+// It returns the path to the first found repository configuration file.
+func FindRepositoryCfgCwd() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return FindRepository(cwd)
+
+	return FindRepositoryCfg(cwd)
 }
 
 // NewRepository reads the configuration file and returns a Repository

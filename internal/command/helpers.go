@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,14 +31,22 @@ var (
 )
 
 func findRepository() (*baur.Repository, error) {
-	log.Debugln("searching for repository root...")
+	log.Debugln("searching for repository config...")
 
-	repo, err := baur.FindRepositoryCwd()
+	path, err := baur.FindRepositoryCfgCwd()
 	if err != nil {
-		return nil, err
+		if errors.Is(err, os.ErrNotExist) {
+			log.Fatalf("baur repository not found, ensure a %q file exist in the current or a parent directory\n",
+				baur.RepositoryCfgFile)
+		}
+
+		log.Fatalln("finding baur repository failed:", err)
 	}
 
-	log.Debugf("repository root found: %s", repo.Path)
+	log.Debugf("repository config found: %q", path)
+
+	repo, err := baur.NewRepository(path)
+	exitOnErr(err)
 
 	return repo, nil
 }
