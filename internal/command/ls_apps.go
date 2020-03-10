@@ -11,7 +11,6 @@ import (
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/internal/command/flag"
-	"github.com/simplesurance/baur/log"
 )
 
 const (
@@ -106,14 +105,12 @@ func (c *lsAppsCmd) run(cmd *cobra.Command, args []string) {
 	for _, app := range apps {
 		row := c.assembleRow(app)
 
-		if err := formatter.WriteRow(row); err != nil {
-			log.Fatalln(err)
-		}
+		err := formatter.WriteRow(row)
+		exitOnErr(err)
 	}
 
-	if err := formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
+	err := formatter.Flush()
+	exitOnErr(err)
 }
 
 func (c *lsAppsCmd) assembleRow(app *baur.App) []interface{} {

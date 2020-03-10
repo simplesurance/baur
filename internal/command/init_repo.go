@@ -39,9 +39,7 @@ func initRepo(cmd *cobra.Command, args []string) {
 		repoDir = args[0]
 	} else {
 		repoDir, err = os.Getwd()
-		if err != nil {
-			log.Fatalln(err)
-		}
+		exitOnErr(err)
 	}
 
 	repoCfg := cfg.ExampleRepository()

@@ -81,9 +81,7 @@ func mustCreatebashComplDir(path string) {
 	}
 
 	err = fs.Mkdir(path)
-	if err != nil {
-		log.Fatalf("could not create bash completion dir '%s': %s", path, err)
-	}
+	exitOnErrf(err, "could not create bash completion dir %q", path)
 }
 
 func bashComp(cmd *cobra.Command, args []string) {
@@ -93,18 +91,13 @@ func bashComp(cmd *cobra.Command, args []string) {
 
 	complFile := path.Join(complDir, "baur")
 	f, err := os.Create(complFile)
-	if err != nil {
-		log.Fatalf("Creating '%s' failed: %s", complFile, err)
-	}
+	exitOnErrf(err, "creating %q' failed", complFile)
 
 	err = rootCmd.GenBashCompletion(f)
-	if err != nil {
-		log.Fatalln("generating bash completion failed:", err.Error())
-	}
+	exitOnErr(err, "generating bash completion failed")
 
-	if err := f.Close(); err != nil {
-		log.Fatalln("closing file failed:", err.Error())
-	}
+	err = f.Close()
+	exitOnErrf(err, "closing %q failed", complFile)
 
 	fmt.Printf("bash completion file written to %s\n", highlight(complFile))
 }
