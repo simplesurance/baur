@@ -38,9 +38,7 @@ func initApp(cmd *cobra.Command, args []string) {
 	MustFindRepository()
 
 	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	if len(args) > 0 {
 		appName = args[0]

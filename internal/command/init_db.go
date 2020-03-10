@@ -47,6 +47,7 @@ func initDb(cmd *cobra.Command, args []string) {
 					"Run '%s' first or pass the Postgres URL as argument.",
 					highlight(baur.RepositoryCfgFile), highlight(cmdInitRepo))
 			}
+
 			log.Fatalln(err)
 		}
 
@@ -56,14 +57,10 @@ func initDb(cmd *cobra.Command, args []string) {
 	}
 
 	storageClt, err := getPostgresCltWithEnv(dbURL)
-	if err != nil {
-		log.Fatalln("establishing connection failed:", err.Error())
-	}
+	exitOnErr(err, "establishing connection failed")
 
 	err = storageClt.Init()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	fmt.Println("database tables created successfully")
 }

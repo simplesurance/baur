@@ -171,14 +171,12 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 		row = c.statusAssembleRow(repo.Path, task, build, taskStatus)
 
-		if err := formatter.WriteRow(row); err != nil {
-			log.Fatalln(err)
-		}
+		err := formatter.WriteRow(row)
+		exitOnErr(err)
 	}
 
-	if err := formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
+	err = formatter.Flush()
+	exitOnErr(err)
 }
 
 func (c *statusCmd) storageQueryIsNeeded() bool {

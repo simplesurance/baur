@@ -65,9 +65,7 @@ func showApp(arg string) {
 	mustWriteRow(formatter, []interface{}{"", "Build Command:", highlight(task.Command)})
 
 	outputs, err := task.BuildOutputs()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	if len(outputs) != 0 {
 		mustWriteRow(formatter, []interface{}{})
@@ -117,9 +115,8 @@ func showApp(arg string) {
 		}
 	}
 
-	if err := formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
+	err = formatter.Flush()
+	exitOnErr(err)
 }
 
 func showBuild(buildID int) {
@@ -138,9 +135,7 @@ func showBuild(buildID int) {
 	}
 
 	build.Outputs, err = storageClt.GetBuildOutputs(build.ID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	formatter = table.New(nil, os.Stdout)
 
@@ -184,8 +179,6 @@ func showBuild(buildID int) {
 		}
 	}
 
-	if err := formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
-
+	err = formatter.Flush()
+	exitOnErr(err)
 }

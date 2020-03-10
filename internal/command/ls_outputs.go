@@ -46,18 +46,14 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 	}
 
 	exist, err := pgClient.BuildExist(buildID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	if !exist {
 		log.Fatalf("build with ID %d does not exist", buildID)
 	}
 
 	outputs, err := pgClient.GetBuildOutputs(buildID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	formatter := getLsOutputsFormatter(lsOutputsConf.quiet, lsOutputsConf.csv)
 
@@ -80,9 +76,8 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 		mustWriteRow(formatter, row)
 	}
 
-	if err = formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
+	err = formatter.Flush()
+	exitOnErr(err)
 }
 
 func getLsOutputsFormatter(isQuiet, isCsv bool) format.Formatter {

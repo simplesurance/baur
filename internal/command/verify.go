@@ -83,9 +83,7 @@ func verify(cmd *cobra.Command, args []string) {
 	var issuesFound bool
 	for _, app := range storedApps {
 		issues, err := storage.VerifySameInputDigestSameOutputs(clt, app.Name, startTs)
-		if err != nil && err != storage.ErrNotExist {
-			log.Fatalln("verifiying if builds with same input digests have the same outputs failed:", err)
-		}
+		exitOnErr(err, "verifiying if builds with same input digests have the same outputs failed")
 
 		// Docker images are not reproducible, timestamps in the
 		// filesystem of the image change with every build, we

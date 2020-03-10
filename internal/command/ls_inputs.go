@@ -71,9 +71,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	inputResolver := baur.NewInputResolver()
 
 	inputs, err := inputResolver.Resolve(rep.Path, task)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	sort.Slice(inputs, func(i, j int) bool {
 		return inputs.Files[i].RepoRelPath() < inputs.Files[j].RepoRelPath()
@@ -86,22 +84,18 @@ func lsInputs(cmd *cobra.Command, args []string) {
 		}
 
 		digest, err := input.Digest()
-		if err != nil {
-			log.Fatalln("calculating digest failed:", err)
-		}
+		exitOnErr(err, "calculating digest failed")
 
 		mustWriteRow(formatter, []interface{}{input, digest.String()})
 	}
 
-	if err := formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
+	err = formatter.Flush()
+	exitOnErr(err)
 
 	if lsInputsConfig.showDigest && !lsInputsConfig.quiet && !lsInputsConfig.csv {
 		totalDigest, err := inputs.Digest()
-		if err != nil {
-			log.Fatalln("calculating total input digest failed:", err)
-		}
+		exitOnErr(err, "calculating total input digest failed")
+
 		fmt.Printf("\nTotal Build Input Digest: %s\n", highlight(totalDigest.String()))
 	}
 }
