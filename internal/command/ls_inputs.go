@@ -73,7 +73,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	inputs, err := inputResolver.Resolve(rep.Path, task)
 	exitOnErr(err)
 
-	sort.Slice(inputs, func(i, j int) bool {
+	sort.Slice(inputs.Files, func(i, j int) bool {
 		return inputs.Files[i].RepoRelPath() < inputs.Files[j].RepoRelPath()
 	})
 
