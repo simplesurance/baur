@@ -151,7 +151,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 			var err error
 
 			taskStatus, build, err = baur.TaskRunStatus(task, repo.Path, storageClt)
-			exitOnErrf(err, "gathering informations for %s failed: %s", task, err)
+			exitOnErrf(err, "gathering informations for %s failed", task)
 
 			// querying the build status for all applications can
 			// take some time, output progress dots to let the user

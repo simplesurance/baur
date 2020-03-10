@@ -172,16 +172,10 @@ func durationToStrSeconds(duration time.Duration) string {
 	return fmt.Sprintf("%.3f", duration.Seconds())
 }
 
-var errorPrefix = color.New(color.FgRed).Sprint("ERROR: ")
+var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
 
 func exitOnErrf(err error, format string, v ...interface{}) {
-	if err == nil {
-		return
-	}
-
-	fmt.Fprintf(os.Stderr, errorPrefix+format, v...)
-
-	os.Exit(1)
+	exitOnErr(err, fmt.Sprintf(format, v...))
 }
 
 func exitOnErr(err error, msg ...interface{}) {
@@ -189,12 +183,16 @@ func exitOnErr(err error, msg ...interface{}) {
 		return
 	}
 
-	if len(msg) != 0 {
-		msg[0] = fmt.Sprintf("%s%s", errorPrefix, msg[0])
-		fmt.Fprintln(os.Stderr, msg...)
+	if len(msg) == 0 {
+		fmt.Fprintln(os.Stderr, errorPrefix, err)
+		os.Exit(1)
 	}
 
+	wholeMsg := fmt.Sprint(msg...)
+	fmt.Fprintf(os.Stderr, "%s %s: %s\n", errorPrefix, wholeMsg, err)
+
 	os.Exit(1)
+
 }
 
 func mustTaskRepoRelPath(repositoryDir string, task *baur.Task) string {
