@@ -1,5 +1,8 @@
 package command
 
+// TODO: uncomment me
+/*
+
 import (
 	"fmt"
 	"os"
@@ -116,3 +119,4 @@ func verify(cmd *cobra.Command, args []string) {
 	term.PrintSep()
 	fmt.Println(greenHighlight("No issues found"))
 }
+*/

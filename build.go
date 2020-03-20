@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/simplesurance/baur/storage"
@@ -9,6 +10,7 @@ import (
 // BuildStatus indicates if build for a current application version exist
 type BuildStatus int
 
+// TODO: rename BuildStatus to TaskStatus
 const (
 	_ BuildStatus = iota
 	BuildStatusUndefined
@@ -33,11 +35,12 @@ func (t BuildStatus) String() string {
 	}
 }
 
-// TaskRunStatus resolves the file inputs of the task, calculates the total input digestand checks in the
-// store if a run for this input digest already exist.
+// TaskRunStatus resolves the file inputs of the task, calculates the total
+// input digest and checks in the store if a run for this input digest already
+// exist.
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
-func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+func TaskRunStatus(ctx context.Context, task *Task, repositoryDir string, store storage.Storer) (BuildStatus, *storage.TaskRunWithID, error) {
 	if !task.HasInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
@@ -49,24 +52,29 @@ func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer) (Buil
 		return BuildStatusUndefined, nil, err
 	}
 
-	return taskStatusFromDB(task.AppName, inputs, store)
+	return taskStatusFromDB(ctx, task, inputs, store)
 }
 
-func TaskRunStatusInputs(task *Task, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+func TaskRunStatusInputs(ctx context.Context, task *Task, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.TaskRunWithID, error) {
 	if !task.HasInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
 
-	return taskStatusFromDB(task.AppName, inputs, store)
+	return taskStatusFromDB(ctx, task, inputs, store)
 }
 
-func taskStatusFromDB(appName string, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+func taskStatusFromDB(
+	ctx context.Context,
+	task *Task,
+	inputs *Inputs,
+	store storage.Storer,
+) (BuildStatus, *storage.TaskRunWithID, error) {
 	digest, err := inputs.Digest()
 	if err != nil {
 		return BuildStatusUndefined, nil, err
 	}
 
-	existingBuild, err := store.GetLatestBuildByDigest(appName, digest.String())
+	run, err := store.LatestTaskRunByDigest(ctx, task.AppName, task.Name, digest.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
 			return BuildStatusPending, nil, nil
@@ -75,5 +83,5 @@ func taskStatusFromDB(appName string, inputs *Inputs, store storage.Storer) (Bui
 		return BuildStatusUndefined, nil, err
 	}
 
-	return BuildStatusExist, existingBuild, nil
+	return BuildStatusExist, run, nil
 }

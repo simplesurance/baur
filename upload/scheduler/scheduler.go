@@ -11,8 +11,9 @@ type Manager interface {
 
 // Result result of an upload attempt
 type Result struct {
-	Err      error
-	URL      string
-	Duration time.Duration
-	Job      Job
+	Err   error
+	URL   string
+	Start time.Time
+	Stop  time.Time
+	Job   Job
 }

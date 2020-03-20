@@ -89,7 +89,7 @@ var (
 	buildSkipUpload bool
 	buildForce      bool
 
-	result     = map[string]*storage.Build{}
+	result     = map[string]*storage.TaskRunFull{}
 	resultLock = sync.Mutex{}
 
 	store          storage.Storer
@@ -102,7 +102,6 @@ type uploadUserData struct {
 }
 
 type buildUserData struct {
-	// TODO: change App to Task
 	App              *baur.App
 	Inputs           []*storage.Input
 	TotalInputDigest string
@@ -120,16 +119,19 @@ func resultAddBuildResult(repo *baur.Repository, bud *buildUserData, r *build.Re
 	resultLock.Lock()
 	defer resultLock.Unlock()
 
-	b := storage.Build{
-		Application: storage.Application{Name: bud.App.Name},
-		VCSState: storage.VCSState{
-			CommitID: gitCommitID,
-			IsDirty:  gitWorktreeIsDirty,
+	b := storage.TaskRunFull{
+		TaskRun: storage.TaskRun{
+			// TODO: store the real task name, instead of always build,
+			TaskName:         "build",
+			ApplicationName:  bud.App.Name,
+			VCSIsDirty:       gitWorktreeIsDirty,
+			VCSRevision:      gitCommitID,
+			StartTimestamp:   r.StartTs,
+			StopTimestamp:    r.StopTs,
+			Result:           storage.ResultSuccess,
+			TotalInputDigest: bud.TotalInputDigest,
 		},
-		StartTimeStamp:   r.StartTs,
-		StopTimeStamp:    r.StopTs,
-		Inputs:           bud.Inputs,
-		TotalInputDigest: bud.TotalInputDigest,
+		Inputs: bud.Inputs,
 	}
 
 	result[bud.App.Name] = &b
@@ -150,14 +152,14 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Res
 
 	switch r.Job.Type() {
 	case scheduler.JobDocker:
-		arType = storage.DockerArtifact
-		uploadMethod = storage.DockerRegistry
+		arType = storage.ArtifactTypeDocker
+		uploadMethod = storage.UploadMethodDockerRegistry
 	case scheduler.JobFileCopy:
-		arType = storage.FileArtifact
-		uploadMethod = storage.FileCopy
+		arType = storage.ArtifactTypeFile
+		uploadMethod = storage.UploadMethodFileCopy
 	case scheduler.JobS3:
-		arType = storage.FileArtifact
-		uploadMethod = storage.S3
+		arType = storage.ArtifactTypeFile
+		uploadMethod = storage.UploadMethodS3
 	default:
 		panic(fmt.Sprintf("unknown job type %v", r.Job.Type()))
 	}
@@ -174,18 +176,21 @@ func resultAddUploadResult(appName string, ar baur.BuildOutput, r *scheduler.Res
 
 	b.Outputs = append(b.Outputs, &storage.Output{
 		Name:      ar.Name(),
-		SizeBytes: arSize,
 		Type:      arType,
-		Upload: storage.Upload{
-			URI:            r.URL,
-			Method:         uploadMethod,
-			UploadDuration: r.Duration,
+		SizeBytes: uint64(arSize),
+		Uploads: []*storage.Upload{
+			{
+				URI:                  r.URL,
+				Method:               uploadMethod,
+				UploadStartTimestamp: r.Start,
+				UploadStopTimestamp:  r.Stop,
+			},
 		},
 		Digest: artDigest.String(),
 	})
 }
 
-func recordResultIsComplete(task *baur.Task) (bool, *storage.Build) {
+func recordResultIsComplete(task *baur.Task) (bool, *storage.TaskRunFull) {
 	resultLock.Lock()
 	defer resultLock.Unlock()
 
@@ -199,7 +204,6 @@ func recordResultIsComplete(task *baur.Task) (bool, *storage.Build) {
 	}
 
 	return false, nil
-
 }
 
 func taskOutputCount(task *baur.Task) int {
@@ -266,19 +270,21 @@ func waitPrintUploadStatus(uploader scheduler.Manager, uploadChan chan *schedule
 		}
 
 		fmt.Printf("%s: %s uploaded to %s (%ss)\n",
-			ud.App.Name, ud.Output.LocalPath(), res.URL, durationToStrSeconds(res.Duration))
+			ud.App.Name, ud.Output.LocalPath(), res.URL,
+			durationToStrSeconds(res.Stop.Sub(res.Start)))
 
 		resultAddUploadResult(ud.App.Name, ud.Output, res)
 
-		complete, build := recordResultIsComplete(ud.App.Task())
+		complete, taskRun := recordResultIsComplete(ud.App.Task())
 		if complete {
 			log.Debugf("%s: storing build information in database\n", ud.App)
-			if err := store.Save(build); err != nil {
-				log.Fatalf("storing build information about %q failed: %s", ud.App.Name, err)
+			id, err := store.SaveTaskRun(ctx, taskRun)
+			if err != nil {
+				log.Fatalf("%s: storing task run information failed: %s", ud.App.Name, err)
 			}
-			fmt.Printf("%s: build %d stored in database\n", ud.App.Name, build.ID)
+			fmt.Printf("%s: build %d stored in database\n", ud.App.Name, id)
 
-			log.Debugf("stored the following build information: %s\n", prettyprint.AsString(build))
+			log.Debugf("stored the following build information: %s\n", prettyprint.AsString(taskRun))
 		}
 
 		resultCnt++
@@ -343,7 +349,7 @@ func pendingBuilds(storer storage.Storer, apps []*baur.App, repositoryRootDir st
 			log.Fatalf("%s: calculating total input digest failed: %s\n", task, err)
 		}
 
-		status, existingBuild, err := baur.TaskRunStatusInputs(task, inputs, storer)
+		status, existingBuild, err := baur.TaskRunStatusInputs(ctx, task, inputs, storer)
 		if err != nil {
 			log.Fatalf("fetching build from database failed: %s\n", err)
 		}
@@ -395,7 +401,7 @@ func buildRun(cmd *cobra.Command, args []string) {
 	var buildJobs []*build.Job
 
 	repo := MustFindRepository()
-	store = MustGetPostgresClt(repo)
+	store = mustNewCompatibleStorage(repo)
 
 	apps = mustArgToApps(repo, args)
 	baur.SortAppsByName(apps)

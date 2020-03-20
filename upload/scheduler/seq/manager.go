@@ -103,10 +103,11 @@ func (u *Uploader) Start() {
 			}
 
 			u.statusChan <- &scheduler.Result{
-				Err:      err,
-				URL:      url,
-				Duration: time.Since(startTs),
-				Job:      job,
+				Err:   err,
+				URL:   url,
+				Start: startTs,
+				Stop:  time.Now(),
+				Job:   job,
 			}
 		}
 

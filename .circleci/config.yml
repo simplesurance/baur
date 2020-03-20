@@ -38,15 +38,10 @@ jobs:
             echo Failed waiting for Postgres && exit 1
 
       - run:
-          name: Creating Database Tables with baur init db
-          command:
-            go run cmd/baur/main.go init db -- $BAUR_POSTGRESQL_URL
-
-      - run:
           name: Run Tests
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-            go test -v -test.timeout 1m ./... | tee ${TEST_RESULTS}/go-test.out
+            go test --tags=integrationtest -v -test.timeout 1m ./... | tee ${TEST_RESULTS}/go-test.out
 
       - store_test_results:
           path: /tmp/test-results
