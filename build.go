@@ -3,6 +3,7 @@ package baur
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/storage"
 )
 
@@ -37,7 +38,7 @@ func (t BuildStatus) String() string {
 // store if a run for this input digest already exist.
 // If the function returns BuildStatusExist the returned build pointer is valid
 // otherwise it is nil.
-func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer, branch string, compare string) (BuildStatus, *storage.BuildWithDuration, error) {
 	if !task.HasInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
@@ -49,26 +50,48 @@ func TaskRunStatus(task *Task, repositoryDir string, store storage.Storer) (Buil
 		return BuildStatusUndefined, nil, err
 	}
 
-	return taskStatusFromDB(task.AppName, inputs, store)
+	return taskStatusFromDB(task.AppName, inputs, store, branch, compare, task.AppUseLastBuild)
 }
 
-func TaskRunStatusInputs(task *Task, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+func TaskRunStatusInputs(task *Task, inputs *Inputs, store storage.Storer, branch string, compare string) (BuildStatus, *storage.BuildWithDuration, error) {
 	if !task.HasInputs() {
 		return BuildStatusInputsUndefined, nil, nil
 	}
 
-	return taskStatusFromDB(task.AppName, inputs, store)
+	return taskStatusFromDB(task.AppName, inputs, store, branch, compare, task.AppUseLastBuild)
 }
 
-func taskStatusFromDB(appName string, inputs *Inputs, store storage.Storer) (BuildStatus, *storage.BuildWithDuration, error) {
+func taskStatusFromDB(appName string, inputs *Inputs, store storage.Storer, branch string, compare string, useLastBuild bool) (BuildStatus, *storage.BuildWithDuration, error) {
+	var existingBuild *storage.BuildWithDuration
+	var buildErr error
+	var branchToUse string
+
 	digest, err := inputs.Digest()
 	if err != nil {
 		return BuildStatusUndefined, nil, err
 	}
 
-	existingBuild, err := store.GetLatestBuildByDigest(appName, digest.String())
-	if err != nil {
-		if err == storage.ErrNotExist {
+	if compare != "" && branch != compare {
+		branchTest, testErr := store.AreBuildsForBranch(appName, branch)
+		if testErr != nil {
+			return -1, nil, errors.Wrap(testErr, "Checking branch builds failed")
+		}
+		if branchTest {
+			branchToUse = branch
+		} else {
+			branchToUse = compare
+		}
+	} else {
+		branchToUse = branch
+	}
+
+	if useLastBuild {
+		existingBuild, buildErr = store.GetLastBuildCompareDigest(appName, digest.String(), branchToUse)
+	} else {
+		existingBuild, buildErr = store.GetLatestBuildByDigest(appName, digest.String(), branchToUse)
+	}
+	if buildErr != nil {
+		if buildErr == storage.ErrNotExist {
 			return BuildStatusPending, nil, nil
 		}
 

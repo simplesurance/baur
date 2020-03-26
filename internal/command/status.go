@@ -39,6 +39,8 @@ type statusCmd struct {
 	csv         bool
 	quiet       bool
 	absPaths    bool
+	branch      string
+	compare     string
 	buildStatus flag.TaskStatus
 	fields      *flag.Fields
 }
@@ -69,6 +71,12 @@ func newStatusCmd() *statusCmd {
 
 	cmd.Flags().BoolVar(&cmd.absPaths, "abs-path", false,
 		"Show absolute instead of relative paths")
+
+	cmd.PersistentFlags().StringVarP(&cmd.branch, "branch", "B", "default",
+		"branch identifier to query against")
+
+	cmd.PersistentFlags().StringVarP(&cmd.compare, "compare", "c", "",
+		"Branch identifier to fall back to if no builds exist")
 
 	// TODO: refactor buildStatus struct
 	cmd.Flags().VarP(&cmd.buildStatus, "status", "s",
@@ -150,7 +158,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 		if storageQueryNeeded {
 			var err error
 
-			taskStatus, build, err = baur.TaskRunStatus(task, repo.Path, storageClt)
+			taskStatus, build, err = baur.TaskRunStatus(task, repo.Path, storageClt, c.branch, c.compare)
 			exitOnErrf(err, "gathering informations for %s failed", task)
 
 			// querying the build status for all applications can

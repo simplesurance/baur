@@ -17,6 +17,7 @@ var sqlFieldMap = map[storage.Field]string{
 	storage.FieldBuildDuration:   "duration",
 	storage.FieldBuildStartTime:  "build.start_timestamp",
 	storage.FieldBuildID:         "build.id",
+	storage.FieldBranch:          "build.branch",
 }
 
 // sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings

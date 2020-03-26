@@ -50,6 +50,7 @@ type Build struct {
 	StartTimeStamp   time.Time
 	StopTimeStamp    time.Time
 	TotalInputDigest string
+	Branch           string
 	Outputs          []*Output
 	Inputs           []*Input
 }
@@ -92,6 +93,7 @@ const (
 	FieldBuildDuration
 	FieldBuildStartTime
 	FieldBuildID
+	FieldBranch
 )
 
 func (f Field) String() string {
@@ -104,6 +106,8 @@ func (f Field) String() string {
 		return "FieldBuildStartTime"
 	case FieldBuildID:
 		return "FieldBuildID"
+	case FieldBranch:
+		return "FieldBranch"
 	default:
 		return "FieldUndefined"
 	}
@@ -202,7 +206,9 @@ type Storer interface {
 	GetApps() ([]*Application, error)
 
 	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
-	GetLatestBuildByDigest(appName, totalInputDigest string) (*BuildWithDuration, error)
+	GetLatestBuildByDigest(appName, totalInputDigest string, branch string) (*BuildWithDuration, error)
+	GetLastBuildCompareDigest(appName, totalInputDigest string, branch string) (*BuildWithDuration, error)
+	AreBuildsForBranch(appName, branchId string) (bool, error)
 
 	GetBuildOutputs(buildID int) ([]*Output, error)
 	BuildExist(id int) (bool, error)

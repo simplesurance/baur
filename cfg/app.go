@@ -13,9 +13,10 @@ import (
 
 // App stores an application configuration.
 type App struct {
-	Name     string   `toml:"name" comment:"Name of the application"`
-	Includes []string `toml:"includes" comment:"Task-includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory.\n. Valid variables: $ROOT."`
-	Tasks    Tasks    `toml:"Task"`
+	Name         string   `toml:"name" comment:"Name of the application"`
+	UseLastBuild bool     `toml:"use_last_build" comment:"Only compare against the last build"`
+	Includes     []string `toml:"includes" comment:"Task-includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory.\n. Valid variables: $ROOT."`
+	Tasks        Tasks    `toml:"Task"`
 
 	filepath string
 }
@@ -23,7 +24,8 @@ type App struct {
 // ExampleApp returns an exemplary app cfg struct with the name set to the given value.
 func ExampleApp(name string) *App {
 	return &App{
-		Name: name,
+		Name:         name,
+		UseLastBuild: false,
 
 		Tasks: []*Task{
 			&Task{

@@ -13,9 +13,10 @@ import (
 
 // App represents an application
 type App struct {
-	RelPath string
-	Path    string
-	Name    string
+	RelPath      string
+	Path         string
+	Name         string
+	UseLastBuild bool
 
 	repositoryRootPath string
 
@@ -46,6 +47,7 @@ func NewApp(appCfg *cfg.App, repositoryRootPath string) (*App, error) {
 		Path:               appDir,
 		RelPath:            appRelPath,
 		Name:               appCfg.Name,
+		UseLastBuild:       appCfg.UseLastBuild,
 		repositoryRootPath: repositoryRootPath,
 	}
 
@@ -61,7 +63,7 @@ func (a *App) Task() *Task {
 	result := make([]*Task, 0, len(a.cfg.Tasks))
 
 	for _, taskCfg := range a.cfg.Tasks {
-		task := NewTask(taskCfg, a.Name, a.repositoryRootPath, a.Path)
+		task := NewTask(taskCfg, a.Name, a.repositoryRootPath, a.Path, a.UseLastBuild)
 		result = append(result, task)
 	}
 

@@ -17,7 +17,8 @@ type Task struct {
 	RepositoryRoot string
 	Directory      string
 
-	AppName string
+	AppName         string
+	AppUseLastBuild bool
 
 	Name             string
 	Command          string
@@ -26,7 +27,7 @@ type Task struct {
 }
 
 // NewTask returns a new Task.
-func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string) *Task {
+func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string, appUseLastBuild bool) *Task {
 	return &Task{
 		RepositoryRoot:   repositoryRootdir,
 		Directory:        workingDir,
@@ -34,6 +35,7 @@ func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string) *Task
 		Command:          cfg.Command,
 		Name:             cfg.Name,
 		AppName:          appName,
+		AppUseLastBuild:  appUseLastBuild,
 		UnresolvedInputs: &cfg.Input,
 	}
 }

@@ -12,13 +12,13 @@ import (
 func insertBuild(tx *sql.Tx, appID, vcsID int, b *storage.Build) (int, error) {
 	const stmt = `
 	INSERT INTO build
-	(application_id, vcs_id, start_timestamp, stop_timestamp, total_input_digest)
-	VALUES($1, $2, $3, $4, $5)
+	(application_id, vcs_id, start_timestamp, stop_timestamp, total_input_digest, branch)
+	VALUES($1, $2, $3, $4, $5, $6)
 	RETURNING id;`
 
 	var id int
 
-	r := tx.QueryRow(stmt, appID, vcsID, b.StartTimeStamp, b.StopTimeStamp, b.TotalInputDigest)
+	r := tx.QueryRow(stmt, appID, vcsID, b.StartTimeStamp, b.StopTimeStamp, b.TotalInputDigest, b.Branch)
 
 	if err := r.Scan(&id); err != nil {
 		return -1, err

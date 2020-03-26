@@ -72,6 +72,8 @@ The following Environment Variables are supported:
 const buildExampleHelp = `
 build payment-service		build and upload the application with the name payment-service
 build --verbose --force		rebuild and upload all applications, enable verbose output
+build --branch=shop shop-ui	build the shop-ui using the shop branch identifier
+build --branch=shop --compare=master build the shop-u using the shop branch identifier.  If no builds exist with shop will use master instead
 build --skip-upload shop-ui	build the application with the name shop-ui, skip uploading it's build ouputs
 build ui/shop			build and upload the application in the directory ui/shop
 `
@@ -88,6 +90,9 @@ var buildCmd = &cobra.Command{
 var (
 	buildSkipUpload bool
 	buildForce      bool
+
+	branchFlag  string
+	compareFlag string
 
 	result     = map[string]*storage.Build{}
 	resultLock = sync.Mutex{}
@@ -113,6 +118,10 @@ func init() {
 		"skip uploading build outputs and recording the build")
 	buildCmd.Flags().BoolVarP(&buildForce, "force", "f", false,
 		"force rebuilding of all applications")
+	buildCmd.PersistentFlags().StringVarP(&branchFlag, "branch", "B", "default",
+		"branch identifier to store build against")
+	buildCmd.PersistentFlags().StringVarP(&compareFlag, "compare", "c", "",
+		"Branch identifier to fall back to if no builds exist")
 	rootCmd.AddCommand(buildCmd)
 }
 
@@ -128,6 +137,7 @@ func resultAddBuildResult(repo *baur.Repository, bud *buildUserData, r *build.Re
 		},
 		StartTimeStamp:   r.StartTs,
 		StopTimeStamp:    r.StopTs,
+		Branch:           branchFlag,
 		Inputs:           bud.Inputs,
 		TotalInputDigest: bud.TotalInputDigest,
 	}
@@ -343,7 +353,7 @@ func pendingBuilds(storer storage.Storer, apps []*baur.App, repositoryRootDir st
 			log.Fatalf("%s: calculating total input digest failed: %s\n", task, err)
 		}
 
-		status, existingBuild, err := baur.TaskRunStatusInputs(task, inputs, storer)
+		status, existingBuild, err := baur.TaskRunStatusInputs(task, inputs, storer, branchFlag, compareFlag)
 		if err != nil {
 			log.Fatalf("fetching build from database failed: %s\n", err)
 		}
