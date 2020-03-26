@@ -80,12 +80,12 @@ func scanBuildRows(rows *sql.Rows) (*storage.BuildWithDuration, error) {
 
 // AreBuildsForBranch checks whether there are any builds for the given
 // branch and app
-func (c *Client) AreBuildsForBranch(appName, branchId string) (bool, error) {
+func (c *Client) AreBuildsForBranch(appName, branch string) (bool, error) {
 	const query = buildQueryWithoutInputsOutputs + `
 	WHERE application.name = $1 AND build.branch = $2
 	ORDER BY build.id DESC LIMIT 1
 	`
-	rows, err := c.Db.Query(query, appName, branchId)
+	rows, err := c.Db.Query(query, appName, branch)
 
 	if err != nil {
 		return false, errors.Wrapf(err, "db query '%s' failed", query)
@@ -94,6 +94,11 @@ func (c *Client) AreBuildsForBranch(appName, branchId string) (bool, error) {
 	if !rows.Next() {
 		return false, err
 	}
+
+	if err := rows.Err(); err != nil {
+		return false, errors.Wrap(err, "iterating over db results failed:")
+	}
+
 	return true, err
 
 }

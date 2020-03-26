@@ -3,7 +3,6 @@ package baur
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/simplesurance/baur/storage"
 )
 
@@ -74,7 +73,7 @@ func taskStatusFromDB(appName string, inputs *Inputs, store storage.Storer, bran
 	if compare != "" && branch != compare {
 		branchTest, testErr := store.AreBuildsForBranch(appName, branch)
 		if testErr != nil {
-			return -1, nil, errors.Wrap(testErr, "Checking branch builds failed")
+			return BuildStatusUndefined, nil, err
 		}
 		if branchTest {
 			branchToUse = branch
