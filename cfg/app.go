@@ -56,7 +56,7 @@ func ExampleApp(name string) *App {
 					},
 					DockerImage: []*DockerImageOutput{
 						{
-							IDFile: fmt.Sprintf("$APPNAME-container.id"),
+							IDFile: "$APPNAME-container.id",
 							RegistryUpload: DockerImageRegistryUpload{
 								Repository: "my-company/$APPNAME",
 								Tag:        "$GITCOMMIT",

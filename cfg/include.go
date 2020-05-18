@@ -2,7 +2,6 @@ package cfg
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -94,7 +93,7 @@ func ExampleInclude(id string) *Include {
 				},
 				DockerImage: []*DockerImageOutput{
 					{
-						IDFile: fmt.Sprintf("$APPNAME-container.id"),
+						IDFile: "$APPNAME-container.id",
 						RegistryUpload: DockerImageRegistryUpload{
 							Repository: "my-company/$APPNAME",
 							Tag:        "$GITCOMMIT",
