@@ -41,9 +41,12 @@ For setting it up in a production environment see the chapter
 [Production Setup](https://github.com/simplesurance/baur/wiki/Configuration#production-setup).
 
 ### Installation
-Install baur by downloading a release archive from
-the [Release Page](https://github.com/simplesurance/baur/releases) and
-extracting `baur` into your `$PATH`.
+The recommended version to use is the latest from the
+[release page](https://github.com/simplesurance/baur/releases).
+
+Download the latest release archive and extract the baur binary.
+
+The master branch is the development branch and might be in an unstable state.
 
 ### Setup
 baur uses a PostgreSQL database to store information about builds, the quickest
