@@ -32,7 +32,7 @@ func New(ctx context.Context, url string, logger Logger) (*Client, error) {
 		cfg.ConnConfig.LogLevel = pgx.LogLevelInfo
 	}
 
-	con, err := pgxpool.ConnectConfig(context.Background(), cfg)
+	con, err := pgxpool.ConnectConfig(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
