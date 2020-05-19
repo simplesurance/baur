@@ -47,7 +47,7 @@ The recommended version to use is the latest from the [release page](https://git
 The master branch is the development branch and might be in an unstable state.
 
 After downloading a release archive, extract the `baur` binary from the archive
- (`tar xJf <FILENAME>`) and move it to a directory that is in your `$PATH`
+ (`tar xJf <FILENAME>`) and move it to a directory that is listed in your `$PATH`
 environment variable.
 
 ### Setup
