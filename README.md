@@ -44,11 +44,11 @@ For setting it up in a production environment see the chapter
 ### Installation
 
 The recommended version to use is the latest from the [release page](https://github.com/simplesurance/baur/releases).
-
 The master branch is the development branch and might be in an unstable state.
 
 After downloading a release archive, extract the `baur` binary from the archive
-and move it to a directory in your `$PATH`.
+ (`tar xJf <FILENAME>`) and move it to a directory that is in your `$PATH`
+environment variable.
 
 ### Setup
 
