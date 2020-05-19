@@ -17,7 +17,7 @@ var dbURL = "postgres://postgres@localhost:5434/baur?sslmode=disable&connect_tim
 var ctx = context.Background()
 
 func TestMain(m *testing.M) {
-	if url := os.Getenv("DBURL"); url != "" {
+	if url := os.Getenv("BAUR_POSTGRESQL_URL"); url != "" {
 		dbURL = url
 	}
 
