@@ -44,6 +44,7 @@ For setting it up in a production environment see the chapter
 ### Installation
 
 The recommended version to use is the latest from the [release page](https://github.com/simplesurance/baur/releases).
+
 The master branch is the development branch and might be in an unstable state.
 
 ### Setup
