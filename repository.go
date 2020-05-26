@@ -8,7 +8,6 @@ import (
 
 	"github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/fs"
-	"github.com/simplesurance/baur/log"
 )
 
 // Repository represents an repository containing applications
@@ -19,7 +18,6 @@ type Repository struct {
 	AppSearchDirs []string
 	SearchDepth   int
 	PSQLURL       string
-	includeDB     *cfg.IncludeDB
 }
 
 // FindRepositoryCfg searches for a repository config file. The search starts in
@@ -63,7 +61,6 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		AppSearchDirs: fs.PathsJoin(repoPath, repoCfg.Discover.Dirs),
 		SearchDepth:   repoCfg.Discover.SearchDepth,
 		PSQLURL:       repoCfg.Database.PGSQLURL,
-		includeDB:     cfg.NewIncludeDB(log.StdLogger),
 	}
 
 	err = fs.DirsExist(r.AppSearchDirs...)
