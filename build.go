@@ -13,7 +13,6 @@ const (
 	_ BuildStatus = iota
 	BuildStatusUndefined
 	BuildStatusInputsUndefined
-	// TODO: is BuildStatusBuildCommandUndefined used/needed?
 	BuildStatusExist
 	BuildStatusPending
 )
