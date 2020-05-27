@@ -429,6 +429,28 @@ func TestTaskRuns(t *testing.T) {
 		},
 
 		{
+			name: "INAppNames",
+			filters: []*storage.Filter{
+				&storage.Filter{
+					Field:    storage.FieldApplicationName,
+					Operator: storage.OpIN,
+					Value:    []string{run1.ApplicationName, "testApp"},
+				},
+			},
+			expectedTaskRuns: []*storage.TaskRunWithID{
+				&storage.TaskRunWithID{
+					ID:      id,
+					TaskRun: run.TaskRun,
+				},
+
+				&storage.TaskRunWithID{
+					ID:      id1,
+					TaskRun: run1.TaskRun,
+				},
+			},
+		},
+
+		{
 			name: "appNameOrderByDurationAsc",
 			filters: []*storage.Filter{
 				&storage.Filter{

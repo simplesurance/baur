@@ -6,57 +6,76 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-// sqlFieldMap contains a mapping from storage.Fields to table column names
-var sqlFieldMap = map[storage.Field]string{
-	storage.FieldApplicationName: "application_name",
-	storage.FieldTaskName:        "task_name",
-	storage.FieldDuration:        "duration",
-	storage.FieldStartTime:       "start_timestamp",
-	storage.FieldID:              "task_run_id",
-}
-
-// sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
-var sqlOperatorMap = map[storage.Op]string{
-	storage.OpEQ: "=",
-	storage.OpGT: ">",
-	storage.OpLT: "<",
-	storage.OpIN: "= ANY",
-}
-
-// sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
-var sqlOrderDirectionMap = map[storage.Order]string{
-	storage.OrderAsc:  "ASC",
-	storage.OrderDesc: "DESC",
-}
-
-// Query is the sql query struct
-type Query struct {
+// query assembles an SQL-Query described by storage Filters and Sorters
+type query struct {
 	BaseQuery string
 	Filters   []*storage.Filter
 	Sorters   []*storage.Sorter
 }
 
-func (q *Query) compileFilterStr() (filterStr string, args []interface{}, err error) {
+func columnName(f storage.Field) (string, error) {
+	switch f {
+	case storage.FieldApplicationName:
+		return "application_name", nil
+	case storage.FieldTaskName:
+		return "task_name", nil
+	case storage.FieldDuration:
+		return "duration", nil
+	case storage.FieldStartTime:
+		return "start_timestamp", nil
+	case storage.FieldID:
+		return "task_run_id", nil
+
+	default:
+		return "", fmt.Errorf("no postgresql mapping for storage field %s exists", f)
+	}
+}
+
+func compileOp(a string, op storage.Op, b string) (string, error) {
+	switch op {
+	case storage.OpEQ:
+		return a + " = " + b, nil
+	case storage.OpGT:
+		return a + " > " + b, nil
+	case storage.OpLT:
+		return a + " < " + b, nil
+	case storage.OpIN:
+		return fmt.Sprintf("%s = ANY (%s)", a, b), nil
+
+	default:
+		return "", fmt.Errorf("no postgresql mapping for storage operator %s exists", op)
+	}
+}
+
+func compileSortOrder(o storage.Order, column string) (string, error) {
+	switch o {
+	case storage.OrderAsc:
+		return column + " ASC", nil
+	case storage.OrderDesc:
+		return column + " DESC ", nil
+
+	default:
+		return "", fmt.Errorf("no postgresql mapping for storage order direction %s exists", o)
+	}
+}
+
+func (q *query) compileFilterStr() (filterStr string, args []interface{}, err error) {
 	if len(q.Filters) == 0 {
 		return
 	}
 
-	filterStr = "WHERE "
-
 	for i, f := range q.Filters {
-		field, exist := sqlFieldMap[f.Field]
-		if !exist {
-			return "", nil, fmt.Errorf("no postgresql mapping for storage field %s exists", f.Field)
+		column, err := columnName(f.Field)
+		if err != nil {
+			return "", nil, err
 		}
 
-		op, exist := sqlOperatorMap[f.Operator]
-		if !exist {
-			return "", nil, fmt.Errorf("no postgresql mapping for storage operator %s exists", f.Operator)
+		opStr, err := compileOp(column, f.Operator, fmt.Sprintf("$%d", i+1))
+		if err != nil {
+			return "", nil, err
 		}
 
-		// parenthesis around $%d are needed for the ANY query, the
-		// syntax is also valid for all other supported filters
-		filterStr += fmt.Sprintf("%s %s ($%d)", field, op, i+1)
+		filterStr += opStr
 		args = append(args, f.Value)
 
 		if i+1 < len(q.Filters) {
@@ -64,38 +83,38 @@ func (q *Query) compileFilterStr() (filterStr string, args []interface{}, err er
 		}
 	}
 
-	return filterStr, args, err
+	return "WHERE " + filterStr, args, err
 }
 
-func (q *Query) compileSorterStr() (string, error) {
+func (q *query) compileSorterStr() (string, error) {
 	if len(q.Sorters) == 0 {
 		return "", nil
 	}
 
-	var sorterStr = "ORDER BY "
+	var sorterStr string
 	for i, f := range q.Sorters {
-		field, exist := sqlFieldMap[f.Field]
-		if !exist {
-			return "", fmt.Errorf("no postgresql mapping for storage field %s exists", f.Field)
+		column, err := columnName(f.Field)
+		if err != nil {
+			return "", err
 		}
 
-		dir, exist := sqlOrderDirectionMap[f.Order]
-		if !exist {
-			return "", fmt.Errorf("no postgresql mapping for storage order direction %s exists", f.Order)
+		orderStr, err := compileSortOrder(f.Order, column)
+		if err != nil {
+			return "", err
 		}
 
-		sorterStr += fmt.Sprintf("%s %s", field, dir)
+		sorterStr += orderStr
 
 		if i+1 < len(q.Sorters) {
 			sorterStr += ",  "
 		}
 	}
 
-	return sorterStr, nil
+	return "ORDER BY " + sorterStr, nil
 }
 
 // Compile creates the SQL query string and returns it with the arguments for the query
-func (q *Query) Compile() (query string, args []interface{}, err error) {
+func (q *query) Compile() (query string, args []interface{}, err error) {
 	if len(q.Filters) == 0 && len(q.Sorters) == 0 {
 		return q.BaseQuery, nil, nil
 	}

@@ -225,7 +225,7 @@ func (c *Client) TaskRuns(
 
 	var result []*storage.TaskRunWithID
 
-	q := Query{
+	q := query{
 		BaseQuery: queryStr,
 		Filters:   filters,
 		Sorters:   sorters,
