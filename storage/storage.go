@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"errors"
-	"io"
 	"time"
 )
 
@@ -81,7 +80,7 @@ type TaskRunWithID struct {
 
 // Storer is an interface for storing and retrieving baur task runs
 type Storer interface {
-	io.Closer
+	Close() error
 
 	// Init initializes a storage, e.g. creating the database scheme
 	Init(context.Context) error
