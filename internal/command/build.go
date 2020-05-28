@@ -53,8 +53,8 @@ The following Environment Variables are supported:
     %s
     %s
 `,
-	coloredBuildStatus(baur.BuildStatusPending),
-	coloredBuildStatus(baur.BuildStatusInputsUndefined),
+	coloredTaskStatus(baur.TaskStatusExecutionPending),
+	coloredTaskStatus(baur.TaskStatusInputsUndefined),
 
 	highlight(envVarPSQLURL),
 
@@ -103,7 +103,7 @@ type uploadUserData struct {
 
 type buildUserData struct {
 	App              *baur.App
-	Inputs           []*storage.Input
+	Inputs           *baur.Inputs
 	TotalInputDigest string
 }
 
@@ -119,6 +119,16 @@ func resultAddBuildResult(repo *baur.Repository, bud *buildUserData, r *build.Re
 	resultLock.Lock()
 	defer resultLock.Unlock()
 
+	totalInputDigest, err := bud.Inputs.Digest()
+	if err != nil {
+		panic(fmt.Sprintf(
+			"%s: retrieving totalInputDigest from Inputs() failed, "+
+				"it should have returned the precalculated digest %s",
+			bud.App.Task(),
+			err,
+		))
+	}
+
 	b := storage.TaskRunFull{
 		TaskRun: storage.TaskRun{
 			// TODO: store the real task name, instead of always build,
@@ -129,9 +139,9 @@ func resultAddBuildResult(repo *baur.Repository, bud *buildUserData, r *build.Re
 			StartTimestamp:   r.StartTs,
 			StopTimestamp:    r.StopTs,
 			Result:           storage.ResultSuccess,
-			TotalInputDigest: bud.TotalInputDigest,
+			TotalInputDigest: totalInputDigest.String(),
 		},
-		Inputs: bud.Inputs,
+		Inputs: taskInputsToStorageInputs(bud.Inputs),
 	}
 
 	result[bud.App.Name] = &b
@@ -310,73 +320,60 @@ func maxAppNameLen(apps []*baur.App) int {
 	return maxLen
 }
 
-func filesToStorageInputs(inputs *baur.Inputs) ([]*storage.Input, error) {
+func taskInputsToStorageInputs(inputs *baur.Inputs) []*storage.Input {
 	result := make([]*storage.Input, len(inputs.Files))
 
-	for i, file := range inputs.Files {
-		digest, err := file.Digest()
+	for i, input := range inputs.Files {
+		digest, err := input.Digest()
 		if err != nil {
-			// should never happen because the digest is already calculated before and here file should only return the stored value
-			return nil, err
+			panic(fmt.Sprintf(
+				"%s: retrieving digest of input failed, "+
+					"it should have returned the precalculated digest %s",
+				input,
+				err,
+			))
 		}
 
 		result[i] = &storage.Input{
 			Digest: digest.String(),
-			URI:    file.RepoRelPath(),
+			URI:    input.RepoRelPath(),
 		}
 	}
 
-	return result, nil
+	return result
 }
 
 func pendingBuilds(storer storage.Storer, apps []*baur.App, repositoryRootDir string, rebuildExisting bool) []*build.Job {
 	var res []*build.Job
+	statusMgr := baur.NewTaskStatusEvaluator(repositoryRootDir, storer, baur.NewInputResolver())
 
 	appNameColLen := maxAppNameLen(apps) + sepLen
-	inputResolver := baur.NewInputResolver()
 
 	for _, app := range apps {
 		task := app.Task()
 
 		log.Debugf("%s: resolving build inputs and calculating digests...", task)
-		inputs, err := inputResolver.Resolve(repositoryRootDir, task)
-		if err != nil {
-			log.Fatalf("%s: resolving input failed: %s\n", task, err)
-		}
+		status, inputs, run, err := statusMgr.Status(ctx, task)
+		exitOnErrf(err, task.String())
 
-		digest, err := inputs.Digest()
-		if err != nil {
-			log.Fatalf("%s: calculating total input digest failed: %s\n", task, err)
-		}
-
-		status, existingBuild, err := baur.TaskRunStatusInputs(ctx, task, inputs, storer)
-		if err != nil {
-			log.Fatalf("fetching build from database failed: %s\n", err)
-		}
-
-		if status == baur.BuildStatusUndefined {
+		if status == baur.TaskStatusUndefined {
 			panic(fmt.Sprintf("task status is %s and err is not nil (%s) \n", status, err))
 		}
 
-		if status == baur.BuildStatusExist {
+		if status == baur.TaskStatusRunExist {
 			fmt.Printf("%-*s%s%s (%s)\n",
-				appNameColLen, app.Name, appColSep, coloredBuildStatus(status), highlight(existingBuild.ID))
+				appNameColLen, app.Name, appColSep, coloredTaskStatus(status), highlight(run.ID))
 		} else {
 			fmt.Printf("%-*s%s%s\n",
-				appNameColLen, app.Name, appColSep, coloredBuildStatus(status))
+				appNameColLen, app.Name, appColSep, coloredTaskStatus(status))
 		}
 
-		if status == baur.BuildStatusInputsUndefined {
+		if status == baur.TaskStatusInputsUndefined {
 			continue
 		}
 
-		if !rebuildExisting && status == baur.BuildStatusExist {
+		if !rebuildExisting && status == baur.TaskStatusRunExist {
 			continue
-		}
-
-		storageInputs, err := filesToStorageInputs(inputs)
-		if err != nil {
-			log.Fatalf("%s: %s\n", task, err)
 		}
 
 		res = append(res, &build.Job{
@@ -384,9 +381,8 @@ func pendingBuilds(storer storage.Storer, apps []*baur.App, repositoryRootDir st
 			Directory:   app.Path,
 			Command:     app.Task().Command,
 			UserData: &buildUserData{
-				App:              app,
-				Inputs:           storageInputs,
-				TotalInputDigest: digest.String(),
+				App:    app,
+				Inputs: inputs,
 			},
 		})
 	}
@@ -413,10 +409,10 @@ func buildRun(cmd *cobra.Command, args []string) {
 
 	if buildForce {
 		fmt.Printf("\nBuilding applications with build status: %s or %s\n",
-			coloredBuildStatus(baur.BuildStatusPending), coloredBuildStatus(baur.BuildStatusExist))
+			coloredTaskStatus(baur.TaskStatusExecutionPending), coloredTaskStatus(baur.TaskStatusRunExist))
 	} else {
 		fmt.Printf("\nBuilding applications with build status: %s\n",
-			coloredBuildStatus(baur.BuildStatusPending))
+			coloredTaskStatus(baur.TaskStatusExecutionPending))
 	}
 
 	if buildSkipUpload {

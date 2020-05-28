@@ -157,13 +157,13 @@ func mustWriteRow(fmt format.Formatter, row []interface{}) {
 	}
 }
 
-func coloredBuildStatus(status baur.BuildStatus) string {
+func coloredTaskStatus(status baur.TaskStatus) string {
 	switch status {
-	case baur.BuildStatusInputsUndefined:
+	case baur.TaskStatusInputsUndefined:
 		return yellowHighlight(status.String())
-	case baur.BuildStatusExist:
+	case baur.TaskStatusRunExist:
 		return greenHighlight(status.String())
-	case baur.BuildStatusPending:
+	case baur.TaskStatusExecutionPending:
 		return redHighlight(status.String())
 	default:
 		return status.String()

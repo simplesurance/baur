@@ -23,7 +23,7 @@ const TaskStatusFormatDescription string = "one of " +
 
 // TaskStatus is a commandline parameter to specify build status filters
 type TaskStatus struct {
-	Status baur.BuildStatus
+	Status baur.TaskStatus
 	isSet  bool
 }
 
@@ -38,11 +38,11 @@ func (b *TaskStatus) Set(val string) error {
 
 	switch strings.ToLower(val) {
 	case taskStatusExist:
-		b.Status = baur.BuildStatusExist
+		b.Status = baur.TaskStatusRunExist
 	case taskStatusPending:
-		b.Status = baur.BuildStatusPending
+		b.Status = baur.TaskStatusExecutionPending
 	case taskStatusInputUndefined:
-		b.Status = baur.BuildStatusInputsUndefined
+		b.Status = baur.TaskStatusInputsUndefined
 
 	default:
 		return errors.New("status must be " + TaskStatusFormatDescription)

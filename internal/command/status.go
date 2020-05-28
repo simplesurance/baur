@@ -140,18 +140,20 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 	showProgress := len(tasks) >= 5 && !c.quiet && !c.csv
 
+	statusMgr := baur.NewTaskStatusEvaluator(repo.Path, storageClt, baur.NewInputResolver())
+
 	baur.SortTasksByID(tasks)
 
 	for i, task := range tasks {
 		var row []interface{}
 		var taskRun *storage.TaskRunWithID
-		var taskStatus baur.BuildStatus
+		var taskStatus baur.TaskStatus
 
 		if storageQueryNeeded {
 			var err error
 
-			taskStatus, taskRun, err = baur.TaskRunStatus(ctx, task, repo.Path, storageClt)
-			exitOnErrf(err, "gathering informations for %s failed", task)
+			taskStatus, _, taskRun, err = statusMgr.Status(ctx, task)
+			exitOnErrf(err, "%s: evaluating task status failed", task)
 
 			// querying the build status for all applications can
 			// take some time, output progress dots to let the user
@@ -194,7 +196,7 @@ func (c *statusCmd) storageQueryIsNeeded() bool {
 	return false
 }
 
-func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.BuildStatus) []interface{} {
+func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus) []interface{} {
 	var row []interface{}
 
 	for _, f := range c.fields.Fields {
@@ -213,7 +215,7 @@ func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, tas
 			row = append(row, buildStatus)
 
 		case statusRunIDParam:
-			if buildStatus == baur.BuildStatusExist {
+			if buildStatus == baur.TaskStatusRunExist {
 				row = append(row, fmt.Sprint(taskRun.ID))
 			} else {
 				// no build exist, we don't have a build id
@@ -221,7 +223,7 @@ func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, tas
 			}
 
 		case statusGitCommitParam:
-			if buildStatus == baur.BuildStatusExist {
+			if buildStatus == baur.TaskStatusRunExist {
 				row = append(row, fmt.Sprint(taskRun.VCSRevision))
 			} else {
 				row = append(row, "")
