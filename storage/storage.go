@@ -91,7 +91,16 @@ type Storer interface {
 	LatestTaskRunByDigest(ctx context.Context, appname, taskName, totalInputDigest string) (*TaskRunWithID, error)
 
 	TaskRun(ctx context.Context, id int) (*TaskRunWithID, error)
-	TaskRuns(ctx context.Context, filters []*Filter, sorters []*Sorter) ([]*TaskRunWithID, error)
+	// TaskRuns queries the storage for runs that match the filters.
+	// The found results are passed in iterative manner to the callback
+	// function. When the callback function returns an error, the iteration
+	// stops.
+	// When no matching records exist, the method returns ErrNotExist.
+	TaskRuns(ctx context.Context,
+		filters []*Filter,
+		sorters []*Sorter,
+		callback func(*TaskRunWithID) error,
+	) error
 
 	Inputs(ctx context.Context, taskRunID int) ([]*Input, error)
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)

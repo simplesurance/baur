@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
@@ -80,6 +79,17 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 	repo := MustFindRepository()
 	psql := mustNewCompatibleStorage(repo)
 
+	var formatter format.Formatter
+	if lsBuildsConfig.csv {
+		formatter = csv.New(nil, os.Stdout)
+	} else {
+		formatter = table.New(nil, os.Stdout)
+	}
+
+	if !lsBuildsConfig.csv && !lsBuildsConfig.quiet {
+		printHeader(formatter)
+	}
+
 	filters := lsBuildsConfig.getFilters()
 	if lsBuildsConfig.sort.Value != (storage.Sorter{}) {
 		sorters = append(sorters, &lsBuildsConfig.sort.Value)
@@ -87,73 +97,55 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	sorters = append(sorters, &defaultSorter)
 
-	taskRuns, err := psql.TaskRuns(ctx, filters, sorters)
+	err := psql.TaskRuns(
+		ctx,
+		filters,
+		sorters,
+		func(taskRun *storage.TaskRunWithID) error {
+			return printTaskRun(formatter, taskRun)
+		},
+	)
+
 	if err != nil {
 		if err == storage.ErrNotExist {
-			log.Fatalf("no builds for application '%s' exist", lsBuildsConfig.app)
+			log.Fatalf("no matching task runs exist")
 		}
 
 		log.Fatalln(err)
 	}
 
-	if len(taskRuns) == 0 {
-		log.Fatalf("no builds for application '%s' exist", lsBuildsConfig.app)
-	}
-
-	printBuilds(repo, taskRuns)
+	exitOnErr(formatter.Flush())
 }
 
-func printBuilds(repo *baur.Repository, taskRuns []*storage.TaskRunWithID) {
-	var headers []string
-	var formatter format.Formatter
-	writeHeaders := !lsBuildsConfig.quiet && !lsBuildsConfig.csv
-
-	if writeHeaders {
-		headers = []string{
-			"Id",
-			"App",
-			"Start Time",
-			"Duration (s)",
-			"Input Digest",
-		}
-
-	}
-
-	if lsBuildsConfig.csv {
-		formatter = csv.New(headers, os.Stdout)
-	} else {
-		formatter = table.New(headers, os.Stdout)
-	}
-
-	for _, taskRun := range taskRuns {
-		var row []interface{}
-
-		if lsBuildsConfig.quiet {
-			row = []interface{}{taskRun.ID}
-		} else {
-			row = []interface{}{
-				strconv.Itoa(taskRun.ID),
-				taskRun.ApplicationName,
-				taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
-				fmt.Sprint(
-					taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds(),
-				),
-				taskRun.TotalInputDigest,
-			}
-		}
-
-		if err := formatter.WriteRow(row); err != nil {
-			log.Fatalln(err)
-		}
-
-	}
-
-	if err := formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
+func printHeader(formatter format.Formatter) {
+	exitOnErr(formatter.WriteRow([]interface{}{
+		"Id",
+		"App",
+		"Start Time",
+		"Duration (s)",
+		"Input Digest",
+	}))
 }
 
-func (conf lsBuildsConf) getFilters() (filters []*storage.Filter) {
+func printTaskRun(formatter format.Formatter, taskRun *storage.TaskRunWithID) error {
+	if lsBuildsConfig.quiet {
+		return formatter.WriteRow([]interface{}{taskRun.ID})
+	}
+
+	return formatter.WriteRow([]interface{}{
+		strconv.Itoa(taskRun.ID),
+		taskRun.ApplicationName,
+		taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
+		durationToStrSeconds(
+			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
+		),
+		taskRun.TotalInputDigest,
+	})
+}
+
+func (conf lsBuildsConf) getFilters() []*storage.Filter {
+	var filters []*storage.Filter
+
 	if conf.app != "all" {
 		filters = append(filters, &storage.Filter{
 			Field:    storage.FieldApplicationName,
@@ -178,5 +170,5 @@ func (conf lsBuildsConf) getFilters() (filters []*storage.Filter) {
 		})
 	}
 
-	return
+	return filters
 }

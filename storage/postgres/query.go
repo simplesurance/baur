@@ -11,27 +11,31 @@ import (
 )
 
 func (c *Client) TaskRun(ctx context.Context, id int) (*storage.TaskRunWithID, error) {
-	taskRuns, err := c.TaskRuns(
-		ctx,
-		[]*storage.Filter{
-			{
-				Field:    storage.FieldID,
-				Operator: storage.OpEQ,
-				Value:    id,
-			},
+	var taskRun *storage.TaskRunWithID
+
+	idFilter := []*storage.Filter{
+		{
+			Field:    storage.FieldID,
+			Operator: storage.OpEQ,
+			Value:    id,
 		},
-		nil,
-	)
+	}
+
+	err := c.TaskRuns(ctx, idFilter, nil, func(tr *storage.TaskRunWithID) error {
+		taskRun = tr
+
+		return nil
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(taskRuns) != 1 {
-		return nil, fmt.Errorf("expected %d results, got %d", 1, len(taskRuns))
+	if taskRun == nil {
+		panic("TaskRuns returned a nil TaskRunWithID and nil error")
 	}
 
-	return taskRuns[0], nil
+	return taskRun, nil
 }
 
 func (c *Client) LatestTaskRunByDigest(ctx context.Context, appName, taskName, totalInputDigest string) (*storage.TaskRunWithID, error) {
@@ -200,7 +204,8 @@ func (c *Client) TaskRuns(
 	ctx context.Context,
 	filters []*storage.Filter,
 	sorters []*storage.Sorter,
-) ([]*storage.TaskRunWithID, error) {
+	cb func(*storage.TaskRunWithID) error,
+) error {
 	const queryStr = `
 	SELECT *
 	  FROM (
@@ -223,7 +228,7 @@ func (c *Client) TaskRuns(
 	       ) tr
 	  `
 
-	var result []*storage.TaskRunWithID
+	var queryReturnedRows bool
 
 	q := query{
 		BaseQuery: queryStr,
@@ -233,16 +238,18 @@ func (c *Client) TaskRuns(
 
 	query, args, err := q.Compile()
 	if err != nil {
-		return nil, fmt.Errorf("compiling query string failed: %w", err)
+		return fmt.Errorf("compiling query string failed: %w", err)
 	}
 
 	rows, err := c.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
+		return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
 	}
 
 	for rows.Next() {
 		var taskRun storage.TaskRunWithID
+
+		queryReturnedRows = true
 
 		err := rows.Scan(
 			&taskRun.ID,
@@ -256,21 +263,25 @@ func (c *Client) TaskRuns(
 			&taskRun.Result,
 			nil, // skip scanning of duration value, it's only used for filtering and sorting
 		)
+
 		if err != nil {
 			rows.Close()
-			return nil, fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
+			return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
 		}
 
-		result = append(result, &taskRun)
+		if err := cb(&taskRun); err != nil {
+			rows.Close()
+			return fmt.Errorf("callback failed: %w", err)
+		}
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
+		return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
 	}
 
-	if len(result) == 0 {
-		return nil, storage.ErrNotExist
+	if !queryReturnedRows {
+		return storage.ErrNotExist
 	}
 
-	return result, nil
+	return nil
 }

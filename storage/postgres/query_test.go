@@ -520,14 +520,19 @@ func TestTaskRuns(t *testing.T) {
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			taskRuns, err := client.TaskRuns(ctx, testcase.filters, testcase.sorters)
+			var result []*storage.TaskRunWithID
+
+			err := client.TaskRuns(ctx, testcase.filters, testcase.sorters, func(tr *storage.TaskRunWithID) error {
+				result = append(result, tr)
+				return nil
+			})
 			assert.Equal(t, testcase.expectedError, err)
 
-			for _, taskRun := range taskRuns {
+			for _, taskRun := range result {
 				taskRunDropMonotonicTimevals(&taskRun.TaskRun)
 			}
 
-			assert.ElementsMatch(t, testcase.expectedTaskRuns, taskRuns)
+			assert.ElementsMatch(t, testcase.expectedTaskRuns, result)
 		})
 	}
 
