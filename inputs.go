@@ -9,7 +9,7 @@ import (
 
 // Inputs are resolved Inputs of a task.
 type Inputs struct {
-	Files  []*File
+	Files  []*Inputfile
 	digest *digest.Digest
 }
 
@@ -28,7 +28,7 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 			return nil, fmt.Errorf("calculating digest for %q failed: %w", file.Path(), err)
 		}
 
-		digests[i] = &fdigest
+		digests[i] = fdigest
 	}
 
 	totalDigest, err := sha384.Sum(digests)

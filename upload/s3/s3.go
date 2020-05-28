@@ -1,8 +1,6 @@
 package s3
 
 import (
-	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -52,51 +50,20 @@ func NewClient(logger Logger) (*Client, error) {
 	}, nil
 }
 
-func bucketFromURL(u *url.URL) string {
-	return u.Host
-}
-
-func fileFromURL(u *url.URL) string {
-	return u.Path
-}
-
-func verifyURL(u *url.URL) error {
-	if u.Scheme != "s3" {
-		return fmt.Errorf("unsupported URL scheme '%s'", u.Scheme)
-	}
-
-	if len(u.Host) == 0 {
-		return fmt.Errorf("bucket missing in url '%s'", u)
-	}
-
-	if len(u.Path) == 0 {
-		return fmt.Errorf("filename missing in url '%s'", u)
-	}
-
-	return nil
-}
-
 // Upload uploads a file to an s3 bucket, On success it returns the URL to the
 // file.
-func (c *Client) Upload(file string, dest string) (string, error) {
-	url, err := url.Parse(dest)
-	if err != nil {
-		return "", err
-	}
+// dest must be an URL in the format: s3://<bucket>/<filename>
+func (c *Client) Upload(filepath, bucket, key string) (string, error) {
 
-	if err := verifyURL(url); err != nil {
-		return "", err
-	}
-
-	f, err := os.Open(file)
+	f, err := os.Open(filepath)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
 
 	res, err := c.uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucketFromURL(url)),
-		Key:    aws.String(fileFromURL(url)),
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
 		Body:   f,
 	})
 	if err != nil {

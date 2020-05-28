@@ -1,63 +1,46 @@
 package baur
 
 import (
-	"path/filepath"
-
 	"github.com/simplesurance/baur/digest"
 	"github.com/simplesurance/baur/digest/sha384"
 )
 
 // File represent a file
 type File struct {
-	repoRootPath string
-	relPath      string
-	absPath      string
-	digest       *digest.Digest
+	AbsPath string
+	digest  *digest.Digest
 }
 
-// NewFile returns a new file
-func NewFile(repoRootPath, relPath string) *File {
-	return &File{
-		repoRootPath: repoRootPath,
-		relPath:      relPath,
-		absPath:      filepath.Join(repoRootPath, relPath),
-	}
-}
-
-// Digest returns a digest of the file
-func (f *File) Digest() (digest.Digest, error) {
-	if f.digest != nil {
-		return *f.digest, nil
-	}
-
+// CalcDigest calculates the digest of the file, saves it and returns it.
+func (f *File) CalcDigest() (*digest.Digest, error) {
 	sha := sha384.New()
 
-	err := sha.AddBytes([]byte(f.relPath))
+	err := sha.AddBytes([]byte(f.AbsPath))
 	if err != nil {
-		return digest.Digest{}, err
+		return nil, err
 	}
 
-	err = sha.AddFile(f.absPath)
+	err = sha.AddFile(f.AbsPath)
 	if err != nil {
-		return digest.Digest{}, err
+		return nil, err
 	}
 
 	f.digest = sha.Digest()
 
-	return *f.digest, nil
+	return f.digest, nil
 }
 
-// Path returns it's absolute path
+// Digest returns the previous calculated digest.
+// If the digest wasn't calculated yet, CalcDigest() is called and it's return
+// values are returned.
+func (f *File) Digest() (*digest.Digest, error) {
+	if f.digest != nil {
+		return f.digest, nil
+	}
+
+	return f.CalcDigest()
+}
+
 func (f *File) Path() string {
-	return f.absPath
-}
-
-// RepoRelPath returns the path relative to the baur repository
-func (f *File) RepoRelPath() string {
-	return f.relPath
-}
-
-// String returns it's string representation
-func (f *File) String() string {
-	return f.RepoRelPath()
+	return f.AbsPath
 }

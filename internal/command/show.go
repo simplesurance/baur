@@ -68,23 +68,26 @@ func showApp(arg string) {
 	mustWriteRow(formatter, []interface{}{"", "Path:", highlight(app.RelPath)})
 	mustWriteRow(formatter, []interface{}{"", "Build Command:", highlight(task.Command)})
 
-	outputs, err := task.BuildOutputs()
-	exitOnErr(err)
+	// TODO: make this work again, print the outputs:
+	/*
+		outputs, err := task.Outputs()
+		exitOnErr(err)
 
-	if len(outputs) != 0 {
-		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{underline("Outputs:")})
+		if len(outputs) != 0 {
+			mustWriteRow(formatter, []interface{}{})
+			mustWriteRow(formatter, []interface{}{underline("Outputs:")})
 
-		for i, art := range outputs {
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight(art.Type())})
-			mustWriteRow(formatter, []interface{}{"", "Local:", highlight(art.String())})
-			mustWriteRow(formatter, []interface{}{"", "Remote:", highlight(art.UploadDestination())})
+			for i, art := range outputs {
+				mustWriteRow(formatter, []interface{}{"", "Type:", highlight(art.Type())})
+				mustWriteRow(formatter, []interface{}{"", "Local:", highlight(art.String())})
+				mustWriteRow(formatter, []interface{}{"", "Remote:", highlight(art.UploadDestination())})
 
-			if i+1 < len(outputs) {
-				mustWriteRow(formatter, []interface{}{})
+				if i+1 < len(outputs) {
+					mustWriteRow(formatter, []interface{}{})
+				}
 			}
 		}
-	}
+	*/
 
 	if task.HasInputs() {
 		mustWriteRow(formatter, []interface{}{})
@@ -119,7 +122,7 @@ func showApp(arg string) {
 		}
 	}
 
-	err = formatter.Flush()
+	err := formatter.Flush()
 	exitOnErr(err)
 }
 
@@ -182,7 +185,7 @@ func showBuild(taskRunID int) {
 		mustWriteRow(formatter, []interface{}{
 			"",
 			"Size:",
-			highlight(bytesToMib(int(o.SizeBytes)) + " MiB"),
+			highlight(bytesToMib(o.SizeBytes) + " MiB"),
 		})
 		mustWriteRow(formatter, []interface{}{"", "Type:", highlight(o.Type)})
 

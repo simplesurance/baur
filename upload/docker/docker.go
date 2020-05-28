@@ -130,8 +130,9 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 	panic("docker: could not find any auth data in a config.json")
 }
 
-// Upload tags and uploads an image into a docker registry repository
-// destURI format: <repository>:<tag>
+// Upload tags and uploads an image to a docker registry repository.
+// On success it returns the path  to the uploaded docker image, in the format:
+// [registry]:/repository/tag
 func (c *Client) Upload(image, registryAddr, repository, tag string) (string, error) {
 	var addrRepo string
 	var destURI string
@@ -190,4 +191,14 @@ func (c *Client) Size(imageID string) (int64, error) {
 	}
 
 	return img.VirtualSize, nil
+}
+
+// Exists return true if the image with the given ID exist, otherwise false.
+func (c *Client) Exists(imageID string) (bool, error) {
+	_, err := c.clt.InspectImage(imageID)
+	if err != nil && err != docker.ErrNoSuchImage {
+		return false, err
+	}
+
+	return err != docker.ErrNoSuchImage, nil
 }

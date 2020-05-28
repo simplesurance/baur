@@ -22,6 +22,7 @@ import (
 const envVarPSQLURL = "BAUR_POSTGRESQL_URL"
 
 var (
+	// TODO: move the higlight definitions to internal/command/term/color.go
 	greenHighlight  = color.New(color.FgGreen).SprintFunc()
 	redHighlight    = color.New(color.FgRed).SprintFunc()
 	yellowHighlight = color.New(color.FgYellow).SprintFunc()
@@ -43,6 +44,7 @@ func findRepository() (*baur.Repository, error) {
 }
 
 // MustFindRepository must find repo
+// TODO: rename to mustFindRepository
 func MustFindRepository() *baur.Repository {
 	repo, err := findRepository()
 	if err != nil {
@@ -170,12 +172,16 @@ func coloredTaskStatus(status baur.TaskStatus) string {
 	}
 }
 
-func bytesToMib(bytes int) string {
+func bytesToMib(bytes uint64) string {
 	return fmt.Sprintf("%.3f", float64(bytes)/1024/1024)
 }
 
 func durationToStrSeconds(duration time.Duration) string {
 	return fmt.Sprintf("%.3f", duration.Seconds())
+}
+
+func strDurationSec(start, end time.Time) string {
+	return durationToStrSeconds(end.Sub(start))
 }
 
 var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
