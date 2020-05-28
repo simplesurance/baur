@@ -2,12 +2,9 @@ package baur
 
 import (
 	"fmt"
-	"path"
-	"path/filepath"
 	"sort"
 
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/upload/scheduler"
 )
 
 // Task is a an execution step belonging to an app.
@@ -53,63 +50,8 @@ func (t *Task) HasInputs() bool {
 	return !cfg.InputsAreEmpty(t.UnresolvedInputs)
 }
 
-// TODO: rename this function when the db and commands support multiple tasks.
-// BuildOutputs returns a list of outputs that the task.Command is expected to produce.
-func (t *Task) BuildOutputs() ([]BuildOutput, error) {
-	result := make([]BuildOutput, 0, len(t.Outputs.DockerImage)+len(t.Outputs.File))
-
-	taskRelDir, err := filepath.Rel(t.Directory, t.RepositoryRoot)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, di := range t.Outputs.DockerImage {
-		result = append(result, &DockerArtifact{
-			ImageIDFile: path.Join(t.Directory, di.IDFile),
-			Tag:         di.RegistryUpload.Tag,
-			Repository:  di.RegistryUpload.Repository,
-			Registry:    di.RegistryUpload.Registry,
-		})
-	}
-
-	for _, f := range t.Outputs.File {
-		filePath := f.Path
-		absFilePath := path.Join(t.Directory, filePath)
-
-		if !f.S3Upload.IsEmpty() {
-			url := "s3://" + f.S3Upload.Bucket + "/" + f.S3Upload.DestFile
-
-			result = append(result, &FileArtifact{
-				RelPath:   path.Join(taskRelDir, filePath),
-				Path:      absFilePath,
-				DestFile:  f.S3Upload.DestFile,
-				UploadURL: url,
-				uploadJob: &scheduler.S3Job{
-					DestURL:  url,
-					FilePath: absFilePath,
-				},
-			})
-		}
-
-		if !f.FileCopy.IsEmpty() {
-			result = append(result, &FileArtifact{
-				RelPath:   path.Join(taskRelDir, filePath),
-				Path:      absFilePath,
-				DestFile:  f.FileCopy.Path,
-				UploadURL: f.FileCopy.Path,
-				uploadJob: &scheduler.FileCopyJob{
-					Src: absFilePath,
-					Dst: f.FileCopy.Path,
-				},
-			})
-		}
-	}
-
-	return result, nil
-}
-
 func SortTasksByID(tasks []*Task) {
 	sort.Slice(tasks, func(i int, j int) bool {
-		return tasks[i].ID() < tasks[i].ID()
+		return tasks[i].ID() < tasks[j].ID()
 	})
 }

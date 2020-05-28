@@ -75,7 +75,7 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 				row = []interface{}{
 					upload.URI,
 					o.Digest,
-					bytesToMib(int(o.SizeBytes)),
+					bytesToMib(o.SizeBytes),
 					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
 					o.Type,
 					upload.Method,

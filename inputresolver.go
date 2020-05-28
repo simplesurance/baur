@@ -130,14 +130,14 @@ func (i *InputResolver) resolveGoSrcInputs(appDir string, inputs *cfg.GolangSour
 	return i.goSourceResolver.Resolve(inputs.Environment, absGoSourceDirs...)
 }
 
-func (i *InputResolver) pathsToUniqFiles(repositoryRoot string, pathSlice ...[]string) ([]*File, error) {
+func (i *InputResolver) pathsToUniqFiles(repositoryRoot string, pathSlice ...[]string) ([]*Inputfile, error) {
 	var pathsCount int
 
 	for _, paths := range pathSlice {
 		pathsCount += len(paths)
 	}
 
-	res := make([]*File, 0, pathsCount)
+	res := make([]*Inputfile, 0, pathsCount)
 	dedupMap := make(map[string]struct{}, pathsCount)
 
 	for _, paths := range pathSlice {
