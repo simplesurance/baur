@@ -125,7 +125,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 	storageQueryNeeded := c.storageQueryIsNeeded()
 
 	if storageQueryNeeded {
-		storageClt = MustGetPostgresClt(repo)
+		storageClt = mustNewCompatibleStorage(repo)
 	}
 
 	if writeHeaders {
@@ -144,13 +144,13 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 	for i, task := range tasks {
 		var row []interface{}
-		var build *storage.BuildWithDuration
+		var taskRun *storage.TaskRunWithID
 		var taskStatus baur.BuildStatus
 
 		if storageQueryNeeded {
 			var err error
 
-			taskStatus, build, err = baur.TaskRunStatus(task, repo.Path, storageClt)
+			taskStatus, taskRun, err = baur.TaskRunStatus(ctx, task, repo.Path, storageClt)
 			exitOnErrf(err, "gathering informations for %s failed", task)
 
 			// querying the build status for all applications can
@@ -169,7 +169,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		row = c.statusAssembleRow(repo.Path, task, build, taskStatus)
+		row = c.statusAssembleRow(repo.Path, task, taskRun, taskStatus)
 
 		err := formatter.WriteRow(row)
 		exitOnErr(err)
@@ -194,7 +194,7 @@ func (c *statusCmd) storageQueryIsNeeded() bool {
 	return false
 }
 
-func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, build *storage.BuildWithDuration, buildStatus baur.BuildStatus) []interface{} {
+func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.BuildStatus) []interface{} {
 	var row []interface{}
 
 	for _, f := range c.fields.Fields {
@@ -214,7 +214,7 @@ func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, bui
 
 		case statusRunIDParam:
 			if buildStatus == baur.BuildStatusExist {
-				row = append(row, fmt.Sprint(build.ID))
+				row = append(row, fmt.Sprint(taskRun.ID))
 			} else {
 				// no build exist, we don't have a build id
 				row = append(row, "")
@@ -222,7 +222,7 @@ func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, bui
 
 		case statusGitCommitParam:
 			if buildStatus == baur.BuildStatusExist {
-				row = append(row, fmt.Sprint(build.VCSState.CommitID))
+				row = append(row, fmt.Sprint(taskRun.VCSRevision))
 			} else {
 				row = append(row, "")
 			}

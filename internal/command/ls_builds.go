@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
@@ -45,8 +44,8 @@ var lsBuildsConfig lsBuildsConf
 
 func init() {
 	lsBuildsConfig.sort = flag.NewSort(map[string]storage.Field{
-		"time":     storage.FieldBuildStartTime,
-		"duration": storage.FieldBuildDuration,
+		"time":     storage.FieldStartTime,
+		"duration": storage.FieldDuration,
 	})
 
 	lsBuildsCmd.Flags().BoolVar(&lsBuildsConfig.csv, "csv", false,
@@ -71,14 +70,25 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 	var sorters []*storage.Sorter
 
 	defaultSorter := storage.Sorter{
-		Field: storage.FieldBuildStartTime,
+		Field: storage.FieldStartTime,
 		Order: storage.OrderDesc,
 	}
 
 	lsBuildsConfig.app = args[0]
 
 	repo := MustFindRepository()
-	psql := MustGetPostgresClt(repo)
+	psql := mustNewCompatibleStorage(repo)
+
+	var formatter format.Formatter
+	if lsBuildsConfig.csv {
+		formatter = csv.New(nil, os.Stdout)
+	} else {
+		formatter = table.New(nil, os.Stdout)
+	}
+
+	if !lsBuildsConfig.csv && !lsBuildsConfig.quiet {
+		printHeader(formatter)
+	}
 
 	filters := lsBuildsConfig.getFilters()
 	if lsBuildsConfig.sort.Value != (storage.Sorter{}) {
@@ -87,66 +97,55 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	sorters = append(sorters, &defaultSorter)
 
-	builds, err := psql.GetBuildsWithoutInputsOutputs(filters, sorters)
+	err := psql.TaskRuns(
+		ctx,
+		filters,
+		sorters,
+		func(taskRun *storage.TaskRunWithID) error {
+			return printTaskRun(formatter, taskRun)
+		},
+	)
+
 	if err != nil {
+		if err == storage.ErrNotExist {
+			log.Fatalf("no matching task runs exist")
+		}
+
 		log.Fatalln(err)
 	}
-	if len(builds) == 0 {
-		log.Fatalf("no builds for application '%s' exist", lsBuildsConfig.app)
-	}
 
-	printBuilds(repo, builds)
+	exitOnErr(formatter.Flush())
 }
 
-func printBuilds(repo *baur.Repository, builds []*storage.BuildWithDuration) {
-	var headers []string
-	var formatter format.Formatter
-	writeHeaders := !lsBuildsConfig.quiet && !lsBuildsConfig.csv
-
-	if writeHeaders {
-		headers = []string{
-			"Id",
-			"App",
-			"Start Time",
-			"Duration (s)",
-			"Input Digest",
-		}
-
-	}
-
-	if lsBuildsConfig.csv {
-		formatter = csv.New(headers, os.Stdout)
-	} else {
-		formatter = table.New(headers, os.Stdout)
-	}
-
-	for _, build := range builds {
-		var row []interface{}
-
-		if lsBuildsConfig.quiet {
-			row = []interface{}{build.ID}
-		} else {
-			row = []interface{}{
-				strconv.Itoa(build.ID),
-				build.Application.Name,
-				build.StartTimeStamp.Format(flag.DateTimeFormatTz),
-				fmt.Sprint(build.Duration.Seconds()),
-				build.TotalInputDigest,
-			}
-		}
-
-		if err := formatter.WriteRow(row); err != nil {
-			log.Fatalln(err)
-		}
-
-	}
-
-	if err := formatter.Flush(); err != nil {
-		log.Fatalln(err)
-	}
+func printHeader(formatter format.Formatter) {
+	exitOnErr(formatter.WriteRow([]interface{}{
+		"Id",
+		"App",
+		"Start Time",
+		"Duration (s)",
+		"Input Digest",
+	}))
 }
 
-func (conf lsBuildsConf) getFilters() (filters []*storage.Filter) {
+func printTaskRun(formatter format.Formatter, taskRun *storage.TaskRunWithID) error {
+	if lsBuildsConfig.quiet {
+		return formatter.WriteRow([]interface{}{taskRun.ID})
+	}
+
+	return formatter.WriteRow([]interface{}{
+		strconv.Itoa(taskRun.ID),
+		taskRun.ApplicationName,
+		taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
+		durationToStrSeconds(
+			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
+		),
+		taskRun.TotalInputDigest,
+	})
+}
+
+func (conf lsBuildsConf) getFilters() []*storage.Filter {
+	var filters []*storage.Filter
+
 	if conf.app != "all" {
 		filters = append(filters, &storage.Filter{
 			Field:    storage.FieldApplicationName,
@@ -157,7 +156,7 @@ func (conf lsBuildsConf) getFilters() (filters []*storage.Filter) {
 
 	if conf.before != (flag.DateTimeFlagValue{}) {
 		filters = append(filters, &storage.Filter{
-			Field:    storage.FieldBuildStartTime,
+			Field:    storage.FieldStartTime,
 			Operator: storage.OpLT,
 			Value:    conf.before.Time,
 		})
@@ -165,11 +164,11 @@ func (conf lsBuildsConf) getFilters() (filters []*storage.Filter) {
 
 	if conf.after != (flag.DateTimeFlagValue{}) {
 		filters = append(filters, &storage.Filter{
-			Field:    storage.FieldBuildStartTime,
+			Field:    storage.FieldStartTime,
 			Operator: storage.OpGT,
 			Value:    conf.after.Time,
 		})
 	}
 
-	return
+	return filters
 }

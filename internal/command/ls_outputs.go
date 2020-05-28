@@ -10,6 +10,7 @@ import (
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/storage"
 )
 
 var lsOutputsCmd = &cobra.Command{
@@ -38,42 +39,51 @@ func init() {
 
 func lsOutputs(cmd *cobra.Command, args []string) {
 	repo := MustFindRepository()
-	pgClient := MustGetPostgresClt(repo)
+	pgClient := mustNewCompatibleStorage(repo)
 
-	buildID, err := strconv.Atoi(args[0])
+	taskRunID, err := strconv.Atoi(args[0])
 	if err != nil {
-		log.Fatalf("'%s' is not a numeric build ID", args[0])
+		log.Fatalf("'%s' is not a numeric task run ID", args[0])
 	}
 
-	exist, err := pgClient.BuildExist(buildID)
-	exitOnErr(err)
+	_, err = pgClient.TaskRun(ctx, taskRunID)
+	if err != nil {
+		if err == storage.ErrNotExist {
+			log.Fatalf("task run with ID %d does not exist", taskRunID)
+		}
 
-	if !exist {
-		log.Fatalf("build with ID %d does not exist", buildID)
 	}
 
-	outputs, err := pgClient.GetBuildOutputs(buildID)
-	exitOnErr(err)
+	outputs, err := pgClient.Outputs(ctx, taskRunID)
+	if err != nil {
+		if err == storage.ErrNotExist {
+			log.Debugf("task run with ID %d has no outputs", taskRunID)
+		} else {
+			exitOnErr(err)
+		}
+	}
 
 	formatter := getLsOutputsFormatter(lsOutputsConf.quiet, lsOutputsConf.csv)
 
 	for _, o := range outputs {
-		var row []interface{}
+		for _, upload := range o.Uploads {
+			var row []interface{}
 
-		if lsOutputsConf.quiet {
-			row = []interface{}{o.Upload.URI}
-		} else {
-			row = []interface{}{
-				o.Upload.URI,
-				o.Digest,
-				bytesToMib(int(o.SizeBytes)),
-				durationToStrSeconds(o.Upload.UploadDuration),
-				o.Type,
-				o.Upload.Method,
+			if lsOutputsConf.quiet {
+				row = []interface{}{upload.URI}
+			} else {
+				row = []interface{}{
+					upload.URI,
+					o.Digest,
+					bytesToMib(int(o.SizeBytes)),
+					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
+					o.Type,
+					upload.Method,
+				}
 			}
-		}
 
-		mustWriteRow(formatter, row)
+			mustWriteRow(formatter, row)
+		}
 	}
 
 	err = formatter.Flush()

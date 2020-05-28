@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,6 +26,8 @@ var cpuProfilingFlag bool
 var noColorFlag bool
 
 var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
+
+var ctx = context.Background()
 
 func initSb(_ *cobra.Command, _ []string) {
 	if verboseFlag {

@@ -1,5 +1,7 @@
 package command
 
+// TODO: adapt naming to task run change
+
 import (
 	"fmt"
 	"os"
@@ -52,6 +54,8 @@ func show(cmd *cobra.Command, args []string) {
 
 func showApp(arg string) {
 	var formatter format.Formatter
+
+	// TODO: show all tasks of the app
 
 	repo := MustFindRepository()
 	app := mustArgToApp(repo, arg)
@@ -119,62 +123,89 @@ func showApp(arg string) {
 	exitOnErr(err)
 }
 
-func showBuild(buildID int) {
+func vcsStr(v *storage.TaskRun) string {
+	if len(v.VCSRevision) == 0 {
+		return ""
+	}
+
+	if v.VCSIsDirty {
+		return fmt.Sprintf("%s-dirty", v.VCSRevision)
+	}
+
+	return v.VCSRevision
+}
+
+func showBuild(taskRunID int) {
 	var formatter format.Formatter
 
 	repo := MustFindRepository()
-	storageClt := MustGetPostgresClt(repo)
+	storageClt := mustNewCompatibleStorage(repo)
 
-	build, err := storageClt.GetBuildWithoutInputsOutputs(buildID)
+	taskRun, err := storageClt.TaskRun(ctx, taskRunID)
 	if err != nil {
 		if err == storage.ErrNotExist {
-			log.Fatalf("build with id %d does not exist\n", buildID)
+			log.Fatalf("task run with id %d does not exist\n", taskRunID)
 		}
 
 		log.Fatalln(err)
 	}
 
-	build.Outputs, err = storageClt.GetBuildOutputs(build.ID)
+	outputs, err := storageClt.Outputs(ctx, taskRun.ID)
 	exitOnErr(err)
 
 	formatter = table.New(nil, os.Stdout)
 
 	mustWriteRow(formatter, []interface{}{underline("General:")})
-	mustWriteRow(formatter, []interface{}{"", "Name:", highlight(build.Application.Name)})
-	mustWriteRow(formatter, []interface{}{"", "ID:", highlight(build.ID)})
+	mustWriteRow(formatter, []interface{}{"", "Application:", highlight(taskRun.ApplicationName)})
+	mustWriteRow(formatter, []interface{}{"", "Task:", highlight(taskRun.TaskName)})
+	mustWriteRow(formatter, []interface{}{"", "Run-ID:", highlight(taskRun.ID)})
 
-	mustWriteRow(formatter, []interface{}{"", "Started At:", highlight(build.StartTimeStamp)})
+	mustWriteRow(formatter, []interface{}{"", "Started At:", highlight(taskRun.StartTimestamp)})
 	mustWriteRow(formatter, []interface{}{
 		"",
 		"Build Duration:",
-		highlight(fmt.Sprintf("%.2f s", build.StopTimeStamp.Sub(build.StartTimeStamp).Seconds())),
+		highlight(fmt.Sprintf("%.2f s", taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds())),
 	})
 
-	mustWriteRow(formatter, []interface{}{"", "Git Commit:", highlight(vcsStr(&build.VCSState))})
+	mustWriteRow(formatter, []interface{}{"", "Git Commit:", highlight(vcsStr(&taskRun.TaskRun))})
 
-	mustWriteRow(formatter, []interface{}{"", "Total Input Digest:", highlight(build.TotalInputDigest)})
+	mustWriteRow(formatter, []interface{}{"", "Total Input Digest:", highlight(taskRun.TotalInputDigest)})
 
-	if len(build.Outputs) > 0 {
+	if len(outputs) > 0 {
 		mustWriteRow(formatter, []interface{}{})
 		mustWriteRow(formatter, []interface{}{underline("Outputs:")})
 	}
-	for i, o := range build.Outputs {
-		mustWriteRow(formatter, []interface{}{"", "URI:", highlight(o.Upload.URI)})
+
+	for i, o := range outputs {
+		mustWriteRow(formatter, []interface{}{"", "Local Path:", highlight(o.Name)})
 		mustWriteRow(formatter, []interface{}{"", "Digest:", highlight(o.Digest)})
 		mustWriteRow(formatter, []interface{}{
 			"",
 			"Size:",
 			highlight(bytesToMib(int(o.SizeBytes)) + " MiB"),
 		})
-		mustWriteRow(formatter, []interface{}{
-			"",
-			"Upload Duration:",
-			highlight(durationToStrSeconds(o.Upload.UploadDuration) + " s"),
-		})
 		mustWriteRow(formatter, []interface{}{"", "Type:", highlight(o.Type)})
-		mustWriteRow(formatter, []interface{}{"", "Upload Method:", highlight(o.Upload.Method)})
 
-		if i+1 < len(build.Outputs) {
+		mustWriteRow(formatter, []interface{}{})
+		mustWriteRow(formatter, []interface{}{"", underline("Uploads:")})
+
+		for uploadIdx, upload := range o.Uploads {
+			mustWriteRow(formatter, []interface{}{"", "", "URI:", highlight(upload.URI)})
+			mustWriteRow(formatter, []interface{}{
+				"",
+				"",
+				"Upload Duration:",
+				highlight(
+					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)) + " s"),
+			})
+			mustWriteRow(formatter, []interface{}{"", "", "Upload Method:", highlight(upload.Method)})
+
+			if uploadIdx+1 < len(o.Uploads) {
+				mustWriteRow(formatter, []interface{}{})
+			}
+		}
+
+		if i+1 < len(outputs) {
 			mustWriteRow(formatter, []interface{}{})
 		}
 	}

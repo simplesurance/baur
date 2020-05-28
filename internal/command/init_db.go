@@ -56,10 +56,10 @@ func initDb(cmd *cobra.Command, args []string) {
 		dbURL = args[0]
 	}
 
-	storageClt, err := getPostgresCltWithEnv(dbURL)
+	storageClt, err := newStorageClient(dbURL)
 	exitOnErr(err, "establishing connection failed")
 
-	err = storageClt.Init()
+	err = storageClt.Init(ctx)
 	exitOnErr(err)
 
 	fmt.Println("database tables created successfully")

@@ -1,214 +1,107 @@
 package storage
 
 import (
+	"context"
 	"errors"
-	"fmt"
-	"strings"
 	"time"
-)
-
-// ArtifactType describes the type of an artifact
-type ArtifactType string
-
-const (
-	//DockerArtifact is a docker image artifact
-	DockerArtifact ArtifactType = "docker"
-	//FileArtifact is a file artifact
-	FileArtifact ArtifactType = "file"
-)
-
-// UploadMethod describes the used upload mechanism
-type UploadMethod string
-
-// Description of UploadMethod Values
-const (
-	S3             UploadMethod = "s3"
-	DockerRegistry UploadMethod = "docker"
-	FileCopy       UploadMethod = "filecopy"
 )
 
 // ErrNotExist indicates that a record does not exist
 var ErrNotExist = errors.New("does not exist")
 
-// VCSState contains informations about the VCS at the time of the build
-type VCSState struct {
-	CommitID string
-	IsDirty  bool
-}
-
-// Application stores the name of the Application
-type Application struct {
-	ID   int
-	Name string
-}
-
-// Build represents a stored build
-type Build struct {
-	ID               int
-	Application      Application
-	VCSState         VCSState
-	StartTimeStamp   time.Time
-	StopTimeStamp    time.Time
-	TotalInputDigest string
-	Outputs          []*Output
-	Inputs           []*Input
-}
-
-// BuildWithDuration adds duration to a Build
-type BuildWithDuration struct {
-	Build
-	Duration time.Duration
-}
-
-// NameLower returns the app of the name in lowercase
-func (a *Application) NameLower() string {
-	return strings.ToLower(a.Name)
-}
-
-// Upload contains informations about an output upload
-type Upload struct {
-	ID             int
-	UploadDuration time.Duration
-	URI            string
-	Method         UploadMethod
-}
-
-// Output represents a build output
-type Output struct {
-	Name      string
-	Type      ArtifactType
-	Digest    string
-	SizeBytes int64
-	Upload    Upload
-}
-
-// Field represents data fields that can be used in sort and filter operations
-type Field int
-
-// Defines the available data fields
-const (
-	FieldUndefined Field = iota
-	FieldApplicationName
-	FieldBuildDuration
-	FieldBuildStartTime
-	FieldBuildID
-)
-
-func (f Field) String() string {
-	switch f {
-	case FieldApplicationName:
-		return "FieldApplicationName"
-	case FieldBuildDuration:
-		return "FieldBuildDuration"
-	case FieldBuildStartTime:
-		return "FieldBuildStartTime"
-	case FieldBuildID:
-		return "FieldBuildID"
-	default:
-		return "FieldUndefined"
-	}
-}
-
-// Input represents a source of an artifact
 type Input struct {
 	URI    string
 	Digest string
 }
 
-// Filter specifies filter operatons for queries
-type Filter struct {
-	Field    Field
-	Operator Op
-	Value    interface{}
-}
-
-// Op describes the filter operator
-type Op int
+// UploadMethod is the method that was used to upload the object
+type UploadMethod string
 
 const (
-	// OpEQ represents an equal (=) operator
-	OpEQ Op = iota
-	// OpGT represents a greater than (>) operator
-	OpGT
-	// OpLT represents a smaller than (<) operator
-	OpLT
-	// OpIN represents a In operator, works like the SQL IN operator, the
-	// corresponding Value field in The filter struct must be a slice
-	OpIN
+	UploadMethodS3             UploadMethod = "s3"
+	UploadMethodDockerRegistry UploadMethod = "docker"
+	UploadMethodFileCopy       UploadMethod = "filecopy"
 )
 
-func (o Op) String() string {
-	switch o {
-	case OpEQ:
-		return "OpEQ"
-	case OpGT:
-		return "OpGT"
-	default:
-		return "OpUndefined"
-	}
+// Upload contains informations about an output upload
+type Upload struct {
+	URI                  string
+	UploadStartTimestamp time.Time
+	UploadStopTimestamp  time.Time
+	Method               UploadMethod
 }
 
-// Order specifies the sort order
-type Order int
+// ArtifactType describes the type of an artifact
+type ArtifactType string
 
 const (
-	// SortInvalid represents an invalid sort value
-	SortInvalid Order = iota
-	// OrderAsc sorts ascending
-	OrderAsc
-	// OrderDesc sorts descending
-	OrderDesc
+	ArtifactTypeDocker ArtifactType = "docker"
+	ArtifactTypeFile   ArtifactType = "file"
 )
 
-func (s Order) String() string {
-	switch s {
-	case OrderAsc:
-		return "asc"
-	case OrderDesc:
-		return "desc"
-	default:
-		return "invalid"
-	}
+// Output represents a task output
+type Output struct {
+	Name      string
+	Type      ArtifactType
+	Digest    string
+	SizeBytes uint64
+	Uploads   []*Upload
 }
 
-//OrderFromStr converts a string to an Order
-func OrderFromStr(s string) (Order, error) {
-	switch strings.ToLower(s) {
-	case "asc":
-		return OrderAsc, nil
-	case "desc":
-		return OrderDesc, nil
-	default:
-		return SortInvalid, errors.New("undefined order")
-	}
+// Result is the result of a task run
+type Result string
+
+const (
+	ResultSuccess Result = "success"
+	ResultFailure Result = "failure"
+)
+
+type TaskRun struct {
+	ApplicationName  string
+	TaskName         string
+	VCSRevision      string
+	VCSIsDirty       bool
+	StartTimestamp   time.Time
+	StopTimestamp    time.Time
+	TotalInputDigest string
+	Result           Result
 }
 
-// Sorter specifies how the result of queries should be sorted
-type Sorter struct {
-	Field Field
-	Order Order
+type TaskRunFull struct {
+	TaskRun
+	Inputs  []*Input
+	Outputs []*Output
 }
 
-// String return the string representation
-func (s *Sorter) String() string {
-	return fmt.Sprintf("%s-%s", s.Field, s.Order)
+type TaskRunWithID struct {
+	ID int
+	TaskRun
 }
 
-// Storer is an interface for persisting informations about builds
+// Storer is an interface for storing and retrieving baur task runs
 type Storer interface {
-	Init() error
-	Save(b *Build) error
+	Close() error
 
-	GetApps() ([]*Application, error)
+	// Init initializes a storage, e.g. creating the database scheme
+	Init(context.Context) error
+	// IsCompatible verifies that the storage is compatible with the baur version
+	IsCompatible(context.Context) error
 
-	GetSameTotalInputDigestsForAppBuilds(appName string, startTs time.Time) (map[string][]int, error)
-	GetLatestBuildByDigest(appName, totalInputDigest string) (*BuildWithDuration, error)
+	SaveTaskRun(context.Context, *TaskRunFull) (id int, err error)
+	LatestTaskRunByDigest(ctx context.Context, appname, taskName, totalInputDigest string) (*TaskRunWithID, error)
 
-	GetBuildOutputs(buildID int) ([]*Output, error)
-	BuildExist(id int) (bool, error)
+	TaskRun(ctx context.Context, id int) (*TaskRunWithID, error)
+	// TaskRuns queries the storage for runs that match the filters.
+	// The found results are passed in iterative manner to the callback
+	// function. When the callback function returns an error, the iteration
+	// stops.
+	// When no matching records exist, the method returns ErrNotExist.
+	TaskRuns(ctx context.Context,
+		filters []*Filter,
+		sorters []*Sorter,
+		callback func(*TaskRunWithID) error,
+	) error
 
-	// GetBuildWithoutInputsOutputs returns a single build, if no build with the ID
-	// exist ErrNotExist is returned
-	GetBuildWithoutInputsOutputs(id int) (*BuildWithDuration, error)
-	GetBuildsWithoutInputsOutputs(filters []*Filter, sorters []*Sorter) ([]*BuildWithDuration, error)
+	Inputs(ctx context.Context, taskRunID int) ([]*Input, error)
+	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
 }

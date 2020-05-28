@@ -1,348 +1,399 @@
 package postgres
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
+	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/simplesurance/baur/storage"
 )
 
-func insertBuild(tx *sql.Tx, appID, vcsID int, b *storage.Build) (int, error) {
-	const stmt = `
-	INSERT INTO build
-	(application_id, vcs_id, start_timestamp, stop_timestamp, total_input_digest)
-	VALUES($1, $2, $3, $4, $5)
-	RETURNING id;`
+func strArgList(args ...interface{}) string {
+	var result strings.Builder
+
+	result.WriteRune('[')
+
+	for i, arg := range args {
+		fmt.Fprintf(&result, "'%v'", arg)
+
+		if i < len(args)-1 {
+			result.WriteString(", ")
+		}
+	}
+
+	result.WriteRune(']')
+
+	return result.String()
+}
+
+// queryValueStr returns the argument for an SQL VALUES statement with
+// enumerated parameters.
+// It creates pairsCount "($n, $n+1, $n+...)" string pairs, with argsPerPair
+// values per pair.
+func queryValueStr(pairsCount, argsPerPair int) string {
+	var res strings.Builder
+
+	// allocation size is not exact but better then no preallocation:
+	// 4 Bytes per parameter '$nn,' +
+	// 4 bytes for the opening bracket, closing bracket, commata and space
+	res.Grow((argsPerPair * 4) + (pairsCount * 3))
+
+	argNr := 1
+	for i := 0; i < pairsCount; i++ {
+		if i > 0 {
+			res.WriteRune(' ')
+		}
+
+		res.WriteRune('(')
+
+		for j := 0; j < argsPerPair; j++ {
+			fmt.Fprintf(&res, "$%d", argNr)
+			argNr++
+
+			if j < argsPerPair-1 {
+				res.WriteString(", ")
+			}
+		}
+
+		res.WriteRune(')')
+
+		if i < pairsCount-1 {
+			res.WriteString(", ")
+		}
+	}
+
+	return res.String()
+}
+
+func scanIDs(rows pgx.Rows, res *[]int) error {
+	for rows.Next() {
+		var id int
+
+		err := rows.Scan(&id)
+		if err != nil {
+			rows.Close()
+			return err
+		}
+
+		*res = append(*res, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func insertAppIfNotExist(ctx context.Context, db dbConn, appName string) (int, error) {
+	const query = `
+	   INSERT INTO application (name)
+	   VALUES ($1)
+	       ON CONFLICT ON CONSTRAINT application_name_uniq
+	       DO UPDATE SET id=application.id
+	RETURNING id
+	`
 
 	var id int
 
-	r := tx.QueryRow(stmt, appID, vcsID, b.StartTimeStamp, b.StopTimeStamp, b.TotalInputDigest)
-
-	if err := r.Scan(&id); err != nil {
-		return -1, err
+	if err := db.QueryRow(ctx, query, appName).Scan(&id); err != nil {
+		return -1, newQueryError(query, err, appName)
 	}
 
 	return id, nil
 }
 
-func insertBuildOutputs(tx *sql.Tx, buildID int, outputIDs []int) ([]int, error) {
-	const stmt1 = "INSERT INTO build_output(build_id, output_id) VALUES"
-	const stmt2 = "RETURNING ID"
+func insertTaskIfNotExist(ctx context.Context, db dbConn, appName, taskName string) (int, error) {
+	var id int
 
-	var ids []int
-	var stmtVals string
-
-	for i, outputID := range outputIDs {
-		stmtVals += fmt.Sprintf("(%d, %d)", buildID, outputID)
-
-		if i < len(outputIDs)-1 {
-			stmtVals += ", "
-		}
-	}
-
-	query := stmt1 + stmtVals + stmt2
-	rows, err := tx.Query(query)
+	appID, err := insertAppIfNotExist(ctx, db, appName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "db query %q failed", query)
+		return -1, err
 	}
 
-	for rows.Next() {
-		var id int
-
-		err := rows.Scan(&id)
-		if err != nil {
-			rows.Close()
-			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
-		}
-
-		ids = append(ids, id)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, errors.Wrap(err, "iterating over rows failed")
-	}
-
-	return ids, nil
-}
-
-func insertOutputsIfNotExist(tx *sql.Tx, outputs []*storage.Output) ([]int, error) {
-	const stmt1 = "INSERT INTO output (name, type, digest, size_bytes) VALUES"
-	const stmt2 = `
-	ON CONFLICT ON CONSTRAINT output_digest_key
-	DO UPDATE SET id=output.id RETURNING id
+	const query = `
+	   INSERT INTO task (name, application_id)
+	   VALUES ($1, $2)
+	       ON CONFLICT ON CONSTRAINT task_name_application_id_uniq
+	       DO UPDATE SET id=task.id
+	RETURNING id
 	`
 
-	var (
-		argCNT    = 1
-		stmtVals  string
-		queryArgs = make([]interface{}, 0, len(outputs)*4)
-		ids       = make([]int, 0, len(outputs))
-	)
-
-	for i, out := range outputs {
-		stmtVals += fmt.Sprintf("($%d, $%d, $%d, $%d)", argCNT, argCNT+1, argCNT+2, argCNT+3)
-		argCNT += 4
-		queryArgs = append(queryArgs, out.Name, out.Type, out.Digest, out.SizeBytes)
-
-		if i < len(outputs)-1 {
-			stmtVals += ", "
-		}
-	}
-	query := stmt1 + stmtVals + stmt2
-
-	rows, err := tx.Query(query, queryArgs...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "db query %q failed", query)
+	if err := db.QueryRow(ctx, query, taskName, appID).Scan(&id); err != nil {
+		return -1, newQueryError(query, err, appName, taskName)
 	}
 
-	for rows.Next() {
-		var id int
-
-		err := rows.Scan(&id)
-		if err != nil {
-			rows.Close()
-			return nil, errors.Wrapf(err, "parsing result of query %q failed", query)
-		}
-
-		ids = append(ids, id)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, errors.Wrap(err, "iterating over rows failed")
-	}
-
-	return ids, nil
+	return id, nil
 }
 
-func insertInputBuilds(tx *sql.Tx, buildID int, inputIDs []int) error {
+func insertVCSIfNotExist(ctx context.Context, db dbConn, revision string, isDirty bool) (int, error) {
+	const query = `
+	   INSERT INTO vcs (revision, dirty)
+	   VALUES ($1, $2)
+	       ON CONFLICT ON CONSTRAINT vcs_revision_dirty_uniq
+	       DO UPDATE SET id=vcs.id
+	RETURNING id
+	`
+
+	var id int
+
+	if err := db.QueryRow(ctx, query, revision, isDirty).Scan(&id); err != nil {
+		return -1, newQueryError(query, err, revision, isDirty)
+	}
+
+	return id, nil
+}
+
+func insertInputIfNotExist(ctx context.Context, db dbConn, inputs []*storage.Input) ([]int, error) {
 	const stmt1 = `
-		INSERT into input_build
-		(build_id, input_id)
-		VALUES
+           INSERT INTO input (uri, digest)
+	   VALUES
+`
+	const stmt2 = `
+	       ON CONFLICT ON CONSTRAINT input_uri_digest_uniq
+	       DO UPDATE SET id=input.id
+	RETURNING id
 	`
 
-	var stmtVals string
-	argCNT := 1
-	queryArgs := make([]interface{}, 0, len(inputIDs))
+	stmtVals := queryValueStr(len(inputs), 2)
 
-	queryArgs = append(queryArgs, buildID)
-	argCNT++
+	queryArgs := make([]interface{}, 0, len(inputs)*2)
+	for _, in := range inputs {
+		queryArgs = append(queryArgs, in.URI, in.Digest)
+	}
 
-	for i, id := range inputIDs {
-		stmtVals += fmt.Sprintf("($1, $%d)", argCNT)
-		argCNT++
+	query := stmt1 + stmtVals + " " + stmt2
 
-		queryArgs = append(queryArgs, id)
+	rows, err := db.Query(ctx, query, queryArgs...)
+	if err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	ids := make([]int, 0, len(inputs))
+	if err := scanIDs(rows, &ids); err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	return ids, nil
+}
+
+func insertTaskRunInputsIfNotExist(ctx context.Context, db dbConn, taskRunID int, taskRun *storage.TaskRunFull) error {
+	const stmt1 = `
+	INSERT INTO task_run_input (task_run_id, total_digest, input_id)
+	VALUES
+	`
+
+	inputIDs, err := insertInputIfNotExist(ctx, db, taskRun.Inputs)
+	if err != nil {
+		return err
+	}
+
+	var stmtVals strings.Builder
+	argNr := 3
+	for i := 0; i < len(inputIDs); i++ {
+		fmt.Fprintf(&stmtVals, "($1, $2, $%d)", argNr)
+		argNr++
 
 		if i < len(inputIDs)-1 {
-			stmtVals += ", "
+			stmtVals.WriteString(", ")
 		}
+	}
+
+	queryArgs := make([]interface{}, 2, (len(inputIDs)*2)+2)
+	queryArgs[0] = taskRunID
+	queryArgs[1] = taskRun.TotalInputDigest
+
+	for _, inputID := range inputIDs {
+		queryArgs = append(queryArgs, inputID)
+	}
+
+	query := stmt1 + stmtVals.String()
+
+	_, err = db.Exec(ctx, query, queryArgs...)
+	if err != nil {
+		return newQueryError(query, err, queryArgs...)
+	}
+
+	return nil
+}
+
+func insertUploads(ctx context.Context, db dbConn, uploads []*storage.Upload) ([]int, error) {
+	const stmt1 = `
+	INSERT into upload (uri, method, start_timestamp, stop_timestamp)
+	VALUES`
+	const stmt2 = "RETURNING id"
+
+	stmtVals := queryValueStr(len(uploads), 4)
+
+	queryArgs := make([]interface{}, 0, len(uploads)*4)
+	for _, upload := range uploads {
+		queryArgs = append(
+			queryArgs,
+			upload.URI, upload.Method, upload.UploadStartTimestamp, upload.UploadStopTimestamp,
+		)
+	}
+
+	query := stmt1 + stmtVals + " " + stmt2
+
+	rows, err := db.Query(ctx, query, queryArgs...)
+	if err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	ids := make([]int, 0, len(uploads))
+	if err := scanIDs(rows, &ids); err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	return ids, err
+}
+
+func insertOutputIfNotExist(ctx context.Context, db dbConn, output *storage.Output) (int, error) {
+	const query = `
+	   INSERT INTO output (name, type, digest, size_bytes)
+	   VALUES($1, $2, $3, $4)
+	       ON CONFLICT ON CONSTRAINT output_name_type_digest_size_bytes_uniq
+	       DO UPDATE SET id=output.id
+	RETURNING id
+	`
+
+	var id int
+
+	queryArgs := []interface{}{
+		output.Name,
+		output.Type,
+		output.Digest,
+		output.SizeBytes,
+	}
+
+	err := db.QueryRow(
+		ctx,
+		query,
+		queryArgs...,
+	).Scan(&id)
+	if err != nil {
+		return -1, newQueryError(query, err, queryArgs...)
+	}
+
+	return id, nil
+}
+
+func insertTaskOutputsIfNotExist(ctx context.Context, db dbConn, taskRunID int, outputs []*storage.Output) error {
+	if len(outputs) == 0 {
+		return nil
+	}
+
+	type taskOutput struct {
+		outputID int
+		uploadID int
+	}
+
+	var records []*taskOutput
+
+	for _, output := range outputs {
+		outputID, err := insertOutputIfNotExist(ctx, db, output)
+		if err != nil {
+			return err
+		}
+
+		uploadIDs, err := insertUploads(ctx, db, output.Uploads)
+		if err != nil {
+			return err
+		}
+
+		for _, uploadID := range uploadIDs {
+			records = append(records, &taskOutput{
+				outputID: outputID,
+				uploadID: uploadID,
+			})
+		}
+	}
+
+	const stmt1 = "INSERT INTO task_run_output (task_run_id, output_id, upload_id) VALUES"
+
+	stmtVals := queryValueStr(len(records), 3)
+
+	queryArgs := make([]interface{}, 0, len(records)*3)
+	for _, record := range records {
+		queryArgs = append(queryArgs, taskRunID, record.outputID, record.uploadID)
 	}
 
 	query := stmt1 + stmtVals
 
-	_, err := tx.Exec(query, queryArgs...)
+	_, err := db.Exec(ctx, query, queryArgs...)
 	if err != nil {
-		return errors.Wrapf(err, "db query %q failed", query)
+		return newQueryError(query, err, queryArgs...)
 	}
 
 	return nil
 }
 
-func insertInputsIfNotExist(tx *sql.Tx, inputs []*storage.Input) ([]int, error) {
-	const stmt1 = "INSERT INTO input (uri, digest) VALUES"
-	const stmt2 = `
-	ON CONFLICT ON CONSTRAINT input_uniq
-	DO UPDATE SET id=input.id RETURNING id
-	`
-	var (
-		stmtVals string
+func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.TaskRunFull) (int, error) {
+	const query = `
+		   INSERT INTO task_run (vcs_id, task_id, start_timestamp, stop_timestamp, result)
+		   VALUES($1, $2, $3, $4, $5)
+		RETURNING ID
+		`
 
-		argCNT    = 1
-		queryArgs = make([]interface{}, 0, len(inputs)*2)
-		ids       = make([]int, 0, len(inputs))
-	)
+	var taskRunID int
 
-	for i, in := range inputs {
-		stmtVals += fmt.Sprintf("($%d, $%d)", argCNT, argCNT+1)
-		argCNT += 2
-		queryArgs = append(queryArgs, in.URI, in.Digest)
-
-		if i < len(inputs)-1 {
-			stmtVals += ", "
-		}
-	}
-
-	query := stmt1 + stmtVals + stmt2
-
-	rows, err := tx.Query(query, queryArgs...)
+	vcsID, err := insertVCSIfNotExist(ctx, tx, taskRun.VCSRevision, taskRun.VCSIsDirty)
 	if err != nil {
-		return nil, errors.Wrapf(err, "db query %q failed", query)
+		return -1, fmt.Errorf("storing vcs record failed: %w", err)
 	}
 
-	for rows.Next() {
-		var id int
-
-		err := rows.Scan(&id)
-		if err != nil {
-			rows.Close()
-			return nil, errors.Wrapf(err, "db query %q failed", query)
-		}
-
-		ids = append(ids, id)
+	taskID, err := insertTaskIfNotExist(ctx, tx, taskRun.ApplicationName, taskRun.TaskName)
+	if err != nil {
+		return -1, fmt.Errorf("storing task record failed: %w", err)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, errors.Wrap(err, "iterating over rows failed")
+	queryArgs := []interface{}{
+		vcsID,
+		taskID,
+		taskRun.StartTimestamp,
+		taskRun.StopTimestamp,
+		taskRun.Result,
 	}
 
-	return ids, nil
+	err = tx.QueryRow(
+		ctx,
+		query,
+		queryArgs...,
+	).Scan(&taskRunID)
+	if err != nil {
+		return -1, newQueryError(query, err, queryArgs...)
+	}
 
+	err = insertTaskRunInputsIfNotExist(ctx, tx, taskRunID, taskRun)
+	if err != nil {
+		return -1, err
+	}
+
+	err = insertTaskOutputsIfNotExist(ctx, tx, taskRunID, taskRun.Outputs)
+	if err != nil {
+		return -1, err
+	}
+
+	return taskRunID, nil
 }
 
-func insertVCSIfNotExist(tx *sql.Tx, v *storage.VCSState) (int, error) {
-	const stmt = `
-	INSERT INTO vcs
-	(commit, dirty)
-	VALUES($1, $2)
-	ON CONFLICT ON CONSTRAINT vcs_uniq
-	DO UPDATE SET id=vcs.id RETURNING id
-	`
-	var id int
-
-	err := tx.QueryRow(stmt, v.CommitID, v.IsDirty).Scan(&id)
+func (c *Client) SaveTaskRun(ctx context.Context, taskRun *storage.TaskRunFull) (int, error) {
+	tx, err := c.db.Begin(ctx)
 	if err != nil {
-		return -1, errors.Wrapf(err, "db query %q failed", stmt)
+		return -1, err
+	}
+
+	id, err := c.saveTaskRun(ctx, tx, taskRun)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return -1, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return -1, err
 	}
 
 	return id, nil
-}
-
-func insertAppIfNotExist(tx *sql.Tx, app *storage.Application) error {
-	const stmt = `
-	INSERT INTO application
-	(name)
-	VALUES($1)
-	ON CONFLICT ON CONSTRAINT application_name_key
-	DO UPDATE SET id=application.id RETURNING id
-	`
-
-	err := tx.QueryRow(stmt, app.NameLower()).Scan(&app.ID)
-	if err != nil {
-		return errors.Wrapf(err, "db query %q failed", stmt)
-	}
-
-	return nil
-}
-
-func insertUploads(tx *sql.Tx, buildOutputIDs []int, outputs []*storage.Output) error {
-	const stmt = `
-	INSERT into upload
-	(build_output_id, uri, method, upload_duration_ns)
-	VALUES
-	`
-
-	var (
-		stmtVals  string
-		argCNT    = 1
-		queryArgs = make([]interface{}, 0, len(outputs)*4)
-	)
-
-	// TODO: retrieve the ID from the insert and set it in out.Upload
-	if len(outputs) != len(buildOutputIDs) {
-		return fmt.Errorf("output (%d) and buildOutputIDs (%d) slices are not of same length",
-			len(outputs), len(buildOutputIDs))
-	}
-
-	for i, out := range outputs {
-		stmtVals += fmt.Sprintf("($%d, $%d,$%d, $%d)", argCNT, argCNT+1, argCNT+2, argCNT+3)
-		argCNT += 4
-		queryArgs = append(queryArgs, buildOutputIDs[i], out.Upload.URI, out.Upload.Method, out.Upload.UploadDuration)
-
-		if i < len(outputs)-1 {
-			stmtVals += ", "
-		}
-	}
-
-	query := stmt + stmtVals
-
-	_, err := tx.Exec(query, queryArgs...)
-	if err != nil {
-		return errors.Wrapf(err, "db query %q failed", query)
-	}
-
-	return err
-}
-
-// Save stores a build in the database, the ID field of the passed Build is
-// ignored. The database generates a record ID and it will be stored in the
-// passed Build.
-func (c *Client) Save(b *storage.Build) error {
-	tx, err := c.Db.Begin()
-	if err != nil {
-		return errors.Wrap(err, "starting transaction failed")
-	}
-
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback()
-			return
-		}
-
-		commitErr := tx.Commit()
-		if commitErr != nil {
-			err = errors.Wrap(err, "committing transaction failed")
-		}
-	}()
-
-	err = insertAppIfNotExist(tx, &b.Application)
-	if err != nil {
-		return errors.Wrap(err, "storing application record failed")
-	}
-
-	vcsID, err := insertVCSIfNotExist(tx, &b.VCSState)
-	if err != nil {
-		return errors.Wrap(err, "storing vcs information failed")
-	}
-
-	buildID, err := insertBuild(tx, b.Application.ID, vcsID, b)
-	if err != nil {
-		return errors.Wrap(err, "storing build record failed")
-	}
-
-	outputIDs, err := insertOutputsIfNotExist(tx, b.Outputs)
-	if err != nil {
-		return errors.Wrap(err, "storing output records failed")
-	}
-
-	buildOutputIDs, err := insertBuildOutputs(tx, buildID, outputIDs)
-	if err != nil {
-		return errors.Wrap(err, "storing buildOutput records failed")
-	}
-
-	err = insertUploads(tx, buildOutputIDs, b.Outputs)
-	if err != nil {
-		return errors.Wrap(err, "storing upload record failed")
-	}
-
-	// inputs not specified in the baur app config
-	if len(b.Inputs) == 0 {
-		return nil
-	}
-
-	ids, err := insertInputsIfNotExist(tx, b.Inputs)
-	if err != nil {
-		return errors.Wrap(err, "storing inputs failed")
-	}
-
-	err = insertInputBuilds(tx, buildID, ids)
-	if err != nil {
-		return errors.Wrap(err, "storing input_build failed")
-	}
-
-	b.ID = buildID
-
-	return nil
 }

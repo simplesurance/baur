@@ -71,10 +71,10 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	return apps[0]
 }
 
-// getPostgresCltWithEnv returns a new postresql storage client,
-// if the environment variable BAUR_PSQL_URI is set, this uri is used instead of
-// the configuration specified in the baur.Repository object
-func getPostgresCltWithEnv(psqlURI string) (*postgres.Client, error) {
+// newStorageClient creates a new postgresql storage client.
+// If the environment variable BAUR_PSQL_URI is set, this uri is used instead
+// of the configuration specified in the baur.Repository object
+func newStorageClient(psqlURI string) (storage.Storer, error) {
 	uri := psqlURI
 
 	if envURI := os.Getenv(envVarPSQLURL); len(envURI) != 0 {
@@ -86,7 +86,16 @@ func getPostgresCltWithEnv(psqlURI string) (*postgres.Client, error) {
 		log.Debugf("environment variable $%s not set", envVarPSQLURL)
 	}
 
-	return postgres.New(uri)
+	var logger postgres.Logger
+	if verboseFlag {
+		logger = log.StdLogger
+	}
+
+	client, err := postgres.New(ctx, uri, logger)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 //mustHavePSQLURI calls log.Fatalf if neither envVarPSQLURL nor the postgres_url
@@ -103,28 +112,20 @@ func mustHavePSQLURI(r *baur.Repository) {
 	}
 }
 
-// MustGetPostgresClt must return the PG client
-func MustGetPostgresClt(r *baur.Repository) *postgres.Client {
+// mustNewCompatibleStorage initializes a new postgresql storage client.
+// The function ensures that the storage is compatible.
+func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
 	mustHavePSQLURI(r)
 
-	clt, err := getPostgresCltWithEnv(r.PSQLURL)
-	if err != nil {
-		log.Fatalf("could not establish connection to postgreSQL db: %s", err)
+	clt, err := newStorageClient(r.PSQLURL)
+	exitOnErr(err, "creating postgresql storage client failed")
+
+	if err := clt.IsCompatible(ctx); err != nil {
+		clt.Close()
+		exitOnErr(err)
 	}
 
 	return clt
-}
-
-func vcsStr(v *storage.VCSState) string {
-	if len(v.CommitID) == 0 {
-		return ""
-	}
-
-	if v.IsDirty {
-		return fmt.Sprintf("%s-dirty", v.CommitID)
-	}
-
-	return v.CommitID
 }
 
 func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {

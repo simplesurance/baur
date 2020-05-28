@@ -1,131 +1,287 @@
 package postgres
 
 import (
-	"database/sql"
+	"context"
+	"errors"
 	"fmt"
-	"reflect"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/simplesurance/baur/storage"
 )
 
-// sqlFieldMap contains a mapping from storage.Fields to table column names
-// todo inject fieldsMap in Compile() so one can set these manually each time
-var sqlFieldMap = map[storage.Field]string{
-	storage.FieldApplicationName: "application.name",
-	storage.FieldBuildDuration:   "duration",
-	storage.FieldBuildStartTime:  "build.start_timestamp",
-	storage.FieldBuildID:         "build.id",
-}
+func (c *Client) TaskRun(ctx context.Context, id int) (*storage.TaskRunWithID, error) {
+	var taskRun *storage.TaskRunWithID
 
-// sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
-var sqlOperatorMap = map[storage.Op]string{
-	storage.OpEQ: "=",
-	storage.OpGT: ">",
-	storage.OpLT: "<",
-	storage.OpIN: "= ANY",
-}
-
-// sqlOperatorMap is a mapping from storage.OPs to postgreSQL operator strings
-var sqlOrderDirectionMap = map[storage.Order]string{
-	storage.OrderAsc:  "ASC",
-	storage.OrderDesc: "DESC",
-}
-
-// RowScanFunc should run rows.Scan and return a value for that row
-type RowScanFunc func(rows *sql.Rows) (interface{}, error)
-
-// Query is the sql query struct
-type Query struct {
-	BaseQuery string
-	Filters   []*storage.Filter
-	Sorters   []*storage.Sorter
-}
-
-func toPQType(val interface{}) interface{} {
-	valType := reflect.TypeOf(val).Kind()
-
-	if valType == reflect.Slice || valType == reflect.Array {
-		return pq.Array(val)
+	idFilter := []*storage.Filter{
+		{
+			Field:    storage.FieldID,
+			Operator: storage.OpEQ,
+			Value:    id,
+		},
 	}
 
-	return val
-}
+	err := c.TaskRuns(ctx, idFilter, nil, func(tr *storage.TaskRunWithID) error {
+		taskRun = tr
 
-func (q *Query) compileFilterStr() (filterStr string, args []interface{}, err error) {
-	if len(q.Filters) == 0 {
-		return
-	}
+		return nil
+	})
 
-	filterStr = "WHERE "
-	for i, f := range q.Filters {
-		field, exist := sqlFieldMap[f.Field]
-		if !exist {
-			return "", nil, fmt.Errorf("no postgresql mapping for storage field %s exists", f.Field)
-		}
-
-		op, exist := sqlOperatorMap[f.Operator]
-		if !exist {
-			return "", nil, fmt.Errorf("no postgresql mapping for storage operator %s exists", f.Operator)
-		}
-
-		// the parenthesis around $%d are needed for the ANY query, the
-		// syntax is also valid for all other supported filters
-		filterStr += fmt.Sprintf("%s %s ($%d)", field, op, i+1)
-		args = append(args, toPQType(f.Value))
-
-		if i+1 < len(q.Filters) {
-			filterStr += " AND "
-		}
-	}
-
-	return
-}
-
-func (q *Query) compileSorterStr() (string, error) {
-	if len(q.Sorters) == 0 {
-		return "", nil
-	}
-
-	var sorterStr = "ORDER BY "
-	for i, f := range q.Sorters {
-		field, exist := sqlFieldMap[f.Field]
-		if !exist {
-			return "", fmt.Errorf("no postgresql mapping for storage field %s exists", f.Field)
-		}
-
-		dir, exist := sqlOrderDirectionMap[f.Order]
-		if !exist {
-			return "", fmt.Errorf("no postgresql mapping for storage order direction %s exists", f.Order)
-		}
-
-		sorterStr += fmt.Sprintf("%s %s", field, dir)
-
-		if i+1 < len(q.Sorters) {
-			sorterStr += ",  "
-		}
-	}
-
-	return sorterStr, nil
-}
-
-// Compile compiles the actual sql query
-// and returns it along with the query params
-func (q *Query) Compile() (query string, args []interface{}, err error) {
-	if len(q.Filters) == 0 && len(q.Sorters) == 0 {
-		return q.BaseQuery, nil, nil
-	}
-
-	filterStr, args, err := q.compileFilterStr()
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	orderStr, err := q.compileSorterStr()
+	if taskRun == nil {
+		panic("TaskRuns returned a nil TaskRunWithID and nil error")
+	}
+
+	return taskRun, nil
+}
+
+func (c *Client) LatestTaskRunByDigest(ctx context.Context, appName, taskName, totalInputDigest string) (*storage.TaskRunWithID, error) {
+	// TODO: improve the query, retrieving the newest record via LIMIT should be slow
+	const query = `
+	SELECT task_run.id,
+	       application.name,
+	       task.name,
+	       vcs.revision,
+	       vcs.dirty,
+	       task_run_input.total_digest,
+	       task_run.start_timestamp,
+	       task_run.stop_timestamp,
+	       task_run.result
+	  FROM application
+	  JOIN task ON application.id = task.application_id
+	  JOIN task_run ON task.id = task_run.task_id
+	  JOIN task_run_input ON task_run_input.task_run_id = task_run.id
+	  LEFT OUTER JOIN vcs ON vcs.id = task_run.vcs_id
+	 WHERE application.name = $1
+	   AND task.name = $2
+	   AND task_run_input.total_digest = $3
+	 ORDER BY task_run.stop_timestamp DESC
+	 LIMIT 1
+	 `
+
+	var result storage.TaskRunWithID
+
+	row := c.db.QueryRow(ctx, query, appName, taskName, totalInputDigest)
+
+	err := row.Scan(
+		&result.ID,
+		&result.ApplicationName,
+		&result.TaskName,
+		&result.VCSRevision,
+		&result.VCSIsDirty,
+		&result.TotalInputDigest,
+		&result.StartTimestamp,
+		&result.StopTimestamp,
+		&result.Result,
+	)
 	if err != nil {
-		return "", nil, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(appName, taskName, totalInputDigest), err)
 	}
 
-	return fmt.Sprintf("%s %s %s", q.BaseQuery, filterStr, orderStr), args, nil
+	return &result, nil
+}
+
+func (c *Client) Inputs(ctx context.Context, taskRunID int) ([]*storage.Input, error) {
+	const query = `
+	SELECT input.uri,
+	       input.digest
+	  FROM input
+	  JOIN task_run_input ON input.id = task_run_input.input_id
+	  WHERE task_run_input.task_run_id = $1
+	  `
+
+	var result []*storage.Input
+
+	rows, err := c.db.Query(ctx, query, taskRunID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	for rows.Next() {
+		var input storage.Input
+
+		if err := rows.Scan(&input.URI, &input.Digest); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+		}
+
+		result = append(result, &input)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	if len(result) == 0 {
+		return nil, storage.ErrNotExist
+	}
+
+	return result, nil
+}
+
+func (c *Client) Outputs(ctx context.Context, taskRunID int) ([]*storage.Output, error) {
+	const query = `
+	SELECT output.id,
+	       output.name,
+	       output.type,
+	       output.digest,
+	       output.size_bytes,
+	       upload.uri,
+	       upload.method,
+	       upload.start_timestamp,
+	       upload.stop_timestamp
+	  FROM output
+	  JOIN task_run_output ON task_run_output.output_id = output.id
+	  JOIN upload ON upload.id = task_run_output.upload_id
+	 WHERE task_run_output.task_run_id = $1
+	 `
+
+	resMap := map[int]*storage.Output{}
+
+	rows, err := c.db.Query(ctx, query, taskRunID)
+	if err != nil {
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	for rows.Next() {
+		var upload storage.Upload
+		var outputID int
+		output := &storage.Output{}
+
+		err := rows.Scan(
+			&outputID,
+			&output.Name,
+			&output.Type,
+			&output.Digest,
+			&output.SizeBytes,
+			&upload.URI,
+			&upload.Method,
+			&upload.UploadStartTimestamp,
+			&upload.UploadStopTimestamp,
+		)
+		if err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+		}
+
+		if rec := resMap[outputID]; rec == nil {
+			resMap[outputID] = output
+		} else {
+			output = rec
+		}
+
+		output.Uploads = append(output.Uploads, &upload)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	if len(resMap) == 0 {
+		return nil, storage.ErrNotExist
+	}
+
+	result := make([]*storage.Output, 0, len(resMap))
+	for _, output := range resMap {
+		result = append(result, output)
+	}
+
+	return result, nil
+}
+
+func (c *Client) TaskRuns(
+	ctx context.Context,
+	filters []*storage.Filter,
+	sorters []*storage.Sorter,
+	cb func(*storage.TaskRunWithID) error,
+) error {
+	const queryStr = `
+	SELECT *
+	  FROM (
+	       SELECT DISTINCT ON (task_run.id)
+		      task_run.id AS task_run_id,
+	              application.name AS application_name,
+	              task.name AS task_name,
+	              vcs.revision,
+	              vcs.dirty,
+	              task_run_input.total_digest,
+	              task_run.start_timestamp AS start_timestamp,
+	              task_run.stop_timestamp,
+	              task_run.result,
+	              (EXTRACT(EPOCH FROM (task_run.stop_timestamp - task_run.start_timestamp))::bigint * 1000000000) AS duration
+	         FROM application
+	         JOIN task ON application.id = task.application_id
+	         JOIN task_run ON task.id = task_run.task_id
+	         JOIN task_run_input ON task_run_input.task_run_id = task_run.id
+	         LEFT OUTER JOIN vcs ON vcs.id = task_run.vcs_id
+	       ) tr
+	  `
+
+	var queryReturnedRows bool
+
+	q := query{
+		BaseQuery: queryStr,
+		Filters:   filters,
+		Sorters:   sorters,
+	}
+
+	query, args, err := q.Compile()
+	if err != nil {
+		return fmt.Errorf("compiling query string failed: %w", err)
+	}
+
+	rows, err := c.db.Query(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
+	}
+
+	for rows.Next() {
+		var taskRun storage.TaskRunWithID
+
+		queryReturnedRows = true
+
+		err := rows.Scan(
+			&taskRun.ID,
+			&taskRun.ApplicationName,
+			&taskRun.TaskName,
+			&taskRun.VCSRevision,
+			&taskRun.VCSIsDirty,
+			&taskRun.TotalInputDigest,
+			&taskRun.StartTimestamp,
+			&taskRun.StopTimestamp,
+			&taskRun.Result,
+			nil, // skip scanning of duration value, it's only used for filtering and sorting
+		)
+
+		if err != nil {
+			rows.Close()
+			return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
+		}
+
+		if err := cb(&taskRun); err != nil {
+			rows.Close()
+			return fmt.Errorf("callback failed: %w", err)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
+	}
+
+	if !queryReturnedRows {
+		return storage.ErrNotExist
+	}
+
+	return nil
 }
