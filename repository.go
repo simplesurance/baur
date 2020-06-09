@@ -12,12 +12,12 @@ import (
 
 // Repository represents an repository containing applications
 type Repository struct {
-	Path          string
-	CfgPath       string
-	Cfg           *cfg.Repository
-	AppSearchDirs []string
-	SearchDepth   int
-	PSQLURL       string
+	Path        string
+	CfgPath     string
+	Cfg         *cfg.Repository
+	SearchDepth int
+	// TODO: remove PSQLURL
+	PSQLURL string
 }
 
 // FindRepositoryCfg searches for a repository config file. The search starts in
@@ -55,18 +55,11 @@ func NewRepository(cfgPath string) (*Repository, error) {
 	repoPath := path.Dir(cfgPath)
 
 	r := Repository{
-		Cfg:           repoCfg,
-		CfgPath:       cfgPath,
-		Path:          repoPath,
-		AppSearchDirs: fs.PathsJoin(repoPath, repoCfg.Discover.Dirs),
-		SearchDepth:   repoCfg.Discover.SearchDepth,
-		PSQLURL:       repoCfg.Database.PGSQLURL,
-	}
-
-	err = fs.DirsExist(r.AppSearchDirs...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "validating repository config %q failed, "+
-			"application_dirs parameter is invalid", cfgPath)
+		Cfg:         repoCfg,
+		CfgPath:     cfgPath,
+		Path:        repoPath,
+		SearchDepth: repoCfg.Discover.SearchDepth,
+		PSQLURL:     repoCfg.Database.PGSQLURL,
 	}
 
 	return &r, nil
