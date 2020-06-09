@@ -32,30 +32,26 @@ var (
 
 func findRepository() (*baur.Repository, error) {
 	log.Debugln("searching for repository config...")
-
 	path, err := baur.FindRepositoryCfgCwd()
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			log.Fatalf("baur repository not found, ensure a %q file exist in the current or a parent directory\n",
-				baur.RepositoryCfgFile)
-		}
-
-		log.Fatalln("finding baur repository failed:", err)
+		return nil, err
 	}
 
 	log.Debugf("repository config found: %q", path)
 
-	repo, err := baur.NewRepository(path)
-	exitOnErr(err)
-
-	return repo, nil
+	return baur.NewRepository(path)
 }
 
 // MustFindRepository must find repo
 func MustFindRepository() *baur.Repository {
 	repo, err := findRepository()
 	if err != nil {
-		log.Fatalln(err)
+		if errors.Is(err, os.ErrNotExist) {
+			log.Fatalf("baur repository not found, ensure a %q file exist in the current or a parent directory\n",
+				baur.RepositoryCfgFile)
+		}
+
+		log.Fatalln("locating baur repository failed:", err)
 	}
 
 	return repo
