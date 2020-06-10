@@ -146,7 +146,7 @@ func whitelistedEnv() []string {
 
 func (r *Resolver) resolve(path, goroot string, env []string) ([]string, error) {
 	cfg := &packages.Config{
-		Mode: packages.LoadImports,
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports,
 		Dir:  path,
 		Env:  env,
 	}
