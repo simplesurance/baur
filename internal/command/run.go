@@ -9,9 +9,9 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/git"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
-	"github.com/simplesurance/baur/term"
 	"github.com/simplesurance/baur/upload/docker"
 	"github.com/simplesurance/baur/upload/filecopy"
 	"github.com/simplesurance/baur/upload/s3"
@@ -37,9 +37,8 @@ func dockerClient() *docker.Client {
 		log.Debugf("environment variable %s not set", dockerEnvUsernameVar)
 		client, err = docker.NewClient(log.StdLogger.Debugf)
 	}
-	if err != nil {
-		log.Fatalln(err)
-	}
+
+	exitOnErr(err)
 
 	return client
 
@@ -85,21 +84,21 @@ The following Environment Variables are supported:
     %s
     %s
 `,
-	coloredTaskStatus(baur.TaskStatusExecutionPending),
-	coloredTaskStatus(baur.TaskStatusInputsUndefined),
+	terminal.ColoredTaskStatus(baur.TaskStatusExecutionPending),
+	terminal.ColoredTaskStatus(baur.TaskStatusInputsUndefined),
 
-	highlight(envVarPSQLURL),
+	terminal.Highlight(envVarPSQLURL),
 
-	highlight("AWS_REGION"),
-	highlight("AWS_ACCESS_KEY_ID"),
-	highlight("AWS_SECRET_ACCESS_KEY"),
+	terminal.Highlight("AWS_REGION"),
+	terminal.Highlight("AWS_ACCESS_KEY_ID"),
+	terminal.Highlight("AWS_SECRET_ACCESS_KEY"),
 
-	highlight(dockerEnvUsernameVar),
-	highlight(dockerEnvPasswordVar),
-	highlight("DOCKER_HOST"),
-	highlight("DOCKER_API_VERSION"),
-	highlight("DOCKER_CERT_PATH"),
-	highlight("DOCKER_TLS_VERIFY"))
+	terminal.Highlight(dockerEnvUsernameVar),
+	terminal.Highlight(dockerEnvPasswordVar),
+	terminal.Highlight("DOCKER_HOST"),
+	terminal.Highlight("DOCKER_API_VERSION"),
+	terminal.Highlight("DOCKER_CERT_PATH"),
+	terminal.Highlight("DOCKER_TLS_VERIFY"))
 
 func newRunCmd() *runCmd {
 	const example = `
@@ -158,14 +157,14 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	pendingTasks, err := c.filterPendingTasks(tasks)
 	exitOnErr(err)
 
-	term.PrintSep()
+	stdout.PrintSep()
 
 	if c.force {
-		fmt.Printf("Running %d/%d task(s) with status %s, %s\n",
-			len(pendingTasks), len(tasks), coloredTaskStatus(baur.TaskStatusExecutionPending), coloredTaskStatus(baur.TaskStatusRunExist))
+		stdout.Printf("Running %d/%d task(s) with status %s, %s\n",
+			len(pendingTasks), len(tasks), terminal.ColoredTaskStatus(baur.TaskStatusExecutionPending), terminal.ColoredTaskStatus(baur.TaskStatusRunExist))
 	} else {
-		fmt.Printf("Running %d/%d task(s) with status %s\n",
-			len(pendingTasks), len(tasks), coloredTaskStatus(baur.TaskStatusExecutionPending))
+		stdout.Printf("Running %d/%d task(s) with status %s\n",
+			len(pendingTasks), len(tasks), terminal.ColoredTaskStatus(baur.TaskStatusExecutionPending))
 	}
 
 	c.runUploadStore(pendingTasks)
@@ -175,21 +174,20 @@ func (c *runCmd) runUploadStore(taskToRun []*taskWithInputs) {
 	taskRunner := baur.NewTaskRunner()
 
 	for _, t := range taskToRun {
-		fmt.Printf("%s: execution started\n", t.task)
+		stdout.Printf("%s: execution started\n", t.task)
 
 		runResult, err := taskRunner.Run(t.task)
 		exitOnErr(err)
 
 		if runResult.Result.ExitCode == 0 {
-			statusStr := greenHighlight("successful")
+			statusStr := terminal.GreenHighlight("successful")
 
-			fmt.Printf("%s: execution %s (%ss)\n",
-				t.task,
+			stdout.TaskPrintf(t.task, "execution %s (%ss)\n",
 				statusStr,
 				strDurationSec(runResult.StartTime, runResult.StopTime),
 			)
 		} else {
-			statusStr := redHighlight("failed")
+			statusStr := terminal.RedHighlight("failed")
 
 			// TODO: make this only fatal if a --fatal or so commandline flag is passed
 			log.Fatalf("%s: execution %s (%ss), command exited with code %d, output:\n%s\n",
@@ -218,7 +216,7 @@ func (c *runCmd) runUploadStore(taskToRun []*taskWithInputs) {
 		id, err := baur.StoreRun(ctx, c.storage, c.gitState, t.task, t.inputs, runResult, uploadResults)
 		exitOnErr(err)
 
-		fmt.Printf("%s: run stored in database with ID %s\n", t.task, highlight(id))
+		stdout.TaskPrintf(t.task, "run stored in database with ID %s\n", terminal.Highlight(id))
 	}
 }
 
@@ -226,7 +224,7 @@ func outputsExit(task *baur.Task, outputs []baur.Output) bool {
 	allExist := true
 
 	if len(outputs) == 0 {
-		fmt.Printf("%s: does not produce outputs\n", task)
+		stdout.TaskPrintf(task, "does not produce outputs\n")
 		return true
 	}
 
@@ -238,8 +236,8 @@ func outputsExit(task *baur.Task, outputs []baur.Output) bool {
 			size, err := output.Size()
 			exitOnErrf(err, "%s :", task.ID())
 
-			fmt.Printf("%s: created output %s (size: %s MiB)\n",
-				task, output, bytesToMib(size))
+			stdout.TaskPrintf(task, "created output %s (size: %s MiB)\n",
+				output, bytesToMib(size))
 
 			continue
 		}
@@ -260,13 +258,13 @@ func (c *runCmd) uploadOutputs(task *baur.Task, outputs []baur.Output) []*baur.U
 		err := c.uploader.Upload(
 			output,
 			func(o baur.Output, info baur.UploadInfo) {
-				fmt.Printf("%s: uploading output %s to %s\n",
-					task, output, info)
+				stdout.TaskPrintf(task, "uploading output %s to %s\n",
+					output, info)
 			},
 			// TODO: log upload speed
 			func(o baur.Output, uploadResult *baur.UploadResult) {
-				fmt.Printf("%s: uploaded %s to %s (%ss)\n",
-					task, output, uploadResult.URL,
+				stdout.TaskPrintf(task, "uploaded %s to %s (%ss)\n",
+					output, uploadResult.URL,
 					strDurationSec(uploadResult.Start, uploadResult.Stop))
 
 				uploadResults = append(uploadResults, uploadResult)
@@ -301,7 +299,7 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*taskWithInputs, erro
 	taskIDColLen := maxTaskIDLen(tasks) + len(sep)
 	statusEvaluator := baur.NewTaskStatusEvaluator(c.repoRootPath, c.storage, baur.NewInputResolver())
 
-	fmt.Printf("Evaluating status of tasks:\n\n")
+	stdout.Printf("Evaluating status of tasks:\n\n")
 
 	for _, task := range tasks {
 		status, inputs, run, err := statusEvaluator.Status(ctx, task)
@@ -310,15 +308,15 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*taskWithInputs, erro
 		}
 
 		if status == baur.TaskStatusRunExist {
-			fmt.Printf("%-*s%s%s (%s)\n",
-				taskIDColLen, task, sep, coloredTaskStatus(status), greenHighlight(run.ID))
+			stdout.Printf("%-*s%s%s (%s)\n",
+				taskIDColLen, task, sep, terminal.ColoredTaskStatus(status), terminal.GreenHighlight(run.ID))
 
 			if !c.force {
 				continue
 			}
 		}
 
-		fmt.Printf("%-*s%s%s\n", taskIDColLen, task, sep, coloredTaskStatus(status))
+		stdout.Printf("%-*s%s%s\n", taskIDColLen, task, sep, terminal.ColoredTaskStatus(status))
 
 		result = append(result, &taskWithInputs{
 			task:   task,

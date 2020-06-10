@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -9,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/fs"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -99,5 +99,5 @@ func bashComp(cmd *cobra.Command, args []string) {
 	err = f.Close()
 	exitOnErrf(err, "closing %q failed", complFile)
 
-	fmt.Printf("bash completion file written to %s\n", highlight(complFile))
+	stdout.Printf("bash completion file written to %s\n", terminal.Highlight(complFile))
 }

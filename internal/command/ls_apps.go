@@ -11,6 +11,7 @@ import (
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/internal/command/flag"
+	"github.com/simplesurance/baur/internal/command/terminal"
 )
 
 const (
@@ -59,7 +60,7 @@ func newLsAppsCmd() *lsAppsCmd {
 		"Show absolute instead of relative paths")
 
 	cmd.Flags().VarP(cmd.fields, "fields", "f",
-		cmd.fields.Usage(highlight))
+		cmd.fields.Usage(terminal.Highlight))
 
 	return &cmd
 

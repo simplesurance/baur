@@ -1,13 +1,13 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -48,6 +48,6 @@ func initInclude(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("Include configuration file was written to %s\n",
-		highlight(filename))
+	stdout.Printf("Include configuration file was written to %s\n",
+		terminal.Highlight(filename))
 }

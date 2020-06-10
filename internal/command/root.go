@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/exec"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/version"
 )
@@ -28,6 +29,9 @@ var noColorFlag bool
 var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
 
 var ctx = context.Background()
+
+var stdout = terminal.NewStream(os.Stdout)
+var stderr = terminal.NewStream(os.Stderr)
 
 func initSb(_ *cobra.Command, _ []string) {
 	if verboseFlag {
@@ -68,7 +72,7 @@ func Execute() {
 	}
 
 	if cpuProfilingFlag {
-		fmt.Printf("\ncpu profile written to %q\n", defCPUProfFile)
+		stdout.Printf("\ncpu profile written to %q\n", defCPUProfFile)
 		pprof.StopCPUProfile()
 	}
 }

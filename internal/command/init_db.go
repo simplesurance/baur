@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -21,7 +22,7 @@ Creates the baur tables in a PostgreSQL database.
 The Postgres URL is read from the repository configuration file.
 Alternatively the URL can be passed as argument or
 by setting the '%s' environment variable.`,
-	highlight(envVarPSQLURL))
+	terminal.Highlight(envVarPSQLURL))
 
 var initDbCmd = &cobra.Command{
 	Use:     "db [POSTGRES-URL]",
@@ -45,7 +46,7 @@ func initDb(cmd *cobra.Command, args []string) {
 			if os.IsNotExist(err) {
 				log.Fatalf("could not find '%s' repository config file.\n"+
 					"Run '%s' first or pass the Postgres URL as argument.",
-					highlight(baur.RepositoryCfgFile), highlight(cmdInitRepo))
+					terminal.Highlight(baur.RepositoryCfgFile), terminal.Highlight(cmdInitRepo))
 			}
 
 			log.Fatalln(err)
@@ -62,5 +63,5 @@ func initDb(cmd *cobra.Command, args []string) {
 	err = storageClt.Init(ctx)
 	exitOnErr(err)
 
-	fmt.Println("database tables created successfully")
+	stdout.Println("database tables created successfully")
 }
