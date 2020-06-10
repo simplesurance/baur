@@ -45,9 +45,14 @@ func (t *Task) String() string {
 	return t.ID()
 }
 
-// HasInputs returns true if Inputs are defined for the app
+// HasInputs returns true if Inputs are defined for the task
 func (t *Task) HasInputs() bool {
 	return !cfg.InputsAreEmpty(t.UnresolvedInputs)
+}
+
+// HHasOutputs returns true if outputs are defined for the task
+func (t *Task) HasOutputs() bool {
+	return len(t.Outputs.DockerImage) > 0 || len(t.Outputs.File) > 0
 }
 
 func SortTasksByID(tasks []*Task) {

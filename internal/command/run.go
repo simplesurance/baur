@@ -26,47 +26,11 @@ const (
 	dockerEnvPasswordVar = "BAUR_DOCKER_PASSWORD"
 )
 
-func dockerClient() *docker.Client {
-	var client *docker.Client
-	var err error
-
-	dockerUser, dockerPass := os.Getenv(dockerEnvUsernameVar), os.Getenv(dockerEnvPasswordVar)
-
-	if len(dockerUser) != 0 {
-		log.Debugf("using docker authentication data from %s, %s Environment variables, authenticating as '%s'",
-			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
-		client, err = docker.NewClientwAuth(log.StdLogger.Debugf, dockerUser, dockerPass)
-	} else {
-		log.Debugf("environment variable %s not set", dockerEnvUsernameVar)
-		client, err = docker.NewClient(log.StdLogger.Debugf)
-	}
-
-	exitOnErr(err)
-
-	return client
-
-}
-
-func init() {
-	rootCmd.AddCommand(&newRunCmd().Command)
-}
-
-type runCmd struct {
-	cobra.Command
-
-	// Cmdline parameters
-	skipUpload bool
-	force      bool
-
-	// other fields
-	storage      storage.Storer
-	repoRootPath string
-	dockerClient *docker.Client
-	uploader     *baur.Uploader
-	gitState     *git.RepositoryState
-
-	uploadRoutinePool *routines.Pool
-}
+const runExample = `
+baur run auth				run all tasks of the auth application, upload the produced outputs
+baur run calc.check			run the check task of the calc application and upload the produced outputs
+baur run --force			run and upload all tasks of applications, independent of their status
+`
 
 var runLongHelp = fmt.Sprintf(`
 Execute tasks of applications.
@@ -104,19 +68,34 @@ The following Environment Variables are supported:
 	terminal.Highlight("DOCKER_CERT_PATH"),
 	terminal.Highlight("DOCKER_TLS_VERIFY"))
 
-func newRunCmd() *runCmd {
-	const example = `
-run payment-service		run all tasks of the payment-service application and upload the produced outputs
-run calc.check			run the check task of the calc application and upload the produced outputs
-run --force			run and upload all tasks of applications, independent of their status
-`
+func init() {
+	rootCmd.AddCommand(&newRunCmd().Command)
+}
 
+type runCmd struct {
+	cobra.Command
+
+	// Cmdline parameters
+	skipUpload bool
+	force      bool
+
+	// other fields
+	storage      storage.Storer
+	repoRootPath string
+	dockerClient *docker.Client
+	uploader     *baur.Uploader
+	gitState     *git.RepositoryState
+
+	uploadRoutinePool *routines.Pool
+}
+
+func newRunCmd() *runCmd {
 	cmd := runCmd{
 		Command: cobra.Command{
 			Use:     "run [<SPEC>|<PATH>]...",
 			Short:   "run tasks",
 			Long:    runLongHelp,
-			Example: strings.TrimSpace(example),
+			Example: strings.TrimSpace(runExample),
 		},
 	}
 
@@ -128,6 +107,27 @@ run --force			run and upload all tasks of applications, independent of their sta
 		"enforce running tasks independent of their status")
 
 	return &cmd
+}
+
+func dockerClient() *docker.Client {
+	var client *docker.Client
+	var err error
+
+	dockerUser, dockerPass := os.Getenv(dockerEnvUsernameVar), os.Getenv(dockerEnvPasswordVar)
+
+	if len(dockerUser) != 0 {
+		log.Debugf("using docker authentication data from %s, %s Environment variables, authenticating as '%s'",
+			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
+		client, err = docker.NewClientwAuth(log.StdLogger.Debugf, dockerUser, dockerPass)
+	} else {
+		log.Debugf("environment variable %s not set", dockerEnvUsernameVar)
+		client, err = docker.NewClient(log.StdLogger.Debugf)
+	}
+
+	exitOnErr(err)
+
+	return client
+
 }
 
 func (c *runCmd) run(cmd *cobra.Command, args []string) {
@@ -235,6 +235,8 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTasks) {
 	taskRunner := baur.NewTaskRunner()
 
 	for _, t := range taskToRun {
+		// TODO: record the result as failed if run exitCode is != 0
+		// except when a flag like --errors-are-fatal is passed
 		runResult, err := taskRunner.Run(t.task)
 		exitOnErr(err)
 

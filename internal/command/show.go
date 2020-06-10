@@ -1,8 +1,7 @@
 package command
 
-// TODO: adapt naming to task run change
-
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/format"
+	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
@@ -18,11 +17,12 @@ import (
 )
 
 const showLongHelp = `
-Show information about an application or a build.
+Show information about an application or task run.
 
-If the name or the path to an application directory is passed,
+If the name or path of an application directory is passed,
 application information are shown.
-If a numeric build ID is passed, information about the build are shown.
+If a numeric task-run ID is passed, information about the
+recorded task run are shown.
 `
 
 const showExamples = `
@@ -31,100 +31,151 @@ baur show ui/shop	show information about the app in the ui/shop directory
 baur show 512		show information about build 512
 `
 
-var showCmd = &cobra.Command{
-	Use:     "show APP|APP-PATH|BUILD-ID",
-	Short:   "show information about apps or builds",
-	Args:    cobra.ExactArgs(1),
-	Run:     show,
-	Long:    strings.TrimSpace(showLongHelp),
-	Example: strings.TrimSpace(showExamples),
-}
-
 func init() {
-	rootCmd.AddCommand(showCmd)
+	rootCmd.AddCommand(&newShowCmd().Command)
 }
 
-func show(cmd *cobra.Command, args []string) {
+type showCmd struct {
+	cobra.Command
+}
+
+func newShowCmd() *showCmd {
+	cmd := showCmd{
+		Command: cobra.Command{
+			Use:     "show APP|APP-PATH|TASK-RUN-ID",
+			Short:   "show information about apps or recorded task runs",
+			Args:    cobra.ExactArgs(1),
+			Long:    strings.TrimSpace(showLongHelp),
+			Example: strings.TrimSpace(showExamples),
+		},
+	}
+
+	cmd.Run = cmd.run
+
+	return &cmd
+}
+
+func (c *showCmd) run(cmd *cobra.Command, args []string) {
 	buildID, err := strconv.Atoi(args[0])
 	if err == nil {
-		showBuild(buildID)
+		c.showBuild(buildID)
 	} else {
-		showApp(args[0])
+		c.showApp(args[0])
 	}
 }
 
-func showApp(arg string) {
-	var formatter format.Formatter
-
-	// TODO: show all tasks of the app
-
+func (c *showCmd) showApp(arg string) {
 	repo := MustFindRepository()
 	app := mustArgToApp(repo, arg)
 
-	formatter = table.New(nil, os.Stdout)
+	tasks := app.Tasks()
+	baur.SortTasksByID(tasks)
 
-	mustWriteRow(formatter, []interface{}{terminal.Underline("General:")})
-	mustWriteRow(formatter, []interface{}{"", "Application Name:", terminal.Highlight(app.Name)})
-	mustWriteRow(formatter, []interface{}{"", "Path:", terminal.Highlight(app.RelPath)})
+	formatter := table.New(nil, os.Stdout)
 
-	stderr.Println("Showing task information not implemented")
-	os.Exit(1)
+	mustWriteRowVa(formatter, "Application Name:", terminal.Highlight(app.Name), "", "")
+	mustWriteRowVa(formatter, "Path:", terminal.Highlight(app.RelPath), "")
 
-	//mustWriteRow(formatter, []interface{}{"", "Build Command:", terminal.Highlight(task.Command)})
-
-	// TODO: make this work again, print the outputs:
-	/*
-			outputs, err := task.Outputs()
-			exitOnErr(err)
-
-			if len(outputs) != 0 {
-				mustWriteRow(formatter, []interface{}{})
-				mustWriteRow(formatter, []interface{}{terminal.Underline("Outputs:")})
-
-				for i, art := range outputs {
-					mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight(art.Type())})
-					mustWriteRow(formatter, []interface{}{"", "Local:", terminal.Highlight(art.String())})
-					mustWriteRow(formatter, []interface{}{"", "Remote:", terminal.Highlight(art.UploadDestination())})
-
-					if i+1 < len(outputs) {
-						mustWriteRow(formatter, []interface{}{})
-					}
-				}
-			}
+	mustWriteRowVa(formatter, "", "", "", "")
+	for taskIdx, task := range tasks {
+		mustWriteRowVa(formatter, terminal.Underline("Task"))
+		mustWriteRowVa(formatter, "", "Name:", terminal.Highlight(task.Name), "", "")
+		mustWriteRowVa(formatter, "", "Command:", terminal.Highlight(task.Command), "", "")
 
 		if task.HasInputs() {
-			mustWriteRow(formatter, []interface{}{})
-			mustWriteRow(formatter, []interface{}{terminal.Underline("Inputs:")})
+			mustWriteRowVa(formatter, "", "", "", "")
+			mustWriteRowVa(formatter, "", terminal.Underline("Inputs:"), "", "")
 
 			if len(task.UnresolvedInputs.Files.Paths) > 0 {
-				mustWriteRow(formatter, []interface{}{})
-
-				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("File")})
-				mustWriteRow(formatter, []interface{}{"",
-					"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
-				})
-
+				mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("File"))
+				mustWriteRowVa(
+					formatter,
+					"",
+					"",
+					"Paths:",
+					terminal.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
+				)
 			}
 
 			if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
-				mustWriteRow(formatter, []interface{}{})
+				if len(task.UnresolvedInputs.Files.Paths) > 0 {
+					mustWriteRowVa(formatter, "", "", "", "")
+				}
 
-				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GitFile")})
-				mustWriteRow(formatter, []interface{}{"",
-					"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", "))})
+				mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("GitFile"))
+				mustWriteRowVa(
+					formatter,
+					"",
+					"",
+					"Paths:",
+					terminal.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", ")),
+				)
 			}
 
 			if len(task.UnresolvedInputs.GolangSources.Paths) > 0 {
-				mustWriteRow(formatter, []interface{}{})
+				if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
+					mustWriteRowVa(formatter, "", "", "", "")
+				}
 
-				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GolangSources")})
-				mustWriteRow(formatter, []interface{}{"",
-					"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", "))})
-				mustWriteRow(formatter, []interface{}{"",
-					"Environment:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", "))})
+				mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("GolangSources"))
+				mustWriteRowVa(
+					formatter,
+					"",
+					"",
+					"Paths:",
+					terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", ")),
+				)
+				mustWriteRowVa(
+					formatter,
+					"",
+					"",
+					"Environment:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", ")),
+				)
 			}
 		}
-	*/
+
+		if task.HasOutputs() {
+			mustWriteRowVa(formatter, "", terminal.Underline("Outputs:"), "", "")
+		}
+
+		for i, di := range task.Outputs.DockerImage {
+			mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("Docker Image"))
+			mustWriteRowVa(formatter, "", "", "IDFile:", terminal.Highlight(di.IDFile))
+			mustWriteRowVa(formatter, "", "", "Registry:", terminal.Highlight(di.RegistryUpload.Registry))
+			mustWriteRowVa(formatter, "", "", "Repository:", terminal.Highlight(di.RegistryUpload.Repository))
+			mustWriteRowVa(formatter, "", "", "Tag:", terminal.Highlight(di.RegistryUpload.Tag))
+
+			if i+1 < len(task.Outputs.DockerImage) {
+				mustWriteRowVa(formatter, "", "", "", "")
+			}
+		}
+
+		for i, file := range task.Outputs.File {
+			if len(task.Outputs.DockerImage) > 0 {
+				mustWriteRowVa(formatter, "", "", "", "")
+			}
+
+			mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("File"))
+			mustWriteRowVa(formatter, "", "", "Path:", terminal.Highlight(file.Path))
+
+			if !file.FileCopy.IsEmpty() {
+				mustWriteRowVa(formatter, "", "", "Filecopy Destination:", terminal.Highlight(file.FileCopy.Path))
+			}
+
+			if !file.S3Upload.IsEmpty() {
+				mustWriteRowVa(formatter, "", "", "S3 Bucket:", terminal.Highlight(file.S3Upload.Bucket))
+				mustWriteRowVa(formatter, "", "", "S3 Destfile:", terminal.Highlight(file.S3Upload.DestFile))
+			}
+
+			if i+1 < len(task.Outputs.File) {
+				mustWriteRowVa(formatter, "", "", "", "")
+			}
+		}
+
+		if taskIdx+1 < len(tasks) {
+			mustWriteRowVa(formatter, "", "", "", "")
+		}
+	}
 
 	err := formatter.Flush()
 	exitOnErr(err)
@@ -142,9 +193,7 @@ func vcsStr(v *storage.TaskRun) string {
 	return v.VCSRevision
 }
 
-func showBuild(taskRunID int) {
-	var formatter format.Formatter
-
+func (c *showCmd) showBuild(taskRunID int) {
 	repo := MustFindRepository()
 	storageClt := mustNewCompatibleStorage(repo)
 
@@ -154,66 +203,79 @@ func showBuild(taskRunID int) {
 			log.Fatalf("task run with id %d does not exist\n", taskRunID)
 		}
 
-		log.Fatalln(err)
+		exitOnErr(err)
 	}
 
 	outputs, err := storageClt.Outputs(ctx, taskRun.ID)
-	exitOnErr(err)
+	if err != nil && !errors.Is(err, storage.ErrNotExist) {
+		exitOnErr(err)
+	}
 
-	formatter = table.New(nil, os.Stdout)
+	formatter := table.New(nil, os.Stdout)
 
-	mustWriteRow(formatter, []interface{}{terminal.Underline("General:")})
-	mustWriteRow(formatter, []interface{}{"", "Application:", terminal.Highlight(taskRun.ApplicationName)})
-	mustWriteRow(formatter, []interface{}{"", "Task:", terminal.Highlight(taskRun.TaskName)})
-	mustWriteRow(formatter, []interface{}{"", "Run-ID:", terminal.Highlight(taskRun.ID)})
+	mustWriteRowVa(formatter, "Run-ID:", terminal.Highlight(taskRun.ID))
+	mustWriteRowVa(formatter, "Application:", terminal.Highlight(taskRun.ApplicationName))
+	mustWriteRowVa(formatter, "Task:", terminal.Highlight(taskRun.TaskName))
 
-	mustWriteRow(formatter, []interface{}{"", "Started At:", terminal.Highlight(taskRun.StartTimestamp)})
-	mustWriteRow(formatter, []interface{}{
-		"",
+	if taskRun.Result == storage.ResultSuccess {
+		mustWriteRowVa(formatter, "Result", terminal.GreenHighlight(taskRun.Result))
+	} else {
+		mustWriteRowVa(formatter, "Result", terminal.RedHighlight(taskRun.Result))
+	}
+
+	mustWriteRowVa(formatter, "Started At:", terminal.Highlight(taskRun.StartTimestamp))
+	mustWriteRowVa(
+		formatter,
 		"Build Duration:",
 		terminal.Highlight(fmt.Sprintf("%.2f s", taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds())),
-	})
+	)
 
-	mustWriteRow(formatter, []interface{}{"", "Git Commit:", terminal.Highlight(vcsStr(&taskRun.TaskRun))})
+	mustWriteRowVa(formatter, "Git Commit:", terminal.Highlight(vcsStr(&taskRun.TaskRun)))
 
-	mustWriteRow(formatter, []interface{}{"", "Total Input Digest:", terminal.Highlight(taskRun.TotalInputDigest)})
+	mustWriteRowVa(formatter, "Total Input Digest:", terminal.Highlight(taskRun.TotalInputDigest))
+	mustWriteRowVa(formatter, "Output Count:", terminal.Highlight(len(outputs)))
 
 	if len(outputs) > 0 {
-		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{terminal.Underline("Outputs:")})
+		mustWriteRowVa(formatter)
+		mustWriteRowVa(formatter, terminal.Underline("Outputs:"))
 	}
 
 	for i, o := range outputs {
-		mustWriteRow(formatter, []interface{}{"", "Local Path:", terminal.Highlight(o.Name)})
-		mustWriteRow(formatter, []interface{}{"", "Digest:", terminal.Highlight(o.Digest)})
-		mustWriteRow(formatter, []interface{}{
+		mustWriteRowVa(formatter, "", "Local Path:", terminal.Highlight(o.Name))
+		mustWriteRowVa(formatter, "", "Digest:", terminal.Highlight(o.Digest))
+		mustWriteRowVa(
+			formatter,
 			"",
 			"Size:",
-			terminal.Highlight(bytesToMib(o.SizeBytes) + " MiB"),
-		})
-		mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight(o.Type)})
+			terminal.Highlight(bytesToMib(o.SizeBytes)+" MiB"),
+		)
+		mustWriteRowVa(formatter, "", "Type:", terminal.Highlight(o.Type))
 
-		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{"", terminal.Underline("Uploads:")})
+		mustWriteRowVa(formatter)
+		mustWriteRowVa(formatter, "", terminal.Underline("Uploads:"))
 
 		for uploadIdx, upload := range o.Uploads {
-			mustWriteRow(formatter, []interface{}{"", "", "URI:", terminal.Highlight(upload.URI)})
-			mustWriteRow(formatter, []interface{}{
+			mustWriteRowVa(formatter, "", "", "URI:", terminal.Highlight(upload.URI))
+			mustWriteRowVa(
+				formatter,
 				"",
 				"",
 				"Upload Duration:",
 				terminal.Highlight(
-					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)) + " s"),
-			})
-			mustWriteRow(formatter, []interface{}{"", "", "Upload Method:", terminal.Highlight(upload.Method)})
+					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp))+" s"),
+			)
+			mustWriteRowVa(
+				formatter,
+				"", "", "Upload Method:", terminal.Highlight(upload.Method),
+			)
 
 			if uploadIdx+1 < len(o.Uploads) {
-				mustWriteRow(formatter, []interface{}{})
+				mustWriteRowVa(formatter)
 			}
 		}
 
 		if i+1 < len(outputs) {
-			mustWriteRow(formatter, []interface{}{})
+			mustWriteRowVa(formatter)
 		}
 	}
 
