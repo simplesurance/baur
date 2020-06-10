@@ -172,11 +172,16 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 	return apps
 }
 
-func mustWriteRow(fmt format.Formatter, row []interface{}) {
+func mustWriteRowVa(fmt format.Formatter, row ...interface{}) {
 	err := fmt.WriteRow(row)
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// Deprecated: use  mustWriteRowVa
+func mustWriteRow(fmt format.Formatter, row []interface{}) {
+	mustWriteRowVa(fmt, row...)
 }
 
 func bytesToMib(bytes uint64) string {
