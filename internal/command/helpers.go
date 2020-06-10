@@ -21,16 +21,6 @@ import (
 // postgresql URI can be stored
 const envVarPSQLURL = "BAUR_POSTGRESQL_URL"
 
-var (
-	// TODO: move the higlight definitions to internal/command/term/color.go
-	greenHighlight  = color.New(color.FgGreen).SprintFunc()
-	redHighlight    = color.New(color.FgRed).SprintFunc()
-	yellowHighlight = color.New(color.FgYellow).SprintFunc()
-	underline       = color.New(color.Underline).SprintFunc()
-	// highlight is a function that highlights parts of strings in the cli output
-	highlight = greenHighlight
-)
-
 func findRepository() (*baur.Repository, error) {
 	log.Debugln("searching for repository config...")
 	path, err := baur.FindRepositoryCfgCwd()
@@ -156,19 +146,6 @@ func mustWriteRow(fmt format.Formatter, row []interface{}) {
 	err := fmt.WriteRow(row)
 	if err != nil {
 		log.Fatalln(err)
-	}
-}
-
-func coloredTaskStatus(status baur.TaskStatus) string {
-	switch status {
-	case baur.TaskStatusInputsUndefined:
-		return yellowHighlight(status.String())
-	case baur.TaskStatusRunExist:
-		return greenHighlight(status.String())
-	case baur.TaskStatusExecutionPending:
-		return redHighlight(status.String())
-	default:
-		return status.String()
 	}
 }
 

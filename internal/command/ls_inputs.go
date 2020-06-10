@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"sort"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -96,6 +96,6 @@ func lsInputs(cmd *cobra.Command, args []string) {
 		totalDigest, err := inputs.Digest()
 		exitOnErr(err, "calculating total input digest failed")
 
-		fmt.Printf("\nTotal Build Input Digest: %s\n", highlight(totalDigest.String()))
+		stdout.Printf("\nTotal Build Input Digest: %s\n", terminal.Highlight(totalDigest.String()))
 	}
 }

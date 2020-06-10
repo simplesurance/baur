@@ -12,6 +12,7 @@ import (
 
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/table"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
@@ -63,10 +64,10 @@ func showApp(arg string) {
 
 	formatter = table.New(nil, os.Stdout)
 
-	mustWriteRow(formatter, []interface{}{underline("General:")})
-	mustWriteRow(formatter, []interface{}{"", "Name:", highlight(app.Name)})
-	mustWriteRow(formatter, []interface{}{"", "Path:", highlight(app.RelPath)})
-	mustWriteRow(formatter, []interface{}{"", "Build Command:", highlight(task.Command)})
+	mustWriteRow(formatter, []interface{}{terminal.Underline("General:")})
+	mustWriteRow(formatter, []interface{}{"", "Name:", terminal.Highlight(app.Name)})
+	mustWriteRow(formatter, []interface{}{"", "Path:", terminal.Highlight(app.RelPath)})
+	mustWriteRow(formatter, []interface{}{"", "Build Command:", terminal.Highlight(task.Command)})
 
 	// TODO: make this work again, print the outputs:
 	/*
@@ -75,12 +76,12 @@ func showApp(arg string) {
 
 		if len(outputs) != 0 {
 			mustWriteRow(formatter, []interface{}{})
-			mustWriteRow(formatter, []interface{}{underline("Outputs:")})
+			mustWriteRow(formatter, []interface{}{terminal.Underline("Outputs:")})
 
 			for i, art := range outputs {
-				mustWriteRow(formatter, []interface{}{"", "Type:", highlight(art.Type())})
-				mustWriteRow(formatter, []interface{}{"", "Local:", highlight(art.String())})
-				mustWriteRow(formatter, []interface{}{"", "Remote:", highlight(art.UploadDestination())})
+				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight(art.Type())})
+				mustWriteRow(formatter, []interface{}{"", "Local:", terminal.Highlight(art.String())})
+				mustWriteRow(formatter, []interface{}{"", "Remote:", terminal.Highlight(art.UploadDestination())})
 
 				if i+1 < len(outputs) {
 					mustWriteRow(formatter, []interface{}{})
@@ -91,14 +92,14 @@ func showApp(arg string) {
 
 	if task.HasInputs() {
 		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{underline("Inputs:")})
+		mustWriteRow(formatter, []interface{}{terminal.Underline("Inputs:")})
 
 		if len(task.UnresolvedInputs.Files.Paths) > 0 {
 			mustWriteRow(formatter, []interface{}{})
 
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("File")})
+			mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("File")})
 			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
+				"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
 			})
 
 		}
@@ -106,19 +107,19 @@ func showApp(arg string) {
 		if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
 			mustWriteRow(formatter, []interface{}{})
 
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GitFile")})
+			mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GitFile")})
 			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", "))})
+				"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", "))})
 		}
 
 		if len(task.UnresolvedInputs.GolangSources.Paths) > 0 {
 			mustWriteRow(formatter, []interface{}{})
 
-			mustWriteRow(formatter, []interface{}{"", "Type:", highlight("GolangSources")})
+			mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GolangSources")})
 			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", "))})
+				"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", "))})
 			mustWriteRow(formatter, []interface{}{"",
-				"Environment:", highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", "))})
+				"Environment:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", "))})
 		}
 	}
 
@@ -158,50 +159,50 @@ func showBuild(taskRunID int) {
 
 	formatter = table.New(nil, os.Stdout)
 
-	mustWriteRow(formatter, []interface{}{underline("General:")})
-	mustWriteRow(formatter, []interface{}{"", "Application:", highlight(taskRun.ApplicationName)})
-	mustWriteRow(formatter, []interface{}{"", "Task:", highlight(taskRun.TaskName)})
-	mustWriteRow(formatter, []interface{}{"", "Run-ID:", highlight(taskRun.ID)})
+	mustWriteRow(formatter, []interface{}{terminal.Underline("General:")})
+	mustWriteRow(formatter, []interface{}{"", "Application:", terminal.Highlight(taskRun.ApplicationName)})
+	mustWriteRow(formatter, []interface{}{"", "Task:", terminal.Highlight(taskRun.TaskName)})
+	mustWriteRow(formatter, []interface{}{"", "Run-ID:", terminal.Highlight(taskRun.ID)})
 
-	mustWriteRow(formatter, []interface{}{"", "Started At:", highlight(taskRun.StartTimestamp)})
+	mustWriteRow(formatter, []interface{}{"", "Started At:", terminal.Highlight(taskRun.StartTimestamp)})
 	mustWriteRow(formatter, []interface{}{
 		"",
 		"Build Duration:",
-		highlight(fmt.Sprintf("%.2f s", taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds())),
+		terminal.Highlight(fmt.Sprintf("%.2f s", taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds())),
 	})
 
-	mustWriteRow(formatter, []interface{}{"", "Git Commit:", highlight(vcsStr(&taskRun.TaskRun))})
+	mustWriteRow(formatter, []interface{}{"", "Git Commit:", terminal.Highlight(vcsStr(&taskRun.TaskRun))})
 
-	mustWriteRow(formatter, []interface{}{"", "Total Input Digest:", highlight(taskRun.TotalInputDigest)})
+	mustWriteRow(formatter, []interface{}{"", "Total Input Digest:", terminal.Highlight(taskRun.TotalInputDigest)})
 
 	if len(outputs) > 0 {
 		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{underline("Outputs:")})
+		mustWriteRow(formatter, []interface{}{terminal.Underline("Outputs:")})
 	}
 
 	for i, o := range outputs {
-		mustWriteRow(formatter, []interface{}{"", "Local Path:", highlight(o.Name)})
-		mustWriteRow(formatter, []interface{}{"", "Digest:", highlight(o.Digest)})
+		mustWriteRow(formatter, []interface{}{"", "Local Path:", terminal.Highlight(o.Name)})
+		mustWriteRow(formatter, []interface{}{"", "Digest:", terminal.Highlight(o.Digest)})
 		mustWriteRow(formatter, []interface{}{
 			"",
 			"Size:",
-			highlight(bytesToMib(o.SizeBytes) + " MiB"),
+			terminal.Highlight(bytesToMib(o.SizeBytes) + " MiB"),
 		})
-		mustWriteRow(formatter, []interface{}{"", "Type:", highlight(o.Type)})
+		mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight(o.Type)})
 
 		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{"", underline("Uploads:")})
+		mustWriteRow(formatter, []interface{}{"", terminal.Underline("Uploads:")})
 
 		for uploadIdx, upload := range o.Uploads {
-			mustWriteRow(formatter, []interface{}{"", "", "URI:", highlight(upload.URI)})
+			mustWriteRow(formatter, []interface{}{"", "", "URI:", terminal.Highlight(upload.URI)})
 			mustWriteRow(formatter, []interface{}{
 				"",
 				"",
 				"Upload Duration:",
-				highlight(
+				terminal.Highlight(
 					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)) + " s"),
 			})
-			mustWriteRow(formatter, []interface{}{"", "", "Upload Method:", highlight(upload.Method)})
+			mustWriteRow(formatter, []interface{}{"", "", "Upload Method:", terminal.Highlight(upload.Method)})
 
 			if uploadIdx+1 < len(o.Uploads) {
 				mustWriteRow(formatter, []interface{}{})

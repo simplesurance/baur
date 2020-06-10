@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -57,6 +57,6 @@ func initApp(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("Application configuration file was written to %s\n",
-		highlight(baur.AppCfgFile))
+	stdout.Printf("Application configuration file was written to %s\n",
+		terminal.Highlight(baur.AppCfgFile))
 }

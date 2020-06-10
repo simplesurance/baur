@@ -12,6 +12,7 @@ import (
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/internal/command/flag"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
@@ -72,10 +73,10 @@ func newStatusCmd() *statusCmd {
 
 	// TODO: refactor buildStatus struct
 	cmd.Flags().VarP(&cmd.buildStatus, "status", "s",
-		cmd.buildStatus.Usage(highlight))
+		cmd.buildStatus.Usage(terminal.Highlight))
 
 	cmd.Flags().VarP(cmd.fields, "fields", "f",
-		cmd.fields.Usage(highlight))
+		cmd.fields.Usage(terminal.Highlight))
 
 	return &cmd
 }
@@ -159,10 +160,10 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 			// take some time, output progress dots to let the user
 			// know that something is happening
 			if showProgress {
-				fmt.Printf(".")
+				stdout.Printf(".")
 
 				if i+1 == len(tasks) {
-					fmt.Printf("\n\n")
+					stdout.Printf("\n\n")
 				}
 			}
 		}
