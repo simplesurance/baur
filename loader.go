@@ -238,12 +238,12 @@ func (a *Loader) taskSpec(apps []*App, spec string) []*Task {
 
 	for _, app := range apps {
 		if spec == "*" {
-			result = append(result, app.Task()...)
+			result = append(result, app.Tasks()...)
 
 			continue
 		}
 
-		for _, task := range app.Task() {
+		for _, task := range app.Tasks() {
 			if task.Name == spec {
 				result = append(result, task)
 			}
