@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/simplesurance/baur/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/simplesurance/baur/storage"
 )
 
 // drop the local monotonic values from timestamps and rounding it is required
@@ -381,16 +382,17 @@ func TestTaskRuns(t *testing.T) {
 			},
 		},
 	}
-	run1 := run
-	run1.StartTimestamp = run1.StartTimestamp.Add(time.Second)
-	run1.TaskName = "check"
 
 	taskRunDropMonotonicTimevals(&run.TaskRun)
-	taskRunDropMonotonicTimevals(&run1.TaskRun)
 
 	id, err := client.SaveTaskRun(ctx, &run)
 	require.NoError(t, err)
 	assert.Greater(t, id, 0)
+
+	run1 := run
+	run1.StartTimestamp = run1.StartTimestamp.Add(time.Second)
+	run1.TaskName = "check"
+	taskRunDropMonotonicTimevals(&run1.TaskRun)
 
 	id1, err := client.SaveTaskRun(ctx, &run1)
 	require.NoError(t, err)
@@ -536,4 +538,43 @@ func TestTaskRuns(t *testing.T) {
 		})
 	}
 
+}
+
+func TestTaskRunQueryRunWithoutOutput(t *testing.T) {
+	client, cleanupFn := newTestClient(t)
+	defer cleanupFn()
+
+	require.NoError(t, client.Init(ctx))
+
+	run := storage.TaskRunFull{
+		TaskRun: storage.TaskRun{
+			ApplicationName:  "baurHimself",
+			TaskName:         "build",
+			VCSRevision:      "1",
+			VCSIsDirty:       false,
+			StartTimestamp:   time.Now(),
+			StopTimestamp:    time.Now().Add(5 * time.Minute),
+			Result:           storage.ResultSuccess,
+			TotalInputDigest: "1234567890",
+		},
+		Inputs: []*storage.Input{
+			{
+				URI:    "main.go",
+				Digest: "45",
+			},
+		},
+	}
+
+	taskRunDropMonotonicTimevals(&run.TaskRun)
+
+	id, err := client.SaveTaskRun(ctx, &run)
+	require.NoError(t, err)
+	assert.Greater(t, id, 0)
+
+	tr, err := client.TaskRun(ctx, id)
+	require.NoError(t, err)
+	require.NotNil(t, tr)
+
+	assert.Equal(t, run.TaskRun, tr.TaskRun)
+	assert.Equal(t, id, tr.ID)
 }
