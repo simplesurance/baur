@@ -58,7 +58,6 @@ type runCmd struct {
 	// other fields
 	storage      storage.Storer
 	repoRootPath string
-	// TODO: do not store docker.Client 2x times, it's also in uploader
 	dockerClient *docker.Client
 	uploader     *baur.Uploader
 	gitState     *git.RepositoryState
@@ -189,7 +188,6 @@ func (c *runCmd) runUploadStore(taskToRun []*taskWithInputs) {
 		} else {
 			statusStr := terminal.RedHighlight("failed")
 
-			// TODO: make this only fatal if a --fatal or so commandline flag is passed
 			log.Fatalf("%s: execution %s (%ss), command exited with code %d, output:\n%s\n",
 				t.task,
 				statusStr,
@@ -198,14 +196,9 @@ func (c *runCmd) runUploadStore(taskToRun []*taskWithInputs) {
 				runResult.StrOutput())
 		}
 
-		// TODO: Create a ConsolePrinter object to log to the console, which
-		// adds prefixes and maybe also has a print function that accepts a
-		// task parameter and prints a prefix for it?
-
 		outputs, err := baur.OutputsFromTask(c.dockerClient, t.task)
 		exitOnErr(err)
 
-		// TODO: make this only fatal if a --fatal or so commandline flag is passed
 		if !outputsExit(t.task, outputs) {
 			os.Exit(1)
 		}
@@ -243,15 +236,13 @@ func outputsExit(task *baur.Task, outputs []baur.Output) bool {
 		}
 
 		allExist = false
-		// TODO: use printf or a streams struct?
-		log.Errorf("%s: did not created output %s", task, output)
+		stderr.TaskPrintf(task, "has %s as output defined but it was not created by the task run\n", output)
 	}
 
 	return allExist
 }
 
 func (c *runCmd) uploadOutputs(task *baur.Task, outputs []baur.Output) []*baur.UploadResult {
-	// TODO: ensure we handle recording tasks without outputs correctly and also record it to the db
 	var uploadResults []*baur.UploadResult
 
 	for _, output := range outputs {
@@ -270,9 +261,8 @@ func (c *runCmd) uploadOutputs(task *baur.Task, outputs []baur.Output) []*baur.U
 				uploadResults = append(uploadResults, uploadResult)
 			},
 		)
-		// TODO: make this only fatal if a --fatal or so commandline flag is passed
-		exitOnErr(err)
 
+		exitOnErr(err)
 	}
 
 	return uploadResults
@@ -314,9 +304,9 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*taskWithInputs, erro
 			if !c.force {
 				continue
 			}
+		} else {
+			stdout.Printf("%-*s%s%s\n", taskIDColLen, task, sep, terminal.ColoredTaskStatus(status))
 		}
-
-		stdout.Printf("%-*s%s%s\n", taskIDColLen, task, sep, terminal.ColoredTaskStatus(status))
 
 		result = append(result, &taskWithInputs{
 			task:   task,
