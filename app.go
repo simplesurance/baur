@@ -1,7 +1,6 @@
 package baur
 
 import (
-	"fmt"
 	"path"
 	"path/filepath"
 	"sort"
@@ -31,16 +30,6 @@ func NewApp(appCfg *cfg.App, repositoryRootPath string) (*App, error) {
 		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
 	}
 
-	if len(appCfg.Tasks) > 1 {
-		return nil, fmt.Errorf("%s: has >1 tasks defined, only 1 task definition with name 'build' is currently allowed", appCfg.Name)
-	}
-
-	if len(appCfg.Tasks) == 1 {
-		if appCfg.Tasks[0].Name != "build" {
-			return nil, fmt.Errorf("%s: has a task defined with name %q, only 1 task definition with name 'build' is currently allowed", appCfg.Name, appCfg.Tasks[0].Name)
-		}
-	}
-
 	app := App{
 		cfg:                appCfg,
 		Path:               appDir,
@@ -57,7 +46,8 @@ func (a *App) String() string {
 	return a.Name
 }
 
-func (a *App) Task() *Task {
+// TODO: rename to Tasks
+func (a *App) Task() []*Task {
 	result := make([]*Task, 0, len(a.cfg.Tasks))
 
 	for _, taskCfg := range a.cfg.Tasks {
@@ -65,13 +55,7 @@ func (a *App) Task() *Task {
 		result = append(result, task)
 	}
 
-	// TODO: return a []*Task and remove this check when the db and
-	// commands are able to handle multiple tasks.
-	if len(result) != 1 {
-		panic(fmt.Sprintf("%s: found %d tasks, expected 1", a.Name, len(result)))
-	}
-
-	return result[0]
+	return result
 }
 
 // SortAppsByName sorts the apps in the slice by Name

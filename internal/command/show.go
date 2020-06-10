@@ -60,68 +60,71 @@ func showApp(arg string) {
 
 	repo := MustFindRepository()
 	app := mustArgToApp(repo, arg)
-	task := app.Task()
 
 	formatter = table.New(nil, os.Stdout)
 
 	mustWriteRow(formatter, []interface{}{terminal.Underline("General:")})
-	mustWriteRow(formatter, []interface{}{"", "Name:", terminal.Highlight(app.Name)})
+	mustWriteRow(formatter, []interface{}{"", "Application Name:", terminal.Highlight(app.Name)})
 	mustWriteRow(formatter, []interface{}{"", "Path:", terminal.Highlight(app.RelPath)})
-	mustWriteRow(formatter, []interface{}{"", "Build Command:", terminal.Highlight(task.Command)})
+
+	stderr.Println("Showing task information not implemented")
+	os.Exit(1)
+
+	//mustWriteRow(formatter, []interface{}{"", "Build Command:", terminal.Highlight(task.Command)})
 
 	// TODO: make this work again, print the outputs:
 	/*
-		outputs, err := task.Outputs()
-		exitOnErr(err)
+			outputs, err := task.Outputs()
+			exitOnErr(err)
 
-		if len(outputs) != 0 {
-			mustWriteRow(formatter, []interface{}{})
-			mustWriteRow(formatter, []interface{}{terminal.Underline("Outputs:")})
+			if len(outputs) != 0 {
+				mustWriteRow(formatter, []interface{}{})
+				mustWriteRow(formatter, []interface{}{terminal.Underline("Outputs:")})
 
-			for i, art := range outputs {
-				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight(art.Type())})
-				mustWriteRow(formatter, []interface{}{"", "Local:", terminal.Highlight(art.String())})
-				mustWriteRow(formatter, []interface{}{"", "Remote:", terminal.Highlight(art.UploadDestination())})
+				for i, art := range outputs {
+					mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight(art.Type())})
+					mustWriteRow(formatter, []interface{}{"", "Local:", terminal.Highlight(art.String())})
+					mustWriteRow(formatter, []interface{}{"", "Remote:", terminal.Highlight(art.UploadDestination())})
 
-				if i+1 < len(outputs) {
-					mustWriteRow(formatter, []interface{}{})
+					if i+1 < len(outputs) {
+						mustWriteRow(formatter, []interface{}{})
+					}
 				}
+			}
+
+		if task.HasInputs() {
+			mustWriteRow(formatter, []interface{}{})
+			mustWriteRow(formatter, []interface{}{terminal.Underline("Inputs:")})
+
+			if len(task.UnresolvedInputs.Files.Paths) > 0 {
+				mustWriteRow(formatter, []interface{}{})
+
+				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("File")})
+				mustWriteRow(formatter, []interface{}{"",
+					"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
+				})
+
+			}
+
+			if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
+				mustWriteRow(formatter, []interface{}{})
+
+				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GitFile")})
+				mustWriteRow(formatter, []interface{}{"",
+					"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", "))})
+			}
+
+			if len(task.UnresolvedInputs.GolangSources.Paths) > 0 {
+				mustWriteRow(formatter, []interface{}{})
+
+				mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GolangSources")})
+				mustWriteRow(formatter, []interface{}{"",
+					"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", "))})
+				mustWriteRow(formatter, []interface{}{"",
+					"Environment:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", "))})
 			}
 		}
 	*/
-
-	if task.HasInputs() {
-		mustWriteRow(formatter, []interface{}{})
-		mustWriteRow(formatter, []interface{}{terminal.Underline("Inputs:")})
-
-		if len(task.UnresolvedInputs.Files.Paths) > 0 {
-			mustWriteRow(formatter, []interface{}{})
-
-			mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("File")})
-			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
-			})
-
-		}
-
-		if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
-			mustWriteRow(formatter, []interface{}{})
-
-			mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GitFile")})
-			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", "))})
-		}
-
-		if len(task.UnresolvedInputs.GolangSources.Paths) > 0 {
-			mustWriteRow(formatter, []interface{}{})
-
-			mustWriteRow(formatter, []interface{}{"", "Type:", terminal.Highlight("GolangSources")})
-			mustWriteRow(formatter, []interface{}{"",
-				"Paths:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", "))})
-			mustWriteRow(formatter, []interface{}{"",
-				"Environment:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", "))})
-		}
-	}
 
 	err := formatter.Flush()
 	exitOnErr(err)
