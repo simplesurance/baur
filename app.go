@@ -46,8 +46,7 @@ func (a *App) String() string {
 	return a.Name
 }
 
-// TODO: rename to Tasks
-func (a *App) Task() []*Task {
+func (a *App) Tasks() []*Task {
 	result := make([]*Task, 0, len(a.cfg.Tasks))
 
 	for _, taskCfg := range a.cfg.Tasks {
