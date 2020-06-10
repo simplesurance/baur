@@ -11,7 +11,6 @@ import (
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/internal/command/terminal"
-	"github.com/simplesurance/baur/log"
 )
 
 type lsInputsConf struct {
@@ -21,7 +20,7 @@ type lsInputsConf struct {
 }
 
 var lsInputsCmd = &cobra.Command{
-	Use:   "inputs [<APP-NAME>|<PATH>]",
+	Use:   "inputs [<APP-NAME>.<TASK-NAME>]",
 	Short: "list resolved build inputs of an application",
 	Run:   lsInputs,
 	Args:  cobra.ExactArgs(1),
@@ -41,17 +40,18 @@ func init() {
 
 	lsCmd.AddCommand(lsInputsCmd)
 }
+
 func lsInputs(cmd *cobra.Command, args []string) {
 	var formatter format.Formatter
 	var headers []string
 
 	rep := MustFindRepository()
-	app := mustArgToApp(rep, args[0])
-	task := app.Task()
+	task := mustArgToTask(rep, args[0])
 	writeHeaders := !lsInputsConfig.quiet && !lsInputsConfig.csv
 
 	if !task.HasInputs() {
-		log.Fatalf("No inputs are configured in %s of %s", baur.AppCfgFile, app.Name)
+		stderr.TaskPrintf(task, "has no inputs configured")
+		os.Exit(1)
 	}
 
 	if writeHeaders {

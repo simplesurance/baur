@@ -49,6 +49,16 @@ func MustFindRepository() *baur.Repository {
 	return repo
 }
 
+func mustArgToTask(repo *baur.Repository, arg string) *baur.Task {
+	tasks := mustArgToTasks(repo, []string{arg})
+	if len(tasks) > 1 {
+		log.Fatalf("argument %q matches multiple tasks, must match only 1 task\n", arg)
+	}
+
+	// mustArgToApps ensures that >=1 apps are returned
+	return tasks[0]
+}
+
 func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	apps := mustArgToApps(repo, []string{arg})
 	if len(apps) > 1 {
@@ -114,6 +124,26 @@ func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
 	}
 
 	return clt
+}
+
+func mustArgToTasks(repo *baur.Repository, args []string) []*baur.Task {
+	repoState := git.NewRepositoryState(repo.Path)
+
+	appLoader, err := baur.NewLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
+	exitOnErr(err)
+
+	tasks, err := appLoader.LoadTasks(args...)
+	exitOnErr(err)
+
+	if len(tasks) == 0 {
+		log.Fatalf("could not find any tasks\n"+
+			"- ensure the [Discover] section is correct in %s\n"+
+			"- ensure that you have >1 application dirs "+
+			"containing a %s file with task definitions",
+			repo.CfgPath, baur.AppCfgFile)
+	}
+
+	return tasks
 }
 
 func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
