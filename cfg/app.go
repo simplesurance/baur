@@ -17,7 +17,7 @@ type App struct {
 
 // Build the build section
 type Build struct {
-	Command  string      `toml:"command" commented:"false" comment:"Command to build the application"`
+	Command  string      `toml:"command" commented:"false" comment:"Command to build the application, valid variables: $ROOT, $APPNAME"`
 	Includes []string    `toml:"includes" comment:"Repository relative paths to baur include files that the build inherits.\n Valid variables: $ROOT"`
 	Input    BuildInput  `comment:"Specification of build inputs like source files, Makefiles, etc"`
 	Output   BuildOutput `comment:"Specification of build outputs produced by the [Build.command]"`
@@ -32,7 +32,7 @@ type BuildInput struct {
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
-	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT " commented:"true"`
+	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT" commented:"true"`
 	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored." commented:"true"`
 }
 
