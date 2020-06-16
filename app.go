@@ -197,12 +197,16 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
 	}
 
+	cmd := strings.TrimSpace(appCfg.Build.Command)
+	cmd = replaceROOTvar(cmd, repository)
+	cmd = replaceAppNameVar(cmd, appCfg.Name)
+
 	app := App{
 		Repository: repository,
 		Path:       path.Dir(cfgPath),
 		RelPath:    appRelPath,
 		Name:       appCfg.Name,
-		BuildCmd:   strings.TrimSpace(appCfg.Build.Command),
+		BuildCmd:   cmd,
 	}
 
 	err = app.addBuildOutput(&appCfg.Build.Output)
