@@ -1,14 +1,18 @@
 package repotest
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/testutils"
+	"github.com/simplesurance/baur/testutils/dbtest"
 	"github.com/simplesurance/baur/testutils/fstest"
 )
 
@@ -22,7 +26,7 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 		Tasks: []*cfg.Task{
 			{
 				Name:    "build",
-				Command: "build.sh",
+				Command: "./build.sh",
 				Input: cfg.Input{
 					Files: cfg.FileInputs{
 						Paths: []string{"build.sh", "output_content.txt"},
@@ -31,7 +35,7 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 				Output: cfg.Output{
 					File: []*cfg.FileOutput{
 						{
-							Path: "artifact",
+							Path: "output",
 							FileCopy: cfg.FileCopy{
 								Path: r.FilecopyArtifactDir,
 							},
@@ -42,9 +46,9 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 
 			{
 				Name:    "check",
-				Command: "check.sh",
+				Command: "./check.sh",
 				Input: cfg.Input{
-					GitFiles: cfg.GitFileInputs{
+					Files: cfg.FileInputs{
 						Paths: []string{"check.sh"},
 					},
 				},
@@ -77,7 +81,7 @@ cat output_content.txt > output
 
 	fstest.Chmod(t, buildFilePath, os.ModePerm)
 
-	fstest.WriteToFile(t, []byte("1"), path.Join(appDir, "output_content.text"))
+	fstest.WriteToFile(t, []byte("1"), path.Join(appDir, "output_content.txt"))
 
 	fstest.WriteToFile(t, []byte(`
 #!/bin/sh
@@ -97,25 +101,61 @@ type Repo struct {
 	FilecopyArtifactDir string
 }
 
+// TaskIDs returns the tasks ids (<AppName>.<TaskName>) of all tasks in the AppCfgs slice
+func (r *Repo) TaskIDs() []string {
+	var result []string
+
+	for _, appCfg := range r.AppCfgs {
+		for _, task := range appCfg.Tasks {
+			result = append(result, fmt.Sprintf("%s.%s", appCfg.Name, task.Name))
+		}
+	}
+
+	return result
+}
+
 type repoOptions struct {
-	keepTmpDir bool
+	keepTmpDir  bool
+	createNewDB bool
 }
 
 type Opt func(*repoOptions)
 
-func OptKeepTmpDir() Opt {
+func WithKeepTmpDir() Opt {
 	return func(o *repoOptions) {
 		o.keepTmpDir = true
+	}
+}
+
+// WithNewDB create a new database with an unique name and use it for the baur
+// repository.
+func WithNewDB() Opt {
+	return func(o *repoOptions) {
+		o.createNewDB = true
 	}
 }
 
 func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 	t.Helper()
 
+	var dbURL string
 	var options repoOptions
 
 	for _, opt := range opts {
 		opt(&options)
+	}
+
+	if options.createNewDB {
+		var err error
+
+		dbName := "baur" + strings.Replace(uuid.New().String(), "-", "", -1)
+
+		t.Logf("creating database %s", dbName)
+		if dbURL, err = dbtest.CreateDB(dbName); err != nil {
+			t.Fatalf("creating db failed: %s", err)
+		}
+	} else {
+		dbURL = dbtest.PSQLURL()
 	}
 
 	tempDir, err := ioutil.TempDir("", "baur-filesrc-test")
@@ -144,11 +184,11 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 		},
 
 		Database: cfg.Database{
-			PGSQLURL: testutils.PSQLURL(),
+			PGSQLURL: dbURL,
 		},
 	}
 
-	if err := cfgR.ToFile(path.Join(tempDir, baur.RepositoryCfgFile), false); err != nil {
+	if err := cfgR.ToFile(path.Join(tempDir, baur.RepositoryCfgFile)); err != nil {
 		t.Fatalf("could not write repository cfg file: %s", err)
 	}
 
