@@ -3,7 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -71,7 +70,7 @@ func (c *showCmd) showApp(arg string) {
 	tasks := app.Tasks()
 	baur.SortTasksByID(tasks)
 
-	formatter := table.New(nil, os.Stdout)
+	formatter := table.New(nil, stdout)
 
 	mustWriteRowVa(formatter, "Application Name:", terminal.Highlight(app.Name), "", "")
 	mustWriteRowVa(formatter, "Path:", terminal.Highlight(app.RelPath), "")
@@ -211,7 +210,7 @@ func (c *showCmd) showBuild(taskRunID int) {
 		exitOnErr(err)
 	}
 
-	formatter := table.New(nil, os.Stdout)
+	formatter := table.New(nil, stdout)
 
 	mustWriteRowVa(formatter, "Run-ID:", terminal.Highlight(taskRun.ID))
 	mustWriteRowVa(formatter, "Application:", terminal.Highlight(taskRun.ApplicationName))

@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -82,9 +81,9 @@ func runBuildLs(cmd *cobra.Command, args []string) {
 
 	var formatter format.Formatter
 	if lsBuildsConfig.csv {
-		formatter = csv.New(nil, os.Stdout)
+		formatter = csv.New(nil, stdout)
 	} else {
-		formatter = table.New(nil, os.Stdout)
+		formatter = table.New(nil, stdout)
 	}
 
 	if !lsBuildsConfig.csv && !lsBuildsConfig.quiet {

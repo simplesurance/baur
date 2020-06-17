@@ -63,9 +63,9 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	}
 
 	if lsInputsConfig.csv {
-		formatter = csv.New(headers, os.Stdout)
+		formatter = csv.New(headers, stdout)
 	} else {
-		formatter = table.New(headers, os.Stdout)
+		formatter = table.New(headers, stdout)
 	}
 
 	inputResolver := baur.NewInputResolver()

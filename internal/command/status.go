@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -134,9 +133,9 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	if c.csv {
-		formatter = csv.New(headers, os.Stdout)
+		formatter = csv.New(headers, stdout)
 	} else {
-		formatter = table.New(headers, os.Stdout)
+		formatter = table.New(headers, stdout)
 	}
 
 	showProgress := len(tasks) >= 5 && !c.quiet && !c.csv
