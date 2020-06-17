@@ -176,7 +176,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	stdout.Println("all tasks executed, waiting for uploads to finish...")
 	c.uploadRoutinePool.Wait()
 	stdout.PrintSep()
-	stdout.Printf("finished in: %ss\n", strDurationSec(startTime, time.Now()))
+	stdout.Printf("finished in: %ss\n", terminal.StrDurationSec(startTime, time.Now()))
 }
 
 type pendingTasks struct {
@@ -246,7 +246,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTasks) {
 			log.Fatalf("%s: execution %s (%ss), command exited with code %d, output:\n%s\n",
 				t.task,
 				statusStr,
-				strDurationSec(runResult.StartTime, runResult.StopTime),
+				terminal.StrDurationSec(runResult.StartTime, runResult.StopTime),
 				runResult.ExitCode,
 				runResult.StrOutput())
 		}
@@ -255,7 +255,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTasks) {
 
 		stdout.TaskPrintf(t.task, "execution %s (%ss)\n",
 			statusStr,
-			strDurationSec(runResult.StartTime, runResult.StopTime),
+			terminal.StrDurationSec(runResult.StartTime, runResult.StopTime),
 		)
 
 		outputs, err := baur.OutputsFromTask(c.dockerClient, t.task)
@@ -296,7 +296,7 @@ func outputsExit(task *baur.Task, outputs []baur.Output) bool {
 			exitOnErrf(err, "%s :", task.ID())
 
 			stdout.TaskPrintf(task, "created %s (size: %s MiB)\n",
-				output, bytesToMib(size))
+				output, terminal.BytesToMib(size))
 
 			continue
 		}

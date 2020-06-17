@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/fatih/color"
 
@@ -182,18 +181,6 @@ func mustWriteRowVa(fmt format.Formatter, row ...interface{}) {
 // Deprecated: use  mustWriteRowVa
 func mustWriteRow(fmt format.Formatter, row []interface{}) {
 	mustWriteRowVa(fmt, row...)
-}
-
-func bytesToMib(bytes uint64) string {
-	return fmt.Sprintf("%.3f", float64(bytes)/1024/1024)
-}
-
-func durationToStrSeconds(duration time.Duration) string {
-	return fmt.Sprintf("%.3f", duration.Seconds())
-}
-
-func strDurationSec(start, end time.Time) string {
-	return durationToStrSeconds(end.Sub(start))
 }
 
 var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
