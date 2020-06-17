@@ -1,4 +1,4 @@
-// +build integrationtest
+// +build dbtest
 
 package postgres
 
