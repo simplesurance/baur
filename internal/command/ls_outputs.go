@@ -9,6 +9,7 @@ import (
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
+	"github.com/simplesurance/baur/internal/command/terminal"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
@@ -75,8 +76,8 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 				row = []interface{}{
 					upload.URI,
 					o.Digest,
-					bytesToMib(o.SizeBytes),
-					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
+					terminal.BytesToMib(o.SizeBytes),
+					terminal.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
 					o.Type,
 					upload.Method,
 				}

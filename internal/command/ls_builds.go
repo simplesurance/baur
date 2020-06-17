@@ -137,7 +137,7 @@ func printTaskRun(formatter format.Formatter, taskRun *storage.TaskRunWithID) er
 		strconv.Itoa(taskRun.ID),
 		taskRun.ApplicationName,
 		taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
-		durationToStrSeconds(
+		terminal.DurationToStrSeconds(
 			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
 		),
 		taskRun.TotalInputDigest,

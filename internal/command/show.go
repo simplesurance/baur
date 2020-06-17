@@ -247,7 +247,7 @@ func (c *showCmd) showBuild(taskRunID int) {
 			formatter,
 			"",
 			"Size:",
-			terminal.Highlight(bytesToMib(o.SizeBytes)+" MiB"),
+			terminal.Highlight(terminal.BytesToMib(o.SizeBytes)+" MiB"),
 		)
 		mustWriteRowVa(formatter, "", "Type:", terminal.Highlight(o.Type))
 
@@ -262,7 +262,7 @@ func (c *showCmd) showBuild(taskRunID int) {
 				"",
 				"Upload Duration:",
 				terminal.Highlight(
-					durationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp))+" s"),
+					terminal.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp))+" s"),
 			)
 			mustWriteRowVa(
 				formatter,
