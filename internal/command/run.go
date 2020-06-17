@@ -11,7 +11,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/git"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/routines"
 	"github.com/simplesurance/baur/storage"
@@ -52,21 +52,21 @@ The following Environment Variables are supported:
     %s
     %s
 `,
-	terminal.ColoredTaskStatus(baur.TaskStatusExecutionPending),
-	terminal.ColoredTaskStatus(baur.TaskStatusInputsUndefined),
+	term.ColoredTaskStatus(baur.TaskStatusExecutionPending),
+	term.ColoredTaskStatus(baur.TaskStatusInputsUndefined),
 
-	terminal.Highlight(envVarPSQLURL),
+	term.Highlight(envVarPSQLURL),
 
-	terminal.Highlight("AWS_REGION"),
-	terminal.Highlight("AWS_ACCESS_KEY_ID"),
-	terminal.Highlight("AWS_SECRET_ACCESS_KEY"),
+	term.Highlight("AWS_REGION"),
+	term.Highlight("AWS_ACCESS_KEY_ID"),
+	term.Highlight("AWS_SECRET_ACCESS_KEY"),
 
-	terminal.Highlight(dockerEnvUsernameVar),
-	terminal.Highlight(dockerEnvPasswordVar),
-	terminal.Highlight("DOCKER_HOST"),
-	terminal.Highlight("DOCKER_API_VERSION"),
-	terminal.Highlight("DOCKER_CERT_PATH"),
-	terminal.Highlight("DOCKER_TLS_VERIFY"))
+	term.Highlight(dockerEnvUsernameVar),
+	term.Highlight(dockerEnvPasswordVar),
+	term.Highlight("DOCKER_HOST"),
+	term.Highlight("DOCKER_API_VERSION"),
+	term.Highlight("DOCKER_CERT_PATH"),
+	term.Highlight("DOCKER_TLS_VERIFY"))
 
 func init() {
 	rootCmd.AddCommand(&newRunCmd().Command)
@@ -166,17 +166,17 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 
 	if c.force {
 		stdout.Printf("Running %d/%d task(s) with status %s, %s\n\n",
-			len(pendingTasks), len(tasks), terminal.ColoredTaskStatus(baur.TaskStatusExecutionPending), terminal.ColoredTaskStatus(baur.TaskStatusRunExist))
+			len(pendingTasks), len(tasks), term.ColoredTaskStatus(baur.TaskStatusExecutionPending), term.ColoredTaskStatus(baur.TaskStatusRunExist))
 	} else {
 		stdout.Printf("Running %d/%d task(s) with status %s\n\n",
-			len(pendingTasks), len(tasks), terminal.ColoredTaskStatus(baur.TaskStatusExecutionPending))
+			len(pendingTasks), len(tasks), term.ColoredTaskStatus(baur.TaskStatusExecutionPending))
 	}
 
 	c.runUploadStore(pendingTasks)
 	stdout.Println("all tasks executed, waiting for uploads to finish...")
 	c.uploadRoutinePool.Wait()
 	stdout.PrintSep()
-	stdout.Printf("finished in: %ss\n", terminal.StrDurationSec(startTime, time.Now()))
+	stdout.Printf("finished in: %ss\n", term.StrDurationSec(startTime, time.Now()))
 }
 
 type pendingTasks struct {
@@ -228,7 +228,7 @@ func (c *runCmd) uploadAndRecord(arg interface{}) {
 	id, err := baur.StoreRun(ctx, c.storage, c.gitState, wa.pendingTask.task, wa.pendingTask.inputs, wa.runResult, uploadResults)
 	exitOnErr(err)
 
-	stdout.TaskPrintf(wa.pendingTask.task, "run stored in database with ID %s\n", terminal.Highlight(id))
+	stdout.TaskPrintf(wa.pendingTask.task, "run stored in database with ID %s\n", term.Highlight(id))
 }
 
 func (c *runCmd) runUploadStore(taskToRun []*pendingTasks) {
@@ -241,21 +241,21 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTasks) {
 		exitOnErr(err)
 
 		if runResult.Result.ExitCode != 0 {
-			statusStr := terminal.RedHighlight("failed")
+			statusStr := term.RedHighlight("failed")
 
 			log.Fatalf("%s: execution %s (%ss), command exited with code %d, output:\n%s\n",
 				t.task,
 				statusStr,
-				terminal.StrDurationSec(runResult.StartTime, runResult.StopTime),
+				term.StrDurationSec(runResult.StartTime, runResult.StopTime),
 				runResult.ExitCode,
 				runResult.StrOutput())
 		}
 
-		statusStr := terminal.GreenHighlight("successful")
+		statusStr := term.GreenHighlight("successful")
 
 		stdout.TaskPrintf(t.task, "execution %s (%ss)\n",
 			statusStr,
-			terminal.StrDurationSec(runResult.StartTime, runResult.StopTime),
+			term.StrDurationSec(runResult.StartTime, runResult.StopTime),
 		)
 
 		outputs, err := baur.OutputsFromTask(c.dockerClient, t.task)
@@ -296,7 +296,7 @@ func outputsExit(task *baur.Task, outputs []baur.Output) bool {
 			exitOnErrf(err, "%s :", task.ID())
 
 			stdout.TaskPrintf(task, "created %s (size: %s MiB)\n",
-				output, terminal.BytesToMib(size))
+				output, term.BytesToMib(size))
 
 			continue
 		}
@@ -339,13 +339,13 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTasks, error)
 
 		if status == baur.TaskStatusRunExist {
 			stdout.Printf("%-*s%s%s (%s)\n",
-				taskIDColLen, task, sep, terminal.ColoredTaskStatus(status), terminal.GreenHighlight(run.ID))
+				taskIDColLen, task, sep, term.ColoredTaskStatus(status), term.GreenHighlight(run.ID))
 
 			if !c.force {
 				continue
 			}
 		} else {
-			stdout.Printf("%-*s%s%s\n", taskIDColLen, task, sep, terminal.ColoredTaskStatus(status))
+			stdout.Printf("%-*s%s%s\n", taskIDColLen, task, sep, term.ColoredTaskStatus(status))
 		}
 
 		result = append(result, &pendingTasks{

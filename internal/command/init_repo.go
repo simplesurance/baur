@@ -9,7 +9,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -55,15 +55,15 @@ func initRepo(cmd *cobra.Command, args []string) {
 	}
 
 	stdout.Printf("Repository configuration was written to %s\n",
-		terminal.Highlight(repoCfgPath))
+		term.Highlight(repoCfgPath))
 	stdout.Printf("\nNext Steps:\n"+
 		"1. Adapt your '%s' configuration file, ensure the '%s' parameter is correct\n"+
 		"2. Run '%s' to create the baur tables in the PostgreSQL database\n"+
 		"3. Run '%s' to create application configuration files\n"+
 		"Optional: Run '%s' to setup bash completion\n",
-		terminal.Highlight(baur.RepositoryCfgFile),
-		terminal.Highlight("postgresql_url"),
-		terminal.Highlight(cmdInitDb),
-		terminal.Highlight(cmdInitApp),
-		terminal.Highlight(cmdInitBashComp))
+		term.Highlight(baur.RepositoryCfgFile),
+		term.Highlight("postgresql_url"),
+		term.Highlight(cmdInitDb),
+		term.Highlight(cmdInitApp),
+		term.Highlight(cmdInitBashComp))
 }

@@ -1,4 +1,4 @@
-package terminal
+package term
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 const separator = "------------------------------------------------------------------------------"
 
-// Stream is a concurrency-safe output for terminal messages.
+// Stream is a concurrency-safe output for term.messages.
 type Stream struct {
 	stream io.Writer
 	lock   sync.Mutex

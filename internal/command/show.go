@@ -10,7 +10,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/format/table"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
@@ -72,27 +72,27 @@ func (c *showCmd) showApp(arg string) {
 
 	formatter := table.New(nil, stdout)
 
-	mustWriteRowVa(formatter, "Application Name:", terminal.Highlight(app.Name), "", "")
-	mustWriteRowVa(formatter, "Path:", terminal.Highlight(app.RelPath), "")
+	mustWriteRowVa(formatter, "Application Name:", term.Highlight(app.Name), "", "")
+	mustWriteRowVa(formatter, "Path:", term.Highlight(app.RelPath), "")
 
 	mustWriteRowVa(formatter, "", "", "", "")
 	for taskIdx, task := range tasks {
-		mustWriteRowVa(formatter, terminal.Underline("Task"))
-		mustWriteRowVa(formatter, "", "Name:", terminal.Highlight(task.Name), "", "")
-		mustWriteRowVa(formatter, "", "Command:", terminal.Highlight(task.Command), "", "")
+		mustWriteRowVa(formatter, term.Underline("Task"))
+		mustWriteRowVa(formatter, "", "Name:", term.Highlight(task.Name), "", "")
+		mustWriteRowVa(formatter, "", "Command:", term.Highlight(task.Command), "", "")
 
 		if task.HasInputs() {
 			mustWriteRowVa(formatter, "", "", "", "")
-			mustWriteRowVa(formatter, "", terminal.Underline("Inputs:"), "", "")
+			mustWriteRowVa(formatter, "", term.Underline("Inputs:"), "", "")
 
 			if len(task.UnresolvedInputs.Files.Paths) > 0 {
-				mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("File"))
+				mustWriteRowVa(formatter, "", "", "Type:", term.Highlight("File"))
 				mustWriteRowVa(
 					formatter,
 					"",
 					"",
 					"Paths:",
-					terminal.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
+					term.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
 				)
 			}
 
@@ -101,13 +101,13 @@ func (c *showCmd) showApp(arg string) {
 					mustWriteRowVa(formatter, "", "", "", "")
 				}
 
-				mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("GitFile"))
+				mustWriteRowVa(formatter, "", "", "Type:", term.Highlight("GitFile"))
 				mustWriteRowVa(
 					formatter,
 					"",
 					"",
 					"Paths:",
-					terminal.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", ")),
+					term.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", ")),
 				)
 			}
 
@@ -116,33 +116,33 @@ func (c *showCmd) showApp(arg string) {
 					mustWriteRowVa(formatter, "", "", "", "")
 				}
 
-				mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("GolangSources"))
+				mustWriteRowVa(formatter, "", "", "Type:", term.Highlight("GolangSources"))
 				mustWriteRowVa(
 					formatter,
 					"",
 					"",
 					"Paths:",
-					terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", ")),
+					term.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", ")),
 				)
 				mustWriteRowVa(
 					formatter,
 					"",
 					"",
-					"Environment:", terminal.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", ")),
+					"Environment:", term.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", ")),
 				)
 			}
 		}
 
 		if task.HasOutputs() {
-			mustWriteRowVa(formatter, "", terminal.Underline("Outputs:"), "", "")
+			mustWriteRowVa(formatter, "", term.Underline("Outputs:"), "", "")
 		}
 
 		for i, di := range task.Outputs.DockerImage {
-			mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("Docker Image"))
-			mustWriteRowVa(formatter, "", "", "IDFile:", terminal.Highlight(di.IDFile))
-			mustWriteRowVa(formatter, "", "", "Registry:", terminal.Highlight(di.RegistryUpload.Registry))
-			mustWriteRowVa(formatter, "", "", "Repository:", terminal.Highlight(di.RegistryUpload.Repository))
-			mustWriteRowVa(formatter, "", "", "Tag:", terminal.Highlight(di.RegistryUpload.Tag))
+			mustWriteRowVa(formatter, "", "", "Type:", term.Highlight("Docker Image"))
+			mustWriteRowVa(formatter, "", "", "IDFile:", term.Highlight(di.IDFile))
+			mustWriteRowVa(formatter, "", "", "Registry:", term.Highlight(di.RegistryUpload.Registry))
+			mustWriteRowVa(formatter, "", "", "Repository:", term.Highlight(di.RegistryUpload.Repository))
+			mustWriteRowVa(formatter, "", "", "Tag:", term.Highlight(di.RegistryUpload.Tag))
 
 			if i+1 < len(task.Outputs.DockerImage) {
 				mustWriteRowVa(formatter, "", "", "", "")
@@ -154,16 +154,16 @@ func (c *showCmd) showApp(arg string) {
 				mustWriteRowVa(formatter, "", "", "", "")
 			}
 
-			mustWriteRowVa(formatter, "", "", "Type:", terminal.Highlight("File"))
-			mustWriteRowVa(formatter, "", "", "Path:", terminal.Highlight(file.Path))
+			mustWriteRowVa(formatter, "", "", "Type:", term.Highlight("File"))
+			mustWriteRowVa(formatter, "", "", "Path:", term.Highlight(file.Path))
 
 			if !file.FileCopy.IsEmpty() {
-				mustWriteRowVa(formatter, "", "", "Filecopy Destination:", terminal.Highlight(file.FileCopy.Path))
+				mustWriteRowVa(formatter, "", "", "Filecopy Destination:", term.Highlight(file.FileCopy.Path))
 			}
 
 			if !file.S3Upload.IsEmpty() {
-				mustWriteRowVa(formatter, "", "", "S3 Bucket:", terminal.Highlight(file.S3Upload.Bucket))
-				mustWriteRowVa(formatter, "", "", "S3 Destfile:", terminal.Highlight(file.S3Upload.DestFile))
+				mustWriteRowVa(formatter, "", "", "S3 Bucket:", term.Highlight(file.S3Upload.Bucket))
+				mustWriteRowVa(formatter, "", "", "S3 Destfile:", term.Highlight(file.S3Upload.DestFile))
 			}
 
 			if i+1 < len(task.Outputs.File) {
@@ -212,60 +212,60 @@ func (c *showCmd) showBuild(taskRunID int) {
 
 	formatter := table.New(nil, stdout)
 
-	mustWriteRowVa(formatter, "Run-ID:", terminal.Highlight(taskRun.ID))
-	mustWriteRowVa(formatter, "Application:", terminal.Highlight(taskRun.ApplicationName))
-	mustWriteRowVa(formatter, "Task:", terminal.Highlight(taskRun.TaskName))
+	mustWriteRowVa(formatter, "Run-ID:", term.Highlight(taskRun.ID))
+	mustWriteRowVa(formatter, "Application:", term.Highlight(taskRun.ApplicationName))
+	mustWriteRowVa(formatter, "Task:", term.Highlight(taskRun.TaskName))
 
 	if taskRun.Result == storage.ResultSuccess {
-		mustWriteRowVa(formatter, "Result", terminal.GreenHighlight(taskRun.Result))
+		mustWriteRowVa(formatter, "Result", term.GreenHighlight(taskRun.Result))
 	} else {
-		mustWriteRowVa(formatter, "Result", terminal.RedHighlight(taskRun.Result))
+		mustWriteRowVa(formatter, "Result", term.RedHighlight(taskRun.Result))
 	}
 
-	mustWriteRowVa(formatter, "Started At:", terminal.Highlight(taskRun.StartTimestamp))
+	mustWriteRowVa(formatter, "Started At:", term.Highlight(taskRun.StartTimestamp))
 	mustWriteRowVa(
 		formatter,
 		"Build Duration:",
-		terminal.Highlight(fmt.Sprintf("%.2f s", taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds())),
+		term.Highlight(fmt.Sprintf("%.2f s", taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds())),
 	)
 
-	mustWriteRowVa(formatter, "Git Commit:", terminal.Highlight(vcsStr(&taskRun.TaskRun)))
+	mustWriteRowVa(formatter, "Git Commit:", term.Highlight(vcsStr(&taskRun.TaskRun)))
 
-	mustWriteRowVa(formatter, "Total Input Digest:", terminal.Highlight(taskRun.TotalInputDigest))
-	mustWriteRowVa(formatter, "Output Count:", terminal.Highlight(len(outputs)))
+	mustWriteRowVa(formatter, "Total Input Digest:", term.Highlight(taskRun.TotalInputDigest))
+	mustWriteRowVa(formatter, "Output Count:", term.Highlight(len(outputs)))
 
 	if len(outputs) > 0 {
 		mustWriteRowVa(formatter)
-		mustWriteRowVa(formatter, terminal.Underline("Outputs:"))
+		mustWriteRowVa(formatter, term.Underline("Outputs:"))
 	}
 
 	for i, o := range outputs {
-		mustWriteRowVa(formatter, "", "Local Path:", terminal.Highlight(o.Name))
-		mustWriteRowVa(formatter, "", "Digest:", terminal.Highlight(o.Digest))
+		mustWriteRowVa(formatter, "", "Local Path:", term.Highlight(o.Name))
+		mustWriteRowVa(formatter, "", "Digest:", term.Highlight(o.Digest))
 		mustWriteRowVa(
 			formatter,
 			"",
 			"Size:",
-			terminal.Highlight(terminal.BytesToMib(o.SizeBytes)+" MiB"),
+			term.Highlight(term.BytesToMib(o.SizeBytes)+" MiB"),
 		)
-		mustWriteRowVa(formatter, "", "Type:", terminal.Highlight(o.Type))
+		mustWriteRowVa(formatter, "", "Type:", term.Highlight(o.Type))
 
 		mustWriteRowVa(formatter)
-		mustWriteRowVa(formatter, "", terminal.Underline("Uploads:"))
+		mustWriteRowVa(formatter, "", term.Underline("Uploads:"))
 
 		for uploadIdx, upload := range o.Uploads {
-			mustWriteRowVa(formatter, "", "", "URI:", terminal.Highlight(upload.URI))
+			mustWriteRowVa(formatter, "", "", "URI:", term.Highlight(upload.URI))
 			mustWriteRowVa(
 				formatter,
 				"",
 				"",
 				"Upload Duration:",
-				terminal.Highlight(
-					terminal.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp))+" s"),
+				term.Highlight(
+					term.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp))+" s"),
 			)
 			mustWriteRowVa(
 				formatter,
-				"", "", "Upload Method:", terminal.Highlight(upload.Method),
+				"", "", "Upload Method:", term.Highlight(upload.Method),
 			)
 
 			if uploadIdx+1 < len(o.Uploads) {
