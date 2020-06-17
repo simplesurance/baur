@@ -10,17 +10,13 @@ import (
 
 const separator = "------------------------------------------------------------------------------"
 
-type OutputStreams struct {
-	Stdout *Stream
-	Stderr *Stream
-}
-
+// Stream is a concurrency-safe output for terminal messages.
 type Stream struct {
-	stream io.WriteCloser
+	stream io.Writer
 	lock   sync.Mutex
 }
 
-func NewStream(out io.WriteCloser) *Stream {
+func NewStream(out io.Writer) *Stream {
 	return &Stream{stream: out}
 }
 
@@ -38,6 +34,7 @@ func (s *Stream) Println(a ...interface{}) {
 	fmt.Fprintln(s.stream, a...)
 }
 
+// TaskPrintf prints a message that is prefixed with '<TASK-NAME>: '
 func (s *Stream) TaskPrintf(task *baur.Task, format string, a ...interface{}) {
 	prefix := Highlight(fmt.Sprintf("%s: ", task))
 
@@ -47,4 +44,11 @@ func (s *Stream) TaskPrintf(task *baur.Task, format string, a ...interface{}) {
 // PrintSep prints a separator line
 func (s *Stream) PrintSep() {
 	fmt.Fprintln(s.stream, separator)
+}
+
+func (s *Stream) Write(p []byte) (n int, err error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.stream.Write(p)
 }
