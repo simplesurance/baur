@@ -1,4 +1,4 @@
-package terminal
+package term
 
 import (
 	"github.com/fatih/color"

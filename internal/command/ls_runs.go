@@ -12,7 +12,7 @@ import (
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/internal/command/flag"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
@@ -74,13 +74,13 @@ func newLsRunsCmd() *lsRunsCmd {
 		"Only print task run IDs")
 
 	cmd.Flags().VarP(cmd.sort, "sort", "s",
-		cmd.sort.Usage(terminal.Highlight))
+		cmd.sort.Usage(term.Highlight))
 
 	cmd.Flags().VarP(&cmd.after, "after", "a",
-		fmt.Sprintf("Only show runs that were started after this datetime.\nFormat: %s", terminal.Highlight(flag.DateTimeFormatDescr)))
+		fmt.Sprintf("Only show runs that were started after this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
 
 	cmd.Flags().VarP(&cmd.before, "before", "b",
-		fmt.Sprintf("Only show runs that were started before this datetime.\nFormat: %s", terminal.Highlight(flag.DateTimeFormatDescr)))
+		fmt.Sprintf("Only show runs that were started before this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
 
 	return &cmd
 }
@@ -177,7 +177,7 @@ func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.Ta
 		taskRun.TaskName,
 		taskRun.Result,
 		taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
-		terminal.DurationToStrSeconds(
+		term.DurationToStrSeconds(
 			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
 		),
 		taskRun.TotalInputDigest,

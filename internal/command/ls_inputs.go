@@ -10,7 +10,7 @@ import (
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 )
 
 type lsInputsConf struct {
@@ -96,6 +96,6 @@ func lsInputs(cmd *cobra.Command, args []string) {
 		totalDigest, err := inputs.Digest()
 		exitOnErr(err, "calculating total input digest failed")
 
-		stdout.Printf("\nTotal Build Input Digest: %s\n", terminal.Highlight(totalDigest.String()))
+		stdout.Printf("\nTotal Build Input Digest: %s\n", term.Highlight(totalDigest.String()))
 	}
 }

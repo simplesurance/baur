@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/exec"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/version"
 )
@@ -30,8 +30,8 @@ var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
 
 var ctx = context.Background()
 
-var stdout = terminal.NewStream(os.Stdout)
-var stderr = terminal.NewStream(os.Stderr)
+var stdout = term.NewStream(os.Stdout)
+var stderr = term.NewStream(os.Stderr)
 
 func initSb(_ *cobra.Command, _ []string) {
 	if verboseFlag {

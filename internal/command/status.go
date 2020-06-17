@@ -11,7 +11,7 @@ import (
 	"github.com/simplesurance/baur/format/table"
 	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/internal/command/flag"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 )
@@ -72,10 +72,10 @@ func newStatusCmd() *statusCmd {
 
 	// TODO: refactor buildStatus struct
 	cmd.Flags().VarP(&cmd.buildStatus, "status", "s",
-		cmd.buildStatus.Usage(terminal.Highlight))
+		cmd.buildStatus.Usage(term.Highlight))
 
 	cmd.Flags().VarP(cmd.fields, "fields", "f",
-		cmd.fields.Usage(terminal.Highlight))
+		cmd.fields.Usage(term.Highlight))
 
 	return &cmd
 }

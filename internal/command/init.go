@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 )
 
 const (
@@ -27,10 +27,10 @@ Optional: %s
 
 Afterwards application configuration files can be created with the
 '%s' command.
-`, terminal.Highlight(cmdInitRepo),
-	terminal.Highlight(cmdInitDb),
-	terminal.Highlight(cmdInitBashComp),
-	terminal.Highlight(cmdInitApp))
+`, term.Highlight(cmdInitRepo),
+	term.Highlight(cmdInitDb),
+	term.Highlight(cmdInitBashComp),
+	term.Highlight(cmdInitApp))
 
 var initCmd = &cobra.Command{
 	Use:   "init",

@@ -9,7 +9,7 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/internal/command/terminal"
+	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 )
 
@@ -58,5 +58,5 @@ func initApp(cmd *cobra.Command, args []string) {
 	}
 
 	stdout.Printf("Application configuration file was written to %s\n",
-		terminal.Highlight(baur.AppCfgFile))
+		term.Highlight(baur.AppCfgFile))
 }
