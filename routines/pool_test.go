@@ -13,11 +13,10 @@ func TestScheduleAndWait(t *testing.T) {
 	pool := NewPool(5)
 
 	for i := range workDone {
-		pool.Queue(func(done interface{}) {
-			workDonePtr := done.(*int32)
-
-			atomic.StoreInt32(workDonePtr, 1)
-		}, &workDone[i])
+		iPtr := &workDone[i]
+		pool.Queue(func() {
+			atomic.StoreInt32(iPtr, 1)
+		})
 	}
 
 	pool.Wait()
@@ -32,5 +31,7 @@ func TestQueuePanicsAfterWait(t *testing.T) {
 	pool := NewPool(1)
 	pool.Wait()
 
-	assert.Panics(t, func() { pool.Queue(func(_ interface{}) {}, nil) })
+	assert.Panics(t, func() {
+		pool.Queue(func() {})
+	})
 }
