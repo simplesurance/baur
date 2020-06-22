@@ -6,31 +6,26 @@ import (
 
 // Pool is a FIFO go-routine pool.
 type Pool struct {
-	wq        []*work
+	wq        []WorkFn
 	terminate bool
 	wqMutex   sync.Mutex // protects wq and terminate
 
-	workChan chan *work
+	workChan chan WorkFn
 
 	schedulerNotifyChan chan struct{}
 
 	terminateWg sync.WaitGroup
 }
 
-type work struct {
-	fn       WorkFn
-	userData interface{}
-}
-
 // WorkFn is a function that is executed by the pool workers.
-type WorkFn func(userData interface{})
+type WorkFn func()
 
 // NewPool creates and start a new go-routine pool.
 // The pool starts <routines> number of workers.
 func NewPool(routines uint) *Pool {
 
 	p := Pool{
-		workChan:            make(chan *work, routines),
+		workChan:            make(chan WorkFn, routines),
 		schedulerNotifyChan: make(chan struct{}, 1),
 	}
 
@@ -70,7 +65,7 @@ func (p *Pool) scheduler() {
 	}
 }
 
-func (p *Pool) popWork() *work {
+func (p *Pool) popWork() WorkFn {
 	p.wqMutex.Lock()
 	defer p.wqMutex.Unlock()
 
@@ -88,14 +83,14 @@ func (p *Pool) worker() {
 	defer p.terminateWg.Done()
 
 	for {
-		w, open := <-p.workChan
+		workFn, open := <-p.workChan
 		if !open {
 			return
 		}
 
 		p.notifyScheduler()
 
-		w.fn(w.userData)
+		workFn()
 	}
 }
 
@@ -108,10 +103,9 @@ func (p *Pool) notifyScheduler() {
 }
 
 // Queue queues new work for the pool.
-// The userData parameter is passed as first parameter to workFn.
 // If Queue() is called after Wait(), the method panics.
 // The method never blocks.
-func (p *Pool) Queue(workFn WorkFn, userData interface{}) {
+func (p *Pool) Queue(workFn WorkFn) {
 	p.wqMutex.Lock()
 	defer p.wqMutex.Unlock()
 
@@ -119,7 +113,7 @@ func (p *Pool) Queue(workFn WorkFn, userData interface{}) {
 		panic("work was queued on a closed pool")
 	}
 
-	p.wq = append(p.wq, &work{fn: workFn, userData: userData})
+	p.wq = append(p.wq, workFn)
 	p.notifyScheduler()
 }
 

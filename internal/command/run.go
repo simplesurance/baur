@@ -179,33 +179,26 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	stdout.Printf("finished in: %ss\n", term.StrDurationSec(startTime, time.Now()))
 }
 
-type pendingTasks struct {
+type pendingTask struct {
 	task   *baur.Task
 	inputs *baur.Inputs
 }
 
-type workerArg struct {
-	ctx         context.Context
-	pendingTask *pendingTasks
-	outputs     []baur.Output
-	runResult   *baur.RunResult
-}
-
-func (c *runCmd) uploadAndRecord(arg interface{}) {
+func (c *runCmd) uploadAndRecord(
+	ctx context.Context,
+	task *baur.Task,
+	inputs *baur.Inputs,
+	outputs []baur.Output,
+	runResult *baur.RunResult,
+) {
 	var uploadResults []*baur.UploadResult
-	var ok bool
 
-	wa, ok := arg.(*workerArg)
-	if !ok {
-		panic("upload worker got parameter of unsupported type")
-	}
-
-	for _, output := range wa.outputs {
+	for _, output := range outputs {
 		err := c.uploader.Upload(
 			output,
 			func(o baur.Output, info baur.UploadInfo) {
 				log.Debugf("%s: uploading output %s to %s\n",
-					wa.pendingTask.task, output, info)
+					task, output, info)
 			},
 
 			func(o baur.Output, result *baur.UploadResult) {
@@ -214,7 +207,7 @@ func (c *runCmd) uploadAndRecord(arg interface{}) {
 
 				mbps := float64(size) / 1024 / 1024 / result.Stop.Sub(result.Start).Seconds()
 
-				stdout.TaskPrintf(wa.pendingTask.task, "%s uploaded to %s (%.3f MiB/s)\n",
+				stdout.TaskPrintf(task, "%s uploaded to %s (%.3f MiB/s)\n",
 					output, result.URL,
 					mbps)
 
@@ -225,13 +218,13 @@ func (c *runCmd) uploadAndRecord(arg interface{}) {
 		exitOnErr(err)
 	}
 
-	id, err := baur.StoreRun(ctx, c.storage, c.gitState, wa.pendingTask.task, wa.pendingTask.inputs, wa.runResult, uploadResults)
+	id, err := baur.StoreRun(ctx, c.storage, c.gitState, task, inputs, runResult, uploadResults)
 	exitOnErr(err)
 
-	stdout.TaskPrintf(wa.pendingTask.task, "run stored in database with ID %s\n", term.Highlight(id))
+	stdout.TaskPrintf(task, "run stored in database with ID %s\n", term.Highlight(id))
 }
 
-func (c *runCmd) runUploadStore(taskToRun []*pendingTasks) {
+func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 	taskRunner := baur.NewTaskRunner()
 
 	for _, t := range taskToRun {
@@ -269,13 +262,13 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTasks) {
 			continue
 		}
 
-		c.uploadRoutinePool.Queue(c.uploadAndRecord, &workerArg{
-			ctx:         ctx,
-			pendingTask: t,
-			outputs:     outputs,
-			runResult:   runResult,
+		// copy the iteration variable, to prevent that it's value
+		// changes in the closure to 't' of the next iteration before
+		// the closure is executed
+		taskCopy := t
+		c.uploadRoutinePool.Queue(func() {
+			c.uploadAndRecord(ctx, taskCopy.task, taskCopy.inputs, outputs, runResult)
 		})
-
 	}
 }
 
@@ -322,8 +315,8 @@ func maxTaskIDLen(tasks []*baur.Task) int {
 	return maxLen
 }
 
-func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTasks, error) {
-	var result []*pendingTasks
+func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTask, error) {
+	var result []*pendingTask
 	const sep = " => "
 
 	taskIDColLen := maxTaskIDLen(tasks) + len(sep)
@@ -348,7 +341,7 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTasks, error)
 			stdout.Printf("%-*s%s%s\n", taskIDColLen, task, sep, term.ColoredTaskStatus(status))
 		}
 
-		result = append(result, &pendingTasks{
+		result = append(result, &pendingTask{
 			task:   task,
 			inputs: inputs,
 		})
