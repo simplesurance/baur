@@ -246,7 +246,7 @@ func (c *showCmd) showBuild(taskRunID int) {
 			formatter,
 			"",
 			"Size:",
-			term.Highlight(term.BytesToMib(o.SizeBytes)+" MiB"),
+			term.Highlight(term.FormatSize(o.SizeBytes)),
 		)
 		mustWriteRowVa(formatter, "", "Type:", term.Highlight(o.Type))
 
