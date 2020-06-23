@@ -288,8 +288,8 @@ func outputsExit(task *baur.Task, outputs []baur.Output) bool {
 			size, err := output.Size()
 			exitOnErrf(err, "%s :", task.ID())
 
-			stdout.TaskPrintf(task, "created %s (size: %s MiB)\n",
-				output, term.BytesToMib(size))
+			stdout.TaskPrintf(task, "created %s (size: %s)\n",
+				output, term.FormatSize(size))
 
 			continue
 		}

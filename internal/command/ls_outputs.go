@@ -68,22 +68,33 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 
 	for _, o := range outputs {
 		for _, upload := range o.Uploads {
-			var row []interface{}
-
 			if lsOutputsConf.quiet {
-				row = []interface{}{upload.URI}
-			} else {
-				row = []interface{}{
+				mustWriteRow(formatter, []interface{}{upload.URI})
+				continue
+			}
+
+			if lsOutputsConf.csv {
+				mustWriteRow(formatter, []interface{}{
 					upload.URI,
 					o.Digest,
-					term.BytesToMib(o.SizeBytes),
+					o.SizeBytes,
 					term.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
 					o.Type,
 					upload.Method,
-				}
+				})
+
+				continue
 			}
 
-			mustWriteRow(formatter, row)
+			mustWriteRow(formatter, []interface{}{
+				upload.URI,
+				o.Digest,
+				term.FormatSize(o.SizeBytes),
+				term.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
+				o.Type,
+				upload.Method,
+			})
+
 		}
 	}
 
@@ -105,7 +116,7 @@ func getLsOutputsFormatter(isQuiet, isCsv bool) format.Formatter {
 	headers = []string{
 		"URI",
 		"Digest",
-		"Size (MiB)",
+		"Size",
 		"Upload Duration (s)",
 		"Output Type",
 		"Method",

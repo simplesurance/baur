@@ -5,8 +5,20 @@ import (
 	"time"
 )
 
-func BytesToMib(bytes uint64) string {
-	return fmt.Sprintf("%.3f", float64(bytes)/1024/1024)
+func FormatSize(bytes uint64) string {
+	if bytes < 1024 {
+		return fmt.Sprintf("%d B", bytes)
+	}
+
+	if bytes < 1024*1024 {
+		return fmt.Sprintf("%.3f KiB", float64(bytes)/1024)
+	}
+
+	if bytes < 1024*1024*1024 {
+		return fmt.Sprintf("%.3f MiB", float64(bytes)/1024/1024)
+	}
+
+	return fmt.Sprintf("%.3f GiB", float64(bytes)/1024/1024/1024)
 }
 
 func DurationToStrSeconds(duration time.Duration) string {
