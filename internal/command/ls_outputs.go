@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -78,7 +79,9 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 					upload.URI,
 					o.Digest,
 					o.SizeBytes,
-					term.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
+					fmt.Sprintf("%.3f",
+						upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp).Seconds(),
+					),
 					o.Type,
 					upload.Method,
 				})
@@ -90,7 +93,9 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 				upload.URI,
 				o.Digest,
 				term.FormatSize(o.SizeBytes),
-				term.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp)),
+				term.FormatDuration(
+					upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp),
+				),
 				o.Type,
 				upload.Method,
 			})

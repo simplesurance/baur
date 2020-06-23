@@ -226,7 +226,11 @@ func (c *showCmd) showBuild(taskRunID int) {
 	mustWriteRowVa(
 		formatter,
 		"Build Duration:",
-		term.Highlight(fmt.Sprintf("%.2f s", taskRun.StopTimestamp.Sub(taskRun.StartTimestamp).Seconds())),
+		term.Highlight(
+			term.FormatDuration(
+				taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
+			),
+		),
 	)
 
 	mustWriteRowVa(formatter, "Git Commit:", term.Highlight(vcsStr(&taskRun.TaskRun)))
@@ -260,8 +264,10 @@ func (c *showCmd) showBuild(taskRunID int) {
 				"",
 				"",
 				"Upload Duration:",
-				term.Highlight(
-					term.DurationToStrSeconds(upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp))+" s"),
+				term.FormatDuration(
+					upload.UploadStopTimestamp.Sub(
+						upload.UploadStartTimestamp),
+				),
 			)
 			mustWriteRowVa(
 				formatter,

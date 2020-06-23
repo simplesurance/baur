@@ -177,7 +177,7 @@ func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.Ta
 		taskRun.TaskName,
 		taskRun.Result,
 		taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
-		term.DurationToStrSeconds(
+		term.FormatDuration(
 			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
 		),
 		taskRun.TotalInputDigest,
