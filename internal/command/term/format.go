@@ -21,10 +21,14 @@ func FormatSize(bytes uint64) string {
 	return fmt.Sprintf("%.3f GiB", float64(bytes)/1024/1024/1024)
 }
 
-func DurationToStrSeconds(duration time.Duration) string {
-	return fmt.Sprintf("%.3f", duration.Seconds())
-}
+func FormatDuration(d time.Duration) string {
+	if d.Minutes() > 1 {
+		return d.Round(time.Second).String()
+	}
 
-func StrDurationSec(start, end time.Time) string {
-	return DurationToStrSeconds(end.Sub(start))
+	if d.Milliseconds() > 1 {
+		return d.Round(time.Millisecond).String()
+	}
+
+	return d.String()
 }

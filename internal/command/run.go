@@ -176,7 +176,11 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	stdout.Println("all tasks executed, waiting for uploads to finish...")
 	c.uploadRoutinePool.Wait()
 	stdout.PrintSep()
-	stdout.Printf("finished in: %ss\n", term.StrDurationSec(startTime, time.Now()))
+	stdout.Printf("finished in: %s\n",
+		term.FormatDuration(
+			time.Since(startTime),
+		),
+	)
 }
 
 type pendingTask struct {
@@ -236,19 +240,23 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 		if runResult.Result.ExitCode != 0 {
 			statusStr := term.RedHighlight("failed")
 
-			log.Fatalf("%s: execution %s (%ss), command exited with code %d, output:\n%s\n",
+			log.Fatalf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
 				t.task,
 				statusStr,
-				term.StrDurationSec(runResult.StartTime, runResult.StopTime),
+				term.FormatDuration(
+					runResult.StopTime.Sub(runResult.StartTime),
+				),
 				runResult.ExitCode,
 				runResult.StrOutput())
 		}
 
 		statusStr := term.GreenHighlight("successful")
 
-		stdout.TaskPrintf(t.task, "execution %s (%ss)\n",
+		stdout.TaskPrintf(t.task, "execution %s (%s)\n",
 			statusStr,
-			term.StrDurationSec(runResult.StartTime, runResult.StopTime),
+			term.FormatDuration(
+				runResult.StopTime.Sub(runResult.StartTime),
+			),
 		)
 
 		outputs, err := baur.OutputsFromTask(c.dockerClient, t.task)
