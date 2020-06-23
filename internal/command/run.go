@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -209,11 +210,15 @@ func (c *runCmd) uploadAndRecord(
 				size, err := o.Size()
 				exitOnErr(err)
 
-				mbps := float64(size) / 1024 / 1024 / result.Stop.Sub(result.Start).Seconds()
+				term.FormatDuration(
+					result.Stop.Sub(result.Start),
+				)
+				bps := uint64(math.Round(float64(size) / result.Stop.Sub(result.Start).Seconds()))
 
-				stdout.TaskPrintf(task, "%s uploaded to %s (%.3f MiB/s)\n",
+				stdout.TaskPrintf(task, "%s uploaded to %s (%s/s)\n",
 					output, result.URL,
-					mbps)
+					term.FormatSize(bps),
+				)
 
 				uploadResults = append(uploadResults, result)
 			},
