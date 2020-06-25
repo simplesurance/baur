@@ -203,7 +203,6 @@ func exitOnErr(err error, msg ...interface{}) {
 	fmt.Fprintf(os.Stderr, "%s %s: %s\n", errorPrefix, wholeMsg, err)
 
 	os.Exit(1)
-
 }
 
 func mustTaskRepoRelPath(repositoryDir string, task *baur.Task) string {
