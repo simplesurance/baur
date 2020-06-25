@@ -139,7 +139,8 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 		filters,
 		sorters,
 		func(taskRun *storage.TaskRunWithID) error {
-			return c.printTaskRun(formatter, taskRun)
+			c.printTaskRun(formatter, taskRun)
+			return nil
 		},
 	)
 
@@ -155,7 +156,8 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func printHeader(formatter format.Formatter) {
-	exitOnErr(formatter.WriteRow([]interface{}{
+	mustWriteRowVa(
+		formatter,
 		"Id",
 		"App",
 		"Task",
@@ -163,15 +165,15 @@ func printHeader(formatter format.Formatter) {
 		"Start Time",
 		"Duration (s)",
 		"Input Digest",
-	}))
+	)
 }
 
-func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.TaskRunWithID) error {
+func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.TaskRunWithID) {
 	if c.quiet {
-		return formatter.WriteRow([]interface{}{taskRun.ID})
+		mustWriteRowVa(formatter, taskRun.ID)
 	}
 
-	return formatter.WriteRow([]interface{}{
+	mustWriteRowVa(formatter,
 		strconv.Itoa(taskRun.ID),
 		taskRun.ApplicationName,
 		taskRun.TaskName,
@@ -181,7 +183,7 @@ func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.Ta
 			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
 		),
 		taskRun.TotalInputDigest,
-	})
+	)
 }
 
 func (c *lsRunsCmd) getFilters() []*storage.Filter {
