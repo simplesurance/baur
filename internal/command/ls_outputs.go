@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -74,32 +73,17 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 				continue
 			}
 
-			if lsOutputsConf.csv {
-				mustWriteRow(formatter, []interface{}{
-					upload.URI,
-					o.Digest,
-					o.SizeBytes,
-					fmt.Sprintf("%.3f",
-						upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp).Seconds(),
-					),
-					o.Type,
-					upload.Method,
-				})
-
-				continue
-			}
-
 			mustWriteRow(formatter, []interface{}{
 				upload.URI,
 				o.Digest,
-				term.FormatSize(o.SizeBytes),
+				term.FormatSize(o.SizeBytes, term.FormatBaseWithoutUnitName(lsOutputsConf.csv)),
 				term.FormatDuration(
 					upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp),
+					term.FormatBaseWithoutUnitName(lsOutputsConf.csv),
 				),
 				o.Type,
 				upload.Method,
 			})
-
 		}
 	}
 
