@@ -181,6 +181,7 @@ func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.Ta
 		taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
 		term.FormatDuration(
 			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
+			term.FormatBaseWithoutUnitName(c.csv),
 		),
 		taskRun.TotalInputDigest,
 	)
