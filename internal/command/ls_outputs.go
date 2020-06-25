@@ -14,31 +14,38 @@ import (
 	"github.com/simplesurance/baur/storage"
 )
 
-var lsOutputsCmd = &cobra.Command{
-	Use:   "outputs <BUILD-ID>",
-	Short: "list outputs for a build",
-	Run:   lsOutputs,
-	Args:  cobra.ExactArgs(1),
-}
+type lsOutputsCmd struct {
+	cobra.Command
 
-type lsOutputsConfig struct {
 	quiet bool
 	csv   bool
 }
 
-var lsOutputsConf lsOutputsConfig
-
 func init() {
-	lsOutputsCmd.Flags().BoolVar(&lsOutputsConf.csv, "csv", false,
-		"Show output in RFC4180 CSV format")
-
-	lsOutputsCmd.Flags().BoolVarP(&lsOutputsConf.quiet, "quiet", "q", false,
-		"Only show URIs")
-
-	lsCmd.AddCommand(lsOutputsCmd)
+	lsCmd.AddCommand(&newLsOutputsCmd().Command)
 }
 
-func lsOutputs(cmd *cobra.Command, args []string) {
+func newLsOutputsCmd() *lsOutputsCmd {
+	cmd := lsOutputsCmd{
+		Command: cobra.Command{
+			Use:   "outputs <TASK-RUN-ID>",
+			Short: "list outputs of a task run",
+			Args:  cobra.ExactArgs(1),
+		},
+	}
+
+	cmd.Run = cmd.run
+
+	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
+		"Show output in RFC4180 CSV format")
+
+	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
+		"Only show URIs")
+
+	return &cmd
+}
+
+func (c *lsOutputsCmd) run(cmd *cobra.Command, args []string) {
 	repo := MustFindRepository()
 	pgClient := mustNewCompatibleStorage(repo)
 
@@ -64,11 +71,11 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	formatter := getLsOutputsFormatter(lsOutputsConf.quiet, lsOutputsConf.csv)
+	formatter := getLsOutputsFormatter(c.quiet, c.csv)
 
 	for _, o := range outputs {
 		for _, upload := range o.Uploads {
-			if lsOutputsConf.quiet {
+			if c.quiet {
 				mustWriteRow(formatter, []interface{}{upload.URI})
 				continue
 			}
@@ -76,10 +83,10 @@ func lsOutputs(cmd *cobra.Command, args []string) {
 			mustWriteRow(formatter, []interface{}{
 				upload.URI,
 				o.Digest,
-				term.FormatSize(o.SizeBytes, term.FormatBaseWithoutUnitName(lsOutputsConf.csv)),
+				term.FormatSize(o.SizeBytes, term.FormatBaseWithoutUnitName(c.csv)),
 				term.FormatDuration(
 					upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp),
-					term.FormatBaseWithoutUnitName(lsOutputsConf.csv),
+					term.FormatBaseWithoutUnitName(c.csv),
 				),
 				o.Type,
 				upload.Method,
