@@ -148,7 +148,7 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 			log.Fatalf("no matching task runs exist")
 		}
 
-		log.Fatalln(err)
+		exitOnErr(err)
 	}
 
 	exitOnErr(formatter.Flush())
