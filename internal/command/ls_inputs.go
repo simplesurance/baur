@@ -21,7 +21,7 @@ type lsInputsConf struct {
 
 var lsInputsCmd = &cobra.Command{
 	Use:   "inputs <APP-NAME>.<TASK-NAME>]",
-	Short: "list resolved build inputs of an application",
+	Short: "list resolved task inputs of an application",
 	Run:   lsInputs,
 	Args:  cobra.ExactArgs(1),
 }
@@ -84,7 +84,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 		}
 
 		digest, err := input.Digest()
-		exitOnErr(err, "calculating digest failed")
+		exitOnErrf(err, "%s: calculating digest failed", input)
 
 		mustWriteRowVa(formatter, input, digest.String())
 	}
