@@ -163,7 +163,7 @@ func printHeader(formatter format.Formatter) {
 		"Task",
 		"Result",
 		"Start Time",
-		"Duration (s)",
+		"Duration",
 		"Input Digest",
 	)
 }
