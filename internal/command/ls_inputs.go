@@ -13,41 +13,48 @@ import (
 	"github.com/simplesurance/baur/internal/command/term"
 )
 
-type lsInputsConf struct {
+func init() {
+	lsCmd.AddCommand(&newLsInputsCmd().Command)
+}
+
+type lsInputsCmd struct {
+	cobra.Command
+
+	csv        bool
 	quiet      bool
 	showDigest bool
-	csv        bool
 }
 
-var lsInputsCmd = &cobra.Command{
-	Use:   "inputs <APP-NAME>.<TASK-NAME>]",
-	Short: "list resolved task inputs of an application",
-	Run:   lsInputs,
-	Args:  cobra.ExactArgs(1),
-}
+func newLsInputsCmd() *lsInputsCmd {
+	cmd := lsInputsCmd{
+		Command: cobra.Command{
+			Use:   "inputs <APP-NAME>.<TASK-NAME>]",
+			Short: "list resolved task inputs of an application",
+			Args:  cobra.ExactArgs(1),
+		},
+	}
 
-var lsInputsConfig lsInputsConf
+	cmd.Run = cmd.run
 
-func init() {
-	lsInputsCmd.Flags().BoolVar(&lsInputsConfig.csv, "csv", false,
+	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
 		"Show output in RFC4180 CSV format")
 
-	lsInputsCmd.Flags().BoolVarP(&lsInputsConfig.quiet, "quiet", "q", false,
+	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"Only show filepaths")
 
-	lsInputsCmd.Flags().BoolVar(&lsInputsConfig.showDigest, "digests", false,
+	cmd.Flags().BoolVar(&cmd.showDigest, "digests", false,
 		"show digests")
 
-	lsCmd.AddCommand(lsInputsCmd)
+	return &cmd
 }
 
-func lsInputs(cmd *cobra.Command, args []string) {
+func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 	var formatter format.Formatter
 	var headers []string
 
 	rep := MustFindRepository()
 	task := mustArgToTask(rep, args[0])
-	writeHeaders := !lsInputsConfig.quiet && !lsInputsConfig.csv
+	writeHeaders := !c.quiet && !c.csv
 
 	if !task.HasInputs() {
 		stderr.TaskPrintf(task, "has no inputs configured")
@@ -57,12 +64,12 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	if writeHeaders {
 		headers = []string{"Path"}
 
-		if lsInputsConfig.showDigest {
+		if c.showDigest {
 			headers = append(headers, "Digest")
 		}
 	}
 
-	if lsInputsConfig.csv {
+	if c.csv {
 		formatter = csv.New(headers, stdout)
 	} else {
 		formatter = table.New(headers, stdout)
@@ -78,7 +85,7 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	})
 
 	for _, input := range inputs.Files {
-		if !lsInputsConfig.showDigest || lsInputsConfig.quiet {
+		if !c.showDigest || c.quiet {
 			mustWriteRowVa(formatter, input)
 			continue
 		}
@@ -92,10 +99,10 @@ func lsInputs(cmd *cobra.Command, args []string) {
 	err = formatter.Flush()
 	exitOnErr(err)
 
-	if lsInputsConfig.showDigest && !lsInputsConfig.quiet && !lsInputsConfig.csv {
+	if c.showDigest && !c.quiet && !c.csv {
 		totalDigest, err := inputs.Digest()
 		exitOnErr(err, "calculating total input digest failed")
 
-		stdout.Printf("\nTotal Build Input Digest: %s\n", term.Highlight(totalDigest.String()))
+		stdout.Printf("\nTotal Input Digest: %s\n", term.Highlight(totalDigest.String()))
 	}
 }
