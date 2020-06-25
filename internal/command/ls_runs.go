@@ -100,7 +100,7 @@ func parseSpec(s string) (app, task string) {
 	}
 
 	// is never executed because of the default case
-	return "", ""
+	panic("default case not run")
 }
 
 func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
