@@ -18,11 +18,11 @@ import (
 )
 
 const lsRunsLongHelp = `
-List  recorded task runs.
+List recorded task runs.
 
 Arguments:
-	'*' can be passed as <APP-NAME> and <TASK-NAME> argument to match
-	all Apps and Tasks.
+	'*' can be passed as <APP-NAME> or <TASK-NAME> argument to match
+	all Apps or Tasks.
 `
 
 const lsRunsExample = `
@@ -30,7 +30,7 @@ baur ls runs -s duration-desc calc               list task runs of the calc
 						 application, sorted by
 						 run duration
 baur ls runs --csv --after=2018.09.27-11:30 '*'  list all task runs in csv format that
-						 started after 2018.09.27 11:30`
+						 were started after 2018.09.27 11:30`
 
 func init() {
 	lsCmd.AddCommand(&newLsRunsCmd().Command)
@@ -53,7 +53,7 @@ func newLsRunsCmd() *lsRunsCmd {
 	cmd := lsRunsCmd{
 		Command: cobra.Command{
 			Use:     "runs <APP-NAME>[.<TASK-NAME>]",
-			Short:   "list record task runs",
+			Short:   "list recorded task runs",
 			Long:    strings.TrimSpace(lsRunsLongHelp),
 			Example: strings.TrimSpace(lsRunsExample),
 			Args:    cobra.ExactArgs(1),
