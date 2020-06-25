@@ -18,7 +18,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:              "baur",
-	Short:            "baur manages builds and artifacts in mono repositories.",
+	Short:            "baur is a task runner for mono repositories.",
 	PersistentPreRun: initSb,
 }
 
