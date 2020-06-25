@@ -64,7 +64,7 @@ func (c *showCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func (c *showCmd) showApp(arg string) {
-	repo := MustFindRepository()
+	repo := mustFindRepository()
 	app := mustArgToApp(repo, arg)
 
 	tasks := app.Tasks()
@@ -193,7 +193,7 @@ func vcsStr(v *storage.TaskRun) string {
 }
 
 func (c *showCmd) showBuild(taskRunID int) {
-	repo := MustFindRepository()
+	repo := mustFindRepository()
 	storageClt := mustNewCompatibleStorage(repo)
 
 	taskRun, err := storageClt.TaskRun(ctx, taskRunID)

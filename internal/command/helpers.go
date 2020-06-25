@@ -32,9 +32,8 @@ func findRepository() (*baur.Repository, error) {
 	return baur.NewRepository(path)
 }
 
-// MustFindRepository must find repo
-// TODO: rename to mustFindRepository
-func MustFindRepository() *baur.Repository {
+// mustFindRepository must find repo
+func mustFindRepository() *baur.Repository {
 	repo, err := findRepository()
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

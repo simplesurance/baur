@@ -109,7 +109,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 	var formatter format.Formatter
 	var storageClt storage.Storer
 
-	repo := MustFindRepository()
+	repo := mustFindRepository()
 
 	loader, err := baur.NewLoader(
 		repo.Cfg,
