@@ -41,7 +41,7 @@ func mustFindRepository() *baur.Repository {
 				baur.RepositoryCfgFile)
 		}
 
-		log.Fatalln("locating baur repository failed:", err)
+		exitOnErr(err, "locating baur repository failed")
 	}
 
 	return repo
@@ -150,14 +150,10 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 	repoState := git.NewRepositoryState(repo.Path)
 
 	appLoader, err := baur.NewLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	apps, err = appLoader.LoadApps(args...)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 
 	if len(apps) == 0 {
 		log.Fatalf("could not find any applications\n"+
@@ -172,9 +168,7 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 
 func mustWriteRowVa(fmt format.Formatter, row ...interface{}) {
 	err := fmt.WriteRow(row)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	exitOnErr(err)
 }
 
 var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
