@@ -46,7 +46,7 @@ func newLsOutputsCmd() *lsOutputsCmd {
 }
 
 func (c *lsOutputsCmd) run(cmd *cobra.Command, args []string) {
-	repo := MustFindRepository()
+	repo := mustFindRepository()
 	pgClient := mustNewCompatibleStorage(repo)
 
 	taskRunID, err := strconv.Atoi(args[0])

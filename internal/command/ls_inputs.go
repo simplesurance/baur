@@ -52,7 +52,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 	var formatter format.Formatter
 	var headers []string
 
-	rep := MustFindRepository()
+	rep := mustFindRepository()
 	task := mustArgToTask(rep, args[0])
 	writeHeaders := !c.quiet && !c.csv
 

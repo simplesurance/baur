@@ -87,7 +87,7 @@ func (c *lsAppsCmd) run(cmd *cobra.Command, args []string) {
 	var headers []string
 	var formatter format.Formatter
 
-	repo := MustFindRepository()
+	repo := mustFindRepository()
 	apps := mustArgToApps(repo, args)
 
 	if !c.quiet && !c.csv {

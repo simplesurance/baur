@@ -134,7 +134,7 @@ func dockerClient() *docker.Client {
 func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	startTime := time.Now()
 
-	repo := MustFindRepository()
+	repo := mustFindRepository()
 	c.repoRootPath = repo.Path
 
 	c.storage = mustNewCompatibleStorage(repo)
