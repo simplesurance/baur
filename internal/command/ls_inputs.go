@@ -20,7 +20,7 @@ type lsInputsConf struct {
 }
 
 var lsInputsCmd = &cobra.Command{
-	Use:   "inputs [<APP-NAME>.<TASK-NAME>]",
+	Use:   "inputs <APP-NAME>.<TASK-NAME>]",
 	Short: "list resolved build inputs of an application",
 	Run:   lsInputs,
 	Args:  cobra.ExactArgs(1),
@@ -79,14 +79,14 @@ func lsInputs(cmd *cobra.Command, args []string) {
 
 	for _, input := range inputs.Files {
 		if !lsInputsConfig.showDigest || lsInputsConfig.quiet {
-			mustWriteRow(formatter, []interface{}{input})
+			mustWriteRowVa(formatter, input)
 			continue
 		}
 
 		digest, err := input.Digest()
 		exitOnErr(err, "calculating digest failed")
 
-		mustWriteRow(formatter, []interface{}{input, digest.String()})
+		mustWriteRowVa(formatter, input, digest.String())
 	}
 
 	err = formatter.Flush()
