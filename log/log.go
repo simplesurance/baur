@@ -9,7 +9,6 @@ import (
 )
 
 var errorPrefix = color.New(color.FgRed).Sprint("ERROR: ")
-var warnPrefix = color.New(color.FgYellow).Sprint("WARN: ")
 
 // Logger logs messages
 type Logger struct {
@@ -87,25 +86,6 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 	l.logger.Printf(errorPrefix+" "+format, v...)
 }
 
-// Warnf logs a message to stderr
-func (l *Logger) Warnf(format string, v ...interface{}) {
-	l.logger.Printf(warnPrefix+format, v...)
-}
-
-// Infoln logs a message to stdout
-/*
-func (l *Logger) Infoln(v ...interface{}) {
-	l.logger.Println(v...)
-}
-*/
-
-// Infof logs a message to stdout
-/*
-func (l *Logger) Infof(format string, v ...interface{}) {
-	l.logger.Printf(format, v...)
-}
-*/
-
 // DebugEnabled returns true if the Stdlogger logs debug messages
 func DebugEnabled() bool {
 	return StdLogger.DebugEnabled()
@@ -142,22 +122,3 @@ func Errorln(v ...interface{}) {
 func Errorf(format string, v ...interface{}) {
 	StdLogger.Errorf(format, v...)
 }
-
-// Warnf logs a message to stderr
-func Warnf(format string, v ...interface{}) {
-	StdLogger.Warnf(format, v...)
-}
-
-// Infoln logs a message to stdout
-/*
-func Infoln(v ...interface{}) {
-	StdLogger.Infoln(v...)
-}
-*/
-
-// Infof logs a message to stdout
-/*
-func Infof(format string, v ...interface{}) {
-	StdLogger.Infof(format, v...)
-}
-*/
