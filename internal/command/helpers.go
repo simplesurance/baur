@@ -178,11 +178,6 @@ func mustWriteRowVa(fmt format.Formatter, row ...interface{}) {
 	}
 }
 
-// Deprecated: use  mustWriteRowVa
-func mustWriteRow(fmt format.Formatter, row []interface{}) {
-	mustWriteRowVa(fmt, row...)
-}
-
 var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
 
 func exitOnErrf(err error, format string, v ...interface{}) {
