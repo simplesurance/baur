@@ -58,7 +58,7 @@ func initSb(_ *cobra.Command, _ []string) {
 // Execute parses commandline flags and execute their actions
 func Execute() {
 	if err := version.LoadPackageVars(); err != nil {
-		log.Errorln("setting version failed", err)
+		stderr.Printf("setting version failed: %s\n", err)
 	}
 	rootCmd.Version = version.CurSemVer.String()
 
