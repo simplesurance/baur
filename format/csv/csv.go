@@ -32,7 +32,7 @@ func (f *Formatter) writeHeader(headers []string) error {
 }
 
 // WriteRow writes a row to the csvwriter buffer
-func (f *Formatter) WriteRow(row []interface{}) error {
+func (f *Formatter) WriteRow(row ...interface{}) error {
 	var str []string
 
 	for _, col := range row {

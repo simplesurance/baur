@@ -167,7 +167,7 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 }
 
 func mustWriteRowVa(fmt format.Formatter, row ...interface{}) {
-	err := fmt.WriteRow(row)
+	err := fmt.WriteRow(row...)
 	exitOnErr(err)
 }
 

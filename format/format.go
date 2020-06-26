@@ -3,6 +3,6 @@ package format
 
 // Formatter is an interface for formatters
 type Formatter interface {
-	WriteRow(Row []interface{}) error
+	WriteRow(Row ...interface{}) error
 	Flush() error
 }
