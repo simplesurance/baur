@@ -173,8 +173,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 		row = c.statusAssembleRow(repo.Path, task, taskRun, taskStatus)
 
-		err := formatter.WriteRow(row)
-		exitOnErr(err)
+		mustWriteRow(formatter, row...)
 	}
 
 	err = formatter.Flush()
