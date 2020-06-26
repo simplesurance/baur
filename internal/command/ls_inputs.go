@@ -86,14 +86,14 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 	for _, input := range inputs.Files {
 		if !c.showDigest || c.quiet {
-			mustWriteRowVa(formatter, input)
+			mustWriteRow(formatter, input)
 			continue
 		}
 
 		digest, err := input.Digest()
 		exitOnErrf(err, "%s: calculating digest failed", input)
 
-		mustWriteRowVa(formatter, input, digest.String())
+		mustWriteRow(formatter, input, digest.String())
 	}
 
 	err = formatter.Flush()
