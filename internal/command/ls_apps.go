@@ -105,7 +105,7 @@ func (c *lsAppsCmd) run(cmd *cobra.Command, args []string) {
 	for _, app := range apps {
 		row := c.assembleRow(app)
 
-		mustWriteRowVa(formatter, row...)
+		mustWriteRow(formatter, row...)
 	}
 
 	err := formatter.Flush()

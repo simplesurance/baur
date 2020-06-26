@@ -156,7 +156,7 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func printHeader(formatter format.Formatter) {
-	mustWriteRowVa(
+	mustWriteRow(
 		formatter,
 		"Id",
 		"App",
@@ -170,10 +170,10 @@ func printHeader(formatter format.Formatter) {
 
 func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.TaskRunWithID) {
 	if c.quiet {
-		mustWriteRowVa(formatter, taskRun.ID)
+		mustWriteRow(formatter, taskRun.ID)
 	}
 
-	mustWriteRowVa(formatter,
+	mustWriteRow(formatter,
 		strconv.Itoa(taskRun.ID),
 		taskRun.ApplicationName,
 		taskRun.TaskName,

@@ -76,11 +76,11 @@ func (c *lsOutputsCmd) run(cmd *cobra.Command, args []string) {
 	for _, o := range outputs {
 		for _, upload := range o.Uploads {
 			if c.quiet {
-				mustWriteRowVa(formatter, upload.URI)
+				mustWriteRow(formatter, upload.URI)
 				continue
 			}
 
-			mustWriteRowVa(formatter,
+			mustWriteRow(formatter,
 				upload.URI,
 				o.Digest,
 				term.FormatSize(o.SizeBytes, term.FormatBaseWithoutUnitName(c.csv)),
