@@ -10,9 +10,9 @@ import (
 const (
 	minSearchDepth = 0
 	maxSearchDepth = 10
-	// Version identifies the format of the configuration files,
-	// whenever an incompatible change is made, this number has to be
-	// increased
+	// Version identifies the format of the configuration files that the
+	// package is able to parse. Whenever an incompatible change is made,
+	// the Version number is increased.
 	Version int = 5
 )
 
@@ -59,7 +59,7 @@ func RepositoryFromFile(cfgPath string) (*Repository, error) {
 // ExampleRepository returns an exemplary Repository config
 func ExampleRepository() *Repository {
 	return &Repository{
-		ConfigVersion: configVersion,
+		ConfigVersion: Version,
 
 		Discover: Discover{
 			Dirs:        []string{"."},
@@ -86,11 +86,11 @@ func (r *Repository) Validate() error {
 	if r.ConfigVersion == 0 {
 		return NewFieldError("can not be unset or 0", "config_version")
 	}
-	if r.ConfigVersion != configVersion {
+	if r.ConfigVersion != Version {
 		return NewFieldError(
 			fmt.Sprintf("incompatible configuration files\n"+
 				"config_version value is %d, expecting version: %d\n"+
-				"Update your baur configuration files or downgrade baur.", r.ConfigVersion, configVersion),
+				"Update your baur configuration files or downgrade baur.", r.ConfigVersion, Version),
 			"config_version",
 		)
 	}
