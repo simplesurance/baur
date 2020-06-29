@@ -40,10 +40,10 @@ const testFileGoMod = `
 module github.com/simplesurance/baur-test
 `
 
-func createGoProject(t *testing.T, dir string, createGoModFile bool) (string, string, []string, func()) {
+func createGoProject(t *testing.T, dir string, createGoModFile bool) (string, string, []string) {
 	t.Helper()
 
-	tmpdir, cleanupFn := fstest.CreateTempDir(t)
+	tmpdir := fstest.CreateTempDir(t)
 	projectPath := path.Join(tmpdir, dir)
 	generatorPkgPath := path.Join(projectPath, "generator")
 
@@ -62,13 +62,12 @@ func createGoProject(t *testing.T, dir string, createGoModFile bool) (string, st
 		fstest.WriteToFile(t, []byte(testFileGoMod), path.Join(projectPath, "go.mod"))
 	}
 
-	return tmpdir, projectPath, []string{mainGoPath, randomGenGoPath}, cleanupFn
+	return tmpdir, projectPath, []string{mainGoPath, randomGenGoPath}
 
 }
 
 func TestResolveWithGoPath(t *testing.T) {
-	tmpdir, projectPath, filepaths, cleanupFn := createGoProject(t, "src/github.com/simplesurance/baur-test/", false)
-	defer cleanupFn()
+	tmpdir, projectPath, filepaths := createGoProject(t, "src/github.com/simplesurance/baur-test/", false)
 
 	resolver := NewResolver(
 		nil,
@@ -94,8 +93,7 @@ func TestResolveWithGoPath(t *testing.T) {
 }
 
 func TestResolveWithGoMod(t *testing.T) {
-	_, projectPath, filepaths, cleanupFn := createGoProject(t, "baur-test/", true)
-	defer cleanupFn()
+	_, projectPath, filepaths := createGoProject(t, "baur-test/", true)
 
 	resolver := NewResolver(nil)
 	resolvedFiles, err := resolver.Resolve(nil, projectPath)

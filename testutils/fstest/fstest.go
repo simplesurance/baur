@@ -8,9 +8,10 @@ import (
 	"testing"
 )
 
-// CreateTempDir creates a new temporary directory, returns a name and a cleanup
-// function that removes the directory.
-func CreateTempDir(t *testing.T) (string, func()) {
+// CreateTempDir creates a new temporary directory.
+// Removal of the directory is registered with t.Cleanup().
+// The function returns the path of the temporary directory.
+func CreateTempDir(t *testing.T) string {
 	t.Helper()
 
 	dir, err := ioutil.TempDir("", "baur-filesrc-test")
@@ -18,7 +19,9 @@ func CreateTempDir(t *testing.T) (string, func()) {
 		t.Fatal(err)
 	}
 
-	return dir, func() { os.RemoveAll(dir) }
+	t.Cleanup(func() { os.RemoveAll(dir) })
+
+	return dir
 }
 
 // WriteToFile writes data to a file.

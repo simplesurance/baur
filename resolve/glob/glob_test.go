@@ -11,8 +11,7 @@ import (
 )
 
 func Test_FindAllSubDirs(t *testing.T) {
-	tempdir, cleanupFunc := fstest.CreateTempDir(t)
-	defer cleanupFunc()
+	tempdir := fstest.CreateTempDir(t)
 
 	expectedResults := []string{
 		tempdir,
@@ -173,8 +172,7 @@ func Test_Resolve(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tempdir, cleanupFunc := fstest.CreateTempDir(t)
-		defer cleanupFunc()
+		tempdir := fstest.CreateTempDir(t)
 
 		if len(tc.dir) != 0 {
 			err := os.MkdirAll(filepath.Join(tempdir, tc.dir), os.ModePerm)

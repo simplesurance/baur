@@ -116,8 +116,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 		},
 	}
 
-	tmpdir, cleanupFN := fstest.CreateTempDir(t)
-	defer cleanupFN()
+	tmpdir := fstest.CreateTempDir(t)
 
 	cfgToFile(t, include, filepath.Join(tmpdir, inclFilePath))
 
@@ -172,8 +171,7 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 		},
 	}
 
-	tmpdir, cleanupFN := fstest.CreateTempDir(t)
-	defer cleanupFN()
+	tmpdir := fstest.CreateTempDir(t)
 
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDir), 0775))
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, outputInclDir), 0775))
@@ -216,8 +214,7 @@ func TestIncludePathsAreRelativeToCfg(t *testing.T) {
 		},
 	}
 
-	tmpdir, cleanupFN := fstest.CreateTempDir(t)
-	defer cleanupFN()
+	tmpdir := fstest.CreateTempDir(t)
 
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDirName), 0775))
 
@@ -239,8 +236,7 @@ func TestAbsIncludePathsFail(t *testing.T) {
 	var inputIncl Include
 	inputIncl.Input = inputInclude()
 
-	tmpdir, cleanupFN := fstest.CreateTempDir(t)
-	defer cleanupFN()
+	tmpdir := fstest.CreateTempDir(t)
 
 	absInputInclPath := filepath.Join(tmpdir, "inputs.toml")
 	taskIncl := Include{
@@ -284,8 +280,7 @@ func TestEnsureInputIncludeIDsMustBeUnique(t *testing.T) {
 	taskIncl.Task = taskInclude()
 	taskIncl.Task[0].Includes = []string{inputInclFilename + "#" + inputIncl.Input[0].IncludeID}
 
-	tmpdir, cleanupFN := fstest.CreateTempDir(t)
-	defer cleanupFN()
+	tmpdir := fstest.CreateTempDir(t)
 
 	cfgToFile(t, inputIncl, filepath.Join(tmpdir, inputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
@@ -314,8 +309,7 @@ func TestEnsureOutputIncludeIDsMustBeUnique(t *testing.T) {
 	taskIncl.Task = taskInclude()
 	taskIncl.Task[0].Includes = []string{outputInclFilename + "#" + outputIncl.Output[0].IncludeID}
 
-	tmpdir, cleanupFN := fstest.CreateTempDir(t)
-	defer cleanupFN()
+	tmpdir := fstest.CreateTempDir(t)
 
 	cfgToFile(t, outputIncl, filepath.Join(tmpdir, outputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))

@@ -76,8 +76,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 
 	require.NoError(t, taskIncl.Task.Validate())
 
-	tmpdir, cleanupFN := fstest.CreateTempDir(t)
-	defer cleanupFN()
+	tmpdir := fstest.CreateTempDir(t)
 
 	appCfgPath := filepath.Join(tmpdir, ".app.toml")
 	err := app.ToFile(appCfgPath)
