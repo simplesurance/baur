@@ -10,10 +10,10 @@ import (
 const (
 	minSearchDepth = 0
 	maxSearchDepth = 10
-	// configVersion identifies the format of the configuration files,
+	// Version identifies the format of the configuration files,
 	// whenever an incompatible change is made, this number has to be
 	// increased
-	configVersion int = 5
+	Version int = 5
 )
 
 // Repository contains the repository configuration.
