@@ -42,3 +42,12 @@ func WriteToFile(t *testing.T, data []byte, path string) {
 		t.Fatal(err)
 	}
 }
+
+// Chmod is wrappoer of os.Chmod that fails the test if chmod returns an error.
+func Chmod(t *testing.T, name string, mode os.FileMode) error {
+	if err := os.Chmod(name, mode); err != nil {
+		t.Fatal(err)
+	}
+
+	return nil
+}
