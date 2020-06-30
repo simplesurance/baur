@@ -9,7 +9,6 @@ import (
 	"github.com/simplesurance/baur/format"
 	"github.com/simplesurance/baur/format/csv"
 	"github.com/simplesurance/baur/format/table"
-	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/internal/command/flag"
 	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
@@ -113,7 +112,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 	loader, err := baur.NewLoader(
 		repo.Cfg,
-		git.NewRepositoryState(repo.Path).CommitID,
+		mustGetRepoState(repo.Path).CommitID,
 		log.StdLogger,
 	)
 	exitOnErr(err)

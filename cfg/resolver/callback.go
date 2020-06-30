@@ -1,6 +1,9 @@
 package resolver
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // CallbackReplacement replaces Old with the string that NewFunc returns.
 type CallbackReplacement struct {
@@ -18,7 +21,7 @@ func (c *CallbackReplacement) Resolve(in string) (string, error) {
 
 	new, err := c.NewFunc()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not replace cfg variable %s: %w", in, err)
 	}
 
 	return strings.Replace(in, c.Old, new, -1), nil

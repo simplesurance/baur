@@ -1,6 +1,11 @@
 package baur
 
-import "github.com/simplesurance/baur/cfg/resolver"
+import (
+	"errors"
+
+	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/vcs"
+)
 
 const (
 	rootVarName      = "$ROOT"
@@ -15,7 +20,18 @@ func DefaultAppCfgResolvers(rootPath, appName string, gitCommitFn func() (string
 		&resolver.StrReplacement{Old: appVarName, New: appName},
 		&resolver.StrReplacement{Old: rootVarName, New: rootPath},
 		&resolver.UUIDVar{Old: uuidVarname},
-		&resolver.CallbackReplacement{Old: gitCommitVarname, NewFunc: gitCommitFn},
+		&resolver.CallbackReplacement{
+			Old: gitCommitVarname,
+			NewFunc: func() (string, error) {
+				commit, err := gitCommitFn()
+				if errors.Is(err, vcs.ErrVCSRepositoryNotExist) {
+					return "", errors.New("baur repository is not part of a git repository")
+				}
+
+				return commit, err
+
+			},
+		},
 	}
 }
 

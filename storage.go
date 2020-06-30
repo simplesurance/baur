@@ -2,28 +2,32 @@ package baur
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/storage"
+	"github.com/simplesurance/baur/vcs"
 )
 
 func StoreRun(
 	ctx context.Context,
 	storer storage.Storer,
-	gitState *git.RepositoryState,
+	vcsState vcs.StateFetcher,
 	task *Task,
 	inputs *Inputs,
 	runResult *RunResult,
 	uploads []*UploadResult,
 ) (int, error) {
-	commitID, err := gitState.CommitID()
-	if err != nil {
+	var commitID string
+	var isDirty bool
+
+	commitID, err := vcsState.CommitID()
+	if err != nil && !errors.Is(err, vcs.ErrVCSRepositoryNotExist) {
 		return -1, err
 	}
 
-	isDirty, err := gitState.WorktreeIsDirty()
-	if err != nil {
+	isDirty, err = vcsState.WorktreeIsDirty()
+	if err != nil && !errors.Is(err, vcs.ErrVCSRepositoryNotExist) {
 		return -1, err
 	}
 
