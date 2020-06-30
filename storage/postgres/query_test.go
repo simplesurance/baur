@@ -540,7 +540,7 @@ func TestTaskRuns(t *testing.T) {
 
 }
 
-func TestTaskRunQueryRunWithoutOutput(t *testing.T) {
+func TestTaskRunQueryRunWithoutOutputWithoutVCS(t *testing.T) {
 	client, cleanupFn := newTestClient(t)
 	defer cleanupFn()
 
@@ -550,8 +550,6 @@ func TestTaskRunQueryRunWithoutOutput(t *testing.T) {
 		TaskRun: storage.TaskRun{
 			ApplicationName:  "baurHimself",
 			TaskName:         "build",
-			VCSRevision:      "1",
-			VCSIsDirty:       false,
 			StartTimestamp:   time.Now(),
 			StopTimestamp:    time.Now().Add(5 * time.Minute),
 			Result:           storage.ResultSuccess,
