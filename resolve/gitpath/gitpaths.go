@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/simplesurance/baur/fs"
-	"github.com/simplesurance/baur/git"
+	"github.com/simplesurance/baur/vcs/git"
 )
 
 // Resolver resolves one or more git glob paths in a git repository by running

@@ -3,15 +3,66 @@ package git
 import (
 	"bufio"
 	"bytes"
+	"fmt"
+	"os"
+	stdexec "os/exec"
+	"path"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/exec"
+	"github.com/simplesurance/baur/fs"
 )
 
 var gitLsPathSpecErrRe = regexp.MustCompile(`pathspec ('.+') did not match any file\(s\) known to git`)
+
+func CommandIsInstalled() bool {
+	_, err := stdexec.LookPath("git")
+
+	return err == nil
+}
+
+// IsGitDir checks if the passed directory is in a git repository.
+// It returns true if:
+// - .git/ exists or
+// - the "git" command is in $PATH and "git rev-parse --git-dir" returns exit code 0
+// It returns false if:
+// - .git/ does not exist and
+// - the "git" command is not in $PATH or "git rev-parse --git-dir" exits with code 128
+
+// If '.git/' exist, if it does not
+func IsGitDir(dir string) (bool, error) {
+	err := fs.DirsExist(path.Join(dir, ".git"))
+	if err == nil {
+		return true, nil
+	}
+
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	result, err := exec.Command("git", "rev-parse", "--git-dir").Directory(dir).Run()
+	if err != nil {
+		return false, err
+	}
+
+	if result.ExitCode == 0 {
+		return true, nil
+	}
+
+	if result.ExitCode == 128 {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("executing %q in %q exited with code $d, expeted 0 or 128",
+		result.Command, result.ExitCode)
+}
 
 // CommitID return the commit id of HEAD by running git rev-parse in the passed
 // directory

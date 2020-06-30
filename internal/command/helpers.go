@@ -10,10 +10,10 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/format"
-	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/storage"
 	"github.com/simplesurance/baur/storage/postgres"
+	"github.com/simplesurance/baur/vcs"
 )
 
 // envVarPSQLURL contains the name of an environment variable in that the
@@ -124,8 +124,15 @@ func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
 	return clt
 }
 
+func mustGetRepoState(dir string) vcs.StateFetcher {
+	s, err := vcs.GetState(dir, log.Debugf)
+	exitOnErr(err, "failed to evaluate if baur repository is in a VCS repository")
+
+	return s
+}
+
 func mustArgToTasks(repo *baur.Repository, args []string) []*baur.Task {
-	repoState := git.NewRepositoryState(repo.Path)
+	repoState := mustGetRepoState(repo.Path)
 
 	appLoader, err := baur.NewLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
 	exitOnErr(err)
@@ -147,7 +154,7 @@ func mustArgToTasks(repo *baur.Repository, args []string) []*baur.Task {
 func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 	var apps []*baur.App
 
-	repoState := git.NewRepositoryState(repo.Path)
+	repoState := mustGetRepoState(repo.Path)
 
 	appLoader, err := baur.NewLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
 	exitOnErr(err)

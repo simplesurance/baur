@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/git"
 	"github.com/simplesurance/baur/internal/command/term"
 	"github.com/simplesurance/baur/log"
 	"github.com/simplesurance/baur/routines"
@@ -19,6 +18,7 @@ import (
 	"github.com/simplesurance/baur/upload/docker"
 	"github.com/simplesurance/baur/upload/filecopy"
 	"github.com/simplesurance/baur/upload/s3"
+	"github.com/simplesurance/baur/vcs"
 )
 
 // TODO remove support for setting docker username/passwd via env vars
@@ -85,7 +85,7 @@ type runCmd struct {
 	repoRootPath string
 	dockerClient *docker.Client
 	uploader     *baur.Uploader
-	gitState     *git.RepositoryState
+	vcsState     vcs.StateFetcher
 
 	uploadRoutinePool *routines.Pool
 }
@@ -146,13 +146,13 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	exitOnErr(err)
 	c.uploader = baur.NewUploader(c.dockerClient, s3Client, filecopy.New(log.Debugf))
 
-	c.gitState = git.NewRepositoryState(repo.Path)
+	c.vcsState = mustGetRepoState(repo.Path)
 
 	if c.skipUpload {
 		stdout.Printf("--skip-upload was passed, outputs won't be uploaded and task runs not recorded\n\n")
 	}
 
-	loader, err := baur.NewLoader(repo.Cfg, c.gitState.CommitID, log.StdLogger)
+	loader, err := baur.NewLoader(repo.Cfg, c.vcsState.CommitID, log.StdLogger)
 	exitOnErr(err)
 
 	tasks, err := loader.LoadTasks(args...)
@@ -227,7 +227,7 @@ func (c *runCmd) uploadAndRecord(
 		exitOnErr(err)
 	}
 
-	id, err := baur.StoreRun(ctx, c.storage, c.gitState, task, inputs, runResult, uploadResults)
+	id, err := baur.StoreRun(ctx, c.storage, c.vcsState, task, inputs, runResult, uploadResults)
 	exitOnErr(err)
 
 	stdout.TaskPrintf(task, "run stored in database with ID %s\n", term.Highlight(id))
