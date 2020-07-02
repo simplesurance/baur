@@ -18,6 +18,12 @@ import (
 
 var gitLsPathSpecErrRe = regexp.MustCompile(`pathspec ('.+') did not match any file\(s\) known to git`)
 
+func CommandIsInstalled() bool {
+	_, err := stdexec.LookPath("git")
+
+	return err == nil
+}
+
 // IsGitDir checks if the passed directory is in a git repository.
 // It returns true if:
 // - .git/ exists or
@@ -41,12 +47,7 @@ func IsGitDir(dir string) (bool, error) {
 		return false, err
 	}
 
-	gitPath, err := stdexec.LookPath("git")
-	if err != nil {
-		return false, nil
-	}
-
-	result, err := exec.Command(gitPath, "rev-parse", "--git-dir").Directory(dir).Run()
+	result, err := exec.Command("git", "rev-parse", "--git-dir").Directory(dir).Run()
 	if err != nil {
 		return false, err
 	}

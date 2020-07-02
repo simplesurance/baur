@@ -125,7 +125,7 @@ func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
 }
 
 func mustGetRepoState(dir string) vcs.StateFetcher {
-	s, err := vcs.GetState(dir)
+	s, err := vcs.GetState(dir, log.Debugf)
 	exitOnErr(err, "evaluating if baur repository is in a VCS repository failed")
 
 	return s
