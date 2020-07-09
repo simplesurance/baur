@@ -15,7 +15,7 @@ type toFileOpts struct {
 	commented bool
 }
 
-// TToFileOpt is an option that can be passed to the ToFile functions
+// ToFileOpt is an option that can be passed to the ToFile functions
 type ToFileOpt func(*toFileOpts)
 
 // ToFileOptOverwrite overwrite an existing file instead of returning an error
@@ -55,7 +55,7 @@ func toFile(data interface{}, filepath string, opts ...ToFileOpt) error {
 	}
 
 	if settings.commented {
-		if err := writeCommented(&buf, f); err != nil {
+		if err := writeCommented(f, &buf); err != nil {
 			f.Close()
 			return err
 		}
@@ -82,7 +82,7 @@ func fileOpenFlags(overwrite bool) int {
 	return os.O_WRONLY | os.O_CREATE | os.O_EXCL
 }
 
-func writeCommented(in io.Reader, out io.Writer) error {
+func writeCommented(out io.Writer, in io.Reader) error {
 	s := bufio.NewScanner(in)
 
 	for s.Scan() {
