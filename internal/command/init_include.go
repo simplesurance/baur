@@ -39,7 +39,7 @@ func initInclude(cmd *cobra.Command, args []string) {
 	}
 
 	cfgInclude := cfg.ExampleInclude("example")
-	err := cfgInclude.IncludeToFile(filename, cfg.ToFileOptCommented())
+	err := cfgInclude.ToFile(filename, cfg.ToFileOptCommented())
 	if err != nil {
 		if os.IsExist(err) {
 			log.Fatalf("%s already exist\n", filename)
