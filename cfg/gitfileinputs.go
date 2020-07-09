@@ -5,7 +5,7 @@ import "github.com/simplesurance/baur/cfg/resolver"
 // GitFileInputs describes source files that are in the git repository by git
 // pathnames
 type GitFileInputs struct {
-	Paths []string `toml:"paths" commented:"true" comment:"Relative paths to source files.\n Only files tracked by Git that are not in the .gitignore file are matched.\n The same patterns that git ls-files supports can be used.\n Valid variables: $ROOT, $APPNAME."`
+	Paths []string `toml:"paths" comment:"Relative paths to source files.\n Only files tracked by Git that are not in the .gitignore file are matched.\n The same patterns that git ls-files supports can be used.\n Valid variables: $ROOT, $APPNAME."`
 }
 
 // Merge merges two GitFileInputs structs

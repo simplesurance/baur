@@ -94,8 +94,8 @@ func AppFromFile(path string) (*App, error) {
 }
 
 // ToFile marshals the App into toml format and writes it to the given filepath.
-func (a *App) ToFile(filepath string) error {
-	return toFile(a, filepath, false)
+func (a *App) ToFile(filepath string, opts ...ToFileOpt) error {
+	return toFile(a, filepath, opts...)
 }
 
 // FilePath returns the path of the file from which the configuration was loaded.

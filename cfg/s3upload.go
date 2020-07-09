@@ -6,8 +6,8 @@ import (
 
 // S3Upload contains S3 upload information
 type S3Upload struct {
-	Bucket   string `toml:"bucket" comment:"Bucket name, valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
-	DestFile string `toml:"dest_file" comment:"Remote File Name, valid variables: $ROOT, $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
+	Bucket   string `toml:"bucket" comment:"Bucket name, valid variables: $APPNAME, $UUID, $GITCOMMIT"`
+	DestFile string `toml:"dest_file" comment:"Remote File Name, valid variables: $ROOT, $APPNAME, $UUID, $GITCOMMIT"`
 }
 
 // IsEmpty returns true if S3Upload is empty
