@@ -6,9 +6,9 @@ import (
 
 // DockerImageRegistryUpload stores information about a Docker image upload.
 type DockerImageRegistryUpload struct {
-	Registry   string `toml:"registry" comment:"Registry address in the format <HOST>:[<PORT>]. If it's empty the default from the docker agent is used." commented:"true"`
-	Repository string `toml:"repository" comment:"Repository name, Valid variables: $APPNAME" commented:"true"`
-	Tag        string `toml:"tag" comment:"Tag that is applied to the image.\n Valid variables: $APPNAME, $UUID, $GITCOMMIT" commented:"true"`
+	Registry   string `toml:"registry" comment:"Registry address in the format <HOST>:[<PORT>]. If it's empty the default from the docker agent is used."`
+	Repository string `toml:"repository" comment:"Repository name, Valid variables: $APPNAME"`
+	Tag        string `toml:"tag" comment:"Tag that is applied to the image.\n Valid variables: $APPNAME, $UUID, $GITCOMMIT"`
 }
 
 //IsEmpty returns true if the struct contains no information.

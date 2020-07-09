@@ -6,8 +6,8 @@ import (
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
-	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT, $APPNAME" commented:"true"`
-	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored. Valid variables: $ROOT, $APPNAME." commented:"true"`
+	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT, $APPNAME"`
+	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored. Valid variables: $ROOT, $APPNAME."`
 }
 
 // Merge merges the two GolangSources structs

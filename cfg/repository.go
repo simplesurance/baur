@@ -73,10 +73,8 @@ func ExampleRepository() *Repository {
 }
 
 // ToFile writes an Repository configuration file to filepath.
-// If overwrite is true an existent file will be overwriten. If it's false the
-// function returns an error if the file exist.
-func (r *Repository) ToFile(filepath string, overwrite bool) error {
-	return toFile(r, filepath, overwrite)
+func (r *Repository) ToFile(filepath string, opts ...ToFileOpt) error {
+	return toFile(r, filepath, opts...)
 }
 
 func (r *Repository) FilePath() string {

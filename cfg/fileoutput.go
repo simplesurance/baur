@@ -6,7 +6,7 @@ import (
 
 // FileOutput describes where a file output is stored.
 type FileOutput struct {
-	Path     string   `toml:"path" comment:"Path relative to the application directory.\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT." commented:"true"`
+	Path     string   `toml:"path" comment:"Path relative to the application directory.\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT."`
 	FileCopy FileCopy `comment:"Copy the file to a local directory."`
 	S3Upload S3Upload `comment:"Upload the file to S3."`
 }

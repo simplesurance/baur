@@ -48,7 +48,7 @@ func initApp(cmd *cobra.Command, args []string) {
 
 	appCfg := cfg.ExampleApp(appName)
 
-	err = appCfg.ToFile(path.Join(cwd, baur.AppCfgFile))
+	err = appCfg.ToFile(path.Join(cwd, baur.AppCfgFile), cfg.ToFileOptCommented())
 	if err != nil {
 		if os.IsExist(err) {
 			log.Fatalf("%s already exist\n", baur.AppCfgFile)

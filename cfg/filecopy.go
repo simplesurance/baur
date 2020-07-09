@@ -4,7 +4,7 @@ import "github.com/simplesurance/baur/cfg/resolver"
 
 // FileCopy describes a filesystem location where a task output is copied to.
 type FileCopy struct {
-	Path string `toml:"path" comment:"Destination directory\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT, $UUID." commented:"true"`
+	Path string `toml:"path" comment:"Destination directory\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT, $UUID."`
 }
 
 // IsEmpty returns true if FileCopy is empty

@@ -45,7 +45,7 @@ func initRepo(cmd *cobra.Command, args []string) {
 	repoCfg := cfg.ExampleRepository()
 	repoCfgPath := path.Join(repoDir, baur.RepositoryCfgFile)
 
-	err = repoCfg.ToFile(repoCfgPath, false)
+	err = repoCfg.ToFile(repoCfgPath)
 	if err != nil {
 		if os.IsExist(err) {
 			log.Fatalf("%s already exist\n", repoCfgPath)

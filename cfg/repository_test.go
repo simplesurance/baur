@@ -28,7 +28,7 @@ func Test_ExampleRepository_WrittenAndReadCfgIsValid(t *testing.T) {
 		t.Error("example conf fails validation: ", err)
 	}
 
-	if err := r.ToFile(tmpfileName, true); err != nil {
+	if err := r.ToFile(tmpfileName, ToFileOptOverwrite()); err != nil {
 		t.Fatal("writing conf to file failed: ", err)
 	}
 
