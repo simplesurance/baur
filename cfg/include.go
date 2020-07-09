@@ -28,8 +28,8 @@ type Include struct {
 	filePath string
 }
 
-// IncludeToFile marshals the Include struct to TOML and writes it to filepath.
-func (incl *Include) IncludeToFile(filepath string, opts ...ToFileOpt) error {
+// ToFile marshals the Include struct to TOML and writes it to filepath.
+func (incl *Include) ToFile(filepath string, opts ...ToFileOpt) error {
 	return toFile(incl, filepath, opts...)
 }
 
