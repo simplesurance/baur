@@ -159,6 +159,9 @@ func WithNewDB() Opt {
 	}
 }
 
+// CreateBaurRepository creates a new baur repository in a temporary directory
+// and a new postgres database with a unique name.
+// The funcion changes the current working directory to the created repository directory.
 func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 	t.Helper()
 
