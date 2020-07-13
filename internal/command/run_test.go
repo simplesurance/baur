@@ -3,7 +3,6 @@ package command
 import (
 	"bytes"
 	"encoding/csv"
-	"os"
 	"strings"
 	"testing"
 
@@ -104,9 +103,6 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateSimpleApp(t)
-
-			err := os.Chdir(r.Dir)
-			require.NoError(t, err)
 
 			runInitDb(t)
 
