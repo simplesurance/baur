@@ -3,7 +3,6 @@ package command
 import (
 	"bytes"
 	"encoding/csv"
-	"os"
 	"strings"
 	"testing"
 
@@ -16,12 +15,6 @@ import (
 	"github.com/simplesurance/baur/testutils/gittest"
 	"github.com/simplesurance/baur/testutils/repotest"
 )
-
-/*
-TODO:
-- check if an app without inputs behaves correctly, it should not be executed via "baur run" and baur status should show INPUTS UNDEFINED
-- Task with not inputs
-*/
 
 func initTest(t *testing.T) {
 	t.Helper()
@@ -51,6 +44,33 @@ func baurCSVStatus(t *testing.T) [][]string {
 	require.NoError(t, err)
 
 	return statusOut
+}
+
+// baurCSVLsApps runs "baur ls apps --csv" and returns a slice where each
+// element is a slice of csv fields per line
+func baurCSVLsApps(t *testing.T) [][]string {
+	var stdoutBuf bytes.Buffer
+
+	t.Helper()
+
+	stdout = term.NewStream(&stdoutBuf)
+
+	lsAppsCmd := newLsAppsCmd()
+	lsAppsCmd.csv = true
+
+	lsAppsCmd.Command.Run(&lsAppsCmd.Command, nil)
+
+	statusOut, err := csv.NewReader(&stdoutBuf).ReadAll()
+	require.NoError(t, err)
+
+	return statusOut
+}
+
+func runInitDb(t *testing.T) {
+	t.Helper()
+
+	t.Log("creating database schema")
+	initDb(initDbCmd, nil)
 }
 
 // TestRunningPendingTasksChangesStatus creates a new baur repository with 2
@@ -84,11 +104,7 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateSimpleApp(t)
 
-			err := os.Chdir(r.Dir)
-			require.NoError(t, err)
-
-			t.Log("creating database schema")
-			initDb(initDbCmd, nil)
+			runInitDb(t)
 
 			if tc.withGitRepository {
 				_, err := exec.Command("git", "init", ".").ExpectSuccess().Run()
@@ -141,4 +157,31 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 			assert.ElementsMatch(t, taskIds, r.TaskIDs(), "baur status is missing some tasks")
 		})
 	}
+}
+
+func TestAppWithoutTasks(t *testing.T) {
+	initTest(t)
+
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	appCfg := r.CreateAppWithoutTasks(t)
+
+	runInitDb(t)
+
+	statusOut := baurCSVStatus(t)
+
+	assert.Empty(t, statusOut, "expected empty baur status output, got: %q", statusOut)
+
+	lsAppsOut := baurCSVLsApps(t)
+
+	var found bool
+	for _, line := range lsAppsOut {
+		require.Len(t, line, 2)
+		name := line[0]
+
+		if name == appCfg.Name {
+			found = true
+		}
+	}
+
+	assert.True(t, found, "baur ls apps did not list %q: %q", appCfg.Name, lsAppsOut)
 }

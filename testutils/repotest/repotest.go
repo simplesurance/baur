@@ -16,6 +16,30 @@ import (
 	"github.com/simplesurance/baur/testutils/fstest"
 )
 
+func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {
+	t.Helper()
+
+	appName := "appWithoutIO"
+
+	app := cfg.App{
+		Name: appName,
+	}
+
+	appDir := path.Join(r.Dir, appName)
+
+	if err := os.Mkdir(appDir, 0775); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := app.ToFile(path.Join(appDir, baur.AppCfgFile)); err != nil {
+		t.Fatalf("writing app cfg file failed: %s", err)
+	}
+
+	r.AppCfgs = append(r.AppCfgs, &app)
+
+	return &app
+}
+
 func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 	t.Helper()
 
@@ -197,7 +221,9 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 		t.Fatalf("could not write repository cfg file: %s", err)
 	}
 
-	// TODO: do `git init` and add files to repo
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("changing directory to %q failed: %q", tempDir, err)
+	}
 
 	t.Logf("changed working directory to baur repository: %q", tempDir)
 
