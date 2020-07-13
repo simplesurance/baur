@@ -8,7 +8,7 @@ jobs:
         environment:
           GOFLAGS: -mod=vendor
           TEST_RESULTS: /tmp/test-results
-          BAUR_POSTGRESQL_URL: "postgres://root@localhost:5432/baur?sslmode=disable"
+          BAUR_TEST_POSTGRESQL_URL: "postgres://root@localhost:5432/baur?sslmode=disable"
 
       - image: circleci/postgres:12
         environment:
