@@ -1,3 +1,5 @@
+// +build dbtest
+
 package command
 
 import (
