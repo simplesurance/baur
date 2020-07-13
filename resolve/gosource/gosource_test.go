@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/simplesurance/baur/fs"
-	"github.com/simplesurance/baur/testutils/fstest"
-	"github.com/simplesurance/baur/testutils/strtest"
+	"github.com/simplesurance/baur/internal/testutils/fstest"
+	"github.com/simplesurance/baur/internal/testutils/strtest"
 )
 
 const testfileMainGo = `

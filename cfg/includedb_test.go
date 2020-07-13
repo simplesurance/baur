@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/internal/testutils/fstest"
 	"github.com/simplesurance/baur/log"
-	"github.com/simplesurance/baur/testutils/fstest"
 )
 
 // cfgToFile marshals a struct to a toml configuration file.

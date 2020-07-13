@@ -14,8 +14,8 @@ import (
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/exec"
 	"github.com/simplesurance/baur/internal/command/term"
-	"github.com/simplesurance/baur/testutils/gittest"
-	"github.com/simplesurance/baur/testutils/repotest"
+	"github.com/simplesurance/baur/internal/testutils/gittest"
+	"github.com/simplesurance/baur/internal/testutils/repotest"
 )
 
 func initTest(t *testing.T) {

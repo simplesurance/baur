@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/internal/testutils/fstest"
 	"github.com/simplesurance/baur/log"
-	"github.com/simplesurance/baur/testutils/fstest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
