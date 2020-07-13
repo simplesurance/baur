@@ -12,8 +12,8 @@ import (
 
 	"github.com/simplesurance/baur"
 	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/testutils/dbtest"
-	"github.com/simplesurance/baur/testutils/fstest"
+	"github.com/simplesurance/baur/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/internal/testutils/fstest"
 )
 
 func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {
