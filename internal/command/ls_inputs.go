@@ -1,7 +1,6 @@
 package command
 
 import (
-	"os"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -58,7 +57,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 	if !task.HasInputs() {
 		stderr.TaskPrintf(task, "has no inputs configured")
-		os.Exit(1)
+		exitFunc(1)
 	}
 
 	if writeHeaders {

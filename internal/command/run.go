@@ -268,7 +268,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 		exitOnErr(err)
 
 		if !outputsExit(t.task, outputs) {
-			os.Exit(1)
+			exitFunc(1)
 		}
 
 		if c.skipUpload {

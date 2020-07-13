@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -96,7 +95,7 @@ func parseSpec(s string) (app, task string) {
 
 	default:
 		stderr.Printf("invalid argument: %q\n", s)
-		os.Exit(1)
+		exitFunc(1)
 	}
 
 	// is never executed because of the default case

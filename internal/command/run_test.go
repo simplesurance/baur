@@ -23,6 +23,16 @@ TODO:
 - Task with not inputs
 */
 
+func initTest(t *testing.T) {
+	t.Helper()
+
+	exitFunc = func(code int) {
+		t.Fatalf("baur command exited with code %d", code)
+	}
+
+	exec.DefaultDebugfFn = t.Logf
+}
+
 // baurCSVStatus runs "baur status --csv" and returns a slice where each
 // element is a slice of csv fields per line
 func baurCSVStatus(t *testing.T) [][]string {
@@ -69,7 +79,7 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 		t.Run(tc.testname, func(t *testing.T) {
 			var headCommit string
 
-			exec.DefaultDebugfFn = t.Logf
+			initTest(t)
 
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateSimpleApp(t)
