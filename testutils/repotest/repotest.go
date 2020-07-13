@@ -185,6 +185,8 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 		dbURL = dbtest.PSQLURL()
 	}
 
+	t.Logf("database url: %q", dbURL)
+
 	tempDir, err := ioutil.TempDir("", "baur-filesrc-test")
 	if err != nil {
 		t.Fatal(err)
