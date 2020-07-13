@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/testutils"
+	"github.com/simplesurance/baur/testutils/dbtest"
 )
 
 var ctx = context.Background()
@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 func newTestClient(t *testing.T) (*Client, func()) {
 	t.Helper()
 
-	con, err := pgxpool.Connect(ctx, testutils.PSQLURL())
+	con, err := pgxpool.Connect(ctx, dbtest.PSQLURL())
 	require.NoError(t, err)
 
 	tx, err := con.Begin(ctx)
