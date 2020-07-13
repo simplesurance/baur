@@ -33,6 +33,8 @@ var ctx = context.Background()
 var stdout = term.NewStream(os.Stdout)
 var stderr = term.NewStream(os.Stderr)
 
+var exitFunc = func(code int) { os.Exit(code) }
+
 func initSb(_ *cobra.Command, _ []string) {
 	if verboseFlag {
 		log.StdLogger.EnableDebug(verboseFlag)
