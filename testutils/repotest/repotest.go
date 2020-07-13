@@ -223,6 +223,8 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 		t.Fatalf("changing directory to %q failed: %q", tempDir, err)
 	}
 
+	t.Logf("changed working directory to baur repository: %q", tempDir)
+
 	return &Repo{
 		Dir:                 tempDir,
 		FilecopyArtifactDir: artifactDir,
