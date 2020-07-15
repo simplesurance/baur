@@ -131,6 +131,12 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 		})
 	}
 
+	for _, task := range a.Tasks {
+		if err := TaskMerge(task, filepath.Dir(a.filepath), includeSpecResolvers, includedb); err != nil {
+			return FieldErrorWrap(err, "Tasks", task.Name)
+		}
+	}
+
 	return nil
 }
 
