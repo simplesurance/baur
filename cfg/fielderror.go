@@ -40,3 +40,11 @@ func FieldErrorWrap(err error, path ...string) error {
 func (f *FieldError) Error() string {
 	return fmt.Sprintf("%s: %s", strings.Join(f.elementPath, "."), f.err)
 }
+
+func (f *FieldError) Unwrap() error {
+	if err := errors.Unwrap(f.err); err != nil {
+		return err
+	}
+
+	return f.err
+}
