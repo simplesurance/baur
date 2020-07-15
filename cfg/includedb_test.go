@@ -11,7 +11,6 @@ import (
 
 	"github.com/simplesurance/baur/cfg/resolver"
 	"github.com/simplesurance/baur/internal/testutils/fstest"
-	"github.com/simplesurance/baur/log"
 )
 
 // cfgToFile marshals a struct to a toml configuration file.
@@ -120,7 +119,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 
 	cfgToFile(t, include, filepath.Join(tmpdir, inclFilePath))
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.LoadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
@@ -180,7 +179,7 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 	cfgToFile(t, outputIncl, filepath.Join(tmpdir, outputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.LoadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
@@ -221,7 +220,7 @@ func TestIncludePathsAreRelativeToCfg(t *testing.T) {
 	cfgToFile(t, inputIncl, filepath.Join(tmpdir, "subdir", inputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.LoadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
@@ -257,7 +256,7 @@ func TestAbsIncludePathsFail(t *testing.T) {
 	cfgToFile(t, inputIncl, absInputInclPath)
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.LoadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
@@ -285,7 +284,7 @@ func TestEnsureInputIncludeIDsMustBeUnique(t *testing.T) {
 	cfgToFile(t, inputIncl, filepath.Join(tmpdir, inputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.LoadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
@@ -314,7 +313,7 @@ func TestEnsureOutputIncludeIDsMustBeUnique(t *testing.T) {
 	cfgToFile(t, outputIncl, filepath.Join(tmpdir, outputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.LoadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,

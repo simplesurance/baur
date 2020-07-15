@@ -9,7 +9,6 @@ import (
 
 	"github.com/simplesurance/baur/cfg/resolver"
 	"github.com/simplesurance/baur/internal/testutils/fstest"
-	"github.com/simplesurance/baur/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -88,7 +87,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 	loadedApp, err := AppFromFile(appCfgPath)
 	require.NoError(t, err)
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
 	require.NoError(t, err)
 
@@ -225,7 +224,7 @@ func TestTaskInclude(t *testing.T) {
 			loadedApp, err := AppFromFile(appCfgPath)
 			require.NoError(t, err)
 
-			includeDB := NewIncludeDB(log.StdLogger)
+			includeDB := NewIncludeDB(t.Logf)
 			err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
 			require.NoError(t, err)
 
@@ -288,7 +287,7 @@ func TestTaskIncludeFailsForNonExistingIncludeFile(t *testing.T) {
 
 	loadedApp, err := AppFromFile(appCfgPath)
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
 	require.True(
 		t,
@@ -342,7 +341,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 
 	loadedApp, err := AppFromFile(appCfgPath)
 
-	includeDB := NewIncludeDB(log.StdLogger)
+	includeDB := NewIncludeDB(t.Logf)
 	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
 	require.True(t, errors.Is(err, ErrIncludeIDNotFound), "merge did not return ErrIncludeIDNotFound: %v", err)
 }
