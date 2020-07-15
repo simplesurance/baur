@@ -10,14 +10,12 @@ import (
 	"github.com/simplesurance/baur/cfg/resolver"
 )
 
-type Logger interface {
-	Debugf(format string, v ...interface{})
-}
+type LogFn func(format string, v ...interface{})
 
 // IncludeDB loads and stores include config files.
 // It's methods are not concurrency-safe.
 type IncludeDB struct {
-	logger Logger
+	logf LogFn
 
 	// the first maps use the absolute path to the include file as key, the second maps use the include ID as key
 	inputs  map[string]map[string]*InputInclude
@@ -28,12 +26,16 @@ type IncludeDB struct {
 // ErrIncludeIDNotFound describes that an include with a specific does not exist in an include file.
 var ErrIncludeIDNotFound = errors.New("id not found in include file")
 
-func NewIncludeDB(logger Logger) *IncludeDB {
+func NewIncludeDB(logf LogFn) *IncludeDB {
+	if logf == nil {
+		logf = func(_ string, _ ...interface{}) {}
+
+	}
 	return &IncludeDB{
 		inputs:  map[string]map[string]*InputInclude{},
 		outputs: map[string]map[string]*OutputInclude{},
 		tasks:   map[string]map[string]*TaskInclude{},
-		logger:  logger,
+		logf:    logf,
 	}
 }
 
@@ -151,7 +153,7 @@ func (db *IncludeDB) parseIncludeSpec(resolver resolver.Resolver, workingDir, in
 		path = filepath.Join(workingDir, relPath)
 	}
 
-	db.logger.Debugf("includedb: resolved %q to path: %q, id: %q", include, path, id)
+	db.logf("includedb: resolved %q to path: %q, id: %q", include, path, id)
 
 	return path, id, nil
 }
@@ -159,7 +161,7 @@ func (db *IncludeDB) parseIncludeSpec(resolver resolver.Resolver, workingDir, in
 // load loads the include file, resolves it's variables, validates it and adds it to the IncludeDB.
 // Includes referenced in TaskIncludes a recursively loaded and included.
 func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
-	db.logger.Debugf("includedb: loading %q", path)
+	db.logf("includedb: loading %q", path)
 	include, err := IncludeFromFile(path)
 	if err != nil {
 		// the error includes the path to the file
@@ -219,7 +221,7 @@ func (db *IncludeDB) addTaskInclude(absPath string, include *TaskInclude) {
 	}
 
 	idMap[include.IncludeID] = include
-	db.logger.Debugf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
+	db.logf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
 }
 
 func (db *IncludeDB) addOutputInclude(absPath string, include *OutputInclude) {
@@ -230,7 +232,7 @@ func (db *IncludeDB) addOutputInclude(absPath string, include *OutputInclude) {
 	}
 
 	idMap[include.IncludeID] = include
-	db.logger.Debugf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
+	db.logf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
 }
 
 func (db *IncludeDB) addInputInclude(absPath string, include *InputInclude) {
@@ -241,7 +243,7 @@ func (db *IncludeDB) addInputInclude(absPath string, include *InputInclude) {
 	}
 
 	idMap[include.IncludeID] = include
-	db.logger.Debugf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
+	db.logf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
 }
 
 func (db *IncludeDB) taskInclude(absPath, id string) (*TaskInclude, bool) {

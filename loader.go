@@ -40,7 +40,7 @@ func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), 
 	return &Loader{
 		logger:          logger,
 		repositoryRoot:  repositoryRootDir,
-		includeDB:       cfg.NewIncludeDB(logger),
+		includeDB:       cfg.NewIncludeDB(logger.Debugf),
 		appConfigPaths:  appConfigPaths,
 		gitCommitIDFunc: gitCommitIDFunc,
 	}, nil
