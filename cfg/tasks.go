@@ -21,7 +21,7 @@ func (tasks Tasks) Merge(workingDir string, resolver resolver.Resolver, included
 func (tasks Tasks) Resolve(resolvers resolver.Resolver) error {
 	for _, t := range tasks {
 		if err := t.Resolve(resolvers); err != nil {
-			return FieldErrorWrap(err, "task", t.Name)
+			return FieldErrorWrap(err, "Tasks", t.Name)
 		}
 	}
 
