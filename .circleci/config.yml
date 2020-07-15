@@ -62,7 +62,7 @@ jobs:
 
   static_analysis:
     docker:
-      - image: golangci/golangci-lint:v1.28.1
+      - image: golangci/golangci-lint:v1.28.3
 
     working_directory: ~/baur
     steps:
