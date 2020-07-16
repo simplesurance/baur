@@ -517,6 +517,7 @@ func TestTaskIncludeFailsForNonExistingIncludeFile(t *testing.T) {
 	require.NoError(t, app.ToFile(appCfgPath))
 
 	loadedApp, err := AppFromFile(appCfgPath)
+	require.NoError(t, err)
 
 	includeDB := NewIncludeDB(t.Logf)
 	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
@@ -571,6 +572,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 	require.NoError(t, include.ToFile(filepath.Join(tmpdir, "include.toml")))
 
 	loadedApp, err := AppFromFile(appCfgPath)
+	require.NoError(t, err)
 
 	includeDB := NewIncludeDB(t.Logf)
 	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
