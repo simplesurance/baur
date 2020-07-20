@@ -1,6 +1,6 @@
 package cfg
 
-import "github.com/simplesurance/baur/cfg/resolver"
+import "github.com/simplesurance/baur/v1/cfg/resolver"
 
 type TaskIncludes []*TaskInclude
 

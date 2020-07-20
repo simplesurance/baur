@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/simplesurance/baur/digest"
+	"github.com/simplesurance/baur/v1/digest"
 )
 
 type OutputType int

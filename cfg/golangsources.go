@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/v1/cfg/resolver"
 )
 
 // GolangSources specifies inputs for Golang Applications

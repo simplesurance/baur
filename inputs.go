@@ -3,8 +3,8 @@ package baur
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/digest"
-	"github.com/simplesurance/baur/digest/sha384"
+	"github.com/simplesurance/baur/v1/digest"
+	"github.com/simplesurance/baur/v1/digest/sha384"
 )
 
 // Inputs are resolved Inputs of a task.

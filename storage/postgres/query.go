@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 
-	"github.com/simplesurance/baur/storage"
+	"github.com/simplesurance/baur/v1/storage"
 )
 
 func (c *Client) TaskRun(ctx context.Context, id int) (*storage.TaskRunWithID, error) {

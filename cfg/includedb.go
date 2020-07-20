@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/v1/cfg/resolver"
 )
 
 type LogFn func(format string, v ...interface{})

@@ -8,7 +8,7 @@ import (
 
 	"github.com/pelletier/go-toml"
 
-	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/v1/cfg/resolver"
 )
 
 // App stores an application configuration.

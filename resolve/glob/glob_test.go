@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/internal/testutils/fstest"
-	"github.com/simplesurance/baur/internal/testutils/strtest"
+	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v1/internal/testutils/strtest"
 )
 
 func Test_FindAllSubDirs(t *testing.T) {

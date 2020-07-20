@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/log"
-	"github.com/simplesurance/baur/resolve/gitpath"
-	"github.com/simplesurance/baur/resolve/glob"
-	"github.com/simplesurance/baur/resolve/gosource"
+	"github.com/simplesurance/baur/v1/cfg"
+	"github.com/simplesurance/baur/v1/log"
+	"github.com/simplesurance/baur/v1/resolve/gitpath"
+	"github.com/simplesurance/baur/v1/resolve/glob"
+	"github.com/simplesurance/baur/v1/resolve/gosource"
 )
 
 type InputResolver struct {

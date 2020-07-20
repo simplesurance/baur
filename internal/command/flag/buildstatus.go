@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/v1"
 )
 
 // Valid commandline values

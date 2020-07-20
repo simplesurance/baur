@@ -3,7 +3,7 @@ package cfg
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/cfg/resolver"
+	"github.com/simplesurance/baur/v1/cfg/resolver"
 )
 
 type Tasks []*Task

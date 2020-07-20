@@ -8,12 +8,12 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/format"
-	"github.com/simplesurance/baur/log"
-	"github.com/simplesurance/baur/storage"
-	"github.com/simplesurance/baur/storage/postgres"
-	"github.com/simplesurance/baur/vcs"
+	"github.com/simplesurance/baur/v1"
+	"github.com/simplesurance/baur/v1/format"
+	"github.com/simplesurance/baur/v1/log"
+	"github.com/simplesurance/baur/v1/storage"
+	"github.com/simplesurance/baur/v1/storage/postgres"
+	"github.com/simplesurance/baur/v1/vcs"
 )
 
 // envVarPSQLURL contains the name of an environment variable in that the

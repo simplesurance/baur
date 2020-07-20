@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/internal/command/term"
-	"github.com/simplesurance/baur/log"
+	"github.com/simplesurance/baur/v1/cfg"
+	"github.com/simplesurance/baur/v1/internal/command/term"
+	"github.com/simplesurance/baur/v1/log"
 )
 
 func init() {

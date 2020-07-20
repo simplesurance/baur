@@ -1,6 +1,6 @@
 package cfg
 
-import "github.com/simplesurance/baur/cfg/resolver"
+import "github.com/simplesurance/baur/v1/cfg/resolver"
 
 // GitFileInputs describes source files that are in the git repository by git
 // pathnames

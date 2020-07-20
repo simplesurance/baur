@@ -3,7 +3,7 @@ package term
 import (
 	"github.com/fatih/color"
 
-	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/v1"
 )
 
 var (

@@ -1,8 +1,8 @@
 package baur
 
 import (
-	"github.com/simplesurance/baur/digest"
-	"github.com/simplesurance/baur/digest/sha384"
+	"github.com/simplesurance/baur/v1/digest"
+	"github.com/simplesurance/baur/v1/digest/sha384"
 )
 
 // File represent a file

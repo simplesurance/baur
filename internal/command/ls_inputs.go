@@ -5,11 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/format"
-	"github.com/simplesurance/baur/format/csv"
-	"github.com/simplesurance/baur/format/table"
-	"github.com/simplesurance/baur/internal/command/term"
+	"github.com/simplesurance/baur/v1"
+	"github.com/simplesurance/baur/v1/format"
+	"github.com/simplesurance/baur/v1/format/csv"
+	"github.com/simplesurance/baur/v1/format/table"
+	"github.com/simplesurance/baur/v1/internal/command/term"
 )
 
 func init() {

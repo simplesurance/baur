@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/simplesurance/baur/cfg"
+	"github.com/simplesurance/baur/v1/cfg"
 )
 
 // App represents an application

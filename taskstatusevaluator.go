@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/simplesurance/baur/storage"
+	"github.com/simplesurance/baur/v1/storage"
 )
 
 // TaskTaskStatusEvaluator evaluates the status of a task.

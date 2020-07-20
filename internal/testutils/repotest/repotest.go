@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/cfg"
-	"github.com/simplesurance/baur/internal/testutils/dbtest"
-	"github.com/simplesurance/baur/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v1"
+	"github.com/simplesurance/baur/v1/cfg"
+	"github.com/simplesurance/baur/v1/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
 )
 
 func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {

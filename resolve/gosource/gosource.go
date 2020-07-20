@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 
-	"github.com/simplesurance/baur/exec"
-	"github.com/simplesurance/baur/fs"
+	"github.com/simplesurance/baur/v1/exec"
+	"github.com/simplesurance/baur/v1/fs"
 )
 
 var defLogFn = func(string, ...interface{}) {}

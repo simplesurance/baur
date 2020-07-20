@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/simplesurance/baur/digest"
+	"github.com/simplesurance/baur/v1/digest"
 )
 
 // Hash offers an interface to add data for computing a digest

@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/simplesurance/baur"
+	"github.com/simplesurance/baur/v1"
 )
 
 const separator = "------------------------------------------------------------------------------"

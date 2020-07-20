@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/simplesurance/baur/fs"
+	"github.com/simplesurance/baur/v1/fs"
 )
 
 // Resolver resolves a glob path to files. The functionality is the same then

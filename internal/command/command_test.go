@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/exec"
-	"github.com/simplesurance/baur/internal/command/term"
-	"github.com/simplesurance/baur/internal/testutils/gittest"
-	"github.com/simplesurance/baur/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v1"
+	"github.com/simplesurance/baur/v1/exec"
+	"github.com/simplesurance/baur/v1/internal/command/term"
+	"github.com/simplesurance/baur/v1/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
 )
 
 func initTest(t *testing.T) {

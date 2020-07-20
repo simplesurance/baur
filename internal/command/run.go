@@ -10,15 +10,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur"
-	"github.com/simplesurance/baur/internal/command/term"
-	"github.com/simplesurance/baur/log"
-	"github.com/simplesurance/baur/routines"
-	"github.com/simplesurance/baur/storage"
-	"github.com/simplesurance/baur/upload/docker"
-	"github.com/simplesurance/baur/upload/filecopy"
-	"github.com/simplesurance/baur/upload/s3"
-	"github.com/simplesurance/baur/vcs"
+	"github.com/simplesurance/baur/v1"
+	"github.com/simplesurance/baur/v1/internal/command/term"
+	"github.com/simplesurance/baur/v1/log"
+	"github.com/simplesurance/baur/v1/routines"
+	"github.com/simplesurance/baur/v1/storage"
+	"github.com/simplesurance/baur/v1/upload/docker"
+	"github.com/simplesurance/baur/v1/upload/filecopy"
+	"github.com/simplesurance/baur/v1/upload/s3"
+	"github.com/simplesurance/baur/v1/vcs"
 )
 
 // TODO remove support for setting docker username/passwd via env vars
