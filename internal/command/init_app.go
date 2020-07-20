@@ -26,7 +26,7 @@ baur init app shop-ui	create an application config with the app name set to shop
 
 var initAppCmd = &cobra.Command{
 	Use:     "app [APP-NAME]",
-	Short:   "creates an application config file in the current directory",
+	Short:   "create an application config file in the current directory",
 	Long:    strings.TrimSpace(initAppLongHelp),
 	Example: strings.TrimSpace(initAppExample),
 	Run:     initApp,
