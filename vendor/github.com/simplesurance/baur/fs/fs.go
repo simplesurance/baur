@@ -19,7 +19,7 @@ func IsFile(path string) (bool, error) {
 		return false, err
 	}
 
-	return fi.Mode().IsRegular(), nil
+	return !fi.IsDir(), nil
 }
 
 // FileExists returns true if path exist and is a file
@@ -34,7 +34,7 @@ func DirsExist(paths ...string) error {
 	for _, path := range paths {
 		isDir, err := IsDir(path)
 		if os.IsNotExist(err) {
-			return fmt.Errorf("'%s' does not exist: %w", path, err)
+			return fmt.Errorf("'%s' does not exist", path)
 		}
 
 		if !isDir {
@@ -83,12 +83,12 @@ func SameFile(a, b string) (bool, error) {
 	return os.SameFile(aFi, bFi), nil
 }
 
-// FindFileInParentDirs finds a file in startPath or it's parent directories.
-// The function starts looking for a file called filename in startPath and then
-// checks recursively it's parent directors.
-// It returns the absolute path of the first match.
+// FindFileInParentDirs finds a directory that contains filename. The function
+// starts searching in startPath and then checks recursively each parent
+// directory for the file. It returns the absolute path to the first found
+// directory contains the file.
 // If it reaches the root directory without finding the file it returns
-// os.ErrNotExist.
+// os.ErrNotExist
 func FindFileInParentDirs(startPath, filename string) (string, error) {
 	searchDir := startPath
 
@@ -192,25 +192,4 @@ func FileSize(path string) (int64, error) {
 // Mkdir creates recursively directories
 func Mkdir(path string) error {
 	return os.MkdirAll(path, os.FileMode(0755))
-}
-
-// AbsPaths prepends to all paths in relPaths the passed rootPath.
-func AbsPaths(rootPath string, relPaths []string) []string {
-	result := make([]string, 0, len(rootPath))
-
-	for _, relPath := range relPaths {
-		absPath := filepath.Join(rootPath, relPath)
-		result = append(result, absPath)
-	}
-
-	return result
-}
-
-const FileBackupSuffix = ".bak"
-
-// BackupFile renames a file to <OldName><FileBaBackupSuffix>.
-func BackupFile(filepath string) error {
-	bakFilePath := filepath + FileBackupSuffix
-
-	return os.Rename(filepath, bakFilePath)
 }
