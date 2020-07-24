@@ -89,6 +89,11 @@ func (db *IncludeDB) LoadInputInclude(resolver resolver.Resolver, workingDir, in
 		return nil, ErrIncludeIDNotFound
 	}
 
+	// file was loaded before but does not contain an input include specification
+	if _, exist := db.outputs[absPath]; exist {
+		return nil, ErrIncludeIDNotFound
+	}
+
 	if err := db.load(absPath, resolver); err != nil {
 		return nil, err
 	}
@@ -117,6 +122,11 @@ func (db *IncludeDB) LoadOutputInclude(resolver resolver.Resolver, workingDir, i
 			return include, nil
 		}
 
+		return nil, ErrIncludeIDNotFound
+	}
+
+	// file was loaded before but does not contain an output include specification
+	if _, exist := db.inputs[absPath]; exist {
 		return nil, ErrIncludeIDNotFound
 	}
 
