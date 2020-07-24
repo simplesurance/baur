@@ -280,11 +280,11 @@ func (db *IncludeDB) outputInclude(absPath, id string) (*OutputInclude, bool) {
 // with the given abspath and id exist.
 func (db *IncludeDB) inputOutputIncludeNotExist(absPath, id string) error {
 	if _, exist := db.inputInclude(absPath, id); exist {
-		return fmt.Errorf("input include %q already exist, include/output ids must be unique", includeSpecifier(absPath, id))
+		return fmt.Errorf("input include %q already exist, include specifiers must be unique", includeSpecifier(absPath, id))
 	}
 
 	if _, exist := db.outputInclude(absPath, id); exist {
-		return fmt.Errorf("output include %q already exist, include/output ids must be unique", includeSpecifier(absPath, id))
+		return fmt.Errorf("output include %q already exist, include specifiers must be unique", includeSpecifier(absPath, id))
 	}
 
 	return nil
