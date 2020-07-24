@@ -171,7 +171,11 @@ func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
-	// Inputs and Outputs are load and indexed before the Tasks. This
+	if err := include.ValidateUniqIncludeIDs(); err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+
+	// Inputs and Outputs are loaded and indexed before the Tasks. This
 	// allows to include inputs and outputs of the same file in the TaskInclude.
 
 	if err := include.Input.Validate(); err != nil {
