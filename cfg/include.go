@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -56,6 +57,47 @@ func IncludeFromFile(path string) (*Include, error) {
 	}
 
 	return &config, err
+}
+
+func (i *Include) ValidateUniqIncludeIDs() error {
+	uniqIncludeIDs := map[string]struct{}{}
+
+	for _, in := range i.Input {
+		if _, exist := uniqIncludeIDs[in.IncludeID]; exist {
+			return NewFieldError(
+				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", in.IncludeID),
+				"Input", "include_id",
+			)
+
+		}
+
+		uniqIncludeIDs[in.IncludeID] = struct{}{}
+	}
+
+	for _, out := range i.Output {
+		if _, exist := uniqIncludeIDs[out.IncludeID]; exist {
+			return NewFieldError(
+				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", out.IncludeID),
+				"Input", "include_id",
+			)
+		}
+
+		uniqIncludeIDs[out.IncludeID] = struct{}{}
+	}
+
+	for _, task := range i.Task {
+		if _, exist := uniqIncludeIDs[task.IncludeID]; exist {
+			return NewFieldError(
+				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", task.IncludeID),
+				"Input", "include_id",
+			)
+		}
+
+		uniqIncludeIDs[task.IncludeID] = struct{}{}
+	}
+
+	return nil
+
 }
 
 // ExampleInclude returns an Include struct with exemplary values.
