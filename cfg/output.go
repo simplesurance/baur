@@ -6,29 +6,35 @@ import (
 
 // Output is the tasks output section
 type Output struct {
-	DockerImage []*DockerImageOutput `comment:"Docker images that are produced by the [Task.command]"`
-	File        []*FileOutput        `comment:"Files that are produces by the [Task.command]"`
+	DockerImage []DockerImageOutput `comment:"Docker images that are produced by the [Task.command]"`
+	File        []FileOutput        `comment:"Files that are produces by the [Task.command]"`
 }
 
-func (out *Output) DockerImageOutputs() []*DockerImageOutput {
+func (out *Output) DockerImageOutputs() []DockerImageOutput {
 	return out.DockerImage
 }
 
-func (out *Output) FileOutputs() []*FileOutput {
+func (out *Output) FileOutputs() []FileOutput {
 	return out.File
 }
 
 func (out *Output) Resolve(resolvers resolver.Resolver) error {
-	for _, dockerImage := range out.DockerImage {
+	for i, dockerImage := range out.DockerImage {
 		if err := dockerImage.Resolve(resolvers); err != nil {
 			return FieldErrorWrap(err, "DockerImage")
 		}
+
+		// replace the slice element because dockerImage is a copy
+		out.DockerImage[i] = dockerImage
 	}
 
-	for _, file := range out.File {
+	for i, file := range out.File {
 		if err := file.Resolve(resolvers); err != nil {
 			return FieldErrorWrap(err, "FileOutput")
 		}
+
+		// replace the slice element because file is a copy
+		out.File[i] = file
 	}
 
 	return nil

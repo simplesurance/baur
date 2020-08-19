@@ -42,7 +42,7 @@ func ExampleApp(name string) *App {
 					},
 				},
 				Output: Output{
-					File: []*FileOutput{
+					File: []FileOutput{
 						{
 							Path: "dist/$APPNAME.tar.xz",
 							S3Upload: S3Upload{
@@ -54,7 +54,7 @@ func ExampleApp(name string) *App {
 							},
 						},
 					},
-					DockerImage: []*DockerImageOutput{
+					DockerImage: []DockerImageOutput{
 						{
 							IDFile: "$APPNAME-container.id",
 							RegistryUpload: DockerImageRegistryUpload{

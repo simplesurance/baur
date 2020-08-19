@@ -6,15 +6,15 @@ import "errors"
 type OutputInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
 
-	DockerImage []*DockerImageOutput `comment:"Docker images that are produced by the [Task.command]"`
-	File        []*FileOutput        `comment:"Files that are produces by the [Task.command]"`
+	DockerImage []DockerImageOutput `comment:"Docker images that are produced by the [Task.command]"`
+	File        []FileOutput        `comment:"Files that are produces by the [Task.command]"`
 }
 
-func (out *OutputInclude) DockerImageOutputs() []*DockerImageOutput {
+func (out *OutputInclude) DockerImageOutputs() []DockerImageOutput {
 	return out.DockerImage
 }
 
-func (out *OutputInclude) FileOutputs() []*FileOutput {
+func (out *OutputInclude) FileOutputs() []FileOutput {
 	return out.File
 }
 

@@ -57,7 +57,7 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 					},
 				},
 				Output: cfg.Output{
-					File: []*cfg.FileOutput{
+					File: []cfg.FileOutput{
 						{
 							Path: "output",
 							FileCopy: cfg.FileCopy{
