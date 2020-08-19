@@ -86,10 +86,6 @@ func AppFromFile(path string) (*App, error) {
 
 	config.filepath = path
 
-	for _, task := range config.Tasks {
-		OutputRemoveEmptySections(&task.Output)
-	}
-
 	return &config, err
 }
 
