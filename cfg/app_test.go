@@ -62,7 +62,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 					Files: FileInputs{Paths: []string{"*.go"}},
 				},
 				Output: Output{
-					File: []*FileOutput{
+					File: []FileOutput{
 						{
 							Path:     "a.out",
 							FileCopy: FileCopy{Path: "/tmp/"},

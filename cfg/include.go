@@ -115,7 +115,7 @@ func ExampleInclude(id string) *Include {
 		Output: []*OutputInclude{
 			{
 				IncludeID: id + "_output",
-				File: []*FileOutput{
+				File: []FileOutput{
 					{
 						Path: "dist/$APPNAME.tar.xz",
 						S3Upload: S3Upload{
@@ -127,7 +127,7 @@ func ExampleInclude(id string) *Include {
 						},
 					},
 				},
-				DockerImage: []*DockerImageOutput{
+				DockerImage: []DockerImageOutput{
 					{
 						IDFile: "$APPNAME-container.id",
 						RegistryUpload: DockerImageRegistryUpload{
@@ -149,7 +149,7 @@ func ExampleInclude(id string) *Include {
 					},
 				},
 				Output: Output{
-					File: []*FileOutput{
+					File: []FileOutput{
 						{
 							Path: "a.out",
 							FileCopy: FileCopy{

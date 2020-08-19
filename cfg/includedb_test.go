@@ -62,8 +62,8 @@ func outputInclude() OutputIncludes {
 	return OutputIncludes{
 		&OutputInclude{
 			IncludeID: "outputs",
-			DockerImage: []*DockerImageOutput{
-				&DockerImageOutput{
+			DockerImage: []DockerImageOutput{
+				DockerImageOutput{
 					IDFile: "idfile",
 					RegistryUpload: DockerImageRegistryUpload{
 						Registry:   "localhost:123",
@@ -72,7 +72,7 @@ func outputInclude() OutputIncludes {
 					},
 				},
 			},
-			File: []*FileOutput{
+			File: []FileOutput{
 				{
 					Path: "a.out",
 					FileCopy: FileCopy{
@@ -393,7 +393,7 @@ func TestTaskInclude(t *testing.T) {
 					Output: OutputIncludes{
 						{
 							IncludeID: "output",
-							DockerImage: []*DockerImageOutput{
+							DockerImage: []DockerImageOutput{
 								{
 									IDFile: "idfile",
 									RegistryUpload: DockerImageRegistryUpload{
@@ -403,7 +403,7 @@ func TestTaskInclude(t *testing.T) {
 									},
 								},
 							},
-							File: []*FileOutput{
+							File: []FileOutput{
 								{
 									Path:     "path",
 									FileCopy: FileCopy{Path: "/tmp/"},
@@ -416,7 +416,7 @@ func TestTaskInclude(t *testing.T) {
 						},
 						{
 							IncludeID: "output2",
-							DockerImage: []*DockerImageOutput{
+							DockerImage: []DockerImageOutput{
 								{
 									IDFile: "idfile1",
 									RegistryUpload: DockerImageRegistryUpload{
@@ -426,7 +426,7 @@ func TestTaskInclude(t *testing.T) {
 									},
 								},
 							},
-							File: []*FileOutput{
+							File: []FileOutput{
 								{
 									Path:     "path",
 									FileCopy: FileCopy{Path: "/data/"},
@@ -556,7 +556,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 		Output: OutputIncludes{
 			{
 				IncludeID: "output",
-				File: []*FileOutput{
+				File: []FileOutput{
 					{
 						Path:     "path",
 						FileCopy: FileCopy{Path: "/tmp/"},
@@ -619,12 +619,20 @@ func TestVarsInIncludeFiles(t *testing.T) {
 		Output: OutputIncludes{
 			{
 				IncludeID: outputInclId,
-				DockerImage: []*DockerImageOutput{
+				DockerImage: []DockerImageOutput{
 					{
 						IDFile: "$APPNAME",
 						RegistryUpload: DockerImageRegistryUpload{
 							Tag:        "test",
 							Repository: "$APPNAME",
+						},
+					},
+				},
+				File: []FileOutput{
+					{
+						Path: "$APPNAME",
+						FileCopy: FileCopy{
+							Path: "/tmp/f",
 						},
 					},
 				},
@@ -677,6 +685,9 @@ func TestVarsInIncludeFiles(t *testing.T) {
 		require.Len(t, loadedApp.Tasks[0].Output.DockerImage, 1)
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].IDFile)
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload.Repository)
+
+		require.Len(t, loadedApp.Tasks[0].Output.File, 1)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.File[0].Path)
 
 		require.Equal(t, "check", loadedApp.Tasks[1].Name)
 		require.Equal(t, variableVal, loadedApp.Tasks[1].Command)

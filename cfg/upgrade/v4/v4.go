@@ -53,7 +53,7 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		}
 
 		for _, di := range old.BuildOutput.DockerImage {
-			output.DockerImage = append(output.DockerImage, &cfg.DockerImageOutput{
+			output.DockerImage = append(output.DockerImage, cfg.DockerImageOutput{
 				IDFile: di.IDFile,
 				RegistryUpload: cfg.DockerImageRegistryUpload{
 					Registry:   di.RegistryUpload.Registry,
@@ -64,7 +64,7 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		}
 
 		for _, f := range old.BuildOutput.File {
-			output.File = append(output.File, &cfg.FileOutput{
+			output.File = append(output.File, cfg.FileOutput{
 				Path:     f.Path,
 				FileCopy: cfg.FileCopy{Path: f.FileCopy.Path},
 				S3Upload: cfg.S3Upload{
@@ -99,7 +99,7 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 
 	//TODO: dedup code for converting outputs, same code is used used in UpgradeIncludeConfig
 	for _, di := range old.Build.Output.DockerImage {
-		task.Output.DockerImage = append(task.Output.DockerImage, &cfg.DockerImageOutput{
+		task.Output.DockerImage = append(task.Output.DockerImage, cfg.DockerImageOutput{
 			IDFile: di.IDFile,
 			RegistryUpload: cfg.DockerImageRegistryUpload{
 				Registry:   di.RegistryUpload.Registry,
@@ -110,7 +110,7 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	}
 
 	for _, f := range old.Build.Output.File {
-		task.Output.File = append(task.Output.File, &cfg.FileOutput{
+		task.Output.File = append(task.Output.File, cfg.FileOutput{
 			Path:     f.Path,
 			FileCopy: cfg.FileCopy{Path: f.FileCopy.Path},
 			S3Upload: cfg.S3Upload{
