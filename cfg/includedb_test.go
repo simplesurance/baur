@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -101,7 +102,7 @@ func taskInclude() TaskIncludes {
 // - TaskIncludes can refer Input/Output includes in the same file.
 // - The loaded TaskInclude contains all data from the config.
 func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
-	inclFilePath := "include.toml"
+	const inclFilePath = "include.toml"
 
 	var include Include
 	include.Input = inputInclude()
@@ -577,4 +578,107 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 	includeDB := NewIncludeDB(t.Logf)
 	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
 	require.True(t, errors.Is(err, ErrIncludeIDNotFound), "merge did not return ErrIncludeIDNotFound: %v", err)
+}
+
+// TestVarsInIncludeFiles ensures vars are correctly replaced when they
+// are defined in an includes
+func TestVarsInIncludeFiles(t *testing.T) {
+	const inputInclID = "input"
+	const outputInclId = "output"
+	const taskInclID = "task"
+	const inclFilename = "include.toml"
+
+	app1 := App{
+		Name:     "app1",
+		Includes: []string{inclFilename + "#" + taskInclID},
+		Tasks: Tasks{
+			{
+				Name:    "build",
+				Command: "make",
+				Includes: []string{
+					inclFilename + "#" + inputInclID,
+					inclFilename + "#" + outputInclId,
+				},
+			},
+		},
+	}
+
+	app2 := app1
+	app2.Name = "app2"
+
+	include := Include{
+		Input: InputIncludes{
+			{
+				IncludeID: inputInclID,
+				Files: FileInputs{
+					Paths: []string{"$APPNAME"},
+				},
+			},
+		},
+
+		Output: OutputIncludes{
+			{
+				IncludeID: outputInclId,
+				DockerImage: []*DockerImageOutput{
+					{
+						IDFile: "$APPNAME",
+						RegistryUpload: DockerImageRegistryUpload{
+							Tag:        "test",
+							Repository: "$APPNAME",
+						},
+					},
+				},
+			},
+		},
+		Task: TaskIncludes{
+			{
+				IncludeID: taskInclID,
+				Name:      "check",
+				Command:   "$APPNAME",
+			},
+		},
+	}
+
+	tmpdir := fstest.CreateTempDir(t)
+	app1Filepath := filepath.Join(tmpdir, "app1.toml")
+	app2Filepath := filepath.Join(tmpdir, "app2.toml")
+
+	cfgToFile(t, include, filepath.Join(tmpdir, inclFilename))
+	cfgToFile(t, app1, app1Filepath)
+	cfgToFile(t, app1, app2Filepath)
+
+	// validate app1
+	app1Loaded, err := AppFromFile(app1Filepath)
+	require.NoError(t, err)
+
+	includeDB := NewIncludeDB(t.Logf)
+	err = app1Loaded.Merge(includeDB, nil)
+	require.NoError(t, err)
+
+	app2Loaded, err := AppFromFile(app1Filepath)
+	require.NoError(t, err)
+
+	err = app2Loaded.Merge(includeDB, nil)
+	require.NoError(t, err)
+
+	loadedApps := []App{*app1Loaded, *app2Loaded}
+
+	for i, loadedApp := range loadedApps {
+		variableVal := fmt.Sprintf("var%d", i)
+
+		err = loadedApp.Resolve(&resolver.StrReplacement{Old: "$APPNAME", New: variableVal})
+		require.NoError(t, err)
+
+		require.Len(t, loadedApp.Tasks, 2)
+
+		require.Equal(t, "build", loadedApp.Tasks[0].Name)
+		require.Len(t, loadedApp.Tasks[0].Input.FileInputs().Paths, 1)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Input.FileInputs().Paths[0])
+		require.Len(t, loadedApp.Tasks[0].Output.DockerImage, 1)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].IDFile)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload.Repository)
+
+		require.Equal(t, "check", loadedApp.Tasks[1].Name)
+		require.Equal(t, variableVal, loadedApp.Tasks[1].Command)
+	}
 }
