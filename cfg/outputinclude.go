@@ -10,12 +10,12 @@ type OutputInclude struct {
 	File        []*FileOutput        `comment:"Files that are produces by the [Task.command]"`
 }
 
-func (out *OutputInclude) DockerImageOutputs() *[]*DockerImageOutput {
-	return &out.DockerImage
+func (out *OutputInclude) DockerImageOutputs() []*DockerImageOutput {
+	return out.DockerImage
 }
 
-func (out *OutputInclude) FileOutputs() *[]*FileOutput {
-	return &out.File
+func (out *OutputInclude) FileOutputs() []*FileOutput {
+	return out.File
 }
 
 // Validate checks if the stored information is valid.

@@ -50,12 +50,6 @@ func IncludeFromFile(path string) (*Include, error) {
 
 	config.filePath = path
 
-	config.Output.RemoveEmptyElements()
-
-	for _, task := range config.Task {
-		OutputRemoveEmptySections(&task.Output)
-	}
-
 	return &config, err
 }
 

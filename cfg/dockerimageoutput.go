@@ -38,8 +38,3 @@ func (d *DockerImageOutput) Validate() error {
 
 	return nil
 }
-
-// IsEmpty returns true if the object contains no data.
-func (d *DockerImageOutput) IsEmpty() bool {
-	return d.IDFile == "" && d.RegistryUpload.IsEmpty()
-}

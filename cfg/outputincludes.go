@@ -17,18 +17,3 @@ func (incl *OutputIncludes) Validate() error {
 
 	return nil
 }
-
-func (incl *OutputIncludes) RemoveEmptyElements() {
-	var i int
-
-	for _, output := range *incl {
-		OutputRemoveEmptySections(output)
-
-		if len(output.DockerImage) != 0 || len(output.File) != 0 {
-			(*incl)[i] = output
-			i++
-		}
-	}
-
-	*incl = (*incl)[:i]
-}

@@ -10,12 +10,12 @@ type Output struct {
 	File        []*FileOutput        `comment:"Files that are produces by the [Task.command]"`
 }
 
-func (out *Output) DockerImageOutputs() *[]*DockerImageOutput {
-	return &out.DockerImage
+func (out *Output) DockerImageOutputs() []*DockerImageOutput {
+	return out.DockerImage
 }
 
-func (out *Output) FileOutputs() *[]*FileOutput {
-	return &out.File
+func (out *Output) FileOutputs() []*FileOutput {
+	return out.File
 }
 
 func (out *Output) Resolve(resolvers resolver.Resolver) error {
@@ -36,19 +36,19 @@ func (out *Output) Resolve(resolvers resolver.Resolver) error {
 
 // Merge appends the information in other to out.
 func (out *Output) Merge(other OutputDef) {
-	out.DockerImage = append(out.DockerImage, *other.DockerImageOutputs()...)
-	out.File = append(out.File, *other.FileOutputs()...)
+	out.DockerImage = append(out.DockerImage, other.DockerImageOutputs()...)
+	out.File = append(out.File, other.FileOutputs()...)
 }
 
 // Validate checks that the stored information is valid.
 func OutputValidate(o OutputDef) error {
-	for _, f := range *o.FileOutputs() {
+	for _, f := range o.FileOutputs() {
 		if err := f.Validate(); err != nil {
 			return FieldErrorWrap(err, "File")
 		}
 	}
 
-	for _, d := range *o.DockerImageOutputs() {
+	for _, d := range o.DockerImageOutputs() {
 		if err := d.Validate(); err != nil {
 			return FieldErrorWrap(err, "DockerImage")
 		}
