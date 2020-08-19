@@ -154,9 +154,12 @@ func (db *IncludeDB) parseIncludeSpec(resolver resolver.Resolver, workingDir, in
 	relPath := spl[0]
 	id = spl[1]
 
-	path, err := resolver.Resolve(relPath)
-	if err != nil {
-		return "", "", fmt.Errorf("resolving variables failed: %w", err)
+	path := relPath
+	if resolver != nil {
+		path, err = resolver.Resolve(relPath)
+		if err != nil {
+			return "", "", fmt.Errorf("resolving variables failed: %w", err)
+		}
 	}
 
 	if !filepath.IsAbs(path) {
