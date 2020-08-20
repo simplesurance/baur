@@ -87,12 +87,9 @@ func (r *Repository) Validate() error {
 		return NewFieldError("can not be unset or 0", "config_version")
 	}
 	if r.ConfigVersion != Version {
-		return NewFieldError(
-			fmt.Sprintf("incompatible configuration files\n"+
-				"config_version value is %d, expecting version: %d\n"+
-				"Update your baur configuration files or downgrade baur.", r.ConfigVersion, Version),
-			"config_version",
-		)
+		return fmt.Errorf("incompatible configuration files\n"+
+			"config_version value is %d, expecting version: %d\n"+
+			"Update your baur configuration files or downgrade baur.", r.ConfigVersion, Version)
 	}
 
 	err := r.Discover.Validate()
