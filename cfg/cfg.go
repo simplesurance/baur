@@ -25,7 +25,7 @@ func ToFileOptOverwrite() ToFileOpt {
 	}
 }
 
-// TToFileOptCommented comment every line in the config
+// ToFileOptCommented comment every line in the config
 func ToFileOptCommented() ToFileOpt {
 	return func(o *toFileOpts) {
 		o.commented = true

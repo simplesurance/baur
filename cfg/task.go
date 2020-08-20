@@ -6,7 +6,7 @@ import "github.com/simplesurance/baur/v1/cfg/resolver"
 type Task struct {
 	Name     string   `toml:"name" comment:"Identifies the task, currently the name must be 'build'."`
 	Command  string   `toml:"command" comment:"Command to execute. The command is run via the sh shell."`
-	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory.\n. Valid variables: $ROOT."`
+	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory.\n Valid variables: $ROOT."`
 	Input    Input    `toml:"Input" comment:"Specification of task inputs like source files, Makefiles, etc"`
 	Output   Output   `toml:"Output" comment:"Specification of task outputs produced by the Task.command"`
 }

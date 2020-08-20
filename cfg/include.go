@@ -53,10 +53,12 @@ func IncludeFromFile(path string) (*Include, error) {
 	return &config, err
 }
 
-func (i *Include) ValidateUniqIncludeIDs() error {
+// ValidateUniqIncludeIDs validates that IDs of all Input, Output and Task
+// includes are unique.
+func (incl *Include) ValidateUniqIncludeIDs() error {
 	uniqIncludeIDs := map[string]struct{}{}
 
-	for _, in := range i.Input {
+	for _, in := range incl.Input {
 		if _, exist := uniqIncludeIDs[in.IncludeID]; exist {
 			return NewFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", in.IncludeID),
@@ -68,7 +70,7 @@ func (i *Include) ValidateUniqIncludeIDs() error {
 		uniqIncludeIDs[in.IncludeID] = struct{}{}
 	}
 
-	for _, out := range i.Output {
+	for _, out := range incl.Output {
 		if _, exist := uniqIncludeIDs[out.IncludeID]; exist {
 			return NewFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", out.IncludeID),
@@ -79,7 +81,7 @@ func (i *Include) ValidateUniqIncludeIDs() error {
 		uniqIncludeIDs[out.IncludeID] = struct{}{}
 	}
 
-	for _, task := range i.Task {
+	for _, task := range incl.Task {
 		if _, exist := uniqIncludeIDs[task.IncludeID]; exist {
 			return NewFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", task.IncludeID),
@@ -163,9 +165,8 @@ func ExampleInclude(id string) *Include {
 	}
 }
 
+// validateIncludes validates includeSpecs
 func validateIncludes(includes []string) error {
-	// IncludeDB ensures during loading that include IDs are unique across
-	// and in the same file. It is not validated by this function.
 	for _, in := range includes {
 		if filepath.IsAbs(in) {
 			return NewFieldError("include specifier is an absolute path, must be a repository relative path", in)
@@ -179,6 +180,7 @@ func validateIncludes(includes []string) error {
 	return nil
 }
 
+// validateIncludeID validates the format of an include ID.
 func validateIncludeID(id string) error {
 	if id == "" {
 		return errors.New("is empty")
