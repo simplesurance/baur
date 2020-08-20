@@ -61,7 +61,7 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 // Fatalln logs a message to stderr and terminates the application with an error
 func (l *Logger) Fatalln(v ...interface{}) {
 	if len(v) != 0 {
-		v[0] = fmt.Sprintf("%s %s", errorPrefix, v[0])
+		v[0] = fmt.Sprintf("%s%s", errorPrefix, v[0])
 	}
 
 	l.logger.Fatalln(v...)
