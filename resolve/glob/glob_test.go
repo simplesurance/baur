@@ -6,12 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v1/internal/testutils/strtest"
 )
 
 func Test_FindAllSubDirs(t *testing.T) {
-	tempdir := fstest.CreateTempDir(t)
+	tempdir := t.TempDir()
 
 	expectedResults := []string{
 		tempdir,
@@ -172,7 +171,7 @@ func Test_Resolve(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tempdir := fstest.CreateTempDir(t)
+		tempdir := t.TempDir()
 
 		if len(tc.dir) != 0 {
 			err := os.MkdirAll(filepath.Join(tempdir, tc.dir), os.ModePerm)
