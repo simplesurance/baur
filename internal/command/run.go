@@ -267,7 +267,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 		outputs, err := baur.OutputsFromTask(c.dockerClient, t.task)
 		exitOnErr(err)
 
-		if !outputsExit(t.task, outputs) {
+		if !outputsExist(t.task, outputs) {
 			exitFunc(1)
 		}
 
@@ -285,7 +285,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 	}
 }
 
-func outputsExit(task *baur.Task, outputs []baur.Output) bool {
+func outputsExist(task *baur.Task, outputs []baur.Output) bool {
 	allExist := true
 
 	if len(outputs) == 0 {

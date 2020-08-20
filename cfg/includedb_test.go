@@ -583,7 +583,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 // are defined in an includes
 func TestVarsInIncludeFiles(t *testing.T) {
 	const inputInclID = "input"
-	const outputInclId = "output"
+	const outputInclID = "output"
 	const taskInclID = "task"
 	const inclFilename = "include.toml"
 
@@ -596,7 +596,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				Command: "make",
 				Includes: []string{
 					inclFilename + "#" + inputInclID,
-					inclFilename + "#" + outputInclId,
+					inclFilename + "#" + outputInclID,
 				},
 			},
 		},
@@ -617,7 +617,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 
 		Output: OutputIncludes{
 			{
-				IncludeID: outputInclId,
+				IncludeID: outputInclID,
 				DockerImage: []DockerImageOutput{
 					{
 						IDFile: "$APPNAME",
