@@ -31,7 +31,7 @@ func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, incl
 		// If no input include for it exist, ErrIncludeIDNotFound is
 		// ignored and we try to load an output include instead.
 		if err != nil && err != ErrIncludeIDNotFound {
-			return err
+			return FieldErrorWrap(fmt.Errorf("%q: %w", includeSpec, err), "Includes")
 		}
 
 		outputInclude, err := includeDB.LoadOutputInclude(resolver, workingDir, includeSpec)
