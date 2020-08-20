@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -116,6 +117,10 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 	for _, includeID := range a.Includes {
 		include, err := includedb.LoadTaskInclude(includeSpecResolvers, filepath.Dir(a.filepath), includeID)
 		if err != nil {
+			if errors.Is(err, ErrIncludeIDNotFound) {
+				return fmt.Errorf("%s: Task include with given ID not found in include file", includeID)
+			}
+
 			return fmt.Errorf("%s: %w", includeID, err)
 		}
 
