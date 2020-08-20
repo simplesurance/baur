@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v1/cfg/resolver"
-	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
 )
 
 // cfgToFile marshals a struct to a toml configuration file.
@@ -117,7 +116,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 		},
 	}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 
 	cfgToFile(t, include, filepath.Join(tmpdir, inclFilePath))
 
@@ -172,7 +171,7 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 		},
 	}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDir), 0775))
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, outputInclDir), 0775))
@@ -215,7 +214,7 @@ func TestIncludePathsAreRelativeToCfg(t *testing.T) {
 		},
 	}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDirName), 0775))
 
@@ -237,7 +236,7 @@ func TestAbsIncludePathsFail(t *testing.T) {
 	var inputIncl Include
 	inputIncl.Input = inputInclude()
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 
 	absInputInclPath := filepath.Join(tmpdir, "inputs.toml")
 	taskIncl := Include{
@@ -281,7 +280,7 @@ func TestEnsureInputIncludeIDsMustBeUnique(t *testing.T) {
 	taskIncl.Task = taskInclude()
 	taskIncl.Task[0].Includes = []string{inputInclFilename + "#" + inputIncl.Input[0].IncludeID}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 
 	cfgToFile(t, inputIncl, filepath.Join(tmpdir, inputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
@@ -310,7 +309,7 @@ func TestEnsureOutputIncludeIDsMustBeUnique(t *testing.T) {
 	taskIncl.Task = taskInclude()
 	taskIncl.Task[0].Includes = []string{outputInclFilename + "#" + outputIncl.Output[0].IncludeID}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 
 	cfgToFile(t, outputIncl, filepath.Join(tmpdir, outputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
@@ -445,7 +444,7 @@ func TestTaskInclude(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			tmpdir := fstest.CreateTempDir(t)
+			tmpdir := t.TempDir()
 
 			appCfgPath := filepath.Join(tmpdir, ".app.toml")
 			require.NoError(t, tc.appConfig.ToFile(appCfgPath))
@@ -513,7 +512,7 @@ func TestTaskIncludeFailsForNonExistingIncludeFile(t *testing.T) {
 		},
 	}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 	appCfgPath := filepath.Join(tmpdir, ".app.toml")
 	require.NoError(t, app.ToFile(appCfgPath))
 
@@ -566,7 +565,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 		},
 	}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 	appCfgPath := filepath.Join(tmpdir, ".app.toml")
 	require.NoError(t, app.ToFile(appCfgPath))
 
@@ -647,7 +646,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 		},
 	}
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 	app1Filepath := filepath.Join(tmpdir, "app1.toml")
 	app2Filepath := filepath.Join(tmpdir, "app2.toml")
 

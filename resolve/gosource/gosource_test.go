@@ -43,7 +43,7 @@ module github.com/simplesurance/baur-test
 func createGoProject(t *testing.T, dir string, createGoModFile bool) (string, string, []string) {
 	t.Helper()
 
-	tmpdir := fstest.CreateTempDir(t)
+	tmpdir := t.TempDir()
 	projectPath := path.Join(tmpdir, dir)
 	generatorPkgPath := path.Join(projectPath, "generator")
 

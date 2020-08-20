@@ -7,6 +7,7 @@ github.com/Microsoft/go-winio/pkg/guid
 # github.com/Microsoft/hcsshim v0.8.7
 github.com/Microsoft/hcsshim/osversion
 # github.com/aws/aws-sdk-go v1.28.9
+## explicit
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -89,8 +90,10 @@ github.com/docker/go-connections/nat
 # github.com/docker/go-units v0.4.0
 github.com/docker/go-units
 # github.com/fatih/color v1.7.0
+## explicit
 github.com/fatih/color
 # github.com/fsouza/go-dockerclient v1.6.0
+## explicit
 github.com/fsouza/go-dockerclient
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
@@ -101,12 +104,14 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/google/uuid v1.1.1
+## explicit
 github.com/google/uuid
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
 # github.com/jackc/chunkreader/v2 v2.0.1
 github.com/jackc/chunkreader/v2
 # github.com/jackc/pgconn v1.5.0
+## explicit
 github.com/jackc/pgconn
 github.com/jackc/pgconn/internal/ctxwatch
 github.com/jackc/pgconn/stmtcache
@@ -121,6 +126,7 @@ github.com/jackc/pgservicefile
 # github.com/jackc/pgtype v1.3.0
 github.com/jackc/pgtype
 # github.com/jackc/pgx/v4 v4.6.0
+## explicit
 github.com/jackc/pgx/v4
 github.com/jackc/pgx/v4/internal/sanitize
 github.com/jackc/pgx/v4/pgxpool
@@ -145,14 +151,17 @@ github.com/opencontainers/image-spec/specs-go/v1
 github.com/opencontainers/runc/libcontainer/system
 github.com/opencontainers/runc/libcontainer/user
 # github.com/pelletier/go-toml v1.8.0
+## explicit
 github.com/pelletier/go-toml
 # github.com/pkg/errors v0.9.1
+## explicit
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/rs/xid v1.2.1
 github.com/rs/xid
 # github.com/simplesurance/baur v0.18.0
+## explicit
 github.com/simplesurance/baur
 github.com/simplesurance/baur/cfg
 github.com/simplesurance/baur/digest
@@ -170,10 +179,12 @@ github.com/simplesurance/baur/upload/scheduler
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
 # github.com/spf13/cobra v0.0.3
+## explicit
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.5.1
+## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
@@ -198,6 +209,7 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/tools v0.0.0-20200204074204-1cc6d1ef6c74
+## explicit
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/gcimporter
 golang.org/x/tools/go/internal/packagesdriver
