@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v1"
+	"github.com/simplesurance/baur/v1/format"
 	"github.com/simplesurance/baur/v1/format/table"
 	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/log"
@@ -63,6 +64,31 @@ func (c *showCmd) run(cmd *cobra.Command, args []string) {
 	}
 }
 
+func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int, sl []string) {
+	defRowArgs := make([]interface{}, 0, indentlvl+1+1)
+
+	for i := 0; i < indentlvl; i++ {
+		defRowArgs = append(defRowArgs, "")
+	}
+
+	for i, val := range sl {
+		var rowArgs []interface{}
+
+		if i == 0 {
+			rowArgs = append(defRowArgs, header)
+		} else {
+			rowArgs = append(defRowArgs, "")
+		}
+
+		if i+1 < len(sl) {
+			val += ", "
+		}
+		rowArgs = append(rowArgs, term.Highlight(val))
+
+		mustWriteRow(fmt, rowArgs...)
+	}
+}
+
 func (c *showCmd) showApp(arg string) {
 	repo := mustFindRepository()
 	app := mustArgToApp(repo, arg)
@@ -87,13 +113,7 @@ func (c *showCmd) showApp(arg string) {
 
 			if len(task.UnresolvedInputs.Files.Paths) > 0 {
 				mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
-				mustWriteRow(
-					formatter,
-					"",
-					"",
-					"Paths:",
-					term.Highlight(strings.Join(task.UnresolvedInputs.Files.Paths, ", ")),
-				)
+				mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.Files.Paths)
 			}
 
 			if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
@@ -101,14 +121,7 @@ func (c *showCmd) showApp(arg string) {
 					mustWriteRow(formatter, "", "", "", "")
 				}
 
-				mustWriteRow(formatter, "", "", "Type:", term.Highlight("GitFile"))
-				mustWriteRow(
-					formatter,
-					"",
-					"",
-					"Paths:",
-					term.Highlight(strings.Join(task.UnresolvedInputs.GitFiles.Paths, ", ")),
-				)
+				mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.GitFiles.Paths)
 			}
 
 			if len(task.UnresolvedInputs.GolangSources.Paths) > 0 {
@@ -117,19 +130,8 @@ func (c *showCmd) showApp(arg string) {
 				}
 
 				mustWriteRow(formatter, "", "", "Type:", term.Highlight("GolangSources"))
-				mustWriteRow(
-					formatter,
-					"",
-					"",
-					"Paths:",
-					term.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Paths, ", ")),
-				)
-				mustWriteRow(
-					formatter,
-					"",
-					"",
-					"Environment:", term.Highlight(strings.Join(task.UnresolvedInputs.GolangSources.Environment, ", ")),
-				)
+				mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.GolangSources.Paths)
+				mustWriteStringSliceRows(formatter, "Environment:", 2, task.UnresolvedInputs.GolangSources.Environment)
 			}
 		}
 
