@@ -11,9 +11,11 @@ var (
 	RedHighlight    = color.New(color.FgRed).SprintFunc()
 	YellowHighlight = color.New(color.FgYellow).SprintFunc()
 
+	MagentaHighlight = color.New(color.FgMagenta).SprintFunc()
+
 	Underline = color.New(color.Underline).SprintFunc()
 
-	Highlight = GreenHighlight
+	Highlight = MagentaHighlight
 )
 
 func ColoredTaskStatus(status baur.TaskStatus) string {
