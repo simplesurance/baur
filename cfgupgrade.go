@@ -9,8 +9,8 @@ import (
 	cfg_old "github.com/simplesurance/baur/cfg"
 	v4 "github.com/simplesurance/baur/v1/cfg/upgrade/v4"
 	"github.com/simplesurance/baur/v1/fs"
+	"github.com/simplesurance/baur/v1/internal/prettyprint"
 	"github.com/simplesurance/baur/v1/log"
-	"github.com/simplesurance/baur/v1/prettyprint"
 )
 
 type CfgUpgrader struct {
