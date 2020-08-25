@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 
 	"github.com/simplesurance/baur/v1/internal/exec"
@@ -186,7 +185,7 @@ func (r *Resolver) resolve(path, goroot string, env []string) ([]string, error) 
 	for _, lpkg := range lpkgs {
 		err = sourceFiles(&srcFiles, goroot, lpkg)
 		if err != nil {
-			return nil, errors.Wrapf(err, "resolving sourcefiles of package '%s' failed", lpkg.Name)
+			return nil, fmt.Errorf("resolving sourcefiles of package '%s' failed: %w", lpkg.Name, err)
 		}
 
 		if len(lpkg.Errors) != 0 {
