@@ -64,7 +64,6 @@ func (incl *Include) ValidateUniqIncludeIDs() error {
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", in.IncludeID),
 				"Input", "include_id",
 			)
-
 		}
 
 		uniqIncludeIDs[in.IncludeID] = struct{}{}
