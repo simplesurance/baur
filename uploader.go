@@ -55,7 +55,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 
 		result, err := u.DockerImage(o)
 		if err != nil {
-			return err
+			return fmt.Errorf("docker upload failed: %w", err)
 		}
 
 		resultCb(o, result)

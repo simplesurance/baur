@@ -205,10 +205,9 @@ func (c *runCmd) uploadAndRecord(
 				log.Debugf("%s: uploading output %s to %s\n",
 					task, output, info)
 			},
-
 			func(o baur.Output, result *baur.UploadResult) {
 				size, err := o.Size()
-				exitOnErr(err)
+				exitOnErrf(err, "%s: %s:", task.ID(), output)
 
 				term.FormatDuration(
 					result.Stop.Sub(result.Start),
@@ -224,11 +223,11 @@ func (c *runCmd) uploadAndRecord(
 			},
 		)
 
-		exitOnErr(err)
+		exitOnErrf(err, "%s: %s", task.ID(), output)
 	}
 
 	id, err := baur.StoreRun(ctx, c.storage, c.vcsState, task, inputs, runResult, uploadResults)
-	exitOnErr(err)
+	exitOnErrf(err, "%s", task.ID())
 
 	stdout.TaskPrintf(task, "run stored in database with ID %s\n", term.Highlight(id))
 }
@@ -240,7 +239,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 		// TODO: record the result as failed if run exitCode is != 0
 		// except when a flag like --errors-are-fatal is passed
 		runResult, err := taskRunner.Run(t.task)
-		exitOnErr(err)
+		exitOnErrf(err, "%s", t.task.ID())
 
 		if runResult.Result.ExitCode != 0 {
 			statusStr := term.RedHighlight("failed")
@@ -265,7 +264,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 		)
 
 		outputs, err := baur.OutputsFromTask(c.dockerClient, t.task)
-		exitOnErr(err)
+		exitOnErrf(err, "%s", t.task.ID())
 
 		if !outputsExist(t.task, outputs) {
 			exitFunc(1)
@@ -295,11 +294,11 @@ func outputsExist(task *baur.Task, outputs []baur.Output) bool {
 
 	for _, output := range outputs {
 		exists, err := output.Exists()
-		exitOnErrf(err, "%s :", task.ID())
+		exitOnErrf(err, "%s:", task.ID())
 
 		if exists {
 			size, err := output.Size()
-			exitOnErrf(err, "%s :", task.ID())
+			exitOnErrf(err, "%s:", task.ID())
 
 			stdout.TaskPrintf(task, "created %s (size: %s)\n",
 				output, term.FormatSize(size))
