@@ -196,11 +196,9 @@ func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 	}
 
 	for _, input := range include.Input {
-		if err := db.inputOutputIncludeNotExist(path, input.IncludeID); err != nil {
+		if err := db.addInputInclude(path, input); err != nil {
 			return err
 		}
-
-		db.addInputInclude(path, input)
 	}
 
 	if err := include.Output.Validate(); err != nil {
@@ -208,11 +206,9 @@ func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 	}
 
 	for _, output := range include.Output {
-		if err := db.inputOutputIncludeNotExist(path, output.IncludeID); err != nil {
+		if err := db.addOutputInclude(path, output); err != nil {
 			return err
 		}
-
-		db.addOutputInclude(path, output)
 	}
 
 	if err := include.Task.Merge(filepath.Dir(path), resolver, db); err != nil {
@@ -224,43 +220,63 @@ func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 	}
 
 	for _, task := range include.Task {
-		db.addTaskInclude(path, task)
+		if err := db.addTaskInclude(path, task); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (db *IncludeDB) addTaskInclude(absPath string, include *TaskInclude) {
+func (db *IncludeDB) addTaskInclude(absPath string, include *TaskInclude) error {
 	idMap, exist := db.tasks[absPath]
 	if !exist {
 		idMap = map[string]*TaskInclude{}
 		db.tasks[absPath] = idMap
 	}
 
+	if _, exist := idMap[include.IncludeID]; exist {
+		return fmt.Errorf("task include %q already exist, include specifiers must be unique", includeSpecifier(absPath, include.IncludeID))
+	}
+
 	idMap[include.IncludeID] = include
 	db.logf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
+
+	return nil
 }
 
-func (db *IncludeDB) addOutputInclude(absPath string, include *OutputInclude) {
+func (db *IncludeDB) addOutputInclude(absPath string, include *OutputInclude) error {
 	idMap, exist := db.outputs[absPath]
 	if !exist {
 		idMap = map[string]*OutputInclude{}
 		db.outputs[absPath] = idMap
 	}
 
+	if _, exist := idMap[include.IncludeID]; exist {
+		return fmt.Errorf("output include %q already exist, include specifiers must be unique", includeSpecifier(absPath, include.IncludeID))
+	}
+
 	idMap[include.IncludeID] = include
 	db.logf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
+
+	return nil
 }
 
-func (db *IncludeDB) addInputInclude(absPath string, include *InputInclude) {
+func (db *IncludeDB) addInputInclude(absPath string, include *InputInclude) error {
 	idMap, exist := db.inputs[absPath]
 	if !exist {
 		idMap = map[string]*InputInclude{}
 		db.inputs[absPath] = idMap
 	}
 
+	if _, exist := idMap[include.IncludeID]; exist {
+		return fmt.Errorf("input include %q already exist, include specifiers must be unique", includeSpecifier(absPath, include.IncludeID))
+	}
+
 	idMap[include.IncludeID] = include
 	db.logf("includedb: loaded include %q", includeSpecifier(absPath, include.IncludeID))
+
+	return nil
 }
 
 func (db *IncludeDB) taskInclude(absPath, id string) (*TaskInclude, bool) {
@@ -291,20 +307,6 @@ func (db *IncludeDB) outputInclude(absPath, id string) (*OutputInclude, bool) {
 	}
 
 	return nil, false
-}
-
-// inputOutputIncludeNotExist returns an error when an input or output include
-// with the given abspath and id exist.
-func (db *IncludeDB) inputOutputIncludeNotExist(absPath, id string) error {
-	if _, exist := db.inputInclude(absPath, id); exist {
-		return fmt.Errorf("input include %q already exist, include specifiers must be unique", includeSpecifier(absPath, id))
-	}
-
-	if _, exist := db.outputInclude(absPath, id); exist {
-		return fmt.Errorf("output include %q already exist, include specifiers must be unique", includeSpecifier(absPath, id))
-	}
-
-	return nil
 }
 
 func includeSpecifier(absPath, id string) string {
