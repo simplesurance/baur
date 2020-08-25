@@ -68,7 +68,8 @@ jobs:
     steps:
       - checkout
 
-      - run: Install golangci-lint
+      - run:
+        name: Install golangci-lint
         command: |
           curl -SsL https://github.com/golangci/golangci-lint/releases/download/v1.30.0/golangci-lint-1.30.0-linux-amd64.tar.gz -o - | \
             tar -C /usr/local/bin/ -tvzf - golangci-lint-1.30.0-linux-amd64/golangci-lint
