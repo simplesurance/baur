@@ -43,3 +43,15 @@ func CommitFilesToGit(t *testing.T, directory string) []string {
 
 	return files
 }
+
+func Clone(t *testing.T, directory, gitURL, commit string) {
+	_, err := exec.Command("git", "clone", gitURL, directory).ExpectSuccess().Run()
+	require.NoError(t, err)
+
+	if commit == "" {
+		return
+	}
+
+	_, err = exec.Command("git", "checkout", commit).Directory(directory).ExpectSuccess().Run()
+	require.NoError(t, err)
+}
