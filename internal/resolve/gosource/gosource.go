@@ -148,6 +148,7 @@ func (r *Resolver) resolve(path, goroot string, env []string) ([]string, error) 
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports,
 		Dir:  path,
 		Env:  env,
+		Logf: r.logFn,
 	}
 
 	lpkgs, err := packages.Load(cfg, "./...")
