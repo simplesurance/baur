@@ -9,7 +9,7 @@ import (
 
 	"github.com/simplesurance/baur/v1/fs"
 	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/log"
+	"github.com/simplesurance/baur/v1/internal/log"
 )
 
 const bashCompLongHelp = `

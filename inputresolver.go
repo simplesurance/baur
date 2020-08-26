@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/simplesurance/baur/v1/cfg"
+	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/internal/resolve/gitpath"
 	"github.com/simplesurance/baur/v1/internal/resolve/glob"
 	"github.com/simplesurance/baur/v1/internal/resolve/gosource"
-	"github.com/simplesurance/baur/v1/log"
 )
 
 type InputResolver struct {

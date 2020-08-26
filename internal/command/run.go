@@ -12,7 +12,7 @@ import (
 
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/log"
+	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/routines"
 	"github.com/simplesurance/baur/v1/storage"
 	"github.com/simplesurance/baur/v1/upload/docker"
