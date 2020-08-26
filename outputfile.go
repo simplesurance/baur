@@ -1,8 +1,8 @@
 package baur
 
 import (
-	"github.com/simplesurance/baur/v1/fs"
 	"github.com/simplesurance/baur/v1/internal/digest"
+	"github.com/simplesurance/baur/v1/internal/fs"
 )
 
 // OutputFile is a file created by a task run.

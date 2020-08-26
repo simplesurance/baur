@@ -8,7 +8,7 @@ import (
 	baur_old "github.com/simplesurance/baur"
 	cfg_old "github.com/simplesurance/baur/cfg"
 	v4 "github.com/simplesurance/baur/v1/cfg/upgrade/v4"
-	"github.com/simplesurance/baur/v1/fs"
+	"github.com/simplesurance/baur/v1/internal/fs"
 	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/internal/prettyprint"
 )

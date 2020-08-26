@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/v1/cfg"
-	"github.com/simplesurance/baur/v1/fs"
+	"github.com/simplesurance/baur/v1/internal/fs"
 )
 
 // Repository represents an repository containing applications
