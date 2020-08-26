@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v1"
-	"github.com/simplesurance/baur/v1/exec"
+	"github.com/simplesurance/baur/v1/internal/exec"
 	"github.com/simplesurance/baur/v1/internal/testutils/gittest"
 	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
 )

@@ -6,7 +6,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/simplesurance/baur/v1/exec"
+	"github.com/simplesurance/baur/v1/internal/exec"
 )
 
 type TaskRunner struct{}
