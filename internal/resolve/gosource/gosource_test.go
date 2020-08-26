@@ -20,7 +20,7 @@ func TestResolve(t *testing.T) {
 	type testCfg struct {
 		Cfg struct {
 			Environment []string
-			Directories []string
+			Queries     []string
 		}
 		ExpectedResults []string
 	}
@@ -55,7 +55,7 @@ func TestResolve(t *testing.T) {
 				testCfg.ExpectedResults[i] = strings.Replace(testCfg.ExpectedResults[i], "$WORKDIR", cwd, -1)
 			}
 
-			resolvedFiles, err := NewResolver(nil).Resolve(testCfg.Cfg.Environment, ".")
+			resolvedFiles, err := NewResolver(nil).Resolve(cwd, testCfg.Cfg.Environment, testCfg.Cfg.Queries)
 			require.NoError(t, err)
 
 			t.Logf("gosources resolved to: %s", prettyprint.AsString(resolvedFiles))

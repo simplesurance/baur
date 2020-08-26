@@ -4,7 +4,7 @@
 			"GO111MODULE=on",
 			"-mod=vendor"
 		],
-		"Directories": "."
+		"Queries": ["file=./main.go"]
 	},
 	"ExpectedResults": [
 		"$WORKDIR/main.go",

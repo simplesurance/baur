@@ -113,21 +113,11 @@ func (i *InputResolver) resolveGlobPaths(appDir string, inputs *cfg.FileInputs) 
 }
 
 func (i *InputResolver) resolveGoSrcInputs(appDir string, inputs *cfg.GolangSources) ([]string, error) {
-	if len(inputs.Paths) == 0 && len(inputs.Environment) == 0 {
+	if len(inputs.Queries) == 0 && len(inputs.Environment) == 0 {
 		return nil, nil
 	}
 
-	absGoSourceDirs := make([]string, len(inputs.Paths))
-	for i, path := range inputs.Paths {
-		if filepath.IsAbs(path) {
-			absGoSourceDirs[i] = path
-			continue
-		}
-
-		absGoSourceDirs[i] = filepath.Join(appDir, path)
-	}
-
-	return i.goSourceResolver.Resolve(inputs.Environment, absGoSourceDirs...)
+	return i.goSourceResolver.Resolve(appDir, inputs.Environment, inputs.Queries)
 }
 
 func (i *InputResolver) pathsToUniqFiles(repositoryRoot string, pathSlice ...[]string) ([]*Inputfile, error) {

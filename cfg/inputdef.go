@@ -11,6 +11,6 @@ type InputDef interface {
 func InputsAreEmpty(in InputDef) bool {
 	return len(in.FileInputs().Paths) == 0 &&
 		len(in.GitFileInputs().Paths) == 0 &&
-		len(in.GolangSourcesInputs().Paths) == 0 &&
+		len(in.GolangSourcesInputs().Queries) == 0 &&
 		len(in.GolangSourcesInputs().Environment) == 0
 }

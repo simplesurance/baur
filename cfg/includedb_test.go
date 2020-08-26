@@ -51,7 +51,7 @@ func inputInclude() InputIncludes {
 
 			GolangSources: GolangSources{
 				Environment: []string{"GOPATH=."},
-				Paths:       []string{"."},
+				Queries:     []string{"."},
 			},
 		},
 	}
@@ -371,7 +371,7 @@ func TestTaskInclude(t *testing.T) {
 							},
 							GolangSources: GolangSources{
 								Environment: []string{"A=B"},
-								Paths:       []string{"."},
+								Queries:     []string{"."},
 							},
 						},
 						{
@@ -384,7 +384,7 @@ func TestTaskInclude(t *testing.T) {
 							},
 							GolangSources: GolangSources{
 								Environment: []string{"C=D"},
-								Paths:       []string{"cmd/"},
+								Queries:     []string{"cmd/"},
 							},
 						},
 					},
@@ -479,8 +479,8 @@ func TestTaskInclude(t *testing.T) {
 					assert.Contains(t, loadedTask.Input.GolangSourcesInputs().Environment, env, "GolangSources env missing")
 				}
 
-				for _, path := range loadedTask.Input.GolangSources.Paths {
-					assert.Contains(t, loadedTask.Input.GolangSourcesInputs().Paths, path, "GolangSources path missing")
+				for _, query := range loadedTask.Input.GolangSources.Queries {
+					assert.Contains(t, loadedTask.Input.GolangSourcesInputs().Queries, query, "GolangSources query missing")
 				}
 			}
 

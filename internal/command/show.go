@@ -124,13 +124,13 @@ func (c *showCmd) showApp(arg string) {
 				mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.GitFiles.Paths)
 			}
 
-			if len(task.UnresolvedInputs.GolangSources.Paths) > 0 {
+			if len(task.UnresolvedInputs.GolangSources.Queries) > 0 {
 				if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
 					mustWriteRow(formatter, "", "", "", "")
 				}
 
 				mustWriteRow(formatter, "", "", "Type:", term.Highlight("GolangSources"))
-				mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.GolangSources.Paths)
+				mustWriteStringSliceRows(formatter, "Query:", 2, task.UnresolvedInputs.GolangSources.Queries)
 				mustWriteStringSliceRows(formatter, "Environment:", 2, task.UnresolvedInputs.GolangSources.Environment)
 			}
 		}

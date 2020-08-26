@@ -6,13 +6,13 @@ import (
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
-	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT, $APPNAME"`
-	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored. Valid variables: $ROOT, $APPNAME."`
+	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This are environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT, $APPNAME"`
+	Queries     []string `toml:"queries" comment:"Specifies the source files or packages of which the dependencies are resolved.\n Queries are passed to the underlying build tool, go list normally.\n Therefore it supports the regulard golang packages pattern (see go help packages).\n When another build tool is used the query syntax described at <https://github.com/golang/tools/blob/bc8aaaa29e0665201b38fa5cb5d47826788fa249/go/packages/doc.go#L17> must be used.\n. Files from Golang's stdlib are ignored.\n Valid variables: $ROOT, $APPNAME."`
 }
 
 // Merge merges the two GolangSources structs
 func (g *GolangSources) Merge(other *GolangSources) {
-	g.Paths = append(g.Paths, other.Paths...)
+	g.Queries = append(g.Queries, other.Queries...)
 	g.Environment = append(g.Environment, other.Environment...)
 }
 
@@ -25,11 +25,11 @@ func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 		}
 	}
 
-	for i, p := range g.Paths {
+	for i, q := range g.Queries {
 		var err error
 
-		if g.Paths[i], err = resolvers.Resolve(p); err != nil {
-			return FieldErrorWrap(err, "Paths", p)
+		if g.Queries[i], err = resolvers.Resolve(q); err != nil {
+			return FieldErrorWrap(err, "Paths", q)
 		}
 	}
 
@@ -38,13 +38,13 @@ func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 
 // Validate checks that the stored information is valid.
 func (g *GolangSources) Validate() error {
-	if len(g.Environment) != 0 && len(g.Paths) == 0 {
-		return NewFieldError("must be set if environment is set", "paths")
+	if len(g.Environment) != 0 && len(g.Queries) == 0 {
+		return NewFieldError("must be set if environment is set", "query")
 	}
 
-	for _, p := range g.Paths {
-		if len(p) == 0 {
-			return NewFieldError("empty string is an invalid path", "paths")
+	for _, q := range g.Queries {
+		if len(q) == 0 {
+			return NewFieldError("empty string is an invalid query", "query")
 		}
 	}
 

@@ -6,7 +6,7 @@ import "github.com/simplesurance/baur/v1/cfg/resolver"
 type Input struct {
 	Files         FileInputs    `comment:"Inputs specified by file glob paths"`
 	GitFiles      GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
-	GolangSources GolangSources `comment:"Inputs specified by directories containing Golang applications"`
+	GolangSources GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
 }
 
 func (in *Input) FileInputs() *FileInputs {

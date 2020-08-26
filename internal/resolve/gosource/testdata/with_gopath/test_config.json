@@ -4,7 +4,7 @@
 			"GOPATH=$WORKDIR",
 			"GO111MODULE=off"
 		],
-		"Directories": "src/github.com/simplesurance/baur-test/"
+		"Queries": ["github.com/simplesurance/baur-test/..."]
 	},
 	"ExpectedResults": [
 		"$WORKDIR/src/github.com/simplesurance/baur-test/main.go",
