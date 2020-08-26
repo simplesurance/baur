@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/simplesurance/baur/v1/exec"
 	"github.com/simplesurance/baur/v1/internal/command/term"
+	"github.com/simplesurance/baur/v1/internal/exec"
 )
 
 // interceptCmdOutput changes the stdout and stderr streams to that the

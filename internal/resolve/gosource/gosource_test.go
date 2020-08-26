@@ -4,7 +4,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/simplesurance/baur/v1/fs"
+	"github.com/simplesurance/baur/v1/internal/fs"
 	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v1/internal/testutils/strtest"
 )

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/simplesurance/baur/v1/internal/vcs"
 	"github.com/simplesurance/baur/v1/storage"
-	"github.com/simplesurance/baur/v1/vcs"
 )
 
 func StoreRun(

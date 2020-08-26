@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/simplesurance/baur/v1/cfg/resolver"
-	"github.com/simplesurance/baur/v1/vcs"
+	"github.com/simplesurance/baur/v1/internal/vcs"
 )
 
 const (

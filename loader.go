@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/simplesurance/baur/v1/cfg"
-	"github.com/simplesurance/baur/v1/fs"
+	"github.com/simplesurance/baur/v1/internal/fs"
 )
 
 type Logger interface {
