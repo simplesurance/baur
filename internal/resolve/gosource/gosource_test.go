@@ -1,116 +1,76 @@
 package gosource
 
 import (
-	"path"
+	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/simplesurance/baur/v1/internal/fs"
-	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
+	"github.com/stretchr/testify/require"
+
+	"github.com/simplesurance/baur/v1/internal/prettyprint"
 	"github.com/simplesurance/baur/v1/internal/testutils/strtest"
 )
 
-const testfileMainGo = `
-package main
+func TestResolve(t *testing.T) {
+	const testCfgFilename = "test_config.json"
 
-import (
-	"fmt"
-
-	"github.com/simplesurance/baur-test/generator"
-)
-
-func main() {
-	fmt.Println(generator.RandomNumber())
-}
-
-`
-const testfileGeneratorGo = `
-package generator
-
-import (
-	"math/rand"
-)
-
-// RandomNumber returns a random number
-func RandomNumber() int {
-	return rand.Int()
-}
-`
-
-const testFileGoMod = `
-module github.com/simplesurance/baur-test
-`
-
-func createGoProject(t *testing.T, dir string, createGoModFile bool) (string, string, []string) {
-	t.Helper()
-
-	tmpdir := t.TempDir()
-	projectPath := path.Join(tmpdir, dir)
-	generatorPkgPath := path.Join(projectPath, "generator")
-
-	err := fs.Mkdir(generatorPkgPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	mainGoPath := path.Join(projectPath, "main.go")
-	randomGenGoPath := path.Join(projectPath, "generator", "generator.go")
-
-	fstest.WriteToFile(t, []byte(testfileMainGo), mainGoPath)
-	fstest.WriteToFile(t, []byte(testfileGeneratorGo), randomGenGoPath)
-
-	if createGoModFile {
-		fstest.WriteToFile(t, []byte(testFileGoMod), path.Join(projectPath, "go.mod"))
-	}
-
-	return tmpdir, projectPath, []string{mainGoPath, randomGenGoPath}
-
-}
-
-func TestResolveWithGoPath(t *testing.T) {
-	tmpdir, projectPath, filepaths := createGoProject(t, "src/github.com/simplesurance/baur-test/", false)
-
-	resolver := NewResolver(
-		nil,
-	)
-
-	resolvedFiles, err := resolver.Resolve([]string{"GOPATH=" + tmpdir}, projectPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, path := range resolvedFiles {
-		if !strtest.InSlice(filepaths, path) {
-			t.Errorf("resolved files contain '%s' but it's not part of the application", path)
+	type testCfg struct {
+		Cfg struct {
+			Environment []string
+			Directories []string
 		}
+		ExpectedResults []string
 	}
 
-	for _, path := range filepaths {
-		if !strtest.InSlice(resolvedFiles, path) {
-			t.Errorf("resolved go source files are missing '%s'", path)
-		}
+	testdataDirs, err := filepath.Glob(filepath.Join("testdata", "*"))
+	require.NoError(t, err)
+
+	for i, d := range testdataDirs {
+		testdataDirs[i], err = filepath.Abs(d)
+		require.NoError(t, err)
 	}
 
-}
+	for _, dir := range testdataDirs {
+		t.Run(dir, func(t *testing.T) {
+			var testCfg testCfg
 
-func TestResolveWithGoMod(t *testing.T) {
-	_, projectPath, filepaths := createGoProject(t, "baur-test/", true)
+			require.NoError(t, os.Chdir(dir))
 
-	resolver := NewResolver(nil)
-	resolvedFiles, err := resolver.Resolve(nil, projectPath)
-	if err != nil {
-		t.Fatal(err)
+			fileContent, err := ioutil.ReadFile(testCfgFilename)
+			require.NoError(t, err)
+
+			require.NoError(t, err, json.Unmarshal(fileContent, &testCfg))
+
+			cwd, err := os.Getwd()
+			require.NoError(t, err)
+
+			for i := range testCfg.Cfg.Environment {
+				testCfg.Cfg.Environment[i] = strings.Replace(testCfg.Cfg.Environment[i], "$WORKDIR", cwd, -1)
+			}
+
+			for i := range testCfg.ExpectedResults {
+				testCfg.ExpectedResults[i] = strings.Replace(testCfg.ExpectedResults[i], "$WORKDIR", cwd, -1)
+			}
+
+			resolvedFiles, err := NewResolver(nil).Resolve(testCfg.Cfg.Environment, ".")
+			require.NoError(t, err)
+
+			t.Logf("gosources resolved to: %s", prettyprint.AsString(resolvedFiles))
+
+			for _, path := range resolvedFiles {
+				if !strtest.InSlice(testCfg.ExpectedResults, path) {
+					t.Errorf("resolved file contain %q but it's not part of the ExpectedResult slice: %+v", path, testCfg.ExpectedResults)
+				}
+			}
+
+			for _, path := range testCfg.ExpectedResults {
+				if !strtest.InSlice(resolvedFiles, path) {
+					t.Errorf("resolved go source is missing %q in %+v", path, resolvedFiles)
+				}
+			}
+		})
 	}
-
-	for _, path := range resolvedFiles {
-		if !strtest.InSlice(filepaths, path) {
-			t.Errorf("resolved files contain '%s' but it's not part of the application", path)
-		}
-	}
-
-	for _, path := range filepaths {
-		if !strtest.InSlice(resolvedFiles, path) {
-			t.Errorf("resolved go source files are missing '%s'", path)
-		}
-	}
-
 }
