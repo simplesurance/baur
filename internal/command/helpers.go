@@ -11,9 +11,9 @@ import (
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/log"
+	"github.com/simplesurance/baur/v1/internal/vcs"
 	"github.com/simplesurance/baur/v1/storage"
 	"github.com/simplesurance/baur/v1/storage/postgres"
-	"github.com/simplesurance/baur/v1/vcs"
 )
 
 // envVarPSQLURL contains the name of an environment variable in that the

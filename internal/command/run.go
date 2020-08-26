@@ -17,8 +17,8 @@ import (
 	"github.com/simplesurance/baur/v1/internal/upload/docker"
 	"github.com/simplesurance/baur/v1/internal/upload/filecopy"
 	"github.com/simplesurance/baur/v1/internal/upload/s3"
+	"github.com/simplesurance/baur/v1/internal/vcs"
 	"github.com/simplesurance/baur/v1/storage"
-	"github.com/simplesurance/baur/v1/vcs"
 )
 
 // TODO remove support for setting docker username/passwd via env vars
