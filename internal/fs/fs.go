@@ -33,8 +33,12 @@ func FileExists(path string) bool {
 func DirsExist(paths ...string) error {
 	for _, path := range paths {
 		isDir, err := IsDir(path)
-		if os.IsNotExist(err) {
-			return fmt.Errorf("'%s' does not exist: %w", path, err)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("'%s' does not exist: %w", path, err)
+			}
+
+			return fmt.Errorf("%s: %w", path, err)
 		}
 
 		if !isDir {
