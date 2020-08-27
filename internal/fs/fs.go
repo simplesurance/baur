@@ -209,7 +209,7 @@ func AbsPaths(rootPath string, relPaths []string) []string {
 
 const FileBackupSuffix = ".bak"
 
-// BackupFile renames a file to <OldName><FileBaBackupSuffix>.
+// BackupFile renames a file to <OldName><FileBackupSuffix>.
 func BackupFile(filepath string) error {
 	bakFilePath := filepath + FileBackupSuffix
 

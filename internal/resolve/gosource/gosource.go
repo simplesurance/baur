@@ -13,6 +13,8 @@ import (
 	"github.com/simplesurance/baur/v1/internal/fs"
 )
 
+const globQueryPrefix = "fileglob="
+
 var defLogFn = func(string, ...interface{}) {}
 
 // Resolver determines all Go Source files that are imported by Go-Files
@@ -91,6 +93,37 @@ func findGoRoot(env []string) (string, error) {
 	return goroot, nil
 }
 
+func resolveGlobs(workDir string, queries []string) ([]string, error) {
+	result := make([]string, 0, len(queries))
+
+	for _, q := range queries {
+		if !strings.HasPrefix(q, globQueryPrefix) {
+			result = append(result, q)
+
+			continue
+		}
+
+		q = strings.TrimPrefix(q, globQueryPrefix)
+		q = filepath.Join(workDir, q)
+
+		files, err := fs.FileGlob(q)
+		if err != nil {
+			return nil, fmt.Errorf("resolving glob %q failed: %w", q, err)
+		}
+
+		for _, f := range files {
+			f, err := filepath.Rel(workDir, f)
+			if err != nil {
+				return nil, fmt.Errorf("resolving glob %q failed: %w", q, err)
+			}
+
+			result = append(result, fmt.Sprintf("file=%s", f))
+		}
+	}
+
+	return result, nil
+}
+
 // Resolve returns the Go source files in the passed directories plus all
 // source files of the imported packages.
 // Testfiles and stdlib dependencies are ignored.
@@ -100,6 +133,11 @@ func (r *Resolver) Resolve(workdir string, environment []string, withTests bool,
 	}
 
 	env := append(whitelistedEnv(), environment...)
+
+	queries, err := resolveGlobs(workdir, queries)
+	if err != nil {
+		return nil, fmt.Errorf("resolving globs in queries failed: %w", err)
+	}
 
 	goroot, err := findGoRoot(env)
 	if err != nil {
