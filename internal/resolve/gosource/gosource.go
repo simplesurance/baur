@@ -65,6 +65,32 @@ func getEnvValue(env []string, key string) string {
 	return ""
 }
 
+func findGoRoot(env []string) (string, error) {
+	goroot := getEnvValue(env, "GOROOT")
+
+	var err error
+	if goroot == "" {
+		goroot, err = GOROOT()
+		if err != nil {
+			return "", err
+		}
+
+	}
+
+	if err := fs.DirsExist(goroot); err != nil {
+		if !os.IsNotExist(err) {
+			return "", fmt.Errorf(
+				"GOROOT directory '%s' does not exist, ensure that 'go env root' returns the right path",
+				goroot,
+			)
+		}
+
+		return "", fmt.Errorf("checking if GOROOT directory %q exists, failed: %w", goroot, err)
+	}
+
+	return goroot, nil
+}
+
 // Resolve returns the Go source files in the passed directories plus all
 // source files of the imported packages.
 // Testfiles and stdlib dependencies are ignored.
@@ -74,26 +100,10 @@ func (r *Resolver) Resolve(workdir string, environment []string, withTests bool,
 	}
 
 	env := append(whitelistedEnv(), environment...)
-	goroot := getEnvValue(env, "GOROOT")
 
-	var err error
-	if goroot == "" {
-		goroot, err = GOROOT()
-		if err != nil {
-			return nil, err
-		}
-
-	}
-
-	if err := fs.DirsExist(goroot); err != nil {
-		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf(
-				"GOROOT directory '%s' does not exist, ensure that 'go env root' returns the right path",
-				goroot,
-			)
-		}
-
-		return nil, fmt.Errorf("checking if GOROOT directory %q exists, failed: %w", goroot, err)
+	goroot, err := findGoRoot(env)
+	if err != nil {
+		return nil, err
 	}
 
 	return r.resolve(workdir, goroot, env, withTests, queries)
