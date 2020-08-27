@@ -1,4 +1,4 @@
-package glob
+package fs
 
 import (
 	"os"
@@ -53,6 +53,13 @@ func createFiles(t *testing.T, basedir string, paths []string) {
 	}
 }
 
+type testcase struct {
+	files           []string
+	dir             string
+	expectedMatches []string
+	fileSrcGlobPath string
+}
+
 func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []string, tc *testcase) {
 	if len(resolvedFiles) != len(tc.expectedMatches) {
 		t.Errorf("resolved to %d files (%v), expected %d (%+v)",
@@ -71,13 +78,6 @@ func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []str
 				e, relPath, tc.expectedMatches, tc)
 		}
 	}
-}
-
-type testcase struct {
-	files           []string
-	dir             string
-	expectedMatches []string
-	fileSrcGlobPath string
 }
 
 func Test_Resolve(t *testing.T) {
@@ -182,7 +182,7 @@ func Test_Resolve(t *testing.T) {
 
 		createFiles(t, tempdir, tc.files)
 
-		resolvedFiles, err := (&Resolver{}).Resolve(path.Join(tempdir, tc.fileSrcGlobPath))
+		resolvedFiles, err := FileGlob(path.Join(tempdir, tc.fileSrcGlobPath))
 		if err != nil {
 			t.Fatal("resolving glob path:", err)
 		}
