@@ -83,7 +83,6 @@ func (r *Resolver) Resolve(workdir string, environment []string, withTests bool,
 			return nil, err
 		}
 
-		env = append(env, "GOROOT="+goroot)
 	}
 
 	if err := fs.DirsExist(goroot); err != nil {
