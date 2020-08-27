@@ -1,6 +1,7 @@
 package gosource
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -128,6 +129,7 @@ func resolveGlobs(workDir string, queries []string) ([]string, error) {
 // source files of the imported packages.
 // Testfiles and stdlib dependencies are ignored.
 func (r *Resolver) Resolve(
+	ctx context.Context,
 	workdir string,
 	environment []string,
 	buildFlags []string,
@@ -150,7 +152,7 @@ func (r *Resolver) Resolve(
 		return nil, err
 	}
 
-	return r.resolve(workdir, goroot, env, buildFlags, withTests, queries)
+	return r.resolve(ctx, workdir, goroot, env, buildFlags, withTests, queries)
 }
 
 // whitelistedEnvVars returns whitelisted environment variables from the host
@@ -188,6 +190,7 @@ func whitelistedEnv() []string {
 }
 
 func (r *Resolver) resolve(
+	ctx context.Context,
 	workdir string,
 	goroot string,
 	env []string,
@@ -199,6 +202,7 @@ func (r *Resolver) resolve(
 		workdir, goroot, env, buildFlags, queries)
 
 	cfg := &packages.Config{
+		Context:    ctx,
 		Mode:       packages.NeedName | packages.NeedFiles | packages.NeedImports,
 		Dir:        workdir,
 		Env:        env,

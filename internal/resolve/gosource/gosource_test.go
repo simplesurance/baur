@@ -1,6 +1,7 @@
 package gosource
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -58,6 +59,7 @@ func TestResolve(t *testing.T) {
 			}
 
 			resolvedFiles, err := NewResolver(t.Logf).Resolve(
+				context.Background(),
 				cwd,
 				testCfg.Cfg.Environment,
 				testCfg.Cfg.BuildFlags,

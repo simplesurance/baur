@@ -76,7 +76,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 	inputResolver := baur.NewInputResolver()
 
-	inputs, err := inputResolver.Resolve(rep.Path, task)
+	inputs, err := inputResolver.Resolve(ctx, rep.Path, task)
 	exitOnErr(err)
 
 	sort.Slice(inputs.Files, func(i, j int) bool {
