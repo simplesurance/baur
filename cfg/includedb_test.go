@@ -52,6 +52,7 @@ func inputInclude() InputIncludes {
 			GolangSources: GolangSources{
 				Environment: []string{"GOPATH=."},
 				Queries:     []string{"."},
+				BuildFlags:  []string{},
 			},
 		},
 	}

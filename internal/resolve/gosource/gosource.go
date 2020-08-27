@@ -127,7 +127,13 @@ func resolveGlobs(workDir string, queries []string) ([]string, error) {
 // Resolve returns the Go source files in the passed directories plus all
 // source files of the imported packages.
 // Testfiles and stdlib dependencies are ignored.
-func (r *Resolver) Resolve(workdir string, environment []string, withTests bool, queries []string) ([]string, error) {
+func (r *Resolver) Resolve(
+	workdir string,
+	environment []string,
+	buildFlags []string,
+	withTests bool,
+	queries []string,
+) ([]string, error) {
 	if len(queries) == 0 {
 		return nil, errors.New("queries parameter is empty")
 	}
@@ -144,7 +150,7 @@ func (r *Resolver) Resolve(workdir string, environment []string, withTests bool,
 		return nil, err
 	}
 
-	return r.resolve(workdir, goroot, env, withTests, queries)
+	return r.resolve(workdir, goroot, env, buildFlags, withTests, queries)
 }
 
 // whitelistedEnvVars returns whitelisted environment variables from the host
@@ -181,16 +187,24 @@ func whitelistedEnv() []string {
 	return env
 }
 
-func (r *Resolver) resolve(workdir, goroot string, env []string, withTests bool, queries []string) ([]string, error) {
-	r.logFn("gosource-resolver: resolving in directory: %q with goroot: %q, env: %+v, the queries: %v",
-		workdir, goroot, env, queries)
+func (r *Resolver) resolve(
+	workdir string,
+	goroot string,
+	env []string,
+	buildFlags []string,
+	withTests bool,
+	queries []string,
+) ([]string, error) {
+	r.logFn("gosource-resolver: resolving in directory: %q with goroot: %q, env: %+v, buildFlags: %v, the queries: %v",
+		workdir, goroot, env, buildFlags, queries)
 
 	cfg := &packages.Config{
-		Mode:  packages.NeedName | packages.NeedFiles | packages.NeedImports,
-		Dir:   workdir,
-		Env:   env,
-		Logf:  r.logFn,
-		Tests: withTests,
+		Mode:       packages.NeedName | packages.NeedFiles | packages.NeedImports,
+		Dir:        workdir,
+		Env:        env,
+		Logf:       r.logFn,
+		Tests:      withTests,
+		BuildFlags: buildFlags,
 	}
 
 	lpkgs, err := packages.Load(cfg, queries...)

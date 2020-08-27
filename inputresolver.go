@@ -117,7 +117,7 @@ func (i *InputResolver) resolveGoSrcInputs(appDir string, inputs *cfg.GolangSour
 		return nil, nil
 	}
 
-	return i.goSourceResolver.Resolve(appDir, inputs.Environment, inputs.Tests, inputs.Queries)
+	return i.goSourceResolver.Resolve(appDir, inputs.Environment, inputs.BuildFlags, inputs.Tests, inputs.Queries)
 }
 
 func (i *InputResolver) pathsToUniqFiles(repositoryRoot string, pathSlice ...[]string) ([]*Inputfile, error) {
