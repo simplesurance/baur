@@ -68,7 +68,7 @@ func getEnvValue(env []string, key string) string {
 // Resolve returns the Go source files in the passed directories plus all
 // source files of the imported packages.
 // Testfiles and stdlib dependencies are ignored.
-func (r *Resolver) Resolve(workdir string, environment, queries []string) ([]string, error) {
+func (r *Resolver) Resolve(workdir string, environment []string, withTests bool, queries []string) ([]string, error) {
 	if len(queries) == 0 {
 		return nil, errors.New("queries parameter is empty")
 	}
@@ -97,7 +97,7 @@ func (r *Resolver) Resolve(workdir string, environment, queries []string) ([]str
 		return nil, fmt.Errorf("checking if GOROOT directory %q exists, failed: %w", goroot, err)
 	}
 
-	return r.resolve(workdir, goroot, env, queries)
+	return r.resolve(workdir, goroot, env, withTests, queries)
 }
 
 // whitelistedEnvVars returns whitelisted environment variables from the host
@@ -134,15 +134,16 @@ func whitelistedEnv() []string {
 	return env
 }
 
-func (r *Resolver) resolve(workdir, goroot string, env, queries []string) ([]string, error) {
+func (r *Resolver) resolve(workdir, goroot string, env []string, withTests bool, queries []string) ([]string, error) {
 	r.logFn("gosource-resolver: resolving in directory: %q with goroot: %q, env: %+v, the queries: %v",
 		workdir, goroot, env, queries)
 
 	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports,
-		Dir:  workdir,
-		Env:  env,
-		Logf: r.logFn,
+		Mode:  packages.NeedName | packages.NeedFiles | packages.NeedImports,
+		Dir:   workdir,
+		Env:   env,
+		Logf:  r.logFn,
+		Tests: withTests,
 	}
 
 	lpkgs, err := packages.Load(cfg, queries...)

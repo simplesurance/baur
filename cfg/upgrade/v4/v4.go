@@ -2,7 +2,6 @@ package v4
 
 import (
 	"fmt"
-	"path/filepath"
 
 	cfgv0 "github.com/simplesurance/baur/cfg"
 	"github.com/simplesurance/baur/v1/cfg"
@@ -43,6 +42,7 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 			GolangSources: cfg.GolangSources{
 				Environment: old.BuildInput.GolangSources.Environment,
 				Queries:     golangSourcesPathsToQuery(old.BuildInput.GolangSources.Paths),
+				Tests:       false,
 			},
 		})
 	}
@@ -84,8 +84,8 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 func golangSourcesPathsToQuery(paths []string) []string {
 	result := make([]string, 0, len(paths))
 	for _, p := range paths {
-		q := filepath.Join(".", p, "./...")
-		result = append(result, q)
+		p = p + "/..."
+		result = append(result, p)
 	}
 
 	return result
@@ -107,6 +107,7 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	task.Input.GitFiles.Paths = old.Build.Input.GitFiles.Paths
 	task.Input.GolangSources.Environment = old.Build.Input.GolangSources.Environment
 	task.Input.GolangSources.Queries = golangSourcesPathsToQuery(old.Build.Input.GolangSources.Paths)
+	task.Input.GolangSources.Tests = false
 
 	//TODO: dedup code for converting outputs, same code is used used in UpgradeIncludeConfig
 	for _, di := range old.Build.Output.DockerImage {

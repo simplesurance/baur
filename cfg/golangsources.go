@@ -6,14 +6,26 @@ import (
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
+	Queries     []string `toml:"queries" comment:"Queries specify the source files or packages of which the dependencies are resolved.\n Format:\n \tfile=<RELATIVE-PATH>\n \tfileglob=<GLOB-PATTERN>\t -> Supports double-star\n \tEverything else is passed directly to underlying build tool (go list by default).\n \tSee also the patterns described at:\n \t<https://github.com/golang/tools/blob/bc8aaaa29e0665201b38fa5cb5d47826788fa249/go/packages/doc.go#L17>.\n Files from Golang's stdlib are ignored.\n Valid variables: $ROOT, $APPNAME."`
 	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This are environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT, $APPNAME"`
-	Queries     []string `toml:"queries" comment:"Specifies the source files or packages of which the dependencies are resolved.\n Queries are passed to the underlying build tool, go list normally.\n Therefore it supports the regulard golang packages pattern (see go help packages).\n When another build tool is used the query syntax described at <https://github.com/golang/tools/blob/bc8aaaa29e0665201b38fa5cb5d47826788fa249/go/packages/doc.go#L17> must be used.\n. Files from Golang's stdlib are ignored.\n Valid variables: $ROOT, $APPNAME."`
+	Tests       bool     `toml:"tests" comment:"If true queries are resolved to test files, otherwise testfiles are ignored."`
+}
+
+func (g *GolangSources) IsEmpty() bool {
+	return len(g.Environment) == 0 && len(g.Queries) == 0 && !g.Tests
 }
 
 // Merge merges the two GolangSources structs
 func (g *GolangSources) Merge(other *GolangSources) {
+	// TODO: merging this section is currently buggy,
+	// https://github.com/simplesurance/baur/issues/169 must be fixed
+
 	g.Queries = append(g.Queries, other.Queries...)
 	g.Environment = append(g.Environment, other.Environment...)
+
+	if other.Tests {
+		g.Tests = other.Tests
+	}
 }
 
 func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
@@ -38,8 +50,8 @@ func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 
 // Validate checks that the stored information is valid.
 func (g *GolangSources) Validate() error {
-	if len(g.Environment) != 0 && len(g.Queries) == 0 {
-		return NewFieldError("must be set if environment is set", "query")
+	if (len(g.Environment) != 0 || g.Tests) && len(g.Queries) == 0 {
+		return NewFieldError("must be set if environment or tests is set", "query")
 	}
 
 	for _, q := range g.Queries {
