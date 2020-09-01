@@ -4,6 +4,8 @@ package command
 
 import (
 	"encoding/csv"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,6 +14,7 @@ import (
 
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/exec"
+	"github.com/simplesurance/baur/v1/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v1/internal/testutils/gittest"
 	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
 )
@@ -21,6 +24,17 @@ func runInitDb(t *testing.T) {
 
 	t.Log("creating database schema")
 	initDb(initDbCmd, nil)
+}
+
+var testdataDir string
+
+func init() {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(wd)
+	}
+
+	testdataDir = filepath.Join(wd, "testdata")
 }
 
 // baurCSVLsApps runs "baur ls apps --csv" and returns a slice where each
@@ -175,4 +189,26 @@ func TestAppWithoutTasks(t *testing.T) {
 	}
 
 	assert.True(t, found, "baur ls apps did not list %q: %q", appCfg.Name, lsAppsOut)
+}
+
+func TestVarInInclude(t *testing.T) {
+	initTest(t)
+
+	err := os.Chdir(filepath.Join(testdataDir, "var_in_include"))
+	require.NoError(t, err)
+
+	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
+	require.NoError(t, err)
+
+	err = os.Setenv(envVarPSQLURL, dbURL)
+	require.NoError(t, err)
+
+	runInitDb(t)
+
+	runCmd := newRunCmd()
+	runCmd.Command.Run(&runCmd.Command, []string{"app1", "app2"})
+
+	exitFunc = func(code int) {
+		t.Errorf("baur command exited with code %d", code)
+	}
 }

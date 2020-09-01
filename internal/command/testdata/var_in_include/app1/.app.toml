@@ -1,0 +1,3 @@
+name = "app1"
+
+includes = ["$ROOT/tasks.toml#build"]
