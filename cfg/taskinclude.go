@@ -50,7 +50,7 @@ func (t *TaskInclude) Validate() error {
 	return nil
 }
 
-// DeepCopyToTask convers the TaskInclude to a Task.
+// DeepCopyToTask converts the TaskInclude to a Task.
 // All fields are copied.
 func (t *TaskInclude) DeepCopyToTask() *Task {
 	var result Task
