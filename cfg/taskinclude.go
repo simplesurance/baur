@@ -1,5 +1,9 @@
 package cfg
 
+import (
+	"github.com/simplesurance/baur/v1/internal/deepcopy"
+)
+
 // TaskInclude is a reusable Tasks definition
 type TaskInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
@@ -44,4 +48,18 @@ func (t *TaskInclude) Validate() error {
 	}
 
 	return nil
+}
+
+// DeepCopyToTask convers the TaskInclude to a Task.
+// All fields are copied.
+func (t *TaskInclude) DeepCopyToTask() *Task {
+	var result Task
+
+	result.Name = t.Name
+	result.Command = t.Command
+
+	deepcopy.MustCopy(t.Input, &result.Input)
+	deepcopy.MustCopy(t.Output, &result.Output)
+
+	return &result
 }
