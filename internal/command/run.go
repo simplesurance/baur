@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"strings"
 	"time"
 
@@ -19,12 +18,6 @@ import (
 	"github.com/simplesurance/baur/v1/internal/upload/s3"
 	"github.com/simplesurance/baur/v1/internal/vcs"
 	"github.com/simplesurance/baur/v1/storage"
-)
-
-// TODO remove support for setting docker username/passwd via env vars
-const (
-	dockerEnvUsernameVar = "BAUR_DOCKER_USERNAME"
-	dockerEnvPasswordVar = "BAUR_DOCKER_PASSWORD"
 )
 
 const runExample = `
@@ -50,8 +43,6 @@ The following Environment Variables are supported:
     %s
     %s
     %s
-    %s
-    %s
 `,
 	term.ColoredTaskStatus(baur.TaskStatusExecutionPending),
 	term.ColoredTaskStatus(baur.TaskStatusInputsUndefined),
@@ -62,8 +53,6 @@ The following Environment Variables are supported:
 	term.Highlight("AWS_ACCESS_KEY_ID"),
 	term.Highlight("AWS_SECRET_ACCESS_KEY"),
 
-	term.Highlight(dockerEnvUsernameVar),
-	term.Highlight(dockerEnvPasswordVar),
 	term.Highlight("DOCKER_HOST"),
 	term.Highlight("DOCKER_API_VERSION"),
 	term.Highlight("DOCKER_CERT_PATH"),
@@ -110,28 +99,9 @@ func newRunCmd() *runCmd {
 	return &cmd
 }
 
-func dockerClient() *docker.Client {
-	var client *docker.Client
+func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	var err error
 
-	dockerUser, dockerPass := os.Getenv(dockerEnvUsernameVar), os.Getenv(dockerEnvPasswordVar)
-
-	if len(dockerUser) != 0 {
-		log.Debugf("using docker authentication data from %s, %s Environment variables, authenticating as '%s'",
-			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
-		client, err = docker.NewClientwAuth(log.StdLogger.Debugf, dockerUser, dockerPass)
-	} else {
-		log.Debugf("environment variable %s not set", dockerEnvUsernameVar)
-		client, err = docker.NewClient(log.StdLogger.Debugf)
-	}
-
-	exitOnErr(err)
-
-	return client
-
-}
-
-func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	startTime := time.Now()
 
 	repo := mustFindRepository()
@@ -141,7 +111,9 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 
 	c.uploadRoutinePool = routines.NewPool(1) // run 1 upload in parallel with builds
 
-	c.dockerClient = dockerClient()
+	c.dockerClient, err = docker.NewClient(log.StdLogger.Debugf)
+	exitOnErr(err)
+
 	s3Client, err := s3.NewClient(log.StdLogger)
 	exitOnErr(err)
 	c.uploader = baur.NewUploader(c.dockerClient, s3Client, filecopy.New(log.Debugf))
