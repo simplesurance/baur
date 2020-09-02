@@ -22,7 +22,11 @@ type Client struct {
 var defLogFn = func(string, ...interface{}) {}
 
 // NewClient initializes a new docker client.
-// It supports the same environment variables then NewClientwAuth().
+// The following environment variables are respected:
+// DOCKER_TLS_VERIFY
+// DOCKER_CERT_PATH
+// DOCKER_HOST to set the url to the docker server.
+// DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
 // The Auth configuration is read from the user's config.json file for an
 // Upload() operation.
 // The following files are checked in the order listed:
