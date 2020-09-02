@@ -16,40 +16,10 @@ const DefaultRegistry = "https://index.docker.io/v1/"
 type Client struct {
 	clt        *docker.Client
 	auths      *docker.AuthConfigurations
-	auth       *docker.AuthConfiguration
 	debugLogFn func(string, ...interface{})
 }
 
 var defLogFn = func(string, ...interface{}) {}
-
-// NewClientwAuth intializes a new docker client.
-// The username and password is used to authenticate at the registry for an
-// Upload() = docker push) operation.
-// The following environment variables are respected:
-// Use DOCKER_HOST to set the url to the docker server.
-// Use DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
-// Use DOCKER_CERT_PATH to load the TLS certificates from.
-// Use DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
-func NewClientwAuth(debugLogFn func(string, ...interface{}), username, password string) (*Client, error) {
-	logFn := defLogFn
-	if debugLogFn != nil {
-		logFn = debugLogFn
-	}
-
-	dockerClt, err := docker.NewClientFromEnv()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		clt: dockerClt,
-		auth: &docker.AuthConfiguration{
-			Username: username,
-			Password: password,
-		},
-		debugLogFn: logFn,
-	}, nil
-}
 
 // NewClient initializes a new docker client.
 // It supports the same environment variables then NewClientwAuth().
@@ -86,15 +56,9 @@ func NewClient(debugLogFn func(string, ...interface{})) (*Client, error) {
 	}, nil
 }
 
-// getAuth returns c.auth if it's not nil otherwise:
-// if the client has no authentication data (c.auths is empty), an empty AuthConfiguration is returned.
-// If server is not empty, the authentication data for the server is returned if it exist.
+// getAuth returns if server is not empty and auth data for the server exist, the authentication data of it.
 // If server is an empty string, the authentication data for DefaultRegistry is returned if it exists.
 func (c *Client) getAuth(server string) docker.AuthConfiguration {
-	if c.auth != nil {
-		return *c.auth
-	}
-
 	if c.auths == nil || len(c.auths.Configs) == 0 {
 		return docker.AuthConfiguration{}
 	}
