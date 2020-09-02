@@ -26,6 +26,17 @@ func runInitDb(t *testing.T) {
 	initDb(initDbCmd, nil)
 }
 
+var testdataDir string
+
+func init() {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(wd)
+	}
+
+	testdataDir = filepath.Join(wd, "testdata")
+}
+
 // baurCSVLsApps runs "baur ls apps --csv" and returns a slice where each
 // element is a slice of csv fields per line
 func baurCSVLsApps(t *testing.T) [][]string {
@@ -183,7 +194,7 @@ func TestAppWithoutTasks(t *testing.T) {
 func TestVarInInclude(t *testing.T) {
 	initTest(t)
 
-	err := os.Chdir(filepath.Join("testdata", "var_in_include"))
+	err := os.Chdir(filepath.Join(testdataDir, "var_in_include"))
 	require.NoError(t, err)
 
 	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
