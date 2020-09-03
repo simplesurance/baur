@@ -38,7 +38,7 @@ func ExampleApp(name string) *App {
 						Paths: []string{"Makefile"},
 					},
 					GolangSources: GolangSources{
-						Paths:       []string{"."},
+						Queries:     []string{"./..."},
 						Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
 					},
 				},

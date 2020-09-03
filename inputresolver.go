@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -30,8 +31,8 @@ func NewInputResolver() *InputResolver {
 // Resolves the input definition of the task to concrete Files.
 // If an input definition does not resolve to >= paths, an error is returned.
 // The resolved Files are deduplicated.
-func (i *InputResolver) Resolve(repositoryDir string, task *Task) (*Inputs, error) {
-	goSourcePaths, err := i.resolveGoSrcInputs(task.Directory, &task.UnresolvedInputs.GolangSources)
+func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) (*Inputs, error) {
+	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, &task.UnresolvedInputs.GolangSources)
 	if err != nil {
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
@@ -112,22 +113,12 @@ func (i *InputResolver) resolveGlobPaths(appDir string, inputs *cfg.FileInputs) 
 	return result, nil
 }
 
-func (i *InputResolver) resolveGoSrcInputs(appDir string, inputs *cfg.GolangSources) ([]string, error) {
-	if len(inputs.Paths) == 0 && len(inputs.Environment) == 0 {
+func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, inputs *cfg.GolangSources) ([]string, error) {
+	if len(inputs.Queries) == 0 && len(inputs.Environment) == 0 {
 		return nil, nil
 	}
 
-	absGoSourceDirs := make([]string, len(inputs.Paths))
-	for i, path := range inputs.Paths {
-		if filepath.IsAbs(path) {
-			absGoSourceDirs[i] = path
-			continue
-		}
-
-		absGoSourceDirs[i] = filepath.Join(appDir, path)
-	}
-
-	return i.goSourceResolver.Resolve(inputs.Environment, absGoSourceDirs...)
+	return i.goSourceResolver.Resolve(ctx, appDir, inputs.Environment, inputs.BuildFlags, inputs.Tests, inputs.Queries)
 }
 
 func (i *InputResolver) pathsToUniqFiles(repositoryRoot string, pathSlice ...[]string) ([]*Inputfile, error) {

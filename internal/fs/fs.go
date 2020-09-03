@@ -7,8 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 // IsFile returns true if path is a file.
@@ -33,8 +31,12 @@ func FileExists(path string) bool {
 func DirsExist(paths ...string) error {
 	for _, path := range paths {
 		isDir, err := IsDir(path)
-		if os.IsNotExist(err) {
-			return fmt.Errorf("'%s' does not exist: %w", path, err)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("'%s' does not exist: %w", path, err)
+			}
+
+			return fmt.Errorf("%s: %w", path, err)
 		}
 
 		if !isDir {
@@ -99,8 +101,7 @@ func FindFileInParentDirs(startPath, filename string) (string, error) {
 		if err == nil {
 			abs, err := filepath.Abs(p)
 			if err != nil {
-				return "", errors.Wrapf(err,
-					"could not get absolute path of %v", p)
+				return "", fmt.Errorf("could not get absolute path of %v: %w", p, err)
 			}
 
 			return abs, nil
@@ -137,7 +138,7 @@ func FindFilesInSubDir(searchDir, filename string, maxdepth int) ([]string, erro
 		for _, m := range matches {
 			abs, err := filepath.Abs(m)
 			if err != nil {
-				return nil, errors.Wrapf(err, "could not get absolute path of %s", m)
+				return nil, fmt.Errorf("could not get absolute path of %s: %w", m, err)
 			}
 
 			result = append(result, abs)
@@ -208,7 +209,7 @@ func AbsPaths(rootPath string, relPaths []string) []string {
 
 const FileBackupSuffix = ".bak"
 
-// BackupFile renames a file to <OldName><FileBaBackupSuffix>.
+// BackupFile renames a file to <OldName><FileBackupSuffix>.
 func BackupFile(filepath string) error {
 	bakFilePath := filepath + FileBackupSuffix
 

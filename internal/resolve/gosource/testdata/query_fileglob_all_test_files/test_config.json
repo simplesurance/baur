@@ -1,0 +1,28 @@
+{
+	"Cfg": {
+		"Environment": [
+			"GO111MODULE=on",
+			"-mod=vendor"
+		],
+		"Queries": ["fileglob=**/*_test.go"],
+		"Tests": true
+	},
+	"ExpectedResults": [
+		"$WORKDIR/main.go",
+		"$WORKDIR/main_test.go",
+		"$WORKDIR/generator/generator.go",
+		"$WORKDIR/generator/generator_test.go",
+		"$WORKDIR/vendor/github.com/google/uuid/dce.go",
+		"$WORKDIR/vendor/github.com/google/uuid/doc.go",
+		"$WORKDIR/vendor/github.com/google/uuid/hash.go",
+		"$WORKDIR/vendor/github.com/google/uuid/marshal.go",
+		"$WORKDIR/vendor/github.com/google/uuid/node.go",
+		"$WORKDIR/vendor/github.com/google/uuid/node_net.go",
+		"$WORKDIR/vendor/github.com/google/uuid/sql.go",
+		"$WORKDIR/vendor/github.com/google/uuid/time.go",
+		"$WORKDIR/vendor/github.com/google/uuid/util.go",
+		"$WORKDIR/vendor/github.com/google/uuid/uuid.go",
+		"$WORKDIR/vendor/github.com/google/uuid/version1.go",
+		"$WORKDIR/vendor/github.com/google/uuid/version4.go"
+	]
+}

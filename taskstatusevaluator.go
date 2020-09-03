@@ -38,7 +38,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusInputsUndefined, nil, nil, nil
 	}
 
-	inputs, err := t.inputResolver.Resolve(t.repositoryDir, task)
+	inputs, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, fmt.Errorf("resolving inputs failed: %w", err)
 	}

@@ -41,7 +41,8 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 			},
 			GolangSources: cfg.GolangSources{
 				Environment: old.BuildInput.GolangSources.Environment,
-				Paths:       old.BuildInput.GolangSources.Paths,
+				Queries:     golangSourcesPathsToQuery(old.BuildInput.GolangSources.Paths),
+				Tests:       false,
 			},
 		})
 	}
@@ -80,6 +81,16 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 	return include
 }
 
+func golangSourcesPathsToQuery(paths []string) []string {
+	result := make([]string, 0, len(paths))
+	for _, p := range paths {
+		p = p + "/..."
+		result = append(result, p)
+	}
+
+	return result
+}
+
 // UpgradeAppConfig converts a version 4 app config to version 5.
 // Includes are not upgrades, NewIncludeID is appened to include references.
 func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
@@ -95,7 +106,8 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	task.Input.Files.Paths = old.Build.Input.Files.Paths
 	task.Input.GitFiles.Paths = old.Build.Input.GitFiles.Paths
 	task.Input.GolangSources.Environment = old.Build.Input.GolangSources.Environment
-	task.Input.GolangSources.Paths = old.Build.Input.GolangSources.Paths
+	task.Input.GolangSources.Queries = golangSourcesPathsToQuery(old.Build.Input.GolangSources.Paths)
+	task.Input.GolangSources.Tests = false
 
 	//TODO: dedup code for converting outputs, same code is used used in UpgradeIncludeConfig
 	for _, di := range old.Build.Output.DockerImage {

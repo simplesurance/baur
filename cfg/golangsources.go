@@ -6,14 +6,31 @@ import (
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
-	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This can be environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT, $APPNAME"`
-	Paths       []string `toml:"paths" comment:"Paths to directories containing Golang source files.\n All source files including imported packages are discovered,\n files from Go's stdlib package and testfiles are ignored. Valid variables: $ROOT, $APPNAME."`
+	Queries     []string `toml:"queries" comment:"Queries specify the source files or packages of which the dependencies are resolved.\n Format:\n \tfile=<RELATIVE-PATH>\n \tfileglob=<GLOB-PATTERN>\t -> Supports double-star\n \tEverything else is passed directly to underlying build tool (go list by default).\n \tSee also the patterns described at:\n \t<https://github.com/golang/tools/blob/bc8aaaa29e0665201b38fa5cb5d47826788fa249/go/packages/doc.go#L17>.\n Files from Golang's stdlib are ignored.\n Valid variables: $ROOT, $APPNAME."`
+	Environment []string `toml:"environment" comment:"Environment to use when discovering Golang source files\n This are environment variables understood by the Golang tools, like GOPATH, GOFLAGS, etc.\n If empty the default Go environment is used.\n Valid variables: $ROOT, $APPNAME"`
+	BuildFlags  []string `toml:"build_flags" comment:"List of command-line flags to be passed through to the build system's query tool."`
+	Tests       bool     `toml:"tests" comment:"If true queries are resolved to test files, otherwise testfiles are ignored."`
+}
+
+func (g *GolangSources) IsEmpty() bool {
+	return len(g.Environment) == 0 &&
+		len(g.Queries) == 0 &&
+		len(g.BuildFlags) == 0 &&
+		!g.Tests
 }
 
 // Merge merges the two GolangSources structs
 func (g *GolangSources) Merge(other *GolangSources) {
-	g.Paths = append(g.Paths, other.Paths...)
+	// TODO: merging this section is currently buggy,
+	// https://github.com/simplesurance/baur/issues/169 must be fixed
+
+	g.Queries = append(g.Queries, other.Queries...)
 	g.Environment = append(g.Environment, other.Environment...)
+	g.BuildFlags = append(g.BuildFlags, other.BuildFlags...)
+
+	if other.Tests {
+		g.Tests = other.Tests
+	}
 }
 
 func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
@@ -25,11 +42,19 @@ func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 		}
 	}
 
-	for i, p := range g.Paths {
+	for i, q := range g.Queries {
 		var err error
 
-		if g.Paths[i], err = resolvers.Resolve(p); err != nil {
-			return FieldErrorWrap(err, "Paths", p)
+		if g.Queries[i], err = resolvers.Resolve(q); err != nil {
+			return FieldErrorWrap(err, "Paths", q)
+		}
+	}
+
+	for i, f := range g.BuildFlags {
+		var err error
+
+		if g.BuildFlags[i], err = resolvers.Resolve(f); err != nil {
+			return FieldErrorWrap(err, "build_flags", f)
 		}
 	}
 
@@ -38,13 +63,14 @@ func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 
 // Validate checks that the stored information is valid.
 func (g *GolangSources) Validate() error {
-	if len(g.Environment) != 0 && len(g.Paths) == 0 {
-		return NewFieldError("must be set if environment is set", "paths")
+	if (len(g.Environment) != 0 || len(g.BuildFlags) != 0 || g.Tests) &&
+		len(g.Queries) == 0 {
+		return NewFieldError("must be set if environment, build_flags or tests is set", "query")
 	}
 
-	for _, p := range g.Paths {
-		if len(p) == 0 {
-			return NewFieldError("empty string is an invalid path", "paths")
+	for _, q := range g.Queries {
+		if len(q) == 0 {
+			return NewFieldError("empty string is an invalid query", "query")
 		}
 	}
 

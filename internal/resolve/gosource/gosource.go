@@ -1,18 +1,20 @@
 package gosource
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"go/build"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 
 	"github.com/simplesurance/baur/v1/internal/exec"
 	"github.com/simplesurance/baur/v1/internal/fs"
 )
+
+const globQueryPrefix = "fileglob="
 
 var defLogFn = func(string, ...interface{}) {}
 
@@ -66,48 +68,91 @@ func getEnvValue(env []string, key string) string {
 	return ""
 }
 
-// Resolve returns the Go source files in the passed directories plus all
-// source files of the imported packages.
-// Testfiles and stdlib dependencies are ignored.
-func (r *Resolver) Resolve(environment []string, directories ...string) ([]string, error) {
-	var allFiles []string
-	var err error
-
-	if len(directories) == 0 {
-		return []string{}, nil
-	}
-
-	env := append(whitelistedEnv(), environment...)
+func findGoRoot(env []string) (string, error) {
 	goroot := getEnvValue(env, "GOROOT")
 
+	var err error
 	if goroot == "" {
 		goroot, err = GOROOT()
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 
-		env = append(env, "GOROOT="+goroot)
 	}
 
 	if err := fs.DirsExist(goroot); err != nil {
-		return nil, fmt.Errorf(
-			"GOROOT directory '%s' does not exist, ensure the GOROOT env variable is set correctly or 'go env root' returns the right path",
-			build.Default.GOROOT,
-		)
-	}
-
-	r.logFn("gosource-resolver: environment: '%s'\n", env)
-
-	for _, path := range directories {
-		files, err := r.resolve(path, goroot, env)
-		if err != nil {
-			return nil, err
+		if !os.IsNotExist(err) {
+			return "", fmt.Errorf(
+				"GOROOT directory '%s' does not exist, ensure that 'go env root' returns the right path",
+				goroot,
+			)
 		}
 
-		allFiles = append(allFiles, files...)
+		return "", fmt.Errorf("checking if GOROOT directory %q exists, failed: %w", goroot, err)
 	}
 
-	return allFiles, nil
+	return goroot, nil
+}
+
+func resolveGlobs(workDir string, queries []string) ([]string, error) {
+	result := make([]string, 0, len(queries))
+
+	for _, q := range queries {
+		if !strings.HasPrefix(q, globQueryPrefix) {
+			result = append(result, q)
+
+			continue
+		}
+
+		q = strings.TrimPrefix(q, globQueryPrefix)
+		q = filepath.Join(workDir, q)
+
+		files, err := fs.FileGlob(q)
+		if err != nil {
+			return nil, fmt.Errorf("resolving glob %q failed: %w", q, err)
+		}
+
+		for _, f := range files {
+			f, err := filepath.Rel(workDir, f)
+			if err != nil {
+				return nil, fmt.Errorf("resolving glob %q failed: %w", q, err)
+			}
+
+			result = append(result, fmt.Sprintf("file=%s", f))
+		}
+	}
+
+	return result, nil
+}
+
+// Resolve returns the Go source files in the passed directories plus all
+// source files of the imported packages.
+// Testfiles and stdlib dependencies are ignored.
+func (r *Resolver) Resolve(
+	ctx context.Context,
+	workdir string,
+	environment []string,
+	buildFlags []string,
+	withTests bool,
+	queries []string,
+) ([]string, error) {
+	if len(queries) == 0 {
+		return nil, errors.New("queries parameter is empty")
+	}
+
+	env := append(whitelistedEnv(), environment...)
+
+	queries, err := resolveGlobs(workdir, queries)
+	if err != nil {
+		return nil, fmt.Errorf("resolving globs in queries failed: %w", err)
+	}
+
+	goroot, err := findGoRoot(env)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.resolve(ctx, workdir, goroot, env, buildFlags, withTests, queries)
 }
 
 // whitelistedEnvVars returns whitelisted environment variables from the host
@@ -144,14 +189,29 @@ func whitelistedEnv() []string {
 	return env
 }
 
-func (r *Resolver) resolve(path, goroot string, env []string) ([]string, error) {
+func (r *Resolver) resolve(
+	ctx context.Context,
+	workdir string,
+	goroot string,
+	env []string,
+	buildFlags []string,
+	withTests bool,
+	queries []string,
+) ([]string, error) {
+	r.logFn("gosource-resolver: resolving in directory: %q with goroot: %q, env: %+v, buildFlags: %v, the queries: %v",
+		workdir, goroot, env, buildFlags, queries)
+
 	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports,
-		Dir:  path,
-		Env:  env,
+		Context:    ctx,
+		Mode:       packages.NeedName | packages.NeedFiles | packages.NeedImports,
+		Dir:        workdir,
+		Env:        env,
+		Logf:       r.logFn,
+		Tests:      withTests,
+		BuildFlags: buildFlags,
 	}
 
-	lpkgs, err := packages.Load(cfg, "./...")
+	lpkgs, err := packages.Load(cfg, queries...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +246,7 @@ func (r *Resolver) resolve(path, goroot string, env []string) ([]string, error) 
 	for _, lpkg := range lpkgs {
 		err = sourceFiles(&srcFiles, goroot, lpkg)
 		if err != nil {
-			return nil, errors.Wrapf(err, "resolving sourcefiles of package '%s' failed", lpkg.Name)
+			return nil, fmt.Errorf("resolving sourcefiles of package '%s' failed: %w", lpkg.Name, err)
 		}
 
 		if len(lpkg.Errors) != 0 {

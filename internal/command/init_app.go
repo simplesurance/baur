@@ -35,7 +35,6 @@ var initAppCmd = &cobra.Command{
 
 func initApp(cmd *cobra.Command, args []string) {
 	var appName string
-	mustFindRepository()
 
 	cwd, err := os.Getwd()
 	exitOnErr(err)
