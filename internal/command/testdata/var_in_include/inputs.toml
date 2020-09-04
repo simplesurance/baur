@@ -1,0 +1,15 @@
+
+[[Input]]
+
+  # identifier of the include
+  include_id = "input"
+
+  # Inputs specified by file glob paths
+  [Input.Files]
+
+    # Relative path to source files.
+    # Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)
+    # and ** is supported to match files recursively.
+    # Valid variables: $ROOT, $APPNAME, $GITCOMMIT.
+    paths = ["$APPNAME.txt"]
+

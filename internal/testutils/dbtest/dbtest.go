@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/url"
 	"os"
+	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -46,4 +48,9 @@ func CreateDB(name string) (string, error) {
 	u.Path = name
 
 	return u.String(), nil
+}
+
+// UniqueDbName returns a unique postgresql database name.
+func UniqueDBName() string {
+	return "baur_test" + strings.Replace(uuid.New().String(), "-", "", -1)
 }

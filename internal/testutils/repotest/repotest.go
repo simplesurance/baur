@@ -5,10 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"testing"
-
-	"github.com/google/uuid"
 
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/cfg"
@@ -175,7 +172,7 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 	if options.createNewDB {
 		var err error
 
-		dbName := "baur" + strings.Replace(uuid.New().String(), "-", "", -1)
+		dbName := dbtest.UniqueDBName()
 
 		t.Logf("creating database %s", dbName)
 		if dbURL, err = dbtest.CreateDB(dbName); err != nil {
