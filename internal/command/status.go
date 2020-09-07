@@ -35,12 +35,13 @@ func init() {
 type statusCmd struct {
 	cobra.Command
 
-	csv                bool
-	quiet              bool
-	absPaths           bool
-	additionalInputStr string
-	buildStatus        flag.TaskStatus
-	fields             *flag.Fields
+	csv                              bool
+	quiet                            bool
+	absPaths                         bool
+	additionalInputStr               string
+	lookupAdditionalInputStrFallback string
+	buildStatus                      flag.TaskStatus
+	fields                           *flag.Fields
 }
 
 func newStatusCmd() *statusCmd {
@@ -79,6 +80,9 @@ func newStatusCmd() *statusCmd {
 
 	cmd.Flags().StringVar(&cmd.additionalInputStr, "additional-input-str", "",
 		"include an additional string as an input")
+
+	cmd.Flags().StringVar(&cmd.lookupAdditionalInputStrFallback, "lookup-additional-input-str-fallback", "",
+		"include an additional input string to fallback to if a run is not found with the additional-input-str value provided")
 
 	return &cmd
 }
@@ -143,7 +147,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 	showProgress := len(tasks) >= 5 && !c.quiet && !c.csv
 
-	statusMgr := baur.NewTaskStatusEvaluator(repo.Path, storageClt, baur.NewInputResolver(), c.additionalInputStr)
+	statusMgr := baur.NewTaskStatusEvaluator(repo.Path, storageClt, baur.NewInputResolver(storageClt), c.additionalInputStr, c.lookupAdditionalInputStrFallback)
 
 	baur.SortTasksByID(tasks)
 

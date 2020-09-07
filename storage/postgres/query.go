@@ -88,6 +88,37 @@ func (c *Client) LatestTaskRunByDigest(ctx context.Context, appName, taskName, t
 	return &result, nil
 }
 
+func (c *Client) InputExistsByDigest(ctx context.Context, appName, taskName, inputDigest string) (bool, error) {
+	const query = `
+	SELECT exists(
+		SELECT 1
+		FROM application
+		JOIN task ON application.id = task.application_id
+		JOIN task_run ON task.id = task_run.task_id
+		JOIN task_run_input ON task_run_input.task_run_id = task_run.id
+		JOIN input ON input.id = task_run_input.input_id
+		LEFT OUTER JOIN vcs ON vcs.id = task_run.vcs_id
+		WHERE application.name = $1
+		AND task.name = $2
+		AND input.digest = $3
+	)`
+
+	var exists bool
+
+	row := c.db.QueryRow(ctx, query, appName, taskName, inputDigest)
+
+	err := row.Scan(&exists)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, storage.ErrNotExist
+		}
+
+		return false, fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(appName, taskName, inputDigest), err)
+	}
+
+	return exists, nil
+}
+
 func (c *Client) Inputs(ctx context.Context, taskRunID int) ([]*storage.Input, error) {
 	const query = `
 	SELECT input.uri,

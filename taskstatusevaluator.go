@@ -14,7 +14,8 @@ type TaskStatusEvaluator struct {
 	inputResolver *InputResolver
 	store         storage.Storer
 
-	additionalInputStr string
+	additionalInputStr               string
+	lookupAdditionalInputStrFallback string
 }
 
 // NewTaskStatusEvaluator returns a new TaskSNewTaskStatusEvaluator.
@@ -23,12 +24,14 @@ func NewTaskStatusEvaluator(
 	store storage.Storer,
 	inputResolver *InputResolver,
 	additionalInputStr string,
+	lookupAdditionalInputStrFallback string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
-		repositoryDir:      repositoryDir,
-		inputResolver:      inputResolver,
-		store:              store,
-		additionalInputStr: additionalInputStr,
+		repositoryDir:                    repositoryDir,
+		inputResolver:                    inputResolver,
+		store:                            store,
+		additionalInputStr:               additionalInputStr,
+		lookupAdditionalInputStrFallback: lookupAdditionalInputStrFallback,
 	}
 }
 
@@ -42,12 +45,12 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusInputsUndefined, nil, nil, nil
 	}
 
-	inputs, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task, t.additionalInputStr)
+	inputs, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task, t.additionalInputStr, t.lookupAdditionalInputStrFallback)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, fmt.Errorf("resolving inputs failed: %w", err)
 	}
 
-	totalInputDigest, err := inputs.Digest()
+	totalInputDigest, err := inputs.TaskStatusDigest(ctx, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, fmt.Errorf("calculating total input digest failed: %w", err)
 	}

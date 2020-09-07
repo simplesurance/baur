@@ -66,9 +66,10 @@ type runCmd struct {
 	cobra.Command
 
 	// Cmdline parameters
-	skipUpload         bool
-	force              bool
-	additionalInputStr string
+	skipUpload                       bool
+	force                            bool
+	additionalInputStr               string
+	lookupAdditionalInputStrFallback string
 
 	// other fields
 	storage      storage.Storer
@@ -98,6 +99,8 @@ func newRunCmd() *runCmd {
 		"enforce running tasks independent of their status")
 	cmd.Flags().StringVar(&cmd.additionalInputStr, "additional-input-str", "",
 		"include an additional string as an input")
+	cmd.Flags().StringVar(&cmd.lookupAdditionalInputStrFallback, "lookup-additional-input-str-fallback", "",
+		"include an additional input string to fallback to if a run is not found with the additional-input-str value provided")
 
 	return &cmd
 }
@@ -307,7 +310,7 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTask, error) 
 	const sep = " => "
 
 	taskIDColLen := maxTaskIDLen(tasks) + len(sep)
-	statusEvaluator := baur.NewTaskStatusEvaluator(c.repoRootPath, c.storage, baur.NewInputResolver(), c.additionalInputStr)
+	statusEvaluator := baur.NewTaskStatusEvaluator(c.repoRootPath, c.storage, baur.NewInputResolver(c.storage), c.additionalInputStr, c.lookupAdditionalInputStrFallback)
 
 	stdout.Printf("Evaluating status of tasks:\n\n")
 

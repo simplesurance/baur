@@ -88,7 +88,8 @@ type Storer interface {
 	IsCompatible(context.Context) error
 
 	SaveTaskRun(context.Context, *TaskRunFull) (id int, err error)
-	LatestTaskRunByDigest(ctx context.Context, appname, taskName, totalInputDigest string) (*TaskRunWithID, error)
+	LatestTaskRunByDigest(ctx context.Context, appName, taskName, totalInputDigest string) (*TaskRunWithID, error)
+	InputExistsByDigest(ctx context.Context, appName, taskName, inputDigest string) (bool, error)
 
 	TaskRun(ctx context.Context, id int) (*TaskRunWithID, error)
 	// TaskRuns queries the storage for runs that match the filters.
