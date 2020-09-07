@@ -50,5 +50,5 @@ func (i *InputString) Value() string {
 
 // String returns it's full string representation
 func (i *InputString) String() string {
-	return fmt.Sprintf("addtional_string: %v", i.value)
+	return fmt.Sprintf("additional_string: %v", i.value)
 }
