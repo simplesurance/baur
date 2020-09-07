@@ -63,7 +63,7 @@ func NewRepository(cfgPath string) (*Repository, error) {
 
 	r := Repository{
 		CfgPath:       cfgPath,
-		Path:          path.Dir(cfgPath),
+		Path:          filepath.Dir(cfgPath),
 		AppSearchDirs: fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
 		SearchDepth:   cfg.Discover.SearchDepth,
 		PSQLURL:       cfg.Database.PGSQLURL,

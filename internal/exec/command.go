@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 )
@@ -54,8 +55,12 @@ func Command(name string, arg ...string) *Cmd {
 	}
 }
 
-// ShellCommand executes a command in sh shell.
+// ShellCommand executes a command in sh shell on Unix or cmd shell on Windows.
 func ShellCommand(cmd string) *Cmd {
+	if runtime.GOOS == "windows" {
+		return Command("cmd", "/C", cmd)
+	}
+
 	return Command("sh", "-c", cmd)
 }
 

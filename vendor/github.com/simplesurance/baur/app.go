@@ -191,7 +191,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 			cfgPath)
 	}
 
-	appAbsPath := path.Dir(cfgPath)
+	appAbsPath := filepath.Dir(cfgPath)
 	appRelPath, err := filepath.Rel(repository.Path, appAbsPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
@@ -203,7 +203,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 
 	app := App{
 		Repository: repository,
-		Path:       path.Dir(cfgPath),
+		Path:       filepath.Dir(cfgPath),
 		RelPath:    appRelPath,
 		Name:       appCfg.Name,
 		BuildCmd:   cmd,
