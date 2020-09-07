@@ -9,11 +9,12 @@ import (
 
 // Inputs are resolved Inputs of a task.
 type Inputs struct {
-	Files  []*Inputfile
-	digest *digest.Digest
+	Files         []*Inputfile
+	AdditionalStr *InputString
+	digest        *digest.Digest
 }
 
-// Digest returns a summarized digest over all Files.
+// Digest returns a summarized digest over all Inputs.
 // On the first call the digest is calculated, on subsequent calls the stored digest is returned.
 func (in *Inputs) Digest() (*digest.Digest, error) {
 	if in.digest != nil {
@@ -29,6 +30,14 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 		}
 
 		digests[i] = fdigest
+	}
+
+	if in.AdditionalStr.Exists() {
+		idigest, err := in.AdditionalStr.Digest()
+		if err != nil {
+			return nil, fmt.Errorf("calculating digest for additional string %q failed: %w", in.AdditionalStr.Value(), err)
+		}
+		digests = append(digests, idigest)
 	}
 
 	totalDigest, err := sha384.Sum(digests)

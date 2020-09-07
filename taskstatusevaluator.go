@@ -13,6 +13,8 @@ type TaskStatusEvaluator struct {
 
 	inputResolver *InputResolver
 	store         storage.Storer
+
+	additionalInputStr string
 }
 
 // NewTaskStatusEvaluator returns a new TaskSNewTaskStatusEvaluator.
@@ -20,15 +22,17 @@ func NewTaskStatusEvaluator(
 	repositoryDir string,
 	store storage.Storer,
 	inputResolver *InputResolver,
+	additionalInputStr string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
-		repositoryDir: repositoryDir,
-		inputResolver: inputResolver,
-		store:         store,
+		repositoryDir:      repositoryDir,
+		inputResolver:      inputResolver,
+		store:              store,
+		additionalInputStr: additionalInputStr,
 	}
 }
 
-// Status resolves the file inputs of the task, calculates the total input
+// Status resolves the inputs of the task, calculates the total input
 // digest and checks in the storage if a run record for the task and total input
 // digest already exist.
 // If TaskStatusInputsUndefined is returned, the returned Inputs slice and TaskRunWithID are nil.
@@ -38,7 +42,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusInputsUndefined, nil, nil, nil
 	}
 
-	inputs, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task)
+	inputs, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task, t.additionalInputStr)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, fmt.Errorf("resolving inputs failed: %w", err)
 	}

@@ -31,7 +31,7 @@ func NewInputResolver() *InputResolver {
 // Resolves the input definition of the task to concrete Files.
 // If an input definition does not resolve to >= paths, an error is returned.
 // The resolved Files are deduplicated.
-func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) (*Inputs, error) {
+func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task, additionalInputStr string) (*Inputs, error) {
 	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, &task.UnresolvedInputs.GolangSources)
 	if err != nil {
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
@@ -61,7 +61,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, err
 	}
 
-	return &Inputs{Files: uniqFiles}, nil
+	return &Inputs{Files: uniqFiles, AdditionalStr: &InputString{value: additionalInputStr}}, nil
 }
 
 func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs *cfg.GitFileInputs) ([]string, error) {

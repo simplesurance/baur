@@ -4,9 +4,10 @@ import "github.com/simplesurance/baur/v1/cfg/resolver"
 
 // Input contains information about task inputs
 type Input struct {
-	Files         FileInputs    `comment:"Inputs specified by file glob paths"`
-	GitFiles      GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
-	GolangSources GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
+	Files         FileInputs         `comment:"Inputs specified by file glob paths"`
+	GitFiles      GitFileInputs      `comment:"Inputs specified by path, matching only Git tracked files"`
+	GolangSources GolangSources      `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
+	AdditionalStr AdditionalInputStr `comment:"Additional input specified by command line"`
 }
 
 func (in *Input) FileInputs() *FileInputs {
@@ -21,11 +22,16 @@ func (in *Input) GolangSourcesInputs() *GolangSources {
 	return &in.GolangSources
 }
 
+func (in *Input) AdditionalStrInput() *AdditionalInputStr {
+	return &in.AdditionalStr
+}
+
 // Merge appends the information in other to in.
 func (in *Input) Merge(other InputDef) {
 	in.Files.Merge(other.FileInputs())
 	in.GitFiles.Merge(other.GitFileInputs())
 	in.GolangSources.Merge(other.GolangSourcesInputs())
+	in.AdditionalStr = *other.AdditionalStrInput()
 }
 
 func (in *Input) Resolve(resolvers resolver.Resolver) error {
@@ -39,6 +45,10 @@ func (in *Input) Resolve(resolvers resolver.Resolver) error {
 
 	if err := in.GolangSources.Resolve(resolvers); err != nil {
 		return FieldErrorWrap(err, "GoLangSources")
+	}
+
+	if err := in.AdditionalStr.Resolve(resolvers); err != nil {
+		return FieldErrorWrap(err, "AdditionalStr")
 	}
 
 	return nil
