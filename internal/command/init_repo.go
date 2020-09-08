@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -45,7 +45,7 @@ func initRepo(cmd *cobra.Command, args []string) {
 	}
 
 	repoCfg := cfg.ExampleRepository()
-	repoCfgPath := path.Join(repoDir, baur.RepositoryCfgFile)
+	repoCfgPath := filepath.Join(repoDir, baur.RepositoryCfgFile)
 
 	err = repoCfg.ToFile(repoCfgPath, false)
 	if err != nil {

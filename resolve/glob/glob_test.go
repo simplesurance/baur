@@ -2,7 +2,6 @@ package glob
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 
@@ -185,7 +184,7 @@ func Test_Resolve(t *testing.T) {
 
 		createFiles(t, tempdir, tc.files)
 
-		fs := NewResolver(path.Join(tempdir, tc.fileSrcGlobPath))
+		fs := NewResolver(filepath.Join(tempdir, tc.fileSrcGlobPath))
 		resolvedFiles, err := fs.Resolve()
 		if err != nil {
 			t.Fatal("resolving glob path:", err)

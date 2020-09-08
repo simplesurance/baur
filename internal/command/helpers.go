@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
@@ -58,7 +58,7 @@ func MustFindRepository() *baur.Repository {
 }
 
 func isAppDir(arg string) bool {
-	cfgPath := path.Join(arg, baur.AppCfgFile)
+	cfgPath := filepath.Join(arg, baur.AppCfgFile)
 	_, err := os.Stat(cfgPath)
 
 	return err == nil

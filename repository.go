@@ -2,7 +2,6 @@ package baur
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -63,8 +62,8 @@ func NewRepository(cfgPath string) (*Repository, error) {
 
 	r := Repository{
 		CfgPath:       cfgPath,
-		Path:          path.Dir(cfgPath),
-		AppSearchDirs: fs.PathsJoin(path.Dir(cfgPath), cfg.Discover.Dirs),
+		Path:          filepath.Dir(cfgPath),
+		AppSearchDirs: fs.PathsJoin(filepath.Dir(cfgPath), cfg.Discover.Dirs),
 		SearchDepth:   cfg.Discover.SearchDepth,
 		PSQLURL:       cfg.Database.PGSQLURL,
 		includeCache:  newIncludeCache(),
@@ -106,7 +105,7 @@ func (r *Repository) FindApps() ([]*App, error) {
 // AppByDir reads an application config file from the direcory and returns an
 // App
 func (r *Repository) AppByDir(appDir string) (*App, error) {
-	cfgPath := path.Join(appDir, AppCfgFile)
+	cfgPath := filepath.Join(appDir, AppCfgFile)
 
 	cfgPath, err := filepath.Abs(cfgPath)
 	if err != nil {

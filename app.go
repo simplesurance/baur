@@ -2,7 +2,6 @@ package baur
 
 import (
 	"fmt"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -78,7 +77,7 @@ func (a *App) addDockerBuildOutputs(buildOutput *cfg.BuildOutput) error {
 		repository := replaceAppNameVar(di.RegistryUpload.Repository, a.Name)
 
 		a.Outputs = append(a.Outputs, &DockerArtifact{
-			ImageIDFile: path.Join(a.Path, replaceAppNameVar(di.IDFile, a.Name)),
+			ImageIDFile: filepath.Join(a.Path, replaceAppNameVar(di.IDFile, a.Name)),
 			Tag:         tag,
 			Repository:  repository,
 			Registry:    di.RegistryUpload.Registry,
@@ -101,10 +100,10 @@ func (a *App) addFileOutputs(buildOutput *cfg.BuildOutput) error {
 			s3Bucket := replaceAppNameVar(f.S3Upload.Bucket, a.Name)
 			url := "s3://" + s3Bucket + "/" + destFile
 
-			src := path.Join(a.Path, filePath)
+			src := filepath.Join(a.Path, filePath)
 
 			a.Outputs = append(a.Outputs, &FileArtifact{
-				RelPath:   path.Join(a.RelPath, filePath),
+				RelPath:   filepath.Join(a.RelPath, filePath),
 				Path:      src,
 				DestFile:  destFile,
 				UploadURL: url,
@@ -122,10 +121,10 @@ func (a *App) addFileOutputs(buildOutput *cfg.BuildOutput) error {
 			}
 
 			dest = replaceUUIDvar(replaceAppNameVar(dest, a.Name))
-			src := path.Join(a.Path, filePath)
+			src := filepath.Join(a.Path, filePath)
 
 			a.Outputs = append(a.Outputs, &FileArtifact{
-				RelPath:   path.Join(a.RelPath, filePath),
+				RelPath:   filepath.Join(a.RelPath, filePath),
 				Path:      src,
 				DestFile:  dest,
 				UploadURL: dest,
@@ -191,7 +190,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 			cfgPath)
 	}
 
-	appAbsPath := path.Dir(cfgPath)
+	appAbsPath := filepath.Dir(cfgPath)
 	appRelPath, err := filepath.Rel(repository.Path, appAbsPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
@@ -203,7 +202,7 @@ func NewApp(repository *Repository, cfgPath string) (*App, error) {
 
 	app := App{
 		Repository: repository,
-		Path:       path.Dir(cfgPath),
+		Path:       filepath.Dir(cfgPath),
 		RelPath:    appRelPath,
 		Name:       appCfg.Name,
 		BuildCmd:   cmd,
@@ -333,13 +332,13 @@ func (a *App) resolveGoSrcInputs() ([]string, error) {
 
 		absGoSourcePaths := make([]string, 0, len(bi.GolangSources.Paths))
 		for _, relGosrcpath := range bi.GolangSources.Paths {
-			absPath := path.Join(a.Path, relGosrcpath)
+			absPath := filepath.Join(a.Path, relGosrcpath)
 			absGoSourcePaths = append(absGoSourcePaths, absPath)
 		}
 
 		goSrcEnv := make([]string, 0, len(bi.GolangSources.Environment))
 		for _, val := range bi.GolangSources.Environment {
-			goSrcEnv = append(goSrcEnv, path.Clean(replaceROOTvar(val, a.Repository)))
+			goSrcEnv = append(goSrcEnv, filepath.Clean(replaceROOTvar(val, a.Repository)))
 		}
 
 		resolver := gosource.NewResolver(log.Debugf, goSrcEnv, absGoSourcePaths...)

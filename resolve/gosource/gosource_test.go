@@ -1,7 +1,7 @@
 package gosource
 
 import (
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/simplesurance/baur/fs"
@@ -44,22 +44,22 @@ func createGoProject(t *testing.T, dir string, createGoModFile bool) (string, st
 	t.Helper()
 
 	tmpdir, cleanupFn := fstest.CreateTempDir(t)
-	projectPath := path.Join(tmpdir, dir)
-	generatorPkgPath := path.Join(projectPath, "generator")
+	projectPath := filepath.Join(tmpdir, dir)
+	generatorPkgPath := filepath.Join(projectPath, "generator")
 
 	err := fs.Mkdir(generatorPkgPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mainGoPath := path.Join(projectPath, "main.go")
-	randomGenGoPath := path.Join(projectPath, "generator", "generator.go")
+	mainGoPath := filepath.Join(projectPath, "main.go")
+	randomGenGoPath := filepath.Join(projectPath, "generator", "generator.go")
 
 	fstest.WriteToFile(t, []byte(testfileMainGo), mainGoPath)
 	fstest.WriteToFile(t, []byte(testfileGeneratorGo), randomGenGoPath)
 
 	if createGoModFile {
-		fstest.WriteToFile(t, []byte(testFileGoMod), path.Join(projectPath, "go.mod"))
+		fstest.WriteToFile(t, []byte(testFileGoMod), filepath.Join(projectPath, "go.mod"))
 	}
 
 	return tmpdir, projectPath, []string{mainGoPath, randomGenGoPath}, cleanupFn

@@ -3,7 +3,7 @@ package filecopy
 import (
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -63,7 +63,7 @@ func copyFile(src, dst string) error {
 // If the destination path exist and is not a regular file an error is returned.
 // If it exist and is a file, the file is overwritten if it's not the same.
 func (c *Client) Upload(src string, dst string) (string, error) {
-	destDir := path.Dir(dst)
+	destDir := filepath.Dir(dst)
 
 	isDir, err := fs.IsDir(destDir)
 	if err != nil {
