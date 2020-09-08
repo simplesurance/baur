@@ -20,9 +20,7 @@ func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, incl
 	for _, includeSpec := range *task.GetIncludes() {
 		inputInclude, err := includeDB.LoadInputInclude(resolver, workingDir, includeSpec)
 		if err == nil {
-			task.GetInput().Files.Merge(&inputInclude.Files)
-			task.GetInput().GitFiles.Merge(&inputInclude.GitFiles)
-			task.GetInput().GolangSources.Merge(&inputInclude.GolangSources)
+			task.GetInput().Merge(inputInclude)
 
 			continue
 		}
