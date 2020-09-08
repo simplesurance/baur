@@ -129,6 +129,8 @@ func (c *showCmd) showApp(arg string) {
 				mustWriteRow(formatter, "", "", "Type:", term.Highlight("GolangSources"))
 				mustWriteStringSliceRows(formatter, "Queries:", 2, gs.Queries)
 				mustWriteStringSliceRows(formatter, "Environment:", 2, gs.Environment)
+				mustWriteStringSliceRows(formatter, "BuildFlags:", 2, gs.BuildFlags)
+				mustWriteRow(formatter, "", "", "Tests:", term.Highlight(gs.Tests))
 
 				if i+1 < len(task.UnresolvedInputs.GolangSources) {
 					mustWriteRow(formatter, "", "", "", "")
