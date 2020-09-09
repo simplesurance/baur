@@ -19,11 +19,10 @@ func init() {
 type lsInputsCmd struct {
 	cobra.Command
 
-	csv                              bool
-	quiet                            bool
-	showDigest                       bool
-	additionalInputStr               string
-	lookupAdditionalInputStrFallback string
+	csv                bool
+	quiet              bool
+	showDigest         bool
+	additionalInputStr string
 }
 
 func newLsInputsCmd() *lsInputsCmd {

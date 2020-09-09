@@ -66,7 +66,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 	return taskStatus, inputs, run, err
 }
 
-func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs *Inputs, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {
+func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs Input, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {
 	totalInputDigest, err := inputs.Digest()
 	if err != nil {
 		return TaskStatusUndefined, nil, fmt.Errorf("calculating total input digest failed: %w", err)
