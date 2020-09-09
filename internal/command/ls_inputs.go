@@ -49,9 +49,6 @@ func newLsInputsCmd() *lsInputsCmd {
 	cmd.Flags().StringVar(&cmd.additionalInputStr, "additional-input-str", "",
 		"include an additional string as an input")
 
-	cmd.Flags().StringVar(&cmd.lookupAdditionalInputStrFallback, "lookup-additional-input-str-fallback", "",
-		"include an additional input string to fallback to if a run is not found with the additional-input-str value provided")
-
 	return &cmd
 }
 
@@ -60,7 +57,6 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 	var headers []string
 
 	rep := mustFindRepository()
-	store := mustNewCompatibleStorage(rep)
 	task := mustArgToTask(rep, args[0])
 	writeHeaders := !c.quiet && !c.csv
 
@@ -83,10 +79,12 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 		formatter = table.New(headers, stdout)
 	}
 
-	inputResolver := baur.NewInputResolver(store)
+	inputResolver := baur.NewInputResolver()
 
-	inputs, err := inputResolver.Resolve(ctx, rep.Path, task, c.additionalInputStr, c.lookupAdditionalInputStrFallback)
+	inputs, err := inputResolver.Resolve(ctx, rep.Path, task)
 	exitOnErr(err)
+
+	inputs.AddAdditionalString(c.additionalInputStr)
 
 	sort.Slice(inputs.Files, func(i, j int) bool {
 		return inputs.Files[i].RepoRelPath() < inputs.Files[j].RepoRelPath()

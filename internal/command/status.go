@@ -147,7 +147,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 	showProgress := len(tasks) >= 5 && !c.quiet && !c.csv
 
-	statusMgr := baur.NewTaskStatusEvaluator(repo.Path, storageClt, baur.NewInputResolver(storageClt), c.additionalInputStr, c.lookupAdditionalInputStrFallback)
+	statusMgr := baur.NewTaskStatusEvaluator(repo.Path, storageClt, baur.NewInputResolver(), c.additionalInputStr, c.lookupAdditionalInputStrFallback)
 
 	baur.SortTasksByID(tasks)
 

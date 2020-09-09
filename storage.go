@@ -90,7 +90,7 @@ func InputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
 	if inputs.AdditionalStr.Exists() {
 		digest, err := inputs.AdditionalStr.Digest()
 		if err != nil {
-			return nil, fmt.Errorf("calculating digest for additional string %q failed: %w", inputs.AdditionalStr.Value(), err)
+			return nil, fmt.Errorf("calculating digest for additional string %q failed: %w", inputs.AdditionalStr.Value, err)
 		}
 		result = append(result, &storage.Input{
 			URI:    inputs.AdditionalStr.String(),

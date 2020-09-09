@@ -12,29 +12,26 @@ import (
 	"github.com/simplesurance/baur/v1/internal/resolve/gitpath"
 	"github.com/simplesurance/baur/v1/internal/resolve/glob"
 	"github.com/simplesurance/baur/v1/internal/resolve/gosource"
-	"github.com/simplesurance/baur/v1/storage"
 )
 
 type InputResolver struct {
 	gitGlobPathResolver *gitpath.Resolver
 	globPathResolver    *glob.Resolver
 	goSourceResolver    *gosource.Resolver
-	store               storage.Storer
 }
 
-func NewInputResolver(store storage.Storer) *InputResolver {
+func NewInputResolver() *InputResolver {
 	return &InputResolver{
 		gitGlobPathResolver: &gitpath.Resolver{},
 		globPathResolver:    &glob.Resolver{},
 		goSourceResolver:    gosource.NewResolver(log.Debugf),
-		store:               store,
 	}
 }
 
 // Resolves the input definition of the task to concrete Files.
 // If an input definition does not resolve to >= paths, an error is returned.
 // The resolved Files are deduplicated.
-func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task, additionalInputStr string, lookupAdditionalInputStrFallback string) (*Inputs, error) {
+func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) (*Inputs, error) {
 	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, &task.UnresolvedInputs.GolangSources)
 	if err != nil {
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
@@ -64,13 +61,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, err
 	}
 
-	inputs := NewInputs(
-		uniqFiles,
-		&InputString{value: additionalInputStr},
-		&InputString{value: lookupAdditionalInputStrFallback},
-		i.store)
-
-	return inputs, nil
+	return &Inputs{Files: uniqFiles}, nil
 }
 
 func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs *cfg.GitFileInputs) ([]string, error) {

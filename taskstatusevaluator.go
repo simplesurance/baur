@@ -45,24 +45,41 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusInputsUndefined, nil, nil, nil
 	}
 
-	inputs, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task, t.additionalInputStr, t.lookupAdditionalInputStrFallback)
+	inputs, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, fmt.Errorf("resolving inputs failed: %w", err)
 	}
 
-	totalInputDigest, err := inputs.TaskStatusDigest(ctx, task)
+	var taskStatus TaskStatus
+	var run *storage.TaskRunWithID
+
+	inputs.AddAdditionalString(t.additionalInputStr)
+	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
+
+	if run == nil && t.lookupAdditionalInputStrFallback != "" {
+		inputs.AddAdditionalString(t.lookupAdditionalInputStrFallback)
+		taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
+
+		inputs.AddAdditionalString(t.additionalInputStr)
+	}
+
+	return taskStatus, inputs, run, err
+}
+
+func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs *Inputs, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {
+	totalInputDigest, err := inputs.Digest()
 	if err != nil {
-		return TaskStatusUndefined, nil, nil, fmt.Errorf("calculating total input digest failed: %w", err)
+		return TaskStatusUndefined, nil, fmt.Errorf("calculating total input digest failed: %w", err)
 	}
 
 	run, err := t.store.LatestTaskRunByDigest(ctx, task.AppName, task.Name, totalInputDigest.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
-			return TaskStatusExecutionPending, inputs, nil, nil
+			return TaskStatusExecutionPending, nil, nil
 		}
 
-		return TaskStatusUndefined, nil, nil, fmt.Errorf("querying storage for task run status failed: %w", err)
+		return TaskStatusUndefined, nil, fmt.Errorf("querying storage for task run status failed: %w", err)
 	}
 
-	return TaskStatusRunExist, inputs, run, nil
+	return TaskStatusRunExist, run, nil
 }
