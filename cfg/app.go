@@ -31,11 +31,15 @@ func ExampleApp(name string) *App {
 				Name:    "build",
 				Command: "make dist",
 				Input: Input{
-					Files: FileInputs{
-						Paths: []string{"dbmigrations/*.sql"},
+					Files: []FileInputs{
+						{
+							Paths: []string{"dbmigrations/*.sql"},
+						},
 					},
-					GitFiles: GitFileInputs{
-						Paths: []string{"Makefile"},
+					GitFiles: []GitFileInputs{
+						{
+							Paths: []string{"Makefile"},
+						},
 					},
 					GolangSources: []GolangSources{
 						{

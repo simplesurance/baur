@@ -111,17 +111,31 @@ func (c *showCmd) showApp(arg string) {
 			mustWriteRow(formatter, "", "", "", "")
 			mustWriteRow(formatter, "", term.Underline("Inputs:"), "", "")
 
-			if len(task.UnresolvedInputs.Files.Paths) > 0 {
+			for i, f := range task.UnresolvedInputs.Files {
 				mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
-				mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.Files.Paths)
-			}
+				mustWriteStringSliceRows(formatter, "Paths:", 2, f.Paths)
 
-			if len(task.UnresolvedInputs.GitFiles.Paths) > 0 {
-				if len(task.UnresolvedInputs.Files.Paths) > 0 {
+				if i+1 < len(task.UnresolvedInputs.Files) {
 					mustWriteRow(formatter, "", "", "", "")
 				}
+			}
 
-				mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.GitFiles.Paths)
+			if len(task.UnresolvedInputs.Files) > 0 && len(task.UnresolvedInputs.GitFiles) > 0 {
+				mustWriteRow(formatter, "", "", "", "")
+			}
+
+			for i, g := range task.UnresolvedInputs.GitFiles {
+				mustWriteRow(formatter, "", "", "Type:", term.Highlight("GitFile"))
+				mustWriteStringSliceRows(formatter, "Paths:", 2, g.Paths)
+
+				if i+1 < len(task.UnresolvedInputs.GitFiles) {
+					mustWriteRow(formatter, "", "", "", "")
+				}
+			}
+
+			if len(task.UnresolvedInputs.GolangSources) > 0 &&
+				len(task.UnresolvedInputs.GitFiles) > 0 || len(task.UnresolvedInputs.Files) > 0 {
+				mustWriteRow(formatter, "", "", "", "")
 			}
 
 			for i, gs := range task.UnresolvedInputs.GolangSources {

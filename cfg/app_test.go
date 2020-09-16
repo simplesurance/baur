@@ -58,7 +58,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 				Command:   "make",
 
 				Input: Input{
-					Files: FileInputs{Paths: []string{"*.go"}},
+					Files: []FileInputs{{Paths: []string{"*.go"}}},
 				},
 				Output: Output{
 					File: []FileOutput{
