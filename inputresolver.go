@@ -37,12 +37,12 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
 
-	gitPaths, err := i.resolveGitGlobPaths(repositoryDir, task.Directory, &task.UnresolvedInputs.GitFiles)
+	gitPaths, err := i.resolveGitGlobPaths(repositoryDir, task.Directory, task.UnresolvedInputs.GitFiles)
 	if err != nil {
 		return nil, fmt.Errorf("resolving git-file inputs failed: %w", err)
 	}
 
-	globPaths, err := i.resolveGlobPaths(task.Directory, &task.UnresolvedInputs.Files)
+	globPaths, err := i.resolveGlobPaths(task.Directory, task.UnresolvedInputs.Files)
 	if err != nil {
 		return nil, fmt.Errorf("resolving glob file inputs failed: %w", err)
 	}
@@ -64,50 +64,54 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	return uniqInputs, nil
 }
 
-func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs *cfg.GitFileInputs) ([]string, error) {
-	if len(inputs.Paths) == 0 {
-		return nil, nil
-	}
+func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs []cfg.GitFileInputs) ([]string, error) {
+	var result []string
 
-	gitPaths, err := i.gitGlobPathResolver.Resolve(appDir, inputs.Paths...)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(gitPaths) == 0 {
-		return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(inputs.Paths, ", "))
-	}
-
-	return gitPaths, err
-}
-
-func (i *InputResolver) resolveGlobPaths(appDir string, inputs *cfg.FileInputs) ([]string, error) {
-	if len(inputs.Paths) == 0 {
-		return nil, nil
-	}
-
-	// slice will have at least the same sice then inputs.Path, every globPath must resolve to >1 path
-	result := make([]string, 0, len(inputs.Paths))
-
-	for _, path := range inputs.Paths {
-		var absGlobPath string
-
-		if filepath.IsAbs(path) {
-			absGlobPath = path
-		} else {
-			absGlobPath = filepath.Join(appDir, path)
+	for _, in := range inputs {
+		if len(in.Paths) == 0 {
+			return nil, nil
 		}
 
-		resolvedPaths, err := i.globPathResolver.Resolve(absGlobPath)
+		gitPaths, err := i.gitGlobPathResolver.Resolve(appDir, in.Paths...)
 		if err != nil {
 			return nil, err
 		}
 
-		if len(resolvedPaths) == 0 {
-			return nil, fmt.Errorf("'%s' matched 0 files", path)
+		if len(gitPaths) == 0 {
+			return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(in.Paths, ", "))
 		}
 
-		result = append(result, resolvedPaths...)
+		result = append(result, gitPaths...)
+
+	}
+
+	return result, nil
+}
+
+func (i *InputResolver) resolveGlobPaths(appDir string, inputs []cfg.FileInputs) ([]string, error) {
+	var result []string
+
+	for _, in := range inputs {
+		for _, path := range in.Paths {
+			var absGlobPath string
+
+			if filepath.IsAbs(path) {
+				absGlobPath = path
+			} else {
+				absGlobPath = filepath.Join(appDir, path)
+			}
+
+			resolvedPaths, err := i.globPathResolver.Resolve(absGlobPath)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(resolvedPaths) == 0 {
+				return nil, fmt.Errorf("'%s' matched 0 files", path)
+			}
+
+			result = append(result, resolvedPaths...)
+		}
 	}
 
 	return result, nil

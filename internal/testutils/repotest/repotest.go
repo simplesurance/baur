@@ -49,8 +49,10 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 				Name:    "build",
 				Command: "./build.sh",
 				Input: cfg.Input{
-					Files: cfg.FileInputs{
-						Paths: []string{"build.sh", "output_content.txt"},
+					Files: []cfg.FileInputs{
+						{
+							Paths: []string{"build.sh", "output_content.txt"},
+						},
 					},
 				},
 				Output: cfg.Output{
@@ -69,8 +71,10 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 				Name:    "check",
 				Command: "./check.sh",
 				Input: cfg.Input{
-					Files: cfg.FileInputs{
-						Paths: []string{"check.sh"},
+					Files: []cfg.FileInputs{
+						{
+							Paths: []string{"check.sh"},
+						},
 					},
 				},
 			},

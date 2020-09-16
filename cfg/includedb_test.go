@@ -41,12 +41,16 @@ func inputInclude() InputIncludes {
 	return InputIncludes{
 		{
 			IncludeID: "inputs",
-			Files: FileInputs{
-				Paths: []string{"Makefile"},
+			Files: []FileInputs{
+				{
+					Paths: []string{"Makefile"},
+				},
 			},
 
-			GitFiles: GitFileInputs{
-				Paths: []string{"*.c", "*.h"},
+			GitFiles: []GitFileInputs{
+				{
+					Paths: []string{"*.c", "*.h"},
+				},
 			},
 
 			GolangSources: []GolangSources{
@@ -365,11 +369,15 @@ func TestTaskInclude(t *testing.T) {
 					Input: InputIncludes{
 						{
 							IncludeID: "input",
-							Files: FileInputs{
-								Paths: []string{"*.go", "*.sh", "*.bat"},
+							Files: []FileInputs{
+								{
+									Paths: []string{"*.go", "*.sh", "*.bat"},
+								},
 							},
-							GitFiles: GitFileInputs{
-								Paths: []string{"*.txt", "*.d"},
+							GitFiles: []GitFileInputs{
+								{
+									Paths: []string{"*.txt", "*.d"},
+								},
 							},
 							GolangSources: []GolangSources{
 								{
@@ -381,11 +389,15 @@ func TestTaskInclude(t *testing.T) {
 						},
 						{
 							IncludeID: "input2",
-							Files: FileInputs{
-								Paths: []string{"*.c", "*.sh"},
+							Files: []FileInputs{
+								{
+									Paths: []string{"*.c", "*.sh"},
+								},
 							},
-							GitFiles: GitFileInputs{
-								Paths: []string{"*.txt", "hellofile"},
+							GitFiles: []GitFileInputs{
+								{
+									Paths: []string{"*.txt", "hellofile"},
+								},
 							},
 							GolangSources: []GolangSources{
 								{
@@ -474,12 +486,12 @@ func TestTaskInclude(t *testing.T) {
 			loadedTask := loadedApp.Tasks[0]
 
 			for _, inputIncl := range tc.includeConfig.cfg.Input {
-				for _, path := range inputIncl.FileInputs().Paths {
-					assert.Contains(t, loadedTask.Input.FileInputs().Paths, path, "FileInput path missing")
+				for _, f := range inputIncl.FileInputs() {
+					assert.Contains(t, loadedTask.Input.FileInputs(), f)
 				}
 
-				for _, path := range inputIncl.GitFileInputs().Paths {
-					assert.Contains(t, loadedTask.Input.GitFileInputs().Paths, path, "GitFileInput missing")
+				for _, path := range inputIncl.GitFileInputs() {
+					assert.Contains(t, loadedTask.Input.GitFileInputs(), path, "GitFileInput missing")
 				}
 
 				for _, gs := range inputIncl.GolangSources {
@@ -549,8 +561,10 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 		Input: InputIncludes{
 			{
 				IncludeID: "input",
-				Files: FileInputs{
-					Paths: []string{"*.go", "*.sh", "*.bat"},
+				Files: []FileInputs{
+					{
+						Paths: []string{"*.go", "*.sh", "*.bat"},
+					},
 				},
 			},
 		},
@@ -612,8 +626,10 @@ func TestVarsInIncludeFiles(t *testing.T) {
 		Input: InputIncludes{
 			{
 				IncludeID: inputInclID,
-				Files: FileInputs{
-					Paths: []string{"$APPNAME"},
+				Files: []FileInputs{
+					{
+						Paths: []string{"$APPNAME"},
+					},
 				},
 			},
 		},
@@ -682,8 +698,11 @@ func TestVarsInIncludeFiles(t *testing.T) {
 		require.Len(t, loadedApp.Tasks, 2)
 
 		require.Equal(t, "build", loadedApp.Tasks[0].Name)
-		require.Len(t, loadedApp.Tasks[0].Input.FileInputs().Paths, 1)
-		require.Equal(t, variableVal, loadedApp.Tasks[0].Input.FileInputs().Paths[0])
+
+		require.Len(t, loadedApp.Tasks[0].Input.FileInputs(), 1)
+		require.Len(t, loadedApp.Tasks[0].Input.FileInputs()[0].Paths, 1)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Input.FileInputs()[0].Paths[0])
+
 		require.Len(t, loadedApp.Tasks[0].Output.DockerImage, 1)
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].IDFile)
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload.Repository)

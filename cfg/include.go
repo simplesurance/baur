@@ -101,11 +101,15 @@ func ExampleInclude(id string) *Include {
 		Input: []*InputInclude{
 			{
 				IncludeID: id + "_input",
-				Files: FileInputs{
-					Paths: []string{"dbmigrations/*.sql"},
+				Files: []FileInputs{
+					{
+						Paths: []string{"dbmigrations/*.sql"},
+					},
 				},
-				GitFiles: GitFileInputs{
-					Paths: []string{"Makefile"},
+				GitFiles: []GitFileInputs{
+					{
+						Paths: []string{"Makefile"},
+					},
 				},
 				GolangSources: []GolangSources{
 					{
@@ -147,8 +151,10 @@ func ExampleInclude(id string) *Include {
 				Name:      "build",
 				Command:   "make",
 				Input: Input{
-					GitFiles: GitFileInputs{
-						Paths: []string{"*.c", "*.h", "Makefile"},
+					GitFiles: []GitFileInputs{
+						{
+							Paths: []string{"*.c", "*.h", "Makefile"},
+						},
 					},
 				},
 				Output: Output{

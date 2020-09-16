@@ -30,15 +30,14 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		len(old.BuildInput.GolangSources.Environment) > 0 ||
 		len(old.BuildInput.GolangSources.Paths) > 0 {
 
-		in := &cfg.InputInclude{
-			IncludeID: NewIncludeID,
-			Files: cfg.FileInputs{
-				Paths: old.BuildInput.Files.Paths,
-			},
+		in := &cfg.InputInclude{IncludeID: NewIncludeID}
 
-			GitFiles: cfg.GitFileInputs{
-				Paths: old.BuildInput.GitFiles.Paths,
-			},
+		if len(old.BuildInput.GitFiles.Paths) > 0 {
+			in.GitFiles = []cfg.GitFileInputs{{Paths: old.BuildInput.GitFiles.Paths}}
+		}
+
+		if len(old.BuildInput.Files.Paths) > 0 {
+			in.Files = []cfg.FileInputs{{Paths: old.BuildInput.Files.Paths}}
 		}
 
 		if len(old.BuildInput.GolangSources.Environment) > 0 || len(old.BuildInput.GolangSources.Paths) > 0 {
@@ -110,8 +109,13 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 		Command: old.Build.Command,
 	}
 
-	task.Input.Files.Paths = old.Build.Input.Files.Paths
-	task.Input.GitFiles.Paths = old.Build.Input.GitFiles.Paths
+	if len(old.Build.Input.Files.Paths) > 0 {
+		task.Input.Files = []cfg.FileInputs{{Paths: old.Build.Input.Files.Paths}}
+	}
+
+	if len(old.Build.Input.GitFiles.Paths) > 0 {
+		task.Input.GitFiles = []cfg.GitFileInputs{{Paths: old.Build.Input.GitFiles.Paths}}
+	}
 
 	if len(old.Build.Input.GolangSources.Environment) > 0 || len(old.Build.Input.GolangSources.Paths) > 0 {
 		task.Input.GolangSources = []cfg.GolangSources{

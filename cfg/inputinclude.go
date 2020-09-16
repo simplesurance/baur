@@ -6,17 +6,17 @@ import "github.com/simplesurance/baur/v1/internal/deepcopy"
 type InputInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
 
-	Files         FileInputs      `comment:"Inputs specified by file glob paths"`
-	GitFiles      GitFileInputs   `comment:"Inputs specified by path, matching only Git tracked files"`
+	Files         []FileInputs    `comment:"Inputs specified by file glob paths"`
+	GitFiles      []GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
 	GolangSources []GolangSources `comment:"Inputs specified by directories containing Golang applications"`
 }
 
-func (in *InputInclude) FileInputs() *FileInputs {
-	return &in.Files
+func (in *InputInclude) FileInputs() []FileInputs {
+	return in.Files
 }
 
-func (in *InputInclude) GitFileInputs() *GitFileInputs {
-	return &in.GitFiles
+func (in *InputInclude) GitFileInputs() []GitFileInputs {
+	return in.GitFiles
 }
 
 func (in *InputInclude) GolangSourcesInputs() []GolangSources {
