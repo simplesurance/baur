@@ -56,7 +56,11 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 	inputs.SetInputString(t.additionalInputStr)
 	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 
-	if run == nil && t.lookupAdditionalInputStrFallback != "" {
+	if err != nil {
+		return TaskStatusUndefined, nil, nil, err
+	}
+
+	if taskStatus == TaskStatusExecutionPending && t.lookupAdditionalInputStrFallback != "" {
 		inputs.SetInputString(t.lookupAdditionalInputStrFallback)
 		taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 
