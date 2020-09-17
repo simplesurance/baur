@@ -160,7 +160,7 @@ github.com/pkg/errors
 github.com/pmezard/go-difflib/difflib
 # github.com/rs/xid v1.2.1
 github.com/rs/xid
-# github.com/simplesurance/baur v0.18.0
+# github.com/simplesurance/baur v0.18.1
 ## explicit
 github.com/simplesurance/baur
 github.com/simplesurance/baur/cfg
