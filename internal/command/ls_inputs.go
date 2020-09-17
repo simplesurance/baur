@@ -19,10 +19,10 @@ func init() {
 type lsInputsCmd struct {
 	cobra.Command
 
-	csv                bool
-	quiet              bool
-	showDigest         bool
-	additionalInputStr string
+	csv        bool
+	quiet      bool
+	showDigest bool
+	inputStr   string
 }
 
 func newLsInputsCmd() *lsInputsCmd {
@@ -45,8 +45,8 @@ func newLsInputsCmd() *lsInputsCmd {
 	cmd.Flags().BoolVar(&cmd.showDigest, "digests", false,
 		"show digests")
 
-	cmd.Flags().StringVar(&cmd.additionalInputStr, "additional-input-str", "",
-		"include an additional string as an input")
+	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
+		"include a string as an input")
 
 	return &cmd
 }
@@ -83,7 +83,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 	inputs, err := inputResolver.Resolve(ctx, rep.Path, task)
 	exitOnErr(err)
 
-	inputs.SetInputString(c.additionalInputStr)
+	inputs.SetInputString(c.inputStr)
 
 	sort.Slice(inputs.Files, func(i, j int) bool {
 		return inputs.Files[i].RepoRelPath() < inputs.Files[j].RepoRelPath()

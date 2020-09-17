@@ -14,8 +14,8 @@ type TaskStatusEvaluator struct {
 	inputResolver *InputResolver
 	store         storage.Storer
 
-	additionalInputStr               string
-	lookupAdditionalInputStrFallback string
+	inputStr    string
+	altInputStr string
 }
 
 // NewTaskStatusEvaluator returns a new TaskSNewTaskStatusEvaluator.
@@ -23,15 +23,15 @@ func NewTaskStatusEvaluator(
 	repositoryDir string,
 	store storage.Storer,
 	inputResolver *InputResolver,
-	additionalInputStr string,
-	lookupAdditionalInputStrFallback string,
+	inputStr string,
+	altInputStr string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
-		repositoryDir:                    repositoryDir,
-		inputResolver:                    inputResolver,
-		store:                            store,
-		additionalInputStr:               additionalInputStr,
-		lookupAdditionalInputStrFallback: lookupAdditionalInputStrFallback,
+		repositoryDir: repositoryDir,
+		inputResolver: inputResolver,
+		store:         store,
+		inputStr:      inputStr,
+		altInputStr:   altInputStr,
 	}
 }
 
@@ -53,18 +53,18 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 	var taskStatus TaskStatus
 	var run *storage.TaskRunWithID
 
-	inputs.SetInputString(t.additionalInputStr)
+	inputs.SetInputString(t.inputStr)
 	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	if taskStatus == TaskStatusExecutionPending && t.lookupAdditionalInputStrFallback != "" {
-		inputs.SetInputString(t.lookupAdditionalInputStrFallback)
+	if taskStatus == TaskStatusExecutionPending && t.altInputStr != "" {
+		inputs.SetInputString(t.altInputStr)
 		taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 
-		inputs.SetInputString(t.additionalInputStr)
+		inputs.SetInputString(t.inputStr)
 	}
 
 	return taskStatus, inputs, run, err

@@ -20,8 +20,8 @@ func NewInputs(files []*Inputfile) *Inputs {
 }
 
 // SetInputString sets a string value as an *InputString
-func (in *Inputs) SetInputString(intputStr string) {
-	in.inputString = NewInputString(intputStr)
+func (in *Inputs) SetInputString(inputStr string) {
+	in.inputString = NewInputString(inputStr)
 	in.digest = nil
 }
 
@@ -51,7 +51,7 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 	if in.inputString.Exists() {
 		idigest, err := in.inputString.Digest()
 		if err != nil {
-			return nil, fmt.Errorf("calculating digest for additional string %q failed: %w", in.inputString.Value, err)
+			return nil, fmt.Errorf("calculating digest for input string %q failed: %w", in.inputString.Value, err)
 		}
 
 		digests = append(digests, idigest)

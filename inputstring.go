@@ -29,7 +29,7 @@ func (i *InputString) Digest() (*digest.Digest, error) {
 	return i.calcDigest()
 }
 
-// Exists returns whether an additional input string has been set
+// Exists returns whether an input string has been set
 func (i *InputString) Exists() bool {
 	return i.Value != ""
 }
