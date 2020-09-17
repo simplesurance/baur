@@ -9,9 +9,9 @@ import (
 
 // Inputs are resolved Inputs of a task.
 type Inputs struct {
-	Files         []*Inputfile
-	AdditionalStr *InputString
-	digest        *digest.Digest
+	Files       []*Inputfile
+	inputString *InputString
+	digest      *digest.Digest
 }
 
 // NewInputs returns a new Inputs
@@ -19,10 +19,15 @@ func NewInputs(files []*Inputfile) *Inputs {
 	return &Inputs{Files: files}
 }
 
-// AddAdditionalString adds a string value to AdditionalStr
-func (in *Inputs) AddAdditionalString(additionalStr string) {
-	in.AdditionalStr = NewInputString(additionalStr)
+// SetInputString sets a string value as an *InputString
+func (in *Inputs) SetInputString(intputStr string) {
+	in.inputString = NewInputString(intputStr)
 	in.digest = nil
+}
+
+// GetInputString returns an *InputString set via SetInputString
+func (in *Inputs) GetInputString() *InputString {
+	return in.inputString
 }
 
 // Digest returns a summarized digest over all Inputs.
@@ -43,11 +48,12 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 		digests[i] = fdigest
 	}
 
-	if in.AdditionalStr.Exists() {
-		idigest, err := in.AdditionalStr.Digest()
+	if in.inputString.Exists() {
+		idigest, err := in.inputString.Digest()
 		if err != nil {
-			return nil, fmt.Errorf("calculating digest for additional string %q failed: %w", in.AdditionalStr.Value, err)
+			return nil, fmt.Errorf("calculating digest for additional string %q failed: %w", in.inputString.Value, err)
 		}
+
 		digests = append(digests, idigest)
 	}
 

@@ -36,7 +36,7 @@ func (i *InputString) Exists() bool {
 
 // String returns it's full string representation
 func (i *InputString) String() string {
-	return fmt.Sprintf("additional_string: %v", i.Value)
+	return fmt.Sprintf("string:%s", i.Value)
 }
 
 // CalcDigest calculates the digest of the string, saves it and returns it.

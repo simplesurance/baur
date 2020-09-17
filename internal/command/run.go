@@ -100,7 +100,7 @@ func newRunCmd() *runCmd {
 	cmd.Flags().StringVar(&cmd.additionalInputStr, "additional-input-str", "",
 		"include an additional string as an input")
 	cmd.Flags().StringVar(&cmd.lookupAdditionalInputStrFallback, "lookup-additional-input-str-fallback", "",
-		"include an additional input string to fallback to if a run is not found with the additional-input-str value provided")
+		"if a run can not be found, try to find a run with this value as input-string")
 
 	return &cmd
 }

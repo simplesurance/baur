@@ -53,14 +53,14 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 	var taskStatus TaskStatus
 	var run *storage.TaskRunWithID
 
-	inputs.AddAdditionalString(t.additionalInputStr)
+	inputs.SetInputString(t.additionalInputStr)
 	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 
 	if run == nil && t.lookupAdditionalInputStrFallback != "" {
-		inputs.AddAdditionalString(t.lookupAdditionalInputStrFallback)
+		inputs.SetInputString(t.lookupAdditionalInputStrFallback)
 		taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 
-		inputs.AddAdditionalString(t.additionalInputStr)
+		inputs.SetInputString(t.additionalInputStr)
 	}
 
 	return taskStatus, inputs, run, err
