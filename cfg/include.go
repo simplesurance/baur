@@ -107,9 +107,11 @@ func ExampleInclude(id string) *Include {
 				GitFiles: GitFileInputs{
 					Paths: []string{"Makefile"},
 				},
-				GolangSources: GolangSources{
-					Queries:     []string{"."},
-					Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
+				GolangSources: []GolangSources{
+					{
+						Queries:     []string{"."},
+						Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
+					},
 				},
 			},
 		},

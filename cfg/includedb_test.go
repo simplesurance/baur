@@ -49,10 +49,12 @@ func inputInclude() InputIncludes {
 				Paths: []string{"*.c", "*.h"},
 			},
 
-			GolangSources: GolangSources{
-				Environment: []string{"GOPATH=."},
-				Queries:     []string{"."},
-				BuildFlags:  []string{},
+			GolangSources: []GolangSources{
+				{
+					Environment: []string{"GOPATH=."},
+					Queries:     []string{"."},
+					BuildFlags:  []string{},
+				},
 			},
 		},
 	}
@@ -370,9 +372,13 @@ func TestTaskInclude(t *testing.T) {
 							GitFiles: GitFileInputs{
 								Paths: []string{"*.txt", "*.d"},
 							},
-							GolangSources: GolangSources{
-								Environment: []string{"A=B"},
-								Queries:     []string{"."},
+							GolangSources: []GolangSources{
+								{
+									Environment: []string{"A=B"},
+									Queries:     []string{"."},
+									BuildFlags:  []string{},
+									Tests:       false,
+								},
 							},
 						},
 						{
@@ -383,9 +389,13 @@ func TestTaskInclude(t *testing.T) {
 							GitFiles: GitFileInputs{
 								Paths: []string{"*.txt", "hellofile"},
 							},
-							GolangSources: GolangSources{
-								Environment: []string{"C=D"},
-								Queries:     []string{"cmd/"},
+							GolangSources: []GolangSources{
+								{
+									Environment: []string{"C=D"},
+									Queries:     []string{"cmd/"},
+									BuildFlags:  []string{},
+									Tests:       true,
+								},
 							},
 						},
 					},
@@ -475,13 +485,8 @@ func TestTaskInclude(t *testing.T) {
 					assert.Contains(t, loadedTask.Input.GitFileInputs().Paths, path, "GitFileInput missing")
 				}
 
-				// related bug: https://github.com/simplesurance/baur/issues/169
-				for _, env := range loadedTask.Input.GolangSources.Environment {
-					assert.Contains(t, loadedTask.Input.GolangSourcesInputs().Environment, env, "GolangSources env missing")
-				}
-
-				for _, query := range loadedTask.Input.GolangSources.Queries {
-					assert.Contains(t, loadedTask.Input.GolangSourcesInputs().Queries, query, "GolangSources query missing")
+				for _, gs := range inputIncl.GolangSources {
+					assert.Contains(t, loadedTask.Input.GolangSources, gs)
 				}
 			}
 

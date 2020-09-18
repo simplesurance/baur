@@ -19,20 +19,6 @@ func (g *GolangSources) IsEmpty() bool {
 		!g.Tests
 }
 
-// Merge merges the two GolangSources structs
-func (g *GolangSources) Merge(other *GolangSources) {
-	// TODO: merging this section is currently buggy,
-	// https://github.com/simplesurance/baur/issues/169 must be fixed
-
-	g.Queries = append(g.Queries, other.Queries...)
-	g.Environment = append(g.Environment, other.Environment...)
-	g.BuildFlags = append(g.BuildFlags, other.BuildFlags...)
-
-	if other.Tests {
-		g.Tests = other.Tests
-	}
-}
-
 func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 	for i, env := range g.Environment {
 		var err error

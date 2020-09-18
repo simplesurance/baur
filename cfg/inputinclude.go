@@ -4,9 +4,9 @@ package cfg
 type InputInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
 
-	Files         FileInputs    `comment:"Inputs specified by file glob paths"`
-	GitFiles      GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
-	GolangSources GolangSources `comment:"Inputs specified by directories containing Golang applications"`
+	Files         FileInputs      `comment:"Inputs specified by file glob paths"`
+	GitFiles      GitFileInputs   `comment:"Inputs specified by path, matching only Git tracked files"`
+	GolangSources []GolangSources `comment:"Inputs specified by directories containing Golang applications"`
 }
 
 func (in *InputInclude) FileInputs() *FileInputs {
@@ -17,8 +17,8 @@ func (in *InputInclude) GitFileInputs() *GitFileInputs {
 	return &in.GitFiles
 }
 
-func (in *InputInclude) GolangSourcesInputs() *GolangSources {
-	return &in.GolangSources
+func (in *InputInclude) GolangSourcesInputs() []GolangSources {
+	return in.GolangSources
 }
 
 // Validate checks if the stored information is valid.

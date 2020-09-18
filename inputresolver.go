@@ -32,7 +32,7 @@ func NewInputResolver() *InputResolver {
 // If an input definition does not resolve to >= paths, an error is returned.
 // The resolved Files are deduplicated.
 func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) (*Inputs, error) {
-	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, &task.UnresolvedInputs.GolangSources)
+	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, task.UnresolvedInputs.GolangSources)
 	if err != nil {
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
@@ -113,12 +113,20 @@ func (i *InputResolver) resolveGlobPaths(appDir string, inputs *cfg.FileInputs) 
 	return result, nil
 }
 
-func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, inputs *cfg.GolangSources) ([]string, error) {
-	if len(inputs.Queries) == 0 && len(inputs.Environment) == 0 {
-		return nil, nil
+func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, inputs []cfg.GolangSources) ([]string, error) {
+	var result []string
+
+	for _, gs := range inputs {
+		files, err := i.goSourceResolver.Resolve(ctx, appDir, gs.Environment, gs.BuildFlags, gs.Tests, gs.Queries)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, files...)
 	}
 
-	return i.goSourceResolver.Resolve(ctx, appDir, inputs.Environment, inputs.BuildFlags, inputs.Tests, inputs.Queries)
+	return result, nil
+
 }
 
 func (i *InputResolver) pathsToUniqFiles(repositoryRoot string, pathSlice ...[]string) ([]*Inputfile, error) {

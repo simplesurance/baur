@@ -30,7 +30,7 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		len(old.BuildInput.GolangSources.Environment) > 0 ||
 		len(old.BuildInput.GolangSources.Paths) > 0 {
 
-		include.Input = append(include.Input, &cfg.InputInclude{
+		in := &cfg.InputInclude{
 			IncludeID: NewIncludeID,
 			Files: cfg.FileInputs{
 				Paths: old.BuildInput.Files.Paths,
@@ -39,12 +39,19 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 			GitFiles: cfg.GitFileInputs{
 				Paths: old.BuildInput.GitFiles.Paths,
 			},
-			GolangSources: cfg.GolangSources{
-				Environment: old.BuildInput.GolangSources.Environment,
-				Queries:     golangSourcesPathsToQuery(old.BuildInput.GolangSources.Paths),
-				Tests:       false,
-			},
-		})
+		}
+
+		if len(old.BuildInput.GolangSources.Environment) > 0 || len(old.BuildInput.GolangSources.Paths) > 0 {
+			in.GolangSources = []cfg.GolangSources{
+				{
+					Environment: old.BuildInput.GolangSources.Environment,
+					Queries:     golangSourcesPathsToQuery(old.BuildInput.GolangSources.Paths),
+					Tests:       false,
+				},
+			}
+		}
+
+		include.Input = append(include.Input, in)
 	}
 
 	if len(old.BuildOutput.DockerImage) > 0 ||
@@ -105,9 +112,16 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 
 	task.Input.Files.Paths = old.Build.Input.Files.Paths
 	task.Input.GitFiles.Paths = old.Build.Input.GitFiles.Paths
-	task.Input.GolangSources.Environment = old.Build.Input.GolangSources.Environment
-	task.Input.GolangSources.Queries = golangSourcesPathsToQuery(old.Build.Input.GolangSources.Paths)
-	task.Input.GolangSources.Tests = false
+
+	if len(old.Build.Input.GolangSources.Environment) > 0 || len(old.Build.Input.GolangSources.Paths) > 0 {
+		task.Input.GolangSources = []cfg.GolangSources{
+			{
+				Environment: old.Build.Input.GolangSources.Environment,
+				Queries:     golangSourcesPathsToQuery(old.Build.Input.GolangSources.Paths),
+				Tests:       false,
+			},
+		}
+	}
 
 	//TODO: dedup code for converting outputs, same code is used used in UpgradeIncludeConfig
 	for _, di := range old.Build.Output.DockerImage {
