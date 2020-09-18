@@ -85,8 +85,9 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 	inputs.SetInputString(c.inputStr)
 
-	sort.Slice(inputs.Files, func(i, j int) bool {
-		return inputs.Files[i].RepoRelPath() < inputs.Files[j].RepoRelPath()
+	inputFiles := inputs.GetInputFiles()
+	sort.Slice(inputFiles, func(i, j int) bool {
+		return inputFiles[i].RepoRelPath() < inputFiles[j].RepoRelPath()
 	})
 
 	for _, input := range buildInputs(inputs) {
@@ -113,10 +114,11 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func buildInputs(inputs *baur.Inputs) []baur.Input {
-	res := make([]baur.Input, len(inputs.Files))
+	inputFiles := inputs.GetInputFiles()
+	res := make([]baur.Input, len(inputFiles))
 
-	for i := range inputs.Files {
-		res[i] = baur.Input(inputs.Files[i])
+	for i := range inputFiles {
+		res[i] = baur.Input(inputFiles[i])
 	}
 
 	if inputs.GetInputString().Exists() {

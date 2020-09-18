@@ -9,14 +9,25 @@ import (
 
 // Inputs are resolved Inputs of a task.
 type Inputs struct {
-	Files       []*Inputfile
+	files       []*Inputfile
 	inputString *InputString
 	digest      *digest.Digest
 }
 
 // NewInputs returns a new Inputs
 func NewInputs(files []*Inputfile) *Inputs {
-	return &Inputs{Files: files}
+	return &Inputs{files: files}
+}
+
+// SetInputFiles sets the input files
+func (in *Inputs) SetInputFiles(files []*Inputfile) {
+	in.files = files
+	in.digest = nil
+}
+
+// GetInputFiles gets the input files
+func (in *Inputs) GetInputFiles() []*Inputfile {
+	return in.files
 }
 
 // SetInputString sets a string value as an *InputString
@@ -37,9 +48,9 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 		return in.digest, nil
 	}
 
-	digests := make([]*digest.Digest, len(in.Files))
+	digests := make([]*digest.Digest, len(in.files))
 
-	for i, file := range in.Files {
+	for i, file := range in.files {
 		fdigest, err := file.Digest()
 		if err != nil {
 			return nil, fmt.Errorf("calculating digest for %q failed: %w", file.Path(), err)
@@ -48,7 +59,7 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 		digests[i] = fdigest
 	}
 
-	if in.inputString.Exists() {
+	if in.inputString != nil && in.inputString.Exists() {
 		idigest, err := in.inputString.Digest()
 		if err != nil {
 			return nil, fmt.Errorf("calculating digest for input string %q failed: %w", in.inputString.Value, err)

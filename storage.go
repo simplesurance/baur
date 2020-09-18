@@ -72,9 +72,9 @@ func StoreRun(
 }
 
 func InputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
-	result := make([]*storage.Input, 0, len(inputs.Files))
+	result := make([]*storage.Input, 0, len(inputs.GetInputFiles()))
 
-	for _, file := range inputs.Files {
+	for _, file := range inputs.GetInputFiles() {
 		// TODO: rename storage.Input.URI to Name?
 		digest, err := file.Digest()
 		if err != nil {
