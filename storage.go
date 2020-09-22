@@ -72,9 +72,9 @@ func StoreRun(
 }
 
 func InputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
-	result := make([]*storage.Input, 0, len(inputs.Files))
+	result := make([]*storage.Input, 0, len(inputs.GetInputFiles()))
 
-	for _, file := range inputs.Files {
+	for _, file := range inputs.GetInputFiles() {
 		// TODO: rename storage.Input.URI to Name?
 		digest, err := file.Digest()
 		if err != nil {
@@ -83,6 +83,17 @@ func InputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
 
 		result = append(result, &storage.Input{
 			URI:    file.RepoRelPath(),
+			Digest: digest.String(),
+		})
+	}
+
+	if inputs.GetInputString().Exists() {
+		digest, err := inputs.GetInputString().Digest()
+		if err != nil {
+			return nil, fmt.Errorf("calculating digest for input string %q failed: %w", inputs.GetInputString().Value, err)
+		}
+		result = append(result, &storage.Input{
+			URI:    inputs.GetInputString().String(),
 			Digest: digest.String(),
 		})
 	}

@@ -22,6 +22,7 @@ type lsInputsCmd struct {
 	csv        bool
 	quiet      bool
 	showDigest bool
+	inputStr   string
 }
 
 func newLsInputsCmd() *lsInputsCmd {
@@ -44,6 +45,9 @@ func newLsInputsCmd() *lsInputsCmd {
 	cmd.Flags().BoolVar(&cmd.showDigest, "digests", false,
 		"show digests")
 
+	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
+		"include a string as an input")
+
 	return &cmd
 }
 
@@ -61,7 +65,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	if writeHeaders {
-		headers = []string{"Path"}
+		headers = []string{"Input"}
 
 		if c.showDigest {
 			headers = append(headers, "Digest")
@@ -79,11 +83,14 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 	inputs, err := inputResolver.Resolve(ctx, rep.Path, task)
 	exitOnErr(err)
 
-	sort.Slice(inputs.Files, func(i, j int) bool {
-		return inputs.Files[i].RepoRelPath() < inputs.Files[j].RepoRelPath()
+	inputs.SetInputString(c.inputStr)
+
+	inputFiles := inputs.GetInputFiles()
+	sort.Slice(inputFiles, func(i, j int) bool {
+		return inputFiles[i].RepoRelPath() < inputFiles[j].RepoRelPath()
 	})
 
-	for _, input := range inputs.Files {
+	for _, input := range buildInputs(inputs) {
 		if !c.showDigest || c.quiet {
 			mustWriteRow(formatter, input)
 			continue
@@ -104,4 +111,19 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 		stdout.Printf("\nTotal Input Digest: %s\n", term.Highlight(totalDigest.String()))
 	}
+}
+
+func buildInputs(inputs *baur.Inputs) []baur.Input {
+	inputFiles := inputs.GetInputFiles()
+	res := make([]baur.Input, len(inputFiles))
+
+	for i := range inputFiles {
+		res[i] = baur.Input(inputFiles[i])
+	}
+
+	if inputs.GetInputString().Exists() {
+		res = append(res, inputs.GetInputString())
+	}
+
+	return res
 }

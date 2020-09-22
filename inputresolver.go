@@ -61,7 +61,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, err
 	}
 
-	return &Inputs{Files: uniqFiles}, nil
+	return NewInputs(uniqFiles), nil
 }
 
 func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs *cfg.GitFileInputs) ([]string, error) {

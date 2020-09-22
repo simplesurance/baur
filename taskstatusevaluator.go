@@ -13,6 +13,9 @@ type TaskStatusEvaluator struct {
 
 	inputResolver *InputResolver
 	store         storage.Storer
+
+	inputStr    string
+	altInputStr string
 }
 
 // NewTaskStatusEvaluator returns a new TaskSNewTaskStatusEvaluator.
@@ -20,15 +23,19 @@ func NewTaskStatusEvaluator(
 	repositoryDir string,
 	store storage.Storer,
 	inputResolver *InputResolver,
+	inputStr string,
+	altInputStr string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
 		repositoryDir: repositoryDir,
 		inputResolver: inputResolver,
 		store:         store,
+		inputStr:      inputStr,
+		altInputStr:   altInputStr,
 	}
 }
 
-// Status resolves the file inputs of the task, calculates the total input
+// Status resolves the inputs of the task, calculates the total input
 // digest and checks in the storage if a run record for the task and total input
 // digest already exist.
 // If TaskStatusInputsUndefined is returned, the returned Inputs slice and TaskRunWithID are nil.
@@ -43,19 +50,40 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusUndefined, nil, nil, fmt.Errorf("resolving inputs failed: %w", err)
 	}
 
+	var taskStatus TaskStatus
+	var run *storage.TaskRunWithID
+
+	inputs.SetInputString(t.inputStr)
+	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
+
+	if err != nil {
+		return TaskStatusUndefined, nil, nil, err
+	}
+
+	if taskStatus == TaskStatusExecutionPending && t.altInputStr != "" {
+		inputs.SetInputString(t.altInputStr)
+		taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
+
+		inputs.SetInputString(t.inputStr)
+	}
+
+	return taskStatus, inputs, run, err
+}
+
+func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs Input, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {
 	totalInputDigest, err := inputs.Digest()
 	if err != nil {
-		return TaskStatusUndefined, nil, nil, fmt.Errorf("calculating total input digest failed: %w", err)
+		return TaskStatusUndefined, nil, fmt.Errorf("calculating total input digest failed: %w", err)
 	}
 
 	run, err := t.store.LatestTaskRunByDigest(ctx, task.AppName, task.Name, totalInputDigest.String())
 	if err != nil {
 		if err == storage.ErrNotExist {
-			return TaskStatusExecutionPending, inputs, nil, nil
+			return TaskStatusExecutionPending, nil, nil
 		}
 
-		return TaskStatusUndefined, nil, nil, fmt.Errorf("querying storage for task run status failed: %w", err)
+		return TaskStatusUndefined, nil, fmt.Errorf("querying storage for task run status failed: %w", err)
 	}
 
-	return TaskStatusRunExist, inputs, run, nil
+	return TaskStatusRunExist, run, nil
 }

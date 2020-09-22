@@ -62,13 +62,15 @@ type csvStatus struct {
 }
 
 // baurCSVStatus runs "baur status --csv" and returns the result.
-func baurCSVStatus(t *testing.T) []*csvStatus {
+func baurCSVStatus(t *testing.T, inputStr string, altInputStr string) []*csvStatus {
 	t.Helper()
 
 	stdoutBuf, _ := interceptCmdOutput()
 
 	statusCmd := newStatusCmd()
 	statusCmd.csv = true
+	statusCmd.inputStr = inputStr
+	statusCmd.altInputStr = altInputStr
 
 	statusCmd.Command.Run(&statusCmd.Command, nil)
 
@@ -87,6 +89,17 @@ func baurCSVStatus(t *testing.T) []*csvStatus {
 	}
 
 	return result
+}
+
+func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, expectedStatus baur.TaskStatus, commit string) {
+	var taskIds []string
+	for _, task := range statusOut {
+		taskIds = append(taskIds, task.taskID)
+
+		assert.Equal(t, expectedStatus.String(), task.status)
+		assert.Equal(t, commit, task.commit)
+	}
+	assert.ElementsMatch(t, taskIds, r.TaskIDs(), "baur status is missing some tasks")
 }
 
 // TestRunningPendingTasksChangesStatus creates a new baur repository with 2
@@ -113,7 +126,7 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			var headCommit string
+			commit := ""
 
 			initTest(t)
 
@@ -131,37 +144,96 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 				res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().Run()
 				assert.NoError(t, err)
 
-				headCommit = strings.TrimSpace(res.StrOutput())
+				commit = strings.TrimSpace(res.StrOutput())
 			}
 
-			statusOut := baurCSVStatus(t)
-
-			var taskIds []string
-			for _, task := range statusOut {
-				taskIds = append(taskIds, task.taskID)
-
-				assert.Equal(t, baur.TaskStatusExecutionPending.String(), task.status)
-				assert.Equal(t, "", task.commit)
-			}
-			assert.ElementsMatch(t, taskIds, r.TaskIDs(), "baur status is missing some tasks")
+			statusOut := baurCSVStatus(t, "", "")
+			assertStatusTasks(t, r, statusOut, baur.TaskStatusExecutionPending, "")
 
 			runCmd := newRunCmd()
 			runCmd.Command.Run(&runCmd.Command, nil)
 
-			statusOut = baurCSVStatus(t)
-			taskIds = nil
-			for _, task := range statusOut {
-				taskIds = append(taskIds, task.taskID)
-
-				assert.Equal(t, baur.TaskStatusRunExist.String(), task.status)
-
-				if tc.withGitRepository {
-					assert.Equal(t, headCommit, task.commit)
-				}
-			}
-			assert.ElementsMatch(t, taskIds, r.TaskIDs(), "baur status is missing some tasks")
+			statusOut = baurCSVStatus(t, "", "")
+			assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
 		})
 	}
+}
+
+// TestRunningPendingTasksWithInputStringChangesStatus creates a new baur repository with a
+// simple app then runs:
+// - "baur run without an input string"
+// - "baur status without an input string", ensures all apps are listed and have status run exist
+// - "baur status with an input string", ensures all apps are listed and have status pending,
+// - "baur run with an input string"
+// - "baur status with an input string", ensures all apps are listed and have status run exist
+func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
+	initTest(t)
+
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateSimpleApp(t)
+
+	runInitDb(t)
+
+	var commit string
+	_, err := exec.Command("git", "init", ".").ExpectSuccess().Run()
+	assert.NoError(t, err)
+
+	gittest.CommitFilesToGit(t, ".")
+
+	res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().Run()
+	assert.NoError(t, err)
+
+	commit = strings.TrimSpace(res.StrOutput())
+
+	runCmd := newRunCmd()
+	runCmd.Command.Run(&runCmd.Command, nil)
+
+	statusOut := baurCSVStatus(t, "", "")
+	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
+
+	inputStr := "feature-x"
+
+	statusOut = baurCSVStatus(t, inputStr, "")
+	assertStatusTasks(t, r, statusOut, baur.TaskStatusExecutionPending, "")
+
+	runCmd = newRunCmd()
+	runCmd.inputStr = inputStr
+	runCmd.Command.Run(&runCmd.Command, nil)
+
+	statusOut = baurCSVStatus(t, inputStr, "")
+	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
+}
+
+// TestAltInputStringReturnsRunExistsStatusWhenInputStringRunExists creates a new baur repository with a
+// simple app then runs:
+// - "baur run with an input string of feature-x"
+// - "baur status with an input string of feature-x", ensures all apps are listed and have status run exist
+// - "baur status with an input string of feature-y", ensures all apps are listed and have status pending,
+// - "baur status with an input string of feature-y and alt input string of feature-x", ensures all apps are listed and have status run exist
+func TestAltInputStringReturnsRunExistsStatusWhenInputStringRunExists(t *testing.T) {
+	initTest(t)
+
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateSimpleApp(t)
+
+	runInitDb(t)
+
+	featureX := "feature-x"
+
+	runCmd := newRunCmd()
+	runCmd.inputStr = featureX
+	runCmd.Command.Run(&runCmd.Command, nil)
+
+	statusOut := baurCSVStatus(t, featureX, "")
+	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, "")
+
+	featureY := "feature-y"
+
+	statusOut = baurCSVStatus(t, featureY, "")
+	assertStatusTasks(t, r, statusOut, baur.TaskStatusExecutionPending, "")
+
+	statusOut = baurCSVStatus(t, featureY, featureX)
+	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, "")
 }
 
 func TestAppWithoutTasks(t *testing.T) {
@@ -172,7 +244,7 @@ func TestAppWithoutTasks(t *testing.T) {
 
 	runInitDb(t)
 
-	statusOut := baurCSVStatus(t)
+	statusOut := baurCSVStatus(t, "", "")
 
 	assert.Empty(t, statusOut, "expected empty baur status output, got: %q", statusOut)
 
