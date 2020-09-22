@@ -29,12 +29,7 @@ func (i *InputString) Digest() (*digest.Digest, error) {
 	return i.calcDigest()
 }
 
-// Exists returns whether an input string has been set
-func (i *InputString) Exists() bool {
-	return i.Value != ""
-}
-
-// String returns it's full string representation
+// String returns it's string representation
 func (i *InputString) String() string {
 	return fmt.Sprintf("string:%s", i.Value)
 }
