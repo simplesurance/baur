@@ -46,7 +46,7 @@ func newLsInputsCmd() *lsInputsCmd {
 		"show digests")
 
 	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as an input")
+		"include a string as input")
 
 	return &cmd
 }
@@ -80,17 +80,17 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 	inputResolver := baur.NewInputResolver()
 
-	inputs, err := inputResolver.Resolve(ctx, rep.Path, task)
+	inputFiles, err := inputResolver.Resolve(ctx, rep.Path, task)
 	exitOnErr(err)
 
-	inputs.SetInputString(c.inputStr)
+	inputs := baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr))
 
-	inputFiles := inputs.GetInputFiles()
-	sort.Slice(inputFiles, func(i, j int) bool {
-		return inputFiles[i].RepoRelPath() < inputFiles[j].RepoRelPath()
+	inputsSlice := baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr)).Inputs()
+	sort.Slice(inputsSlice, func(i, j int) bool {
+		return inputsSlice[i].String() < inputsSlice[j].String()
 	})
 
-	for _, input := range buildInputs(inputs) {
+	for _, input := range inputsSlice {
 		if !c.showDigest || c.quiet {
 			mustWriteRow(formatter, input)
 			continue
@@ -111,19 +111,4 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 		stdout.Printf("\nTotal Input Digest: %s\n", term.Highlight(totalDigest.String()))
 	}
-}
-
-func buildInputs(inputs *baur.Inputs) []baur.Input {
-	inputFiles := inputs.GetInputFiles()
-	res := make([]baur.Input, len(inputFiles))
-
-	for i := range inputFiles {
-		res[i] = baur.Input(inputFiles[i])
-	}
-
-	if inputs.GetInputString().Exists() {
-		res = append(res, inputs.GetInputString())
-	}
-
-	return res
 }

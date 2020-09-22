@@ -9,36 +9,18 @@ import (
 
 // Inputs are resolved Inputs of a task.
 type Inputs struct {
-	files       []*Inputfile
-	inputString *InputString
-	digest      *digest.Digest
+	inputs []Input
+	digest *digest.Digest
 }
 
-// NewInputs returns a new Inputs
-func NewInputs(files []*Inputfile) *Inputs {
-	return &Inputs{files: files}
+// NewInputs returns an new Inputs
+func NewInputs(in []Input) *Inputs {
+	return &Inputs{inputs: in}
 }
 
-// SetInputFiles sets the input files
-func (in *Inputs) SetInputFiles(files []*Inputfile) {
-	in.files = files
-	in.digest = nil
-}
-
-// GetInputFiles gets the input files
-func (in *Inputs) GetInputFiles() []*Inputfile {
-	return in.files
-}
-
-// SetInputString sets a string value as an *InputString
-func (in *Inputs) SetInputString(inputStr string) {
-	in.inputString = NewInputString(inputStr)
-	in.digest = nil
-}
-
-// GetInputString returns an *InputString set via SetInputString
-func (in *Inputs) GetInputString() *InputString {
-	return in.inputString
+// Inputs returns all stored Inputs
+func (in *Inputs) Inputs() []Input {
+	return in.inputs
 }
 
 // Digest returns a summarized digest over all Inputs.
@@ -48,24 +30,15 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 		return in.digest, nil
 	}
 
-	digests := make([]*digest.Digest, len(in.files))
+	digests := make([]*digest.Digest, len(in.inputs))
 
-	for i, file := range in.files {
-		fdigest, err := file.Digest()
+	for i, input := range in.inputs {
+		fdigest, err := input.Digest()
 		if err != nil {
-			return nil, fmt.Errorf("calculating digest for %q failed: %w", file.Path(), err)
+			return nil, fmt.Errorf("calculating digest for %q failed: %w", input, err)
 		}
 
 		digests[i] = fdigest
-	}
-
-	if in.inputString != nil && in.inputString.Exists() {
-		idigest, err := in.inputString.Digest()
-		if err != nil {
-			return nil, fmt.Errorf("calculating digest for input string %q failed: %w", in.inputString.Value, err)
-		}
-
-		digests = append(digests, idigest)
 	}
 
 	totalDigest, err := sha384.Sum(digests)

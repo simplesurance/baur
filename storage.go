@@ -72,28 +72,17 @@ func StoreRun(
 }
 
 func InputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
-	result := make([]*storage.Input, 0, len(inputs.GetInputFiles()))
+	result := make([]*storage.Input, 0, len(inputs.Inputs()))
 
-	for _, file := range inputs.GetInputFiles() {
+	for _, in := range inputs.Inputs() {
 		// TODO: rename storage.Input.URI to Name?
-		digest, err := file.Digest()
+		digest, err := in.Digest()
 		if err != nil {
-			return nil, fmt.Errorf("calculating digest of %q failed: %w", file.Path(), err)
+			return nil, fmt.Errorf("calculating digest of %q failed: %w", in, err)
 		}
 
 		result = append(result, &storage.Input{
-			URI:    file.RepoRelPath(),
-			Digest: digest.String(),
-		})
-	}
-
-	if inputs.GetInputString().Exists() {
-		digest, err := inputs.GetInputString().Digest()
-		if err != nil {
-			return nil, fmt.Errorf("calculating digest for input string %q failed: %w", inputs.GetInputString().Value, err)
-		}
-		result = append(result, &storage.Input{
-			URI:    inputs.GetInputString().String(),
+			URI:    in.String(),
 			Digest: digest.String(),
 		})
 	}

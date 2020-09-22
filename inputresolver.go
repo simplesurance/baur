@@ -31,7 +31,7 @@ func NewInputResolver() *InputResolver {
 // Resolves the input definition of the task to concrete Files.
 // If an input definition does not resolve to >= paths, an error is returned.
 // The resolved Files are deduplicated.
-func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) (*Inputs, error) {
+func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) ([]Input, error) {
 	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, task.UnresolvedInputs.GolangSources)
 	if err != nil {
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
@@ -56,12 +56,12 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	// TODO: add the files that were included in the .app.toml and it's includes
 	allInputsPaths = append(allInputsPaths, path.Join(task.Directory, AppCfgFile))
 
-	uniqFiles, err := i.pathsToUniqFiles(repositoryDir, allInputsPaths)
+	uniqInputs, err := i.pathsToUniqInputs(repositoryDir, allInputsPaths)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewInputs(uniqFiles), nil
+	return uniqInputs, nil
 }
 
 func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs *cfg.GitFileInputs) ([]string, error) {
@@ -129,14 +129,14 @@ func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, i
 
 }
 
-func (i *InputResolver) pathsToUniqFiles(repositoryRoot string, pathSlice ...[]string) ([]*Inputfile, error) {
+func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, pathSlice ...[]string) ([]Input, error) {
 	var pathsCount int
 
 	for _, paths := range pathSlice {
 		pathsCount += len(paths)
 	}
 
-	res := make([]*Inputfile, 0, pathsCount)
+	res := make([]Input, 0, pathsCount)
 	dedupMap := make(map[string]struct{}, pathsCount)
 
 	for _, paths := range pathSlice {

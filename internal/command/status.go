@@ -79,7 +79,7 @@ func newStatusCmd() *statusCmd {
 		cmd.fields.Usage(term.Highlight))
 
 	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as an input")
+		"include a string as input")
 
 	cmd.Flags().StringVar(&cmd.altInputStr, "alt-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")

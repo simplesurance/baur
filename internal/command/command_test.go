@@ -62,7 +62,7 @@ type csvStatus struct {
 }
 
 // baurCSVStatus runs "baur status --csv" and returns the result.
-func baurCSVStatus(t *testing.T, inputStr string, altInputStr string) []*csvStatus {
+func baurCSVStatus(t *testing.T, inputStr, altInputStr string) []*csvStatus {
 	t.Helper()
 
 	stdoutBuf, _ := interceptCmdOutput()
@@ -93,12 +93,14 @@ func baurCSVStatus(t *testing.T, inputStr string, altInputStr string) []*csvStat
 
 func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, expectedStatus baur.TaskStatus, commit string) {
 	var taskIds []string
+
 	for _, task := range statusOut {
 		taskIds = append(taskIds, task.taskID)
 
 		assert.Equal(t, expectedStatus.String(), task.status)
 		assert.Equal(t, commit, task.commit)
 	}
+
 	assert.ElementsMatch(t, taskIds, r.TaskIDs(), "baur status is missing some tasks")
 }
 
