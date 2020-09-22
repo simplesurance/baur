@@ -14,8 +14,8 @@ type TaskStatusEvaluator struct {
 	inputResolver *InputResolver
 	store         storage.Storer
 
-	inputStr    string
-	altInputStr string
+	inputStr       string
+	lookupInputStr string
 }
 
 // NewTaskStatusEvaluator returns a new TaskSNewTaskStatusEvaluator.
@@ -24,14 +24,14 @@ func NewTaskStatusEvaluator(
 	store storage.Storer,
 	inputResolver *InputResolver,
 	inputStr string,
-	altInputStr string,
+	lookupInputStr string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
-		repositoryDir: repositoryDir,
-		inputResolver: inputResolver,
-		store:         store,
-		inputStr:      inputStr,
-		altInputStr:   altInputStr,
+		repositoryDir:  repositoryDir,
+		inputResolver:  inputResolver,
+		store:          store,
+		inputStr:       inputStr,
+		lookupInputStr: lookupInputStr,
 	}
 }
 
@@ -60,20 +60,20 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	if t.altInputStr == "" || taskStatus != TaskStatusExecutionPending {
+	if t.lookupInputStr == "" || taskStatus != TaskStatusExecutionPending {
 		return taskStatus, inputs, run, err
 	}
 
-	inputsWaltInputStr := NewInputs(append(inputFiles, NewInputString(t.altInputStr)))
-	taskStatus, run, err = t.getTaskStatus(ctx, inputsWaltInputStr, task)
+	inputsLookupStr := NewInputs(append(inputFiles, NewInputString(t.lookupInputStr)))
+	taskStatus, run, err = t.getTaskStatus(ctx, inputsLookupStr, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	// inputs instead of inputsWaltInputStr must be returned, if the task
+	// inputs instead of inputsLookupInputStr must be returned, if the task
 	// must be run it should be recorded with the inputStr not with the
 	// altInputStr
-	return taskStatus, inputs, run, err
+	return taskStatus, inputsLookupStr, run, err
 }
 
 func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs *Inputs, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {

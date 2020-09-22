@@ -62,7 +62,7 @@ type csvStatus struct {
 }
 
 // baurCSVStatus runs "baur status --csv" and returns the result.
-func baurCSVStatus(t *testing.T, inputStr, altInputStr string) []*csvStatus {
+func baurCSVStatus(t *testing.T, inputStr, lookupInputStr string) []*csvStatus {
 	t.Helper()
 
 	stdoutBuf, _ := interceptCmdOutput()
@@ -70,7 +70,7 @@ func baurCSVStatus(t *testing.T, inputStr, altInputStr string) []*csvStatus {
 	statusCmd := newStatusCmd()
 	statusCmd.csv = true
 	statusCmd.inputStr = inputStr
-	statusCmd.altInputStr = altInputStr
+	statusCmd.lookupInputStr = lookupInputStr
 
 	statusCmd.Command.Run(&statusCmd.Command, nil)
 
@@ -206,13 +206,13 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
 }
 
-// TestAltInputStringReturnsRunExistsStatusWhenInputStringRunExists creates a new baur repository with a
+// TestLookupInputStringReturnsRunExistsStatusWhenInputStringRunExists creates a new baur repository with a
 // simple app then runs:
 // - "baur run with an input string of feature-x"
 // - "baur status with an input string of feature-x", ensures all apps are listed and have status run exist
 // - "baur status with an input string of feature-y", ensures all apps are listed and have status pending,
-// - "baur status with an input string of feature-y and alt input string of feature-x", ensures all apps are listed and have status run exist
-func TestAltInputStringReturnsRunExistsStatusWhenInputStringRunExists(t *testing.T) {
+// - "baur status with an input string of feature-y and lookup input string of feature-x", ensures all apps are listed and have status run exist
+func TestLookupInputStringReturnsRunExistsStatusWhenInputStringRunExists(t *testing.T) {
 	initTest(t)
 
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
