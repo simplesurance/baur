@@ -50,9 +50,9 @@ func (t *TaskInclude) Validate() error {
 	return nil
 }
 
-// DeepCopyToTask converts the TaskInclude to a Task.
+// toTask converts the TaskInclude to a Task.
 // All fields are copied.
-func (t *TaskInclude) DeepCopyToTask() *Task {
+func (t *TaskInclude) toTask() *Task {
 	var result Task
 
 	result.Name = t.Name

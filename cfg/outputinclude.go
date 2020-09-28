@@ -1,6 +1,10 @@
 package cfg
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/simplesurance/baur/v1/internal/deepcopy"
+)
 
 // OutputInclude is a reusable Output definition
 type OutputInclude struct {
@@ -36,4 +40,11 @@ func (out *OutputInclude) Validate() error {
 	}
 
 	return nil
+}
+
+func (out *OutputInclude) clone() *OutputInclude {
+	var clone OutputInclude
+	deepcopy.MustCopy(out, &clone)
+
+	return &clone
 }
