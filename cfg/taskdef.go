@@ -18,7 +18,7 @@ type TaskDef interface {
 // TaskMerge loads the includes of the task and merges them with the task itself.
 func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, includeDB *IncludeDB) error {
 	for _, includeSpec := range *task.GetIncludes() {
-		inputInclude, err := includeDB.LoadInputInclude(resolver, workingDir, includeSpec)
+		inputInclude, err := includeDB.loadInputInclude(resolver, workingDir, includeSpec)
 		if err == nil {
 			task.GetInput().Merge(inputInclude)
 
@@ -32,7 +32,7 @@ func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, incl
 			return FieldErrorWrap(fmt.Errorf("%q: %w", includeSpec, err), "Includes")
 		}
 
-		outputInclude, err := includeDB.LoadOutputInclude(resolver, workingDir, includeSpec)
+		outputInclude, err := includeDB.loadOutputInclude(resolver, workingDir, includeSpec)
 		if err != nil {
 			if err == ErrIncludeIDNotFound {
 				return FieldErrorWrap(fmt.Errorf("%q: %w", includeSpec, err), "Includes")

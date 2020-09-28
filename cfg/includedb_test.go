@@ -124,7 +124,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 	cfgToFile(t, include, filepath.Join(tmpdir, inclFilePath))
 
 	includeDB := NewIncludeDB(t.Logf)
-	loadedIncl, err := includeDB.LoadTaskInclude(
+	loadedIncl, err := includeDB.loadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
 		inclFilePath+"#"+include.Task[0].IncludeID,
@@ -184,7 +184,7 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
 	includeDB := NewIncludeDB(t.Logf)
-	loadedIncl, err := includeDB.LoadTaskInclude(
+	loadedIncl, err := includeDB.loadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
@@ -225,7 +225,7 @@ func TestIncludePathsAreRelativeToCfg(t *testing.T) {
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
 	includeDB := NewIncludeDB(t.Logf)
-	loadedIncl, err := includeDB.LoadTaskInclude(
+	loadedIncl, err := includeDB.loadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
@@ -261,7 +261,7 @@ func TestAbsIncludePathsFail(t *testing.T) {
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
 	includeDB := NewIncludeDB(t.Logf)
-	loadedIncl, err := includeDB.LoadTaskInclude(
+	loadedIncl, err := includeDB.loadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
 		taskInclFilename+"#"+taskIncl.Task[0].IncludeID,
@@ -289,7 +289,7 @@ func TestEnsureInputIncludeIDsMustBeUnique(t *testing.T) {
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
 	includeDB := NewIncludeDB(t.Logf)
-	loadedIncl, err := includeDB.LoadTaskInclude(
+	loadedIncl, err := includeDB.loadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
@@ -318,7 +318,7 @@ func TestEnsureOutputIncludeIDsMustBeUnique(t *testing.T) {
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
 
 	includeDB := NewIncludeDB(t.Logf)
-	loadedIncl, err := includeDB.LoadTaskInclude(
+	loadedIncl, err := includeDB.loadTaskInclude(
 		&resolver.StrReplacement{Old: "$NOTHING"},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
