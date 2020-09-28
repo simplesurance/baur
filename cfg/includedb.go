@@ -39,12 +39,12 @@ func NewIncludeDB(logf LogFn) *IncludeDB {
 	}
 }
 
-// LoadTaskInclude loads the TaskInclude with the given ID.
+// loadTaskInclude loads the TaskInclude with the given ID.
 // If the include was loaded before it is retrieved from the db.
 // If it wasn't the include file is loaded and added to the db.
 // If the file exist but does not have an include with the specified ID,
 // IncludeIDNotFoundError is returned.
-func (db *IncludeDB) LoadTaskInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*TaskInclude, error) {
+func (db *IncludeDB) loadTaskInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*TaskInclude, error) {
 	absPath, id, err := db.parseIncludeSpec(resolver, workingDir, includeSpec)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", includeSpecifier(absPath, id), err)
@@ -70,12 +70,12 @@ func (db *IncludeDB) LoadTaskInclude(resolver resolver.Resolver, workingDir, inc
 	return include, nil
 }
 
-// LoadInputInclude loads the InputInclude with the given ID.
+// loadInputInclude loads the InputInclude with the given ID.
 // If the include was loaded before it is retrieved from the db.
 // If it wasn't the include file is loaded and added to the db.
 // If the file exist but does not have an include with the specified ID,
 // IncludeIDNotFoundError is returned.
-func (db *IncludeDB) LoadInputInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*InputInclude, error) {
+func (db *IncludeDB) loadInputInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*InputInclude, error) {
 	absPath, id, err := db.parseIncludeSpec(resolver, workingDir, includeSpec)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", includeSpecifier(absPath, id), err)
@@ -106,12 +106,12 @@ func (db *IncludeDB) LoadInputInclude(resolver resolver.Resolver, workingDir, in
 	return include, nil
 }
 
-// LoadOutputInclude loads the OutputInclude with the given ID.
+// loadOutputInclude loads the OutputInclude with the given ID.
 // If the include was loaded before it is retrieved from the db.
 // If it wasn't the include file is loaded and added to the db.
 // If the file exist but does not have an include with the specified ID,
 // IncludeIDNotFoundError is returned.
-func (db *IncludeDB) LoadOutputInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*OutputInclude, error) {
+func (db *IncludeDB) loadOutputInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*OutputInclude, error) {
 	absPath, id, err := db.parseIncludeSpec(resolver, workingDir, includeSpec)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", includeSpecifier(absPath, id), err)

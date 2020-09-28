@@ -117,7 +117,7 @@ func (a *App) Resolve(resolvers resolver.Resolver) error {
 // then appeneded to the task list.
 func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver) error {
 	for _, includeID := range a.Includes {
-		include, err := includedb.LoadTaskInclude(includeSpecResolvers, filepath.Dir(a.filepath), includeID)
+		include, err := includedb.loadTaskInclude(includeSpecResolvers, filepath.Dir(a.filepath), includeID)
 		if err != nil {
 			if errors.Is(err, ErrIncludeIDNotFound) {
 				return fmt.Errorf("%s: Task include with given ID not found in include file", includeID)
