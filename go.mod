@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.34.32
 	github.com/fatih/color v1.9.0
 	github.com/fsouza/go-dockerclient v1.6.5
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/jackc/pgconn v1.7.0
 	github.com/jackc/pgx/v4 v4.9.0
 	github.com/pelletier/go-toml v1.8.0
