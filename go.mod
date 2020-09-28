@@ -7,8 +7,8 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/fsouza/go-dockerclient v1.6.5
 	github.com/google/uuid v1.1.1
-	github.com/jackc/pgconn v1.5.0
-	github.com/jackc/pgx/v4 v4.6.0
+	github.com/jackc/pgconn v1.7.0
+	github.com/jackc/pgx/v4 v4.9.0
 	github.com/pelletier/go-toml v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/simplesurance/baur v0.18.1

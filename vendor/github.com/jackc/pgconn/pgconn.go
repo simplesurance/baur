@@ -84,11 +84,15 @@ type PgConn struct {
 	bufferingReceiveMsg pgproto3.BackendMessage
 	bufferingReceiveErr error
 
+	peekedMsg pgproto3.BackendMessage
+
 	// Reusable / preallocated resources
 	wbuf              []byte // write buffer
 	resultReader      ResultReader
 	multiResultReader MultiResultReader
 	contextWatcher    *ctxwatch.ContextWatcher
+
+	cleanupDone chan struct{}
 }
 
 // Connect establishes a connection to a PostgreSQL server using the environment and connString (in URL or DSN format)
@@ -116,6 +120,12 @@ func ConnectConfig(ctx context.Context, config *Config) (pgConn *PgConn, err err
 		panic("config must be created by ParseConfig")
 	}
 
+	// ConnectTimeout restricts the whole connection process.
+	if config.ConnectTimeout != 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, config.ConnectTimeout)
+		defer cancel()
+	}
 	// Simplify usage by treating primary config and fallbacks the same.
 	fallbackConfigs := []*FallbackConfig{
 		{
@@ -195,6 +205,7 @@ func connect(ctx context.Context, config *Config, fallbackConfig *FallbackConfig
 	pgConn := new(PgConn)
 	pgConn.config = config
 	pgConn.wbuf = make([]byte, 0, wbufLen)
+	pgConn.cleanupDone = make(chan struct{})
 
 	var err error
 	network, address := NetworkAddress(fallbackConfig.Host, fallbackConfig.Port)
@@ -282,6 +293,13 @@ func connect(ctx context.Context, config *Config, fallbackConfig *FallbackConfig
 		case *pgproto3.ReadyForQuery:
 			pgConn.status = connStatusIdle
 			if config.ValidateConnect != nil {
+				// ValidateConnect may execute commands that cause the context to be watched again. Unwatch first to avoid
+				// the watch already in progress panic. This is that last thing done by this method so there is no need to
+				// restart the watch after ValidateConnect returns.
+				//
+				// See https://github.com/jackc/pgconn/issues/40.
+				pgConn.contextWatcher.Unwatch()
+
 				err := config.ValidateConnect(ctx, pgConn)
 				if err != nil {
 					pgConn.conn.Close()
@@ -411,8 +429,12 @@ func (pgConn *PgConn) ReceiveMessage(ctx context.Context) (pgproto3.BackendMessa
 	return msg, err
 }
 
-// receiveMessage receives a message without setting up context cancellation
-func (pgConn *PgConn) receiveMessage() (pgproto3.BackendMessage, error) {
+// peekMessage peeks at the next message without setting up context cancellation.
+func (pgConn *PgConn) peekMessage() (pgproto3.BackendMessage, error) {
+	if pgConn.peekedMsg != nil {
+		return pgConn.peekedMsg, nil
+	}
+
 	var msg pgproto3.BackendMessage
 	var err error
 	if pgConn.bufferingReceive {
@@ -438,6 +460,23 @@ func (pgConn *PgConn) receiveMessage() (pgproto3.BackendMessage, error) {
 
 		return nil, err
 	}
+
+	pgConn.peekedMsg = msg
+	return msg, nil
+}
+
+// receiveMessage receives a message without setting up context cancellation
+func (pgConn *PgConn) receiveMessage() (pgproto3.BackendMessage, error) {
+	msg, err := pgConn.peekMessage()
+	if err != nil {
+		// Close on anything other than timeout error - everything else is fatal
+		if err, ok := err.(net.Error); !(ok && err.Timeout()) {
+			pgConn.asyncClose()
+		}
+
+		return nil, err
+	}
+	pgConn.peekedMsg = nil
 
 	switch msg := msg.(type) {
 	case *pgproto3.ReadyForQuery:
@@ -491,9 +530,17 @@ func (pgConn *PgConn) Close(ctx context.Context) error {
 	}
 	pgConn.status = connStatusClosed
 
+	defer close(pgConn.cleanupDone)
 	defer pgConn.conn.Close()
 
 	if ctx != context.Background() {
+		// Close may be called while a cancellable query is in progress. This will most often be triggered by panic when
+		// a defer closes the connection (possibly indirectly via a transaction or a connection pool). Unwatch to end any
+		// previous watch. It is safe to Unwatch regardless of whether a watch is already is progress.
+		//
+		// See https://github.com/jackc/pgconn/issues/29
+		pgConn.contextWatcher.Unwatch()
+
 		pgConn.contextWatcher.Watch(ctx)
 		defer pgConn.contextWatcher.Unwatch()
 	}
@@ -518,6 +565,7 @@ func (pgConn *PgConn) asyncClose() {
 	pgConn.status = connStatusClosed
 
 	go func() {
+		defer close(pgConn.cleanupDone)
 		defer pgConn.conn.Close()
 
 		deadline := time.Now().Add(time.Second * 15)
@@ -534,7 +582,21 @@ func (pgConn *PgConn) asyncClose() {
 	}()
 }
 
+// CleanupDone returns a channel that will be closed after all underlying resources have been cleaned up. A closed
+// connection is no longer usable, but underlying resources, in particular the net.Conn, may not have finished closing
+// yet. This is because certain errors such as a context cancellation require that the interrupted function call return
+// immediately, but the error may also cause the connection to be closed. In these cases the underlying resources are
+// closed asynchronously.
+//
+// This is only likely to be useful to connection pools. It gives them a way avoid establishing a new connection while
+// an old connection is still being cleaned up and thereby exceeding the maximum pool size.
+func (pgConn *PgConn) CleanupDone() chan (struct{}) {
+	return pgConn.cleanupDone
+}
+
 // IsClosed reports if the connection has been closed.
+//
+// CleanupDone() can be used to determine if all cleanup has been completed.
 func (pgConn *PgConn) IsClosed() bool {
 	return pgConn.status < connStatusIdle
 }
@@ -865,6 +927,39 @@ func (pgConn *PgConn) Exec(ctx context.Context, sql string) *MultiResultReader {
 	return multiResult
 }
 
+// ReceiveResults reads the result that might be returned by Postgres after a SendBytes
+// (e.a. after sending a CopyDone in a copy-both situation).
+//
+// This is a very low level method that requires deep understanding of the PostgreSQL wire protocol to use correctly.
+// See https://www.postgresql.org/docs/current/protocol.html.
+func (pgConn *PgConn) ReceiveResults(ctx context.Context) *MultiResultReader {
+	if err := pgConn.lock(); err != nil {
+		return &MultiResultReader{
+			closed: true,
+			err:    err,
+		}
+	}
+
+	pgConn.multiResultReader = MultiResultReader{
+		pgConn: pgConn,
+		ctx:    ctx,
+	}
+	multiResult := &pgConn.multiResultReader
+	if ctx != context.Background() {
+		select {
+		case <-ctx.Done():
+			multiResult.closed = true
+			multiResult.err = &contextAlreadyDoneError{err: ctx.Err()}
+			pgConn.unlock()
+			return multiResult
+		default:
+		}
+		pgConn.contextWatcher.Watch(ctx)
+	}
+
+	return multiResult
+}
+
 // ExecParams executes a command via the PostgreSQL extended query protocol.
 //
 // sql is a SQL command string. It may only contain one query. Parameter substitution is positional using $1, $2, $3,
@@ -877,11 +972,11 @@ func (pgConn *PgConn) Exec(ctx context.Context, sql string) *MultiResultReader {
 // ExecParams will panic if len(paramOIDs) is not 0, 1, or len(paramValues).
 //
 // paramFormats is a slice of format codes determining for each paramValue column whether it is encoded in text or
-// binary format. If paramFormats is nil all results will be in text protocol. ExecParams will panic if
+// binary format. If paramFormats is nil all params are text format. ExecParams will panic if
 // len(paramFormats) is not 0, 1, or len(paramValues).
 //
 // resultFormats is a slice of format codes determining for each result column whether it is encoded in text or
-// binary format. If resultFormats is nil all results will be in text protocol.
+// binary format. If resultFormats is nil all results will be in text format.
 //
 // ResultReader must be closed before PgConn can be used again.
 func (pgConn *PgConn) ExecParams(ctx context.Context, sql string, paramValues [][]byte, paramOIDs []uint32, paramFormats []int16, resultFormats []int16) *ResultReader {
@@ -904,11 +999,11 @@ func (pgConn *PgConn) ExecParams(ctx context.Context, sql string, paramValues []
 // paramValues are the parameter values. It must be encoded in the format given by paramFormats.
 //
 // paramFormats is a slice of format codes determining for each paramValue column whether it is encoded in text or
-// binary format. If paramFormats is nil all results will be in text protocol. ExecPrepared will panic if
+// binary format. If paramFormats is nil all params are text format. ExecPrepared will panic if
 // len(paramFormats) is not 0, 1, or len(paramValues).
 //
 // resultFormats is a slice of format codes determining for each result column whether it is encoded in text or
-// binary format. If resultFormats is nil all results will be in text protocol.
+// binary format. If resultFormats is nil all results will be in text format.
 //
 // ResultReader must be closed before PgConn can be used again.
 func (pgConn *PgConn) ExecPrepared(ctx context.Context, stmtName string, paramValues [][]byte, paramFormats []int16, resultFormats []int16) *ResultReader {
@@ -972,7 +1067,10 @@ func (pgConn *PgConn) execExtendedSuffix(buf []byte, result *ResultReader) {
 		pgConn.contextWatcher.Unwatch()
 		result.closed = true
 		pgConn.unlock()
+		return
 	}
+
+	result.readUntilRowDescription()
 }
 
 // CopyTo executes the copy command sql and copies the results to w.
@@ -1138,7 +1236,6 @@ func (pgConn *PgConn) CopyFrom(ctx context.Context, r io.Reader, sql string) (Co
 			default:
 				signalMessageChan = pgConn.signalMessage()
 			}
-		default:
 		}
 	}
 	close(abortCopyChan)
@@ -1383,6 +1480,26 @@ func (rr *ResultReader) Close() (CommandTag, error) {
 	return rr.commandTag, rr.err
 }
 
+// readUntilRowDescription ensures the ResultReader's fieldDescriptions are loaded. It does not return an error as any
+// error will be stored in the ResultReader.
+func (rr *ResultReader) readUntilRowDescription() {
+	for !rr.commandConcluded {
+		// Peek before receive to avoid consuming a DataRow if the result set does not include a RowDescription method.
+		// This should never happen under normal pgconn usage, but it is possible if SendBytes and ReceiveResults are
+		// manually used to construct a query that does not issue a describe statement.
+		msg, _ := rr.pgConn.peekMessage()
+		if _, ok := msg.(*pgproto3.DataRow); ok {
+			return
+		}
+
+		// Consume the message
+		msg, _ = rr.receiveMessage()
+		if _, ok := msg.(*pgproto3.RowDescription); ok {
+			return
+		}
+	}
+}
+
 func (rr *ResultReader) receiveMessage() (msg pgproto3.BackendMessage, err error) {
 	if rr.multiResultReader == nil {
 		msg, err = rr.pgConn.receiveMessage()
@@ -1416,13 +1533,17 @@ func (rr *ResultReader) receiveMessage() (msg pgproto3.BackendMessage, err error
 }
 
 func (rr *ResultReader) concludeCommand(commandTag CommandTag, err error) {
+	// Keep the first error that is recorded. Store the error before checking if the command is already concluded to
+	// allow for receiving an error after CommandComplete but before ReadyForQuery.
+	if err != nil && rr.err == nil {
+		rr.err = err
+	}
+
 	if rr.commandConcluded {
 		return
 	}
 
 	rr.commandTag = commandTag
-	rr.err = err
-	rr.fieldDescriptions = nil
 	rr.rowValues = nil
 	rr.commandConcluded = true
 }
@@ -1562,7 +1683,8 @@ func Construct(hc *HijackedConn) (*PgConn, error) {
 
 		status: connStatusIdle,
 
-		wbuf: make([]byte, 0, wbufLen),
+		wbuf:        make([]byte, 0, wbufLen),
+		cleanupDone: make(chan struct{}),
 	}
 
 	pgConn.contextWatcher = ctxwatch.NewContextWatcher(
