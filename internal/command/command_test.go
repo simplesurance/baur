@@ -138,8 +138,7 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 			runInitDb(t)
 
 			if tc.withGitRepository {
-				_, err := exec.Command("git", "init", ".").ExpectSuccess().Run()
-				assert.NoError(t, err)
+				gittest.CreateRepository(t, ".")
 
 				gittest.CommitFilesToGit(t, ".")
 
@@ -177,8 +176,8 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 	runInitDb(t)
 
 	var commit string
-	_, err := exec.Command("git", "init", ".").ExpectSuccess().Run()
-	assert.NoError(t, err)
+
+	gittest.CreateRepository(t, ".")
 
 	gittest.CommitFilesToGit(t, ".")
 

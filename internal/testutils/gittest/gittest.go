@@ -61,3 +61,8 @@ func Clone(t *testing.T, directory, gitURL, commit string) {
 	_, err = exec.Command("git", "checkout", commit).Directory(directory).ExpectSuccess().Run()
 	require.NoError(t, err)
 }
+
+func CreateRepository(t *testing.T, directory string) {
+	_, err := exec.Command("git", "init", ".").Directory(directory).ExpectSuccess().Run()
+	require.NoError(t, err)
+}
