@@ -1,6 +1,7 @@
 package pgtype
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/binary"
 	"fmt"
@@ -23,7 +24,54 @@ type Point struct {
 }
 
 func (dst *Point) Set(src interface{}) error {
-	return errors.Errorf("cannot convert %v to Point", src)
+	if src == nil {
+		dst.Status = Null
+		return nil
+	}
+	err := errors.Errorf("cannot convert %v to Point", src)
+	var p *Point
+	switch value := src.(type) {
+	case string:
+		p, err = parsePoint([]byte(value))
+	case []byte:
+		p, err = parsePoint(value)
+	default:
+		return err
+	}
+	if err != nil {
+		return err
+	}
+	*dst = *p
+	return nil
+}
+
+func parsePoint(src []byte) (*Point, error) {
+	if src == nil || bytes.Compare(src, []byte("null")) == 0 {
+		return &Point{Status: Null}, nil
+	}
+
+	if len(src) < 5 {
+		return nil, errors.Errorf("invalid length for point: %v", len(src))
+	}
+	if src[0] == '"' && src[len(src)-1] == '"' {
+		src = src[1 : len(src)-1]
+	}
+	parts := strings.SplitN(string(src[1:len(src)-1]), ",", 2)
+	if len(parts) < 2 {
+		return nil, errors.Errorf("invalid format for point")
+	}
+
+	x, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		return nil, err
+	}
+
+	y, err := strconv.ParseFloat(parts[1], 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Point{P: Vec2{x, y}, Status: Present}, nil
 }
 
 func (dst Point) Get() interface{} {
@@ -139,4 +187,29 @@ func (dst *Point) Scan(src interface{}) error {
 // Value implements the database/sql/driver Valuer interface.
 func (src Point) Value() (driver.Value, error) {
 	return EncodeValueText(src)
+}
+
+func (src Point) MarshalJSON() ([]byte, error) {
+	switch src.Status {
+	case Present:
+		var buff bytes.Buffer
+		buff.WriteByte('"')
+		buff.WriteString(fmt.Sprintf("(%g,%g)", src.P.X, src.P.Y))
+		buff.WriteByte('"')
+		return buff.Bytes(), nil
+	case Null:
+		return []byte("null"), nil
+	case Undefined:
+		return nil, errUndefined
+	}
+	return nil, errBadStatus
+}
+
+func (dst *Point) UnmarshalJSON(point []byte) error {
+	p, err := parsePoint(point)
+	if err != nil {
+		return err
+	}
+	*dst = *p
+	return nil
 }
