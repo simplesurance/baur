@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/aws/aws-sdk-go v1.34.32
 	github.com/fatih/color v1.9.0
-	github.com/fsouza/go-dockerclient v1.6.0
+	github.com/fsouza/go-dockerclient v1.6.5
 	github.com/google/uuid v1.1.1
 	github.com/jackc/pgconn v1.5.0
 	github.com/jackc/pgx/v4 v4.6.0
