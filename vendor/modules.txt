@@ -92,7 +92,7 @@ github.com/docker/docker/pkg/term/windows
 github.com/docker/go-connections/nat
 # github.com/docker/go-units v0.4.0
 github.com/docker/go-units
-# github.com/fatih/color v1.7.0
+# github.com/fatih/color v1.9.0
 ## explicit
 github.com/fatih/color
 # github.com/fsouza/go-dockerclient v1.6.0
@@ -139,9 +139,9 @@ github.com/jackc/puddle
 github.com/jmespath/go-jmespath
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
 github.com/konsorten/go-windows-terminal-sequences
-# github.com/mattn/go-colorable v0.1.2
+# github.com/mattn/go-colorable v0.1.4
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.9
+# github.com/mattn/go-isatty v0.0.11
 github.com/mattn/go-isatty
 # github.com/morikuni/aec v1.0.0
 github.com/morikuni/aec
