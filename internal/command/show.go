@@ -153,6 +153,7 @@ func (*showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 
 		for i, f := range task.UnresolvedInputs.Files {
 			mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
+			mustWriteRow(formatter, "", "", "Optional:", term.Highlight(f.Optional))
 			mustWriteStringSliceRows(formatter, "Paths:", 2, f.Paths)
 
 			if i+1 < len(task.UnresolvedInputs.Files) {
@@ -166,6 +167,7 @@ func (*showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 
 		for i, g := range task.UnresolvedInputs.GitFiles {
 			mustWriteRow(formatter, "", "", "Type:", term.Highlight("GitFile"))
+			mustWriteRow(formatter, "", "", "Optional:", term.Highlight(g.Optional))
 			mustWriteStringSliceRows(formatter, "Paths:", 2, g.Paths)
 
 			if i+1 < len(task.UnresolvedInputs.GitFiles) {

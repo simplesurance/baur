@@ -35,10 +35,16 @@ func CommitFilesToGit(t *testing.T, directory string) []string {
 
 	require.NoError(t, err)
 
-	_, err = exec.Command("git", append([]string{"add"}, files...)...).ExpectSuccess().Run()
+	_, err = exec.Command("git", append([]string{"add"}, files...)...).
+		Directory(directory).
+		ExpectSuccess().
+		Run()
 	require.NoError(t, err)
 
-	_, err = exec.Command("git", "commit", "-a", "-m", "baur commit").ExpectSuccess().Run()
+	_, err = exec.Command("git", "commit", "-a", "-m", "baur commit").
+		Directory(directory).
+		ExpectSuccess().
+		Run()
 	require.NoError(t, err)
 
 	return files

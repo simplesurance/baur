@@ -16,12 +16,12 @@ type Resolver struct{}
 // Resolve resolves the glob paths to absolute file paths by calling git ls-files.
 // workingDir must be a directory that is part of a Git repository.
 // If a resolved file does not exist an error is returned.
-func (r *Resolver) Resolve(workingDir string, globs ...string) ([]string, error) {
+func (r *Resolver) Resolve(workingDir string, errorUnmatch bool, globs ...string) ([]string, error) {
 	if len(globs) == 0 {
 		return []string{}, nil
 	}
 
-	out, err := git.LsFiles(workingDir, globs...)
+	out, err := git.LsFiles(workingDir, errorUnmatch, globs...)
 	if err != nil {
 		return nil, err
 	}

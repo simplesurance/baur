@@ -71,12 +71,12 @@ func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, in
 			return nil, nil
 		}
 
-		gitPaths, err := i.gitGlobPathResolver.Resolve(appDir, in.Paths...)
+		gitPaths, err := i.gitGlobPathResolver.Resolve(appDir, !in.Optional, in.Paths...)
 		if err != nil {
 			return nil, err
 		}
 
-		if len(gitPaths) == 0 {
+		if !in.Optional && len(gitPaths) == 0 {
 			return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(in.Paths, ", "))
 		}
 
@@ -105,7 +105,7 @@ func (i *InputResolver) resolveGlobPaths(appDir string, inputs []cfg.FileInputs)
 				return nil, err
 			}
 
-			if len(resolvedPaths) == 0 {
+			if !in.Optional && len(resolvedPaths) == 0 {
 				return nil, fmt.Errorf("'%s' matched 0 files", path)
 			}
 
