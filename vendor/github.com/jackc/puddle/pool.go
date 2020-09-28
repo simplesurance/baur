@@ -64,7 +64,7 @@ func (res *Resource) Destroy() {
 	if res.status != resourceStatusAcquired {
 		panic("tried to destroy resource that is not acquired")
 	}
-	res.pool.destroyAcquiredResource(res)
+	go res.pool.destroyAcquiredResource(res)
 }
 
 // Hijack assumes ownership of the resource from the pool. Caller is responsible
@@ -144,6 +144,10 @@ func NewPool(constructor Constructor, destructor Destructor, maxSize int32) *Poo
 // Blocks until all resources are returned to pool and destroyed.
 func (p *Pool) Close() {
 	p.cond.L.Lock()
+	if p.closed {
+		p.cond.L.Unlock()
+		return
+	}
 	p.closed = true
 
 	for _, res := range p.idleResources {
@@ -357,6 +361,10 @@ func (p *Pool) Acquire(ctx context.Context) (*Resource, error) {
 // statistics.
 func (p *Pool) AcquireAllIdle() []*Resource {
 	p.cond.L.Lock()
+	if p.closed {
+		p.cond.L.Unlock()
+		return nil
+	}
 
 	for _, res := range p.idleResources {
 		res.status = resourceStatusAcquired
@@ -373,6 +381,12 @@ func (p *Pool) AcquireAllIdle() []*Resource {
 // It goes straight in the IdlePool. It does not check against maxSize.
 // It can be useful to maintain warm resources under little load.
 func (p *Pool) CreateResource(ctx context.Context) error {
+	p.cond.L.Lock()
+	if p.closed {
+		p.cond.L.Unlock()
+		return ErrClosedPool
+	}
+	p.cond.L.Unlock()
 
 	value, err := p.constructResourceValue(ctx)
 	if err != nil {
@@ -386,11 +400,16 @@ func (p *Pool) CreateResource(ctx context.Context) error {
 		value:        value,
 		lastUsedNano: nanotime(),
 	}
+	p.destructWG.Add(1)
 
 	p.cond.L.Lock()
+	// If closed while constructing resource then destroy it and return an error
+	if p.closed {
+		go p.destructResourceValue(res.value)
+		return ErrClosedPool
+	}
 	p.allResources = append(p.allResources, res)
 	p.idleResources = append(p.idleResources, res)
-	p.destructWG.Add(1)
 	p.cond.L.Unlock()
 
 	return nil
@@ -416,11 +435,9 @@ func (p *Pool) releaseAcquiredResource(res *Resource, lastUsedNano int64) {
 // Remove removes res from the pool and closes it. If res is not part of the
 // pool Remove will panic.
 func (p *Pool) destroyAcquiredResource(res *Resource) {
+	p.destructResourceValue(res.value)
 	p.cond.L.Lock()
-
 	p.allResources = removeResource(p.allResources, res)
-	go p.destructResourceValue(res.value)
-
 	p.cond.L.Unlock()
 	p.cond.Signal()
 }

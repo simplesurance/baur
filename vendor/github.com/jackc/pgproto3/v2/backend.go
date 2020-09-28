@@ -19,6 +19,7 @@ type Backend struct {
 	describe        Describe
 	execute         Execute
 	flush           Flush
+	gssEncRequest   GSSEncRequest
 	parse           Parse
 	passwordMessage PasswordMessage
 	query           Query
@@ -45,7 +46,7 @@ func (b *Backend) Send(msg BackendMessage) error {
 
 // ReceiveStartupMessage receives the initial connection message. This method is used of the normal Receive method
 // because the initial connection message is "special" and does not include the message type as the first byte. This
-// will return either a StartupMessage, SSLRequest, or CancelRequest.
+// will return either a StartupMessage, SSLRequest, GSSEncRequest, or CancelRequest.
 func (b *Backend) ReceiveStartupMessage() (FrontendMessage, error) {
 	buf, err := b.cr.Next(4)
 	if err != nil {
@@ -79,12 +80,18 @@ func (b *Backend) ReceiveStartupMessage() (FrontendMessage, error) {
 			return nil, err
 		}
 		return &b.cancelRequest, nil
+	case gssEncReqNumber:
+		err = b.gssEncRequest.Decode(buf)
+		if err != nil {
+			return nil, err
+		}
+		return &b.gssEncRequest, nil
 	default:
 		return nil, fmt.Errorf("unknown startup message code: %d", code)
 	}
 }
 
-// Receive receives a message from the frontend.
+// Receive receives a message from the frontend. The returned message is only valid until the next call to Receive.
 func (b *Backend) Receive() (FrontendMessage, error) {
 	if !b.partialMsg {
 		header, err := b.cr.Next(5)

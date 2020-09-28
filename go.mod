@@ -3,17 +3,30 @@ module github.com/simplesurance/baur/v1
 go 1.15
 
 require (
-	github.com/aws/aws-sdk-go v1.28.9
-	github.com/fatih/color v1.7.0
-	github.com/fsouza/go-dockerclient v1.6.0
-	github.com/google/uuid v1.1.1
-	github.com/jackc/pgconn v1.5.0
-	github.com/jackc/pgx/v4 v4.6.0
+	github.com/Microsoft/hcsshim v0.8.10 // indirect
+	github.com/aws/aws-sdk-go v1.34.32
+	github.com/containerd/containerd v1.4.1 // indirect
+	github.com/containerd/continuity v0.0.0-20200927060012-aaa88831d126 // indirect
+	github.com/fatih/color v1.9.0
+	github.com/fsouza/go-dockerclient v1.6.5
+	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/google/uuid v1.1.2
+	github.com/jackc/pgconn v1.7.0
+	github.com/jackc/pgx/v4 v4.9.0
+	github.com/mattn/go-colorable v0.1.7 // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/simplesurance/baur v0.18.1
-	github.com/spf13/cobra v0.0.3
-	github.com/stretchr/testify v1.5.1
-	golang.org/x/tools v0.0.0-20200823205832-c024452afbcd
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	github.com/sirupsen/logrus v1.7.0 // indirect
+	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/testify v1.6.1
+	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
+	golang.org/x/sys v0.0.0-20200926100807-9d91bd62050c // indirect
+	golang.org/x/tools v0.0.0-20200928112810-42b62fc93869
+	google.golang.org/genproto v0.0.0-20200925023002-c2d885f95484 // indirect
+	google.golang.org/grpc v1.32.0 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )

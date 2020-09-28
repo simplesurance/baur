@@ -16,6 +16,6 @@ docker run \
 	-p 127.0.0.1:$PSQL_PORT:5432 \
 	-e POSTGRES_HOST_AUTH_METHOD=trust \
 	-e POSTGRES_DB=baur \
-	postgres:latest
+	postgres:12
 
 echo "Started docker PostgreSQL container on port $PSQL_PORT"

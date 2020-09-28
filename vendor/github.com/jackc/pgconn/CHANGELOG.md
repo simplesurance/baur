@@ -1,3 +1,41 @@
+# 1.7.0 (September 26, 2020)
+
+* Exec(Params|Prepared) return ResultReader with FieldDescriptions loaded
+* Add ReceiveResults (Sebastiaan Mannem)
+* Fix parsing DSN connection with bad backslash
+* Add PgConn.CleanupDone so connection pools can determine when async close is complete
+
+# 1.6.4 (July 29, 2020)
+
+* Fix deadlock on error after CommandComplete but before ReadyForQuery
+* Fix panic on parsing DSN with trailing '='
+
+# 1.6.3 (July 22, 2020)
+
+* Fix error message after AppendCertsFromPEM failure (vahid-sohrabloo)
+
+# 1.6.2 (July 14, 2020)
+
+* Update pgservicefile library
+
+# 1.6.1 (June 27, 2020)
+
+* Update golang.org/x/crypto to latest
+* Update golang.org/x/text to 0.3.3
+* Fix error handling for bad PGSERVICE definition
+* Redact passwords in ParseConfig errors (Lukas Vogel)
+
+# 1.6.0 (June 6, 2020)
+
+* Fix panic when closing conn during cancellable query
+* Fix behavior of sslmode=require with sslrootcert present (Petr Jediný)
+* Fix field descriptions available after command concluded (Tobias Salzmann)
+* Support connect_timeout (georgysavva)
+* Handle IPv6 in connection URLs (Lukas Vogel)
+* Fix ValidateConnect with cancelable context
+* Improve CopyFrom performance
+* Add Config.Copy (georgysavva)
+
 # 1.5.0 (March 30, 2020)
 
 * Update golang.org/x/crypto for security fix
