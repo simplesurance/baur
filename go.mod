@@ -3,7 +3,7 @@ module github.com/simplesurance/baur/v1
 go 1.15
 
 require (
-	github.com/aws/aws-sdk-go v1.28.9
+	github.com/aws/aws-sdk-go v1.34.32
 	github.com/fatih/color v1.7.0
 	github.com/fsouza/go-dockerclient v1.6.0
 	github.com/google/uuid v1.1.1
