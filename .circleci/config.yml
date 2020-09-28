@@ -43,7 +43,7 @@ jobs:
             git config --global user.email "circleci-baurtest@example.com"
             git config --global user.name "baur"
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-            go test --tags=dbtest -v -test.timeout 1m ./... | tee ${TEST_RESULTS}/go-test.out
+            go test --tags=dbtest -race -v -test.timeout 1m ./... | tee ${TEST_RESULTS}/go-test.out
 
       - store_test_results:
           path: /tmp/test-results
