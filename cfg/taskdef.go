@@ -20,6 +20,7 @@ func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, incl
 	for _, includeSpec := range *task.GetIncludes() {
 		inputInclude, err := includeDB.loadInputInclude(resolver, workingDir, includeSpec)
 		if err == nil {
+			inputInclude = inputInclude.clone()
 			task.GetInput().Merge(inputInclude)
 
 			continue
@@ -41,6 +42,7 @@ func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, incl
 			return err
 		}
 
+		outputInclude = outputInclude.clone()
 		task.GetOutput().Merge(outputInclude)
 	}
 

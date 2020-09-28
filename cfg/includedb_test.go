@@ -53,7 +53,6 @@ func inputInclude() InputIncludes {
 				{
 					Environment: []string{"GOPATH=."},
 					Queries:     []string{"."},
-					BuildFlags:  []string{},
 				},
 			},
 		},
@@ -376,7 +375,6 @@ func TestTaskInclude(t *testing.T) {
 								{
 									Environment: []string{"A=B"},
 									Queries:     []string{"."},
-									BuildFlags:  []string{},
 									Tests:       false,
 								},
 							},
@@ -393,7 +391,6 @@ func TestTaskInclude(t *testing.T) {
 								{
 									Environment: []string{"C=D"},
 									Queries:     []string{"cmd/"},
-									BuildFlags:  []string{},
 									Tests:       true,
 								},
 							},

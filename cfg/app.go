@@ -126,7 +126,7 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 			return fmt.Errorf("%s: %w", includeID, err)
 		}
 
-		a.Tasks = append(a.Tasks, include.DeepCopyToTask())
+		a.Tasks = append(a.Tasks, include.toTask())
 	}
 
 	for _, task := range a.Tasks {

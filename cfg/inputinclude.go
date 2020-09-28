@@ -1,5 +1,7 @@
 package cfg
 
+import "github.com/simplesurance/baur/v1/internal/deepcopy"
+
 // InputInclude is a reusable Input definition.
 type InputInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
@@ -39,4 +41,11 @@ func (in *InputInclude) Validate() error {
 	}
 
 	return nil
+}
+
+func (in *InputInclude) clone() *InputInclude {
+	var clone InputInclude
+	deepcopy.MustCopy(in, &clone)
+
+	return &clone
 }
