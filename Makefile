@@ -70,3 +70,7 @@ clean:
 .PHONY: test
 test:
 	go test -race ./...
+
+.PHONY: dbtest
+dbtest:
+	go test -race -tags=dbtest ./...
