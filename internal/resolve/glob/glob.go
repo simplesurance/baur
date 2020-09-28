@@ -17,17 +17,11 @@ type Resolver struct{}
 // - it only returns paths to files, no directory paths,
 // If a globPath doesn't match any files an empty []string is returned and
 // error is nil
-func (r *Resolver) Resolve(globPaths ...string) ([]string, error) {
-	var result []string
-
-	for _, globPath := range globPaths {
-		paths, err := fs.FileGlob(globPath)
-		if err != nil {
-			return nil, fmt.Errorf("resolving %q failed: %w", globPath, err)
-		}
-		result = append(result, paths...)
+func (r *Resolver) Resolve(globPath string) ([]string, error) {
+	paths, err := fs.FileGlob(globPath)
+	if err != nil {
+		return nil, fmt.Errorf("resolving %q failed: %w", globPath, err)
 	}
 
-	return result, nil
-
+	return paths, nil
 }
