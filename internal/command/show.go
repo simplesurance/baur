@@ -222,7 +222,7 @@ func (*showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 
 		if !file.S3Upload.IsEmpty() {
 			mustWriteRow(formatter, "", "", "S3 Bucket:", term.Highlight(file.S3Upload.Bucket))
-			mustWriteRow(formatter, "", "", "S3 Destfile:", term.Highlight(file.S3Upload.DestFile))
+			mustWriteRow(formatter, "", "", "S3 Key:", term.Highlight(file.S3Upload.Key))
 		}
 
 		if i+1 < len(task.Outputs.File) {
