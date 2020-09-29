@@ -29,7 +29,7 @@ func ExampleApp(name string) *App {
 		Tasks: []*Task{
 			{
 				Name:    "build",
-				Command: "make dist",
+				Command: []string{"make", "dist"},
 				Input: Input{
 					Files: []FileInputs{
 						{

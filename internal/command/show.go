@@ -104,6 +104,19 @@ func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int
 	}
 }
 
+func (*showCmd) strCmd(cmd []string) string {
+	var result strings.Builder
+
+	for i, e := range cmd {
+		result.WriteString(fmt.Sprintf("'%s'", e))
+		if i < len(cmd)+1 {
+			result.WriteRune(' ')
+		}
+	}
+
+	return result.String()
+}
+
 func (c *showCmd) showApp(appName string) {
 	formatter := table.New(nil, stdout)
 
@@ -142,10 +155,12 @@ func (c *showCmd) showTask(taskName string) {
 	exitOnErr(err)
 }
 
-func (*showCmd) printTask(formatter format.Formatter, task *baur.Task) {
+func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 	mustWriteRow(formatter, term.Underline("Task"))
 	mustWriteRow(formatter, "", "Name:", term.Highlight(task.Name), "", "")
-	mustWriteRow(formatter, "", "Command:", term.Highlight(task.Command), "", "")
+	mustWriteRow(formatter, "", "Command:", term.Highlight(
+		c.strCmd(task.Command),
+	), "", "")
 
 	if task.HasInputs() {
 		mustWriteRow(formatter, "", "", "", "")

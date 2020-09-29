@@ -47,7 +47,7 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 		Tasks: []*cfg.Task{
 			{
 				Name:    "build",
-				Command: "./build.sh",
+				Command: []string{"sh", "./build.sh"},
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{
@@ -69,7 +69,7 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 
 			{
 				Name:    "check",
-				Command: "./check.sh",
+				Command: []string{"sh", "./check.sh"},
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{

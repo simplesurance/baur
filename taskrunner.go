@@ -25,7 +25,7 @@ func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
 	startTime := time.Now()
 
 	// TODO: rework exec, stream the output instead of storing all in memory
-	execResult, err := exec.ShellCommand(task.Command).
+	execResult, err := exec.Command(task.Command[0], task.Command[1:]...).
 		Directory(task.Directory).
 		DebugfPrefix(color.YellowString(fmt.Sprintf("%s: ", task))).
 		Run()

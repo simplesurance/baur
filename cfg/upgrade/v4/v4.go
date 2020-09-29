@@ -107,7 +107,7 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 
 	task := cfg.Task{
 		Name:    "build",
-		Command: old.Build.Command,
+		Command: []string{"sh", "-c", old.Build.Command},
 	}
 
 	if len(old.Build.Input.Files.Paths) > 0 {

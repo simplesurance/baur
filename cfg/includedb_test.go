@@ -98,7 +98,7 @@ func taskInclude() TaskIncludes {
 		&TaskInclude{
 			IncludeID: "build_task",
 			Name:      "build",
-			Command:   "make",
+			Command:   []string{"make"},
 		},
 	}
 }
@@ -117,7 +117,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 		&TaskInclude{
 			IncludeID: "build_task",
 			Name:      "build",
-			Command:   "make",
+			Command:   []string{"make"},
 			Includes:  []string{inclFilePath + "#inputs", inclFilePath + "#outputs"},
 		},
 	}
@@ -168,7 +168,7 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 			&TaskInclude{
 				IncludeID: "build_task",
 				Name:      "build",
-				Command:   "make",
+				Command:   []string{"make"},
 				Includes: []string{
 					inputInclFilename + "#" + inputIncl.Input[0].IncludeID,
 					outputInclFilename + "#" + outputIncl.Output[0].IncludeID,
@@ -212,7 +212,7 @@ func TestIncludePathsAreRelativeToCfg(t *testing.T) {
 			&TaskInclude{
 				IncludeID: "build_task",
 				Name:      "build",
-				Command:   "make",
+				Command:   []string{"make"},
 				Includes: []string{
 					filepath.Join(inputInclDirName, inputInclFilename) + "#" + inputIncl.Input[0].IncludeID,
 				},
@@ -250,7 +250,7 @@ func TestAbsIncludePathsFail(t *testing.T) {
 			&TaskInclude{
 				IncludeID: "build_task",
 				Name:      "build",
-				Command:   "make",
+				Command:   []string{"make"},
 				Includes: []string{
 					absInputInclPath + "#" + inputIncl.Input[0].IncludeID,
 				},
@@ -353,7 +353,7 @@ func TestTaskInclude(t *testing.T) {
 				Tasks: Tasks{
 					{
 						Name:    "build",
-						Command: "make",
+						Command: []string{"make"},
 						Includes: []string{
 							"include.toml#input",
 							"include.toml#input2",
@@ -519,7 +519,7 @@ func TestTaskIncludeFailsForNonExistingIncludeFile(t *testing.T) {
 		Tasks: Tasks{
 			{
 				Name:    "build",
-				Command: "make",
+				Command: []string{"make"},
 				Includes: []string{
 					"include.toml#input",
 				},
@@ -549,7 +549,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 		Tasks: Tasks{
 			{
 				Name:    "build",
-				Command: "make",
+				Command: []string{"make"},
 				Includes: []string{
 					"include.toml#nonexisting",
 				},
@@ -610,7 +610,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 		Tasks: Tasks{
 			{
 				Name:    "build",
-				Command: "make",
+				Command: []string{"make"},
 				Includes: []string{
 					inclFilename + "#" + inputInclID,
 					inclFilename + "#" + outputInclID,
@@ -660,7 +660,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 			{
 				IncludeID: taskInclID,
 				Name:      "check",
-				Command:   "$APPNAME",
+				Command:   []string{"$APPNAME"},
 			},
 		},
 	}
@@ -711,6 +711,6 @@ func TestVarsInIncludeFiles(t *testing.T) {
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.File[0].Path)
 
 		require.Equal(t, "check", loadedApp.Tasks[1].Name)
-		require.Equal(t, variableVal, loadedApp.Tasks[1].Command)
+		require.Equal(t, []string{variableVal}, loadedApp.Tasks[1].Command)
 	}
 }
