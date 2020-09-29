@@ -20,4 +20,4 @@ linters:
 
 linters-settings:
   goimports:
-    local-prefixes: github.com/simplesurance/baur
+    local-prefixes: github.com/simplesurance/baur/v1
