@@ -27,7 +27,7 @@ func ExampleApp(name string) *App {
 		Name: name,
 
 		Tasks: []*Task{
-			&Task{
+			{
 				Name:    "build",
 				Command: "make dist",
 				Input: Input{
