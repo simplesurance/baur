@@ -11,7 +11,6 @@ import (
 	v4 "github.com/simplesurance/baur/v1/cfg/upgrade/v4"
 	"github.com/simplesurance/baur/v1/internal/fs"
 	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/internal/prettyprint"
 )
 
 type CfgUpgrader struct {
@@ -47,11 +46,6 @@ func (u *CfgUpgrader) upgradeAppConfigs(
 		}
 
 		newAppCfg := v4.UpgradeAppConfig(appCfg)
-		if err := newAppCfg.Validate(); err != nil {
-			return fmt.Errorf("validation of upgraded app config %q failed: %w\n+%v",
-				cfgPath, err, prettyprint.AsString(newAppCfg),
-			)
-		}
 
 		if err := fs.BackupFile(cfgPath); err != nil {
 			return err

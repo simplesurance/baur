@@ -20,8 +20,6 @@ var (
 
 func ColoredTaskStatus(status baur.TaskStatus) string {
 	switch status {
-	case baur.TaskStatusInputsUndefined:
-		return YellowHighlight(status.String())
 	case baur.TaskStatusRunExist:
 		return GreenHighlight(status.String())
 	case baur.TaskStatusExecutionPending:
