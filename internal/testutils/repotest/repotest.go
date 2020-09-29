@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/simplesurance/baur/v1"
@@ -22,13 +22,13 @@ func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {
 		Name: appName,
 	}
 
-	appDir := path.Join(r.Dir, appName)
+	appDir := filepath.Join(r.Dir, appName)
 
 	if err := os.Mkdir(appDir, 0775); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := app.ToFile(path.Join(appDir, baur.AppCfgFile)); err != nil {
+	if err := app.ToFile(filepath.Join(appDir, baur.AppCfgFile)); err != nil {
 		t.Fatalf("writing app cfg file failed: %s", err)
 	}
 
@@ -81,20 +81,20 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 		},
 	}
 
-	appDir := path.Join(r.Dir, appName)
+	appDir := filepath.Join(r.Dir, appName)
 
 	if err := os.Mkdir(appDir, 0775); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := app.ToFile(path.Join(appDir, baur.AppCfgFile)); err != nil {
+	if err := app.ToFile(filepath.Join(appDir, baur.AppCfgFile)); err != nil {
 		t.Fatalf("writing app cfg file failed: %s", err)
 	}
 
 	r.AppCfgs = append(r.AppCfgs, &app)
 
-	buildFilePath := path.Join(path.Join(appDir, "build.sh"))
-	checkFilePath := path.Join(path.Join(appDir, "check.sh"))
+	buildFilePath := filepath.Join(filepath.Join(appDir, "build.sh"))
+	checkFilePath := filepath.Join(filepath.Join(appDir, "check.sh"))
 
 	fstest.WriteToFile(t, []byte(`
 #!/bin/sh
@@ -106,7 +106,7 @@ cat output_content.txt > output
 
 	fstest.Chmod(t, buildFilePath, os.ModePerm)
 
-	fstest.WriteToFile(t, []byte("1"), path.Join(appDir, "output_content.txt"))
+	fstest.WriteToFile(t, []byte("1"), filepath.Join(appDir, "output_content.txt"))
 
 	fstest.WriteToFile(t, []byte(`
 #!/bin/sh
@@ -197,7 +197,7 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 		t.Cleanup(func() { os.RemoveAll(tempDir) })
 	}
 
-	artifactDir := path.Join(tempDir, "filecopy-artifacts")
+	artifactDir := filepath.Join(tempDir, "filecopy-artifacts")
 
 	t.Logf("creating baur repository in %s", tempDir)
 
@@ -218,7 +218,7 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 		},
 	}
 
-	if err := cfgR.ToFile(path.Join(tempDir, baur.RepositoryCfgFile)); err != nil {
+	if err := cfgR.ToFile(filepath.Join(tempDir, baur.RepositoryCfgFile)); err != nil {
 		t.Fatalf("could not write repository cfg file: %s", err)
 	}
 

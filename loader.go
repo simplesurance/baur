@@ -2,7 +2,6 @@ package baur
 
 import (
 	"fmt"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -283,7 +282,7 @@ func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
 // IsAppDirectory returns true and the path to the app config file if the
 // directory contains an app config file.
 func IsAppDirectory(dir string) (string, bool) {
-	cfgPath := path.Join(dir, AppCfgFile)
+	cfgPath := filepath.Join(dir, AppCfgFile)
 	isFile, _ := fs.IsFile(cfgPath)
 
 	return cfgPath, isFile
