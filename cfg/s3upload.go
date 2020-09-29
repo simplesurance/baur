@@ -6,13 +6,13 @@ import (
 
 // S3Upload contains S3 upload information
 type S3Upload struct {
-	Bucket   string `toml:"bucket" comment:"Bucket name, valid variables: $APPNAME, $UUID, $GITCOMMIT"`
-	DestFile string `toml:"dest_file" comment:"Remote File Name, valid variables: $ROOT, $APPNAME, $UUID, $GITCOMMIT"`
+	Bucket string `toml:"bucket" comment:"Bucket name, valid variables: $APPNAME, $UUID, $GITCOMMIT"`
+	Key    string `toml:"key" comment:"Identifier for the object in the bucket. Valid variables: $ROOT, $APPNAME, $UUID, $GITCOMMIT"`
 }
 
 // IsEmpty returns true if S3Upload is empty
 func (s *S3Upload) IsEmpty() bool {
-	return len(s.Bucket) == 0 && len(s.DestFile) == 0
+	return len(s.Bucket) == 0 && len(s.Key) == 0
 }
 
 func (s *S3Upload) Resolve(resolvers resolver.Resolver) error {
@@ -22,7 +22,7 @@ func (s *S3Upload) Resolve(resolvers resolver.Resolver) error {
 		return FieldErrorWrap(err, "bucket")
 	}
 
-	if s.DestFile, err = resolvers.Resolve(s.DestFile); err != nil {
+	if s.Key, err = resolvers.Resolve(s.Key); err != nil {
 		return FieldErrorWrap(err, "dest_file")
 	}
 
@@ -35,7 +35,7 @@ func (s *S3Upload) Validate() error {
 		return nil
 	}
 
-	if len(s.DestFile) == 0 {
+	if len(s.Key) == 0 {
 		return NewFieldError("can not be empty", "destfile")
 	}
 

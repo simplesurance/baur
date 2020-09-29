@@ -85,7 +85,7 @@ func outputInclude() OutputIncludes {
 					},
 					S3Upload: S3Upload{
 						Bucket:   "mybucket",
-						DestFile: "the-binary",
+						Key: "the-binary",
 					},
 				},
 			},
@@ -428,7 +428,7 @@ func TestTaskInclude(t *testing.T) {
 									FileCopy: FileCopy{Path: "/tmp/"},
 									S3Upload: S3Upload{
 										Bucket:   "bucket",
-										DestFile: "dest",
+										Key: "dest",
 									},
 								},
 							},
@@ -451,7 +451,7 @@ func TestTaskInclude(t *testing.T) {
 									FileCopy: FileCopy{Path: "/data/"},
 									S3Upload: S3Upload{
 										Bucket:   "bucket1",
-										DestFile: "dest1",
+										Key: "dest1",
 									},
 								},
 							},

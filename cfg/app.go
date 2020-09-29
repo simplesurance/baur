@@ -54,7 +54,7 @@ func ExampleApp(name string) *App {
 							Path: "dist/$APPNAME.tar.xz",
 							S3Upload: S3Upload{
 								Bucket:   "go-artifacts/",
-								DestFile: "$APPNAME-$GITCOMMIT.tar.xz",
+								Key: "$APPNAME-$GITCOMMIT.tar.xz",
 							},
 							FileCopy: FileCopy{
 								Path: "/mnt/fileserver/build_artifacts/$APPNAME-$GITCOMMIT.tar.xz",
