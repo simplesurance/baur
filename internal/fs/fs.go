@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -95,7 +94,7 @@ func FindFileInParentDirs(startPath, filename string) (string, error) {
 	searchDir := startPath
 
 	for {
-		p := path.Join(searchDir, filename)
+		p := filepath.Join(searchDir, filename)
 
 		_, err := os.Stat(p)
 		if err == nil {
@@ -116,7 +115,7 @@ func FindFileInParentDirs(startPath, filename string) (string, error) {
 			return "", os.ErrNotExist
 		}
 
-		searchDir = path.Join(searchDir, "..")
+		searchDir = filepath.Join(searchDir, "..")
 	}
 }
 
@@ -128,7 +127,7 @@ func FindFilesInSubDir(searchDir, filename string, maxdepth int) ([]string, erro
 	glob := ""
 
 	for i := 0; i <= maxdepth; i++ {
-		globPath := path.Join(searchDir, glob, filename)
+		globPath := filepath.Join(searchDir, glob, filename)
 
 		matches, err := filepath.Glob(globPath)
 		if err != nil {
@@ -156,7 +155,7 @@ func PathsJoin(rootPath string, relPaths []string) []string {
 	absPaths := make([]string, 0, len(relPaths))
 
 	for _, d := range relPaths {
-		abs := path.Clean(path.Join(rootPath, d))
+		abs := filepath.Clean(filepath.Join(rootPath, d))
 		absPaths = append(absPaths, abs)
 	}
 
