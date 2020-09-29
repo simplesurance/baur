@@ -126,8 +126,8 @@ func ExampleInclude(id string) *Include {
 					{
 						Path: "dist/$APPNAME.tar.xz",
 						S3Upload: S3Upload{
-							Bucket:   "go-artifacts/",
-							Key: "$APPNAME-$GITCOMMIT.tar.xz",
+							Bucket: "go-artifacts/",
+							Key:    "$APPNAME-$GITCOMMIT.tar.xz",
 						},
 						FileCopy: FileCopy{
 							Path: "/mnt/fileserver/build_artifacts/$APPNAME-$GITCOMMIT.tar.xz",
