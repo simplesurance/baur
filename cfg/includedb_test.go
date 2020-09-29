@@ -68,7 +68,7 @@ func outputInclude() OutputIncludes {
 		&OutputInclude{
 			IncludeID: "outputs",
 			DockerImage: []DockerImageOutput{
-				DockerImageOutput{
+				{
 					IDFile: "idfile",
 					RegistryUpload: DockerImageRegistryUpload{
 						Registry:   "localhost:123",
