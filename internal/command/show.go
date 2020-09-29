@@ -89,6 +89,19 @@ func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int
 	}
 }
 
+func (*showCmd) strCmd(cmd []string) string {
+	var result strings.Builder
+
+	for i, e := range cmd {
+		result.WriteString(fmt.Sprintf("\"%s\"", e))
+		if i < len(cmd)+1 {
+			result.WriteRune(' ')
+		}
+	}
+
+	return result.String()
+}
+
 func (c *showCmd) showApp(arg string) {
 	repo := mustFindRepository()
 	app := mustArgToApp(repo, arg)
@@ -105,7 +118,9 @@ func (c *showCmd) showApp(arg string) {
 	for taskIdx, task := range tasks {
 		mustWriteRow(formatter, term.Underline("Task"))
 		mustWriteRow(formatter, "", "Name:", term.Highlight(task.Name), "", "")
-		mustWriteRow(formatter, "", "Command:", term.Highlight(task.Command), "", "")
+		mustWriteRow(formatter, "", "Command:", term.Highlight(
+			c.strCmd(task.Command),
+		), "", "")
 
 		if task.HasInputs() {
 			mustWriteRow(formatter, "", "", "", "")

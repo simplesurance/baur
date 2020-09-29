@@ -55,7 +55,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 			&TaskInclude{
 				IncludeID: taskName,
 				Name:      taskName,
-				Command:   "make",
+				Command:   []string{"make"},
 
 				Input: Input{
 					Files: []FileInputs{{Paths: []string{"*.go"}}},

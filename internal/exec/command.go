@@ -54,11 +54,6 @@ func Command(name string, arg ...string) *Cmd {
 	}
 }
 
-// ShellCommand executes a command in sh shell.
-func ShellCommand(cmd string) *Cmd {
-	return Command("sh", "-c", cmd)
-}
-
 // Directory changes the directory in which the command is executed.
 func (c *Cmd) Directory(dir string) *Cmd {
 	c.dir = dir

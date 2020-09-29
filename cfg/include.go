@@ -149,7 +149,7 @@ func ExampleInclude(id string) *Include {
 			{
 				IncludeID: id + "_task_cbuild",
 				Name:      "build",
-				Command:   "make",
+				Command:   []string{"make"},
 				Input: Input{
 					GitFiles: []GitFileInputs{
 						{

@@ -17,7 +17,7 @@ type Task struct {
 	AppName string
 
 	Name             string
-	Command          string
+	Command          []string
 	UnresolvedInputs *cfg.Input
 	Outputs          *cfg.Output
 }

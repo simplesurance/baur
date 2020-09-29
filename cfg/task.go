@@ -7,13 +7,13 @@ import (
 // Task is a task section
 type Task struct {
 	Name     string   `toml:"name" comment:"Identifies the task, currently the name must be 'build'."`
-	Command  string   `toml:"command" comment:"Command to execute. The command is run via the sh shell."`
+	Command  []string `toml:"command" comment:"Command to execute.\n The first element is the command, the following it's arguments.\n If the command element contains no path seperators,\n the path is looked up via the $PATH environment variable."`
 	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory.\n Valid variables: $ROOT."`
 	Input    Input    `toml:"Input" comment:"Specification of task inputs like source files, Makefiles, etc"`
 	Output   Output   `toml:"Output" comment:"Specification of task outputs produced by the Task.command"`
 }
 
-func (t *Task) GetCommand() string {
+func (t *Task) GetCommand() []string {
 	return t.Command
 }
 func (t *Task) GetName() string {
@@ -35,8 +35,10 @@ func (t *Task) GetOutput() *Output {
 func (t *Task) Resolve(resolvers resolver.Resolver) error {
 	var err error
 
-	if t.Command, err = resolvers.Resolve(t.Command); err != nil {
-		return FieldErrorWrap(err, "Command")
+	for i, elem := range t.Command {
+		if t.Command[i], err = resolvers.Resolve(elem); err != nil {
+			return FieldErrorWrap(err, "Command")
+		}
 	}
 
 	if err := t.Input.Resolve(resolvers); err != nil {

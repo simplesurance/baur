@@ -1,8 +1,6 @@
 package exec
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 )
 
@@ -10,23 +8,6 @@ func TestEchoStdout(t *testing.T) {
 	const echoStr = "hello world!"
 
 	res, err := Command("echo", "-n", echoStr).Run()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if res.ExitCode != 0 {
-		t.Fatalf("cmd exited with code %d, expected 0", res.ExitCode)
-	}
-
-	if res.StrOutput() != echoStr {
-		t.Errorf("expected output '%s', got '%s'", echoStr, res.StrOutput())
-	}
-}
-
-func TestShellEchoStderr(t *testing.T) {
-	const echoStr = "hello world!"
-
-	res, err := ShellCommand(fmt.Sprintf("echo -n \"%s\" >&2", echoStr)).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,19 +46,4 @@ func TestExpectSuccess(t *testing.T) {
 		t.Fatalf("Command returned an error and result was not nil: %+v", res)
 	}
 
-}
-
-func TestShellLsGlob(t *testing.T) {
-	res, err := ShellCommand("ls -1").Directory("/").Run()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if res.ExitCode != 0 {
-		t.Errorf("exit code is %d, expected 0", res.ExitCode)
-	}
-
-	if len(strings.Split(res.StrOutput(), "\n")) < 2 {
-		t.Errorf("expected >=2 lines of output")
-	}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type TaskDef interface {
-	GetCommand() string
+	GetCommand() []string
 	GetIncludes() *[]string
 	GetInput() *Input
 	GetName() string
