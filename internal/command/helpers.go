@@ -151,24 +151,35 @@ func mustArgToTasks(repo *baur.Repository, args []string) []*baur.Task {
 	return tasks
 }
 
-func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
+func argToApps(repo *baur.Repository, args []string) ([]*baur.App, error) {
 	var apps []*baur.App
 
 	repoState := mustGetRepoState(repo.Path)
 
 	appLoader, err := baur.NewLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
-	exitOnErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	apps, err = appLoader.LoadApps(args...)
-	exitOnErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(apps) == 0 {
-		log.Fatalf("could not find any applications\n"+
+		return nil, fmt.Errorf("could not find any applications\n"+
 			"- ensure the [Discover] section is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file",
 			repo.CfgPath, baur.AppCfgFile)
 	}
+
+	return apps, nil
+}
+
+func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
+	apps, err := argToApps(repo, args)
+	exitOnErr(err)
 
 	return apps
 }

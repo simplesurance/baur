@@ -28,7 +28,7 @@ baur run --force			run and upload all tasks of applications, independent of thei
 
 var runLongHelp = fmt.Sprintf(`
 Execute tasks of applications.
-By default all tasks of all applications with status %s and %s are run.
+By default all tasks of all applications with status %s are run.
 
 The following Environment Variables are supported:
     %s
@@ -45,7 +45,6 @@ The following Environment Variables are supported:
     %s
 `,
 	term.ColoredTaskStatus(baur.TaskStatusExecutionPending),
-	term.ColoredTaskStatus(baur.TaskStatusInputsUndefined),
 
 	term.Highlight(envVarPSQLURL),
 
