@@ -2,7 +2,7 @@ package command
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -42,12 +42,12 @@ func initApp(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		appName = args[0]
 	} else {
-		appName = path.Base(cwd)
+		appName = filepath.Base(cwd)
 	}
 
 	appCfg := cfg.ExampleApp(appName)
 
-	err = appCfg.ToFile(path.Join(cwd, baur.AppCfgFile), cfg.ToFileOptCommented())
+	err = appCfg.ToFile(filepath.Join(cwd, baur.AppCfgFile), cfg.ToFileOptCommented())
 	if err != nil {
 		if os.IsExist(err) {
 			log.Fatalf("%s already exist\n", baur.AppCfgFile)

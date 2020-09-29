@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	stdexec "os/exec"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -34,7 +34,7 @@ func CommandIsInstalled() bool {
 
 // If '.git/' exist, if it does not
 func IsGitDir(dir string) (bool, error) {
-	err := fs.DirsExist(path.Join(dir, ".git"))
+	err := fs.DirsExist(filepath.Join(dir, ".git"))
 	if err == nil {
 		return true, nil
 	}
