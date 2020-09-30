@@ -1,7 +1,6 @@
 package baur
 
 import (
-	"path"
 	"path/filepath"
 	"sort"
 
@@ -23,7 +22,7 @@ type App struct {
 
 // NewApp reads the configuration file and returns a new App
 func NewApp(appCfg *cfg.App, repositoryRootPath string) (*App, error) {
-	appDir := path.Dir(appCfg.FilePath())
+	appDir := filepath.Dir(appCfg.FilePath())
 
 	appRelPath, err := filepath.Rel(repositoryRootPath, appDir)
 	if err != nil {

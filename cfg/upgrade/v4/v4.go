@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	cfgv0 "github.com/simplesurance/baur/cfg"
+
 	"github.com/simplesurance/baur/v1/cfg"
 )
 
