@@ -67,8 +67,8 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 
 	// inputs instead of inputsLookupInputStr must be returned, if the task
 	// must be run it should be recorded with the inputStr not with the
-	// altInputStr
-	return taskStatus, inputsLookupStr, run, err
+	// lookupInputStr
+	return taskStatus, inputs, run, err
 }
 
 func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs *Inputs, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {
