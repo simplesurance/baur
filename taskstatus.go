@@ -10,7 +10,6 @@ type TaskStatus int
 const (
 	_ TaskStatus = iota
 	TaskStatusUndefined
-	TaskStatusInputsUndefined
 	TaskStatusRunExist
 	TaskStatusExecutionPending
 )
@@ -19,8 +18,6 @@ func (b TaskStatus) String() string {
 	switch b {
 	case TaskStatusUndefined:
 		return "Undefined"
-	case TaskStatusInputsUndefined:
-		return "Inputs Undefined"
 	case TaskStatusRunExist:
 		return "Exist"
 	case TaskStatusExecutionPending:

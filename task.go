@@ -50,7 +50,7 @@ func (t *Task) HasInputs() bool {
 	return !cfg.InputsAreEmpty(t.UnresolvedInputs)
 }
 
-// HHasOutputs returns true if outputs are defined for the task
+// HasOutputs returns true if outputs are defined for the task
 func (t *Task) HasOutputs() bool {
 	return len(t.Outputs.DockerImage) > 0 || len(t.Outputs.File) > 0
 }

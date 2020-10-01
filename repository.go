@@ -2,7 +2,7 @@ package baur
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -52,7 +52,7 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		return nil, errors.Wrapf(err,
 			"validating repository config %q failed", cfgPath)
 	}
-	repoPath := path.Dir(cfgPath)
+	repoPath := filepath.Dir(cfgPath)
 
 	r := Repository{
 		Cfg:         repoCfg,

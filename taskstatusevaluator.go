@@ -38,15 +38,10 @@ func NewTaskStatusEvaluator(
 // Status resolves the inputs of the task, calculates the total input
 // digest and checks in the storage if a run record for the task and total input
 // digest already exist.
-// If TaskStatusInputsUndefined is returned, the returned Inputs slice and TaskRunWithID are nil.
 // If TaskStatusExecutionPending is returned, the returned TaskRunWithID is nil.
 func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatus, *Inputs, *storage.TaskRunWithID, error) {
 	var taskStatus TaskStatus
 	var run *storage.TaskRunWithID
-
-	if !task.HasInputs() {
-		return TaskStatusInputsUndefined, nil, nil, nil
-	}
 
 	inputFiles, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task)
 	if err != nil {
@@ -72,8 +67,8 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 
 	// inputs instead of inputsLookupInputStr must be returned, if the task
 	// must be run it should be recorded with the inputStr not with the
-	// altInputStr
-	return taskStatus, inputsLookupStr, run, err
+	// lookupInputStr
+	return taskStatus, inputs, run, err
 }
 
 func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs *Inputs, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {

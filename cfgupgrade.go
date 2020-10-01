@@ -7,10 +7,10 @@ import (
 
 	baur_old "github.com/simplesurance/baur"
 	cfg_old "github.com/simplesurance/baur/cfg"
+
 	v4 "github.com/simplesurance/baur/v1/cfg/upgrade/v4"
 	"github.com/simplesurance/baur/v1/internal/fs"
 	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/internal/prettyprint"
 )
 
 type CfgUpgrader struct {
@@ -37,12 +37,15 @@ func (u *CfgUpgrader) upgradeAppConfigs(
 			return fmt.Errorf("reading application config %q failed: %w", cfgPath, err)
 		}
 
-		newAppCfg := v4.UpgradeAppConfig(appCfg)
-		if err := newAppCfg.Validate(); err != nil {
-			return fmt.Errorf("validation of upgraded app config %q failed: %w\n+%v",
-				cfgPath, err, prettyprint.AsString(newAppCfg),
-			)
+		if err := appCfg.Validate(); err != nil {
+			if appCfg.Name != "" {
+				return fmt.Errorf("%s: %s", appCfg.Name, err)
+			}
+
+			return fmt.Errorf("%s: %s", cfgPath, err)
 		}
+
+		newAppCfg := v4.UpgradeAppConfig(appCfg)
 
 		if err := fs.BackupFile(cfgPath); err != nil {
 			return err
@@ -88,8 +91,8 @@ func (u *CfgUpgrader) Upgrade() error {
 		return err
 	}
 
-	//  Apps are loaded to ensure their configuration and their includes
-	//  are valid.
+	// Apps are loaded to ensure their configuration and their includes
+	// are valid.
 	apps, err := oldRepo.FindApps()
 	if err != nil {
 		return err
@@ -103,6 +106,10 @@ func (u *CfgUpgrader) Upgrade() error {
 		oldInclude, err := cfg_old.IncludeFromFile(includePath)
 		if err != nil {
 			return err
+		}
+
+		if err := oldInclude.Validate(); err != nil {
+			return fmt.Errorf("%s: %s", includePath, err)
 		}
 
 		newInclude := v4.UpgradeIncludeConfig(oldInclude)

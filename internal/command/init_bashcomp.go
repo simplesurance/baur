@@ -2,7 +2,7 @@ package command
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -54,11 +54,11 @@ func getBashCompletionDir() string {
 
 	var xdgHome string
 	if xdgHome, exist = os.LookupEnv("XDG_DATA_HOME"); exist {
-		return path.Join(xdgHome, "bash-completion/completions")
+		return filepath.Join(xdgHome, "bash-completion/completions")
 	}
 
 	if home, exist := os.LookupEnv("HOME"); exist {
-		return path.Join(home, ".local/share/bash-completion/completions")
+		return filepath.Join(home, ".local/share/bash-completion/completions")
 	}
 
 	return "~/.local/share/bash-completion/completions"
@@ -89,7 +89,7 @@ func bashComp(cmd *cobra.Command, args []string) {
 
 	mustCreatebashComplDir(complDir)
 
-	complFile := path.Join(complDir, "baur")
+	complFile := filepath.Join(complDir, "baur")
 	f, err := os.Create(complFile)
 	exitOnErrf(err, "creating %q' failed", complFile)
 
