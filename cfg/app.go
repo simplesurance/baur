@@ -27,7 +27,7 @@ func ExampleApp(name string) *App {
 		Name: name,
 
 		Tasks: []*Task{
-			&Task{
+			{
 				Name:    "build",
 				Command: []string{"make", "dist"},
 				Input: Input{
@@ -53,8 +53,8 @@ func ExampleApp(name string) *App {
 						{
 							Path: "dist/$APPNAME.tar.xz",
 							S3Upload: S3Upload{
-								Bucket:   "go-artifacts/",
-								DestFile: "$APPNAME-$GITCOMMIT.tar.xz",
+								Bucket: "go-artifacts/",
+								Key:    "$APPNAME-$GITCOMMIT.tar.xz",
 							},
 							FileCopy: FileCopy{
 								Path: "/mnt/fileserver/build_artifacts/$APPNAME-$GITCOMMIT.tar.xz",
@@ -98,6 +98,7 @@ func AppFromFile(path string) (*App, error) {
 
 // ToFile marshals the App into toml format and writes it to the given filepath.
 func (a *App) ToFile(filepath string, opts ...ToFileOpt) error {
+	a.filepath = filepath
 	return toFile(a, filepath, opts...)
 }
 

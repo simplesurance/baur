@@ -55,6 +55,10 @@ func TaskValidate(t TaskDef) error {
 		return NewFieldError("can not be empty", "command")
 	}
 
+	if t.GetName() == "" {
+		return NewFieldError("name can not be empty", "name")
+	}
+
 	if strings.Contains(t.GetName(), ".") {
 		return NewFieldError("dots are not allowed in task names", "name")
 	}

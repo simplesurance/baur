@@ -76,8 +76,8 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 				Path:     f.Path,
 				FileCopy: cfg.FileCopy{Path: f.FileCopy.Path},
 				S3Upload: cfg.S3Upload{
-					Bucket:   f.S3Upload.Bucket,
-					DestFile: f.S3Upload.DestFile,
+					Bucket: f.S3Upload.Bucket,
+					Key:    f.S3Upload.DestFile,
 				},
 			})
 		}
@@ -145,8 +145,8 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 			Path:     f.Path,
 			FileCopy: cfg.FileCopy{Path: f.FileCopy.Path},
 			S3Upload: cfg.S3Upload{
-				Bucket:   f.S3Upload.Bucket,
-				DestFile: f.S3Upload.DestFile,
+				Bucket: f.S3Upload.Bucket,
+				Key:    f.S3Upload.DestFile,
 			},
 		})
 	}

@@ -32,6 +32,15 @@ func (tasks Tasks) Validate() error {
 	duplMap := make(map[string]struct{}, len(tasks))
 
 	for _, task := range tasks {
+		err := TaskValidate(task)
+		if err != nil {
+			if task.Name != "" {
+				return FieldErrorWrap(err, "Task", task.Name)
+			}
+
+			return FieldErrorWrap(err, "Task")
+		}
+
 		_, exist := duplMap[task.Name]
 		if exist {
 			return NewFieldError(
@@ -40,11 +49,6 @@ func (tasks Tasks) Validate() error {
 			)
 		}
 		duplMap[task.Name] = struct{}{}
-
-		err := TaskValidate(task)
-		if err != nil {
-			return FieldErrorWrap(err, "Task", task.Name)
-		}
 	}
 
 	return nil

@@ -75,7 +75,7 @@ func fileOutputs(task *Task) ([]Output, error) {
 		if !fileOutput.S3Upload.IsEmpty() {
 			s3Upload = &UploadInfoS3{
 				Bucket: fileOutput.S3Upload.Bucket,
-				Key:    fileOutput.S3Upload.DestFile,
+				Key:    fileOutput.S3Upload.Key,
 			}
 		}
 
