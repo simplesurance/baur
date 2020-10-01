@@ -37,4 +37,10 @@ func (c *upgradeConfigsCmd) run(cmd *cobra.Command, _ []string) {
 	exitOnErr(err)
 
 	stdout.Println("configuration files upgraded successfully")
+
+	repo, err := findRepository()
+	exitOnErr(err, "validation failed: loading repository config failed")
+
+	_, err = argToApps(repo, []string{"*"})
+	exitOnErr(err, "validation failed")
 }

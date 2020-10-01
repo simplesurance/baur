@@ -12,6 +12,7 @@ import (
 	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/format/table"
+	"github.com/simplesurance/baur/v1/internal/fs"
 	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/storage"
 )
@@ -27,6 +28,7 @@ recorded task run are shown.
 
 const showExamples = `
 baur show calc		show information about the calc application
+baur show calc.build	show information about the build task of the calc application
 baur show ui/shop	show information about the app in the ui/shop directory
 baur show 512		show information about build 512
 `
@@ -42,7 +44,7 @@ type showCmd struct {
 func newShowCmd() *showCmd {
 	cmd := showCmd{
 		Command: cobra.Command{
-			Use:     "show APP|APP-PATH|TASK-RUN-ID",
+			Use:     "show <APP-NAME>|<APP-PATH>|<APP-NAME.TASK-NAME>|<TASK-RUN-ID>",
 			Short:   "show information about apps or recorded task runs",
 			Args:    cobra.ExactArgs(1),
 			Long:    strings.TrimSpace(showLongHelp),
@@ -56,12 +58,25 @@ func newShowCmd() *showCmd {
 }
 
 func (c *showCmd) run(cmd *cobra.Command, args []string) {
-	buildID, err := strconv.Atoi(args[0])
+	arg := args[0]
+
+	buildID, err := strconv.Atoi(arg)
 	if err == nil {
 		c.showBuild(buildID)
-	} else {
-		c.showApp(args[0])
+		return
 	}
+
+	if isDir, _ := fs.IsDir(arg); isDir {
+		c.showApp(arg)
+		return
+	}
+
+	if strings.Contains(arg, ".") {
+		c.showTask(arg)
+		return
+	}
+
+	c.showApp(arg)
 }
 
 func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int, sl []string) {
@@ -89,106 +104,21 @@ func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int
 	}
 }
 
-func (c *showCmd) showApp(arg string) {
+func (c *showCmd) showApp(appName string) {
+	formatter := table.New(nil, stdout)
+
 	repo := mustFindRepository()
-	app := mustArgToApp(repo, arg)
+	app := mustArgToApp(repo, appName)
 
 	tasks := app.Tasks()
 	baur.SortTasksByID(tasks)
-
-	formatter := table.New(nil, stdout)
 
 	mustWriteRow(formatter, "Application Name:", term.Highlight(app.Name), "", "")
 	mustWriteRow(formatter, "Path:", term.Highlight(app.RelPath), "")
 
 	mustWriteRow(formatter, "", "", "", "")
 	for taskIdx, task := range tasks {
-		mustWriteRow(formatter, term.Underline("Task"))
-		mustWriteRow(formatter, "", "Name:", term.Highlight(task.Name), "", "")
-		mustWriteRow(formatter, "", "Command:", term.Highlight(task.Command), "", "")
-
-		if task.HasInputs() {
-			mustWriteRow(formatter, "", "", "", "")
-			mustWriteRow(formatter, "", term.Underline("Inputs:"), "", "")
-
-			for i, f := range task.UnresolvedInputs.Files {
-				mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
-				mustWriteStringSliceRows(formatter, "Paths:", 2, f.Paths)
-
-				if i+1 < len(task.UnresolvedInputs.Files) {
-					mustWriteRow(formatter, "", "", "", "")
-				}
-			}
-
-			if len(task.UnresolvedInputs.Files) > 0 && len(task.UnresolvedInputs.GitFiles) > 0 {
-				mustWriteRow(formatter, "", "", "", "")
-			}
-
-			for i, g := range task.UnresolvedInputs.GitFiles {
-				mustWriteRow(formatter, "", "", "Type:", term.Highlight("GitFile"))
-				mustWriteStringSliceRows(formatter, "Paths:", 2, g.Paths)
-
-				if i+1 < len(task.UnresolvedInputs.GitFiles) {
-					mustWriteRow(formatter, "", "", "", "")
-				}
-			}
-
-			if len(task.UnresolvedInputs.GolangSources) > 0 &&
-				len(task.UnresolvedInputs.GitFiles) > 0 || len(task.UnresolvedInputs.Files) > 0 {
-				mustWriteRow(formatter, "", "", "", "")
-			}
-
-			for i, gs := range task.UnresolvedInputs.GolangSources {
-				mustWriteRow(formatter, "", "", "", "")
-				mustWriteRow(formatter, "", "", "Type:", term.Highlight("GolangSources"))
-				mustWriteStringSliceRows(formatter, "Queries:", 2, gs.Queries)
-				mustWriteStringSliceRows(formatter, "Environment:", 2, gs.Environment)
-				mustWriteStringSliceRows(formatter, "BuildFlags:", 2, gs.BuildFlags)
-				mustWriteRow(formatter, "", "", "Tests:", term.Highlight(gs.Tests))
-
-				if i+1 < len(task.UnresolvedInputs.GolangSources) {
-					mustWriteRow(formatter, "", "", "", "")
-				}
-			}
-		}
-
-		if task.HasOutputs() {
-			mustWriteRow(formatter, "", term.Underline("Outputs:"), "", "")
-		}
-
-		for i, di := range task.Outputs.DockerImage {
-			mustWriteRow(formatter, "", "", "Type:", term.Highlight("Docker Image"))
-			mustWriteRow(formatter, "", "", "IDFile:", term.Highlight(di.IDFile))
-			mustWriteRow(formatter, "", "", "Registry:", term.Highlight(di.RegistryUpload.Registry))
-			mustWriteRow(formatter, "", "", "Repository:", term.Highlight(di.RegistryUpload.Repository))
-			mustWriteRow(formatter, "", "", "Tag:", term.Highlight(di.RegistryUpload.Tag))
-
-			if i+1 < len(task.Outputs.DockerImage) {
-				mustWriteRow(formatter, "", "", "", "")
-			}
-		}
-
-		for i, file := range task.Outputs.File {
-			if len(task.Outputs.DockerImage) > 0 {
-				mustWriteRow(formatter, "", "", "", "")
-			}
-
-			mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
-			mustWriteRow(formatter, "", "", "Path:", term.Highlight(file.Path))
-
-			if !file.FileCopy.IsEmpty() {
-				mustWriteRow(formatter, "", "", "Filecopy Destination:", term.Highlight(file.FileCopy.Path))
-			}
-
-			if !file.S3Upload.IsEmpty() {
-				mustWriteRow(formatter, "", "", "S3 Bucket:", term.Highlight(file.S3Upload.Bucket))
-				mustWriteRow(formatter, "", "", "S3 Key:", term.Highlight(file.S3Upload.Key))
-			}
-
-			if i+1 < len(task.Outputs.File) {
-				mustWriteRow(formatter, "", "", "", "")
-			}
-		}
+		c.printTask(formatter, task)
 
 		if taskIdx+1 < len(tasks) {
 			mustWriteRow(formatter, "", "", "", "")
@@ -197,6 +127,108 @@ func (c *showCmd) showApp(arg string) {
 
 	err := formatter.Flush()
 	exitOnErr(err)
+}
+
+func (c *showCmd) showTask(taskName string) {
+	formatter := table.New(nil, stdout)
+
+	repo := mustFindRepository()
+
+	task := mustArgToTask(repo, taskName)
+
+	c.printTask(formatter, task)
+
+	err := formatter.Flush()
+	exitOnErr(err)
+}
+
+func (*showCmd) printTask(formatter format.Formatter, task *baur.Task) {
+	mustWriteRow(formatter, term.Underline("Task"))
+	mustWriteRow(formatter, "", "Name:", term.Highlight(task.Name), "", "")
+	mustWriteRow(formatter, "", "Command:", term.Highlight(task.Command), "", "")
+
+	if task.HasInputs() {
+		mustWriteRow(formatter, "", "", "", "")
+		mustWriteRow(formatter, "", term.Underline("Inputs:"), "", "")
+
+		for i, f := range task.UnresolvedInputs.Files {
+			mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
+			mustWriteStringSliceRows(formatter, "Paths:", 2, f.Paths)
+
+			if i+1 < len(task.UnresolvedInputs.Files) {
+				mustWriteRow(formatter, "", "", "", "")
+			}
+		}
+
+		if len(task.UnresolvedInputs.Files) > 0 && len(task.UnresolvedInputs.GitFiles) > 0 {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+
+		for i, g := range task.UnresolvedInputs.GitFiles {
+			mustWriteRow(formatter, "", "", "Type:", term.Highlight("GitFile"))
+			mustWriteStringSliceRows(formatter, "Paths:", 2, g.Paths)
+
+			if i+1 < len(task.UnresolvedInputs.GitFiles) {
+				mustWriteRow(formatter, "", "", "", "")
+			}
+		}
+
+		if len(task.UnresolvedInputs.GolangSources) > 0 &&
+			len(task.UnresolvedInputs.GitFiles) > 0 || len(task.UnresolvedInputs.Files) > 0 {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+
+		for i, gs := range task.UnresolvedInputs.GolangSources {
+			mustWriteRow(formatter, "", "", "", "")
+			mustWriteRow(formatter, "", "", "Type:", term.Highlight("GolangSources"))
+			mustWriteStringSliceRows(formatter, "Queries:", 2, gs.Queries)
+			mustWriteStringSliceRows(formatter, "Environment:", 2, gs.Environment)
+			mustWriteStringSliceRows(formatter, "BuildFlags:", 2, gs.BuildFlags)
+			mustWriteRow(formatter, "", "", "Tests:", term.Highlight(gs.Tests))
+
+			if i+1 < len(task.UnresolvedInputs.GolangSources) {
+				mustWriteRow(formatter, "", "", "", "")
+			}
+		}
+	}
+
+	if task.HasOutputs() {
+		mustWriteRow(formatter, "", term.Underline("Outputs:"), "", "")
+	}
+
+	for i, di := range task.Outputs.DockerImage {
+		mustWriteRow(formatter, "", "", "Type:", term.Highlight("Docker Image"))
+		mustWriteRow(formatter, "", "", "IDFile:", term.Highlight(di.IDFile))
+		mustWriteRow(formatter, "", "", "Registry:", term.Highlight(di.RegistryUpload.Registry))
+		mustWriteRow(formatter, "", "", "Repository:", term.Highlight(di.RegistryUpload.Repository))
+		mustWriteRow(formatter, "", "", "Tag:", term.Highlight(di.RegistryUpload.Tag))
+
+		if i+1 < len(task.Outputs.DockerImage) {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+	}
+
+	for i, file := range task.Outputs.File {
+		if len(task.Outputs.DockerImage) > 0 {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+
+		mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
+		mustWriteRow(formatter, "", "", "Path:", term.Highlight(file.Path))
+
+		if !file.FileCopy.IsEmpty() {
+			mustWriteRow(formatter, "", "", "Filecopy Destination:", term.Highlight(file.FileCopy.Path))
+		}
+
+		if !file.S3Upload.IsEmpty() {
+			mustWriteRow(formatter, "", "", "S3 Bucket:", term.Highlight(file.S3Upload.Bucket))
+			mustWriteRow(formatter, "", "", "S3 Key:", term.Highlight(file.S3Upload.Key))
+		}
+
+		if i+1 < len(task.Outputs.File) {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+	}
 }
 
 func vcsStr(v *storage.TaskRun) string {
@@ -211,7 +243,7 @@ func vcsStr(v *storage.TaskRun) string {
 	return v.VCSRevision
 }
 
-func (c *showCmd) showBuild(taskRunID int) {
+func (*showCmd) showBuild(taskRunID int) {
 	repo := mustFindRepository()
 	storageClt := mustNewCompatibleStorage(repo)
 

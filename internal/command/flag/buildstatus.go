@@ -10,16 +10,14 @@ import (
 
 // Valid commandline values
 const (
-	taskStatusExist          = "exist"
-	taskStatusPending        = "pending"
-	taskStatusInputUndefined = "inputs-undefined"
+	taskStatusExist   = "exist"
+	taskStatusPending = "pending"
 )
 
 // TaskStatusFormatDescription is the format description for the flag
 const TaskStatusFormatDescription string = "one of " +
 	taskStatusExist + ", " +
-	taskStatusPending + ", " +
-	taskStatusInputUndefined
+	taskStatusPending
 
 // TaskStatus is a commandline parameter to specify build status filters
 type TaskStatus struct {
@@ -41,8 +39,6 @@ func (b *TaskStatus) Set(val string) error {
 		b.Status = baur.TaskStatusRunExist
 	case taskStatusPending:
 		b.Status = baur.TaskStatusExecutionPending
-	case taskStatusInputUndefined:
-		b.Status = baur.TaskStatusInputsUndefined
 
 	default:
 		return errors.New("status must be " + TaskStatusFormatDescription)
@@ -62,12 +58,11 @@ func (b *TaskStatus) Usage(highlightFn func(a ...interface{}) string) string {
 	return strings.TrimSpace(fmt.Sprintf(`
 Only show tasks with this status
 Format: %s
-where %s is one of: %s, %s, %s`,
+where %s is one of: %s, %s`,
 		highlightFn(b.Type()),
 		highlightFn("STATUS"),
 		highlightFn(taskStatusExist),
 		highlightFn(taskStatusPending),
-		highlightFn(taskStatusInputUndefined),
 	))
 }
 
