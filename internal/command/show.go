@@ -108,7 +108,7 @@ func (*showCmd) strCmd(cmd []string) string {
 	var result strings.Builder
 
 	for i, e := range cmd {
-		result.WriteString(fmt.Sprintf("\"%s\"", e))
+		result.WriteString(fmt.Sprintf("'%s'", e))
 		if i < len(cmd)+1 {
 			result.WriteRune(' ')
 		}
