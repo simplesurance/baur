@@ -120,6 +120,63 @@ echo "check successful"
 	return &app
 }
 
+func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
+	t.Helper()
+
+	inputFileName := fmt.Sprintf("%s.txt", appName)
+
+	app := cfg.App{
+		Name: appName,
+		Tasks: []*cfg.Task{
+			{
+				Name:    "build",
+				Command: []string{"echo", "build", appName},
+				Input: cfg.Input{
+					Files: []cfg.FileInputs{
+						{
+							Paths: []string{inputFileName},
+						},
+					},
+				},
+			},
+			{
+				Name:    "test",
+				Command: []string{"echo", "test", appName},
+				Input: cfg.Input{
+					Files: []cfg.FileInputs{
+						{
+							Paths: []string{inputFileName},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	appDir := filepath.Join(r.Dir, appName)
+
+	if err := os.Mkdir(appDir, 0775); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := app.ToFile(filepath.Join(appDir, baur.AppCfgFile)); err != nil {
+		t.Fatalf("writing app cfg file failed: %s", err)
+	}
+
+	r.AppCfgs = append(r.AppCfgs, &app)
+
+	inputFilePath := filepath.Join(filepath.Join(appDir, inputFileName))
+
+	fstest.WriteToFile(t, []byte(`
+#!/bin/sh
+
+echo "building and testing app"
+`),
+		inputFilePath)
+
+	return &app
+}
+
 type Repo struct {
 	AppCfgs             []*cfg.App
 	Dir                 string
