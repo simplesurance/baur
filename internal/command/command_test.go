@@ -273,6 +273,10 @@ func TestVarInInclude(t *testing.T) {
 	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
 	require.NoError(t, err)
 
+	t.Cleanup(func() {
+		os.Setenv(envVarPSQLURL, "")
+	})
+
 	err = os.Setenv(envVarPSQLURL, dbURL)
 	require.NoError(t, err)
 
