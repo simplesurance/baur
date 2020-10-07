@@ -117,6 +117,37 @@ func TestFilesOptional(t *testing.T) {
 		},
 
 		{
+			name:          "file_input_optional_2defs_one_missing",
+			filesToCreate: []string{"file.1"},
+			expectError:   true,
+			task: Task{
+				UnresolvedInputs: &cfg.Input{
+					Files: []cfg.FileInputs{
+						{
+							Paths:    []string{"*.1", "*.2"},
+							Optional: false,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:          "gitfile_input_optional_2defs_one_missing",
+			filesToCreate: []string{"file.1"},
+			expectError:   true,
+			task: Task{
+				UnresolvedInputs: &cfg.Input{
+					GitFiles: []cfg.GitFileInputs{
+						{
+							Paths:    []string{"*.1", "*.2"},
+							Optional: false,
+						},
+					},
+				},
+			},
+		},
+
+		{
 			name:          "file_input_exists",
 			filesToCreate: []string{"file.1", "file.2"},
 			task: Task{
