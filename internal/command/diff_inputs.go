@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -27,25 +26,6 @@ func (i *storageInput) Digest() (*digest.Digest, error) {
 
 func (i *storageInput) String() string {
 	return i.input.URI
-}
-
-type differenceType int
-
-const (
-	digestMismatch differenceType = iota
-	existsInOneOnly
-	existsInTwoOnly
-)
-
-func (d differenceType) String() string {
-	return [...]string{"D", "-", "+"}[d]
-}
-
-type difference struct {
-	State   differenceType
-	Path    string
-	Digest1 string
-	Digest2 string
 }
 
 func init() {
@@ -147,7 +127,7 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	if !c.quiet || c.csv {
-		c.printOutput(inputs1.Inputs(), inputs2.Inputs())
+		c.printOutput(inputs1, inputs2)
 	}
 
 	app1Digest := getDigest(inputs1)
@@ -336,7 +316,7 @@ func getDigest(inputs *baur.Inputs) string {
 	return digest.String()
 }
 
-func (c *diffInputsCmd) printOutput(inputs1, inputs2 []baur.Input) {
+func (c *diffInputsCmd) printOutput(inputs1, inputs2 *baur.Inputs) {
 	var formatter format.Formatter
 	headers := []string{"State", "Path", "Digest1", "Digest2"}
 
@@ -346,45 +326,13 @@ func (c *diffInputsCmd) printOutput(inputs1, inputs2 []baur.Input) {
 		formatter = table.New(headers, stdout)
 	}
 
-	inputs1Map := inputsToStrMap(inputs1)
-	inputs2Map := inputsToStrMap(inputs2)
-
-	var diffs []difference
-
-	for path1, digest1 := range inputs1Map {
-		if digest2, exists := inputs2Map[path1]; !exists {
-			diffs = append(diffs, difference{State: existsInOneOnly, Path: path1, Digest1: digest1})
-		} else {
-			if digest1 != digest2 {
-				diffs = append(diffs, difference{State: digestMismatch, Path: path1, Digest1: digest1, Digest2: digest2})
-			}
-		}
-	}
-
-	for path2, digest2 := range inputs2Map {
-		if _, exists := inputs1Map[path2]; !exists {
-			diffs = append(diffs, difference{State: existsInTwoOnly, Path: path2, Digest2: digest2})
-		}
-	}
-
-	sort.Slice(diffs, func(i, j int) bool {
-		return diffs[i].Path < diffs[j].Path
-	})
+	diffs, err := baur.DiffInputs(inputs1, inputs2)
+	exitOnErr(err)
 
 	for _, diff := range diffs {
 		mustWriteRow(formatter, diff.State, diff.Path, diff.Digest1, diff.Digest2)
 	}
 
-	err := formatter.Flush()
+	err = formatter.Flush()
 	exitOnErr(err)
-}
-
-func inputsToStrMap(inputs []baur.Input) map[string]string {
-	inputsMap := make(map[string]string)
-	for _, input := range inputs {
-		digest, err := input.Digest()
-		exitOnErr(err)
-		inputsMap[input.String()] = digest.String()
-	}
-	return inputsMap
 }

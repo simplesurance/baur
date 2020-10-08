@@ -359,13 +359,6 @@ func TestDifferentAppsReturnExitCode2(t *testing.T) {
 	executeWithoutError(t, diffInputsCmd)
 }
 
-type csvDiffInputs struct {
-	state   string
-	path    string
-	digest1 string
-	digest2 string
-}
-
 func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 	r.CreateAppWithNoOutputs(t, appOneName)
