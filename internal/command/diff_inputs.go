@@ -45,17 +45,19 @@ func newDiffInputsCmd() *diffInputsCmd {
 		Command: cobra.Command{
 			Use:   "inputs <APP-NAME>.<TASK-NAME>|<RUN-ID> <APP-NAME>.<TASK-NAME>|<RUN-ID>",
 			Short: "list inputs that differ between two task-runs",
-			Args:  diffArgs(),
+			Long: `if the inputs match exit code 0 is returned, exit code 2 if they are different or exit code 1 if an error occurs.
+when outputting the differences, State 'D' indicates the digests do not match, '+' indicates the input is missing from the first argument and '-' indicates the input is missing from the second argument`,
+			Args: diffArgs(),
 		},
 	}
 
 	cmd.Run = cmd.run
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"Show output in RFC4180 CSV format")
+		"show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Do not show anything, exit with 0 if the inputs are the same, 2 if they are different or 1 if an error occurs")
+		"do not show anything, if the inputs match exit code 0 is returned, exit code 2 if they are different or exit code 1 if an error occurs")
 
 	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
 		"include a string as input")
