@@ -9,6 +9,7 @@ import (
 
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/cfg"
+	"github.com/simplesurance/baur/v1/internal/digest"
 	"github.com/simplesurance/baur/v1/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
 )
@@ -134,7 +135,7 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{
-							Paths: []string{inputFileName},
+							Paths: []string{"**"},
 						},
 					},
 				},
@@ -145,7 +146,7 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{
-							Paths: []string{inputFileName},
+							Paths: []string{"**"},
 						},
 					},
 				},
@@ -166,15 +167,23 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 	r.AppCfgs = append(r.AppCfgs, &app)
 
 	inputFilePath := filepath.Join(filepath.Join(appDir, inputFileName))
-
-	fstest.WriteToFile(t, []byte(`
-#!/bin/sh
-
-echo "building and testing app"
-`),
-		inputFilePath)
+	fstest.WriteToFile(t, []byte(appName), inputFilePath)
 
 	return &app
+}
+
+func (r *Repo) WriteAdditionalFileContents(t *testing.T, appName, fileName, contents string) *digest.Digest {
+	t.Helper()
+
+	file := baur.NewFile(r.Dir, filepath.Join(appName, fileName))
+	fstest.WriteToFile(t, []byte(contents), file.AbsPath)
+
+	digest, err := file.CalcDigest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return digest
 }
 
 type Repo struct {

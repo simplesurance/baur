@@ -3,10 +3,12 @@
 package command
 
 import (
+	"encoding/csv"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
 )
@@ -350,14 +352,56 @@ func TestDifferentAppsReturnExitCode2(t *testing.T) {
 
 	doInitDb(t)
 
-	runCmd := newRunCmd()
-	runCmd.run(&runCmd.Command, []string{appTwoName})
-
 	assertExitCode(t, 2)
 
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appTwoWithBuildTask})
 	executeWithoutError(t, diffInputsCmd)
+}
+
+type csvDiffInputs struct {
+	state   string
+	path    string
+	digest1 string
+	digest2 string
+}
+
+func TestDifferencesOutputWithCorrectState(t *testing.T) {
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateAppWithNoOutputs(t, appOneName)
+	fileName := "diff_test.txt"
+
+	doInitDb(t)
+
+	originalDigest := r.WriteAdditionalFileContents(t, appOneName, fileName, "original")
+	runCmd := newRunCmd()
+	runCmd.inputStr = "run_one"
+	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
+
+	newDigest := r.WriteAdditionalFileContents(t, appOneName, fileName, "new")
+	runCmd.inputStr = "run_two"
+	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
+
+	exitFunc = func(code int) {}
+
+	stdoutBuf, _ := interceptCmdOutput()
+
+	diffInputsCmd := newDiffInputsCmd()
+	diffInputsCmd.csv = true
+	diffInputsCmd.SetArgs([]string{fmt.Sprintf("%s^^", appOneWithBuildTask), fmt.Sprintf("%s^", appOneWithBuildTask)})
+	executeWithoutError(t, diffInputsCmd)
+
+	expectedOutput := [][]string{
+		{"State", "Path", "Digest1", "Digest2"},
+		{"D", "app_one/diff_test.txt", originalDigest.String(), newDigest.String()},
+		{"-", "string:run_one", "sha384:95e52b4c9863a13d596d34df980988cb78bea9ec3381ba981e1656a84cc1c7456f6830bca0e8931be5f0f48593cb5d06", ""},
+		{"+", "string:run_two", "", "sha384:f3d5e46502641c5591563a0d3157f19a9739616f07bdb4bbc0285cb0a12bd511c026db94f12c719378a20d0ffe85090e"},
+	}
+
+	actualOutput, err := csv.NewReader(stdoutBuf).ReadAll()
+	require.NoError(t, err)
+
+	assert.ElementsMatch(t, expectedOutput, actualOutput)
 }
 
 func executeWithoutError(t *testing.T, cmd *diffInputsCmd) {

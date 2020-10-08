@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -10,6 +11,9 @@ import (
 
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/digest"
+	"github.com/simplesurance/baur/v1/internal/format"
+	"github.com/simplesurance/baur/v1/internal/format/csv"
+	"github.com/simplesurance/baur/v1/internal/format/table"
 	"github.com/simplesurance/baur/v1/storage"
 )
 
@@ -25,6 +29,25 @@ func (i *storageInput) String() string {
 	return i.input.URI
 }
 
+type differenceType int
+
+const (
+	digestMismatch differenceType = iota
+	existsInOneOnly
+	existsInTwoOnly
+)
+
+func (d differenceType) String() string {
+	return [...]string{"D", "-", "+"}[d]
+}
+
+type difference struct {
+	State   differenceType
+	Path    string
+	Digest1 string
+	Digest2 string
+}
+
 func init() {
 	diffCmd.AddCommand(&newDiffInputsCmd().Command)
 }
@@ -32,8 +55,9 @@ func init() {
 type diffInputsCmd struct {
 	cobra.Command
 
-	inputStr string
+	csv      bool
 	quiet    bool
+	inputStr string
 }
 
 func newDiffInputsCmd() *diffInputsCmd {
@@ -47,11 +71,14 @@ func newDiffInputsCmd() *diffInputsCmd {
 
 	cmd.Run = cmd.run
 
-	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as input")
+	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
+		"Show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"Do not show anything, exit with 0 if the inputs are the same, otherwise with 1")
+
+	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
+		"include a string as input")
 
 	return &cmd
 }
@@ -119,9 +146,9 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// TODO: Output input differences
-	// if !c.quiet {
-	// }
+	if !c.quiet || c.csv {
+		c.printOutput(inputs1.Inputs(), inputs2.Inputs())
+	}
 
 	app1Digest := getDigest(inputs1)
 	app2Digest := getDigest(inputs2)
@@ -300,15 +327,64 @@ func getSorters() []*storage.Sorter {
 }
 
 func getDigest(inputs *baur.Inputs) string {
-	if inputs != nil {
-		digest, err := inputs.Digest()
+	digest, err := inputs.Digest()
 
-		if err != nil {
-			exitOnErr(err)
-		}
-
-		return digest.String()
+	if err != nil {
+		exitOnErr(err)
 	}
 
-	return ""
+	return digest.String()
+}
+
+func (c *diffInputsCmd) printOutput(inputs1, inputs2 []baur.Input) {
+	var formatter format.Formatter
+	headers := []string{"State", "Path", "Digest1", "Digest2"}
+
+	if c.csv {
+		formatter = csv.New(headers, stdout)
+	} else {
+		formatter = table.New(headers, stdout)
+	}
+
+	inputs1Map := inputsToStrMap(inputs1)
+	inputs2Map := inputsToStrMap(inputs2)
+
+	var diffs []difference
+
+	for path1, digest1 := range inputs1Map {
+		if digest2, exists := inputs2Map[path1]; !exists {
+			diffs = append(diffs, difference{State: existsInOneOnly, Path: path1, Digest1: digest1})
+		} else {
+			if digest1 != digest2 {
+				diffs = append(diffs, difference{State: digestMismatch, Path: path1, Digest1: digest1, Digest2: digest2})
+			}
+		}
+	}
+
+	for path2, digest2 := range inputs2Map {
+		if _, exists := inputs1Map[path2]; !exists {
+			diffs = append(diffs, difference{State: existsInTwoOnly, Path: path2, Digest2: digest2})
+		}
+	}
+
+	sort.Slice(diffs, func(i, j int) bool {
+		return diffs[i].Path < diffs[j].Path
+	})
+
+	for _, diff := range diffs {
+		mustWriteRow(formatter, diff.State, diff.Path, diff.Digest1, diff.Digest2)
+	}
+
+	err := formatter.Flush()
+	exitOnErr(err)
+}
+
+func inputsToStrMap(inputs []baur.Input) map[string]string {
+	inputsMap := make(map[string]string)
+	for _, input := range inputs {
+		digest, err := input.Digest()
+		exitOnErr(err)
+		inputsMap[input.String()] = digest.String()
+	}
+	return inputsMap
 }
