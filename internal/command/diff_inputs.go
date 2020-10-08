@@ -75,7 +75,7 @@ func newDiffInputsCmd() *diffInputsCmd {
 		"Show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Do not show anything, exit with 0 if the inputs are the same, otherwise with 1")
+		"Do not show anything, exit with 0 if the inputs are the same, 2 if they are different or 1 if an error occurs")
 
 	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
 		"include a string as input")
