@@ -64,7 +64,7 @@ func newDiffInputsCmd() *diffInputsCmd {
 	cmd := diffInputsCmd{
 		Command: cobra.Command{
 			Use:   "inputs <APP-NAME>.<TASK-NAME>|<RUN-ID> <APP-NAME>.<TASK-NAME>|<RUN-ID>",
-			Short: "list resolved task inputs of an application",
+			Short: "list inputs that differ between two task-runs",
 			Args:  diffArgs(),
 		},
 	}

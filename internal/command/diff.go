@@ -6,7 +6,7 @@ import (
 
 var diffCmd = &cobra.Command{
 	Use:   "diff",
-	Short: "list inputs that differ between two builds",
+	Short: "list inputs that differ between two task-runs",
 }
 
 func init() {
