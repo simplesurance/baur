@@ -60,7 +60,12 @@ func FromString(in string) (*Digest, error) {
 
 		algorithm = SHA256
 	case "sha384":
-		if len(spl[1]) != 96 {
+		// There was a bug that caused digests that are created with a leading zero to be stored
+		// in the DB without the leading zero. This bug has been fixed but these digests need to be
+		// accounted for by appending the missing zero back onto the start of the digest.
+		if len(spl[1]) == 95 {
+			spl[1] = fmt.Sprintf("0%s", spl[1])
+		} else if len(spl[1]) != 96 {
 			return nil, fmt.Errorf("hash length is %d, expected length 96", len(spl[1]))
 		}
 
