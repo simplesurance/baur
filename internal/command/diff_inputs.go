@@ -136,9 +136,14 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	app2Digest := getDigest(inputs2)
 
 	if app1Digest == app2Digest {
+		if c.quiet && !c.csv {
+			stdout.Printf("the inputs for %s and %s match", args[0], args[1])
+		}
 		exitFunc(0)
 	}
-
+	if c.quiet && !c.csv {
+		stdout.Printf("the inputs for %s and %s differ", args[0], args[1])
+	}
 	exitFunc(2)
 }
 
