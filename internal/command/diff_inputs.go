@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -29,6 +30,7 @@ func (i *storageInput) String() string {
 }
 
 type diffInputArgDetails struct {
+	arg      string
 	appName  string
 	taskName string
 	runID    string
@@ -160,13 +162,13 @@ func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputAr
 
 	for _, arg := range args {
 		app, task, runID := parseDiffSpec(arg)
-		results = append(results, &diffInputArgDetails{appName: app, taskName: task, runID: runID})
+		results = append(results, &diffInputArgDetails{arg: arg, appName: app, taskName: task, runID: runID})
 	}
 
 	var mustHaveTasks []string
 	for _, argDetails := range results {
 		if argDetails.runID == "" {
-			mustHaveTasks = append(mustHaveTasks, fmt.Sprintf("%s.%s", argDetails.appName, argDetails.taskName))
+			mustHaveTasks = append(mustHaveTasks, argDetails.arg)
 		}
 	}
 
@@ -183,7 +185,7 @@ func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputAr
 
 		for _, argDetails := range results {
 			if argDetails.runID == "" && argDetails.task == nil {
-				exitOnErr(fmt.Errorf("task not found for %s.%s", argDetails.appName, argDetails.taskName))
+				exitOnErr(fmt.Errorf("task not found for %s", argDetails.arg))
 			}
 		}
 	}
@@ -288,26 +290,31 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *
 		},
 	}
 
-	var taskRuns []*storage.TaskRunWithID
+	var taskRun *storage.TaskRunWithID
+	found := errors.New("found_task_run")
+	runPosition := len(argDetails.runID)
+	retrieved := 0
 	err := psql.TaskRuns(
 		ctx,
 		filters,
 		sorters,
-		func(taskRun *storage.TaskRunWithID) error {
-			taskRuns = append(taskRuns, taskRun)
+		func(record *storage.TaskRunWithID) error {
+			retrieved++
+			if retrieved == runPosition {
+				taskRun = record
+				return found
+			}
 			return nil
 		},
 	)
 
-	if err != nil {
+	if err != nil && errors.Unwrap(err) != found {
 		exitOnErr(err)
 	}
 
-	if len(taskRuns) < len(argDetails.runID) {
-		exitOnErr(fmt.Errorf("%s.%s%s does not exist, only %d task-run(s) exist(s)", argDetails.appName, argDetails.taskName, argDetails.runID, len(taskRuns)))
+	if runPosition > retrieved {
+		exitOnErr(fmt.Errorf("%s does not exist, only %d task-run(s) exist(s)", argDetails.arg, retrieved))
 	}
-
-	taskRun := taskRuns[len(argDetails.runID)-1]
 
 	return taskRun, nil
 }
