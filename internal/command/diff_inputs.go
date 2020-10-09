@@ -28,6 +28,13 @@ func (i *storageInput) String() string {
 	return i.input.URI
 }
 
+type diffInputArgDetails struct {
+	appName  string
+	taskName string
+	runID    string
+	task     *baur.Task
+}
+
 func init() {
 	diffCmd.AddCommand(&newDiffInputsCmd().Command)
 }
@@ -111,15 +118,14 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	repo := mustFindRepository()
+	argDetails := getDiffInputArgDetails(repo, args)
 
-	app1, task1, runID1 := c.parseDiffSpec(args[0])
-	inputs1, run1, err := c.getTaskRunInputs(repo, app1, task1, runID1)
+	inputs1, run1, err := c.getTaskRunInputs(repo, argDetails[0])
 	if err != nil {
 		exitOnErr(err)
 	}
 
-	app2, task2, runID2 := c.parseDiffSpec(args[1])
-	inputs2, run2, err := c.getTaskRunInputs(repo, app2, task2, runID2)
+	inputs2, run2, err := c.getTaskRunInputs(repo, argDetails[1])
 	if err != nil {
 		exitOnErr(err)
 	}
@@ -149,10 +155,46 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	exitFunc(2)
 }
 
+func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputArgDetails {
+	var results []*diffInputArgDetails
+
+	for _, arg := range args {
+		app, task, runID := parseDiffSpec(arg)
+		results = append(results, &diffInputArgDetails{appName: app, taskName: task, runID: runID})
+	}
+
+	var mustHaveTasks []string
+	for _, argDetails := range results {
+		if argDetails.runID == "" {
+			mustHaveTasks = append(mustHaveTasks, fmt.Sprintf("%s.%s", argDetails.appName, argDetails.taskName))
+		}
+	}
+
+	if len(mustHaveTasks) > 0 {
+		tasks := mustArgToTasks(repo, mustHaveTasks)
+
+		for _, task := range tasks {
+			for _, argDetails := range results {
+				if argDetails.runID == "" && task.AppName == argDetails.appName && task.Name == argDetails.taskName {
+					argDetails.task = task
+				}
+			}
+		}
+
+		for _, argDetails := range results {
+			if argDetails.runID == "" && argDetails.task == nil {
+				exitOnErr(fmt.Errorf("task not found for %s.%s", argDetails.appName, argDetails.taskName))
+			}
+		}
+	}
+
+	return results
+}
+
 // parseDiffSpec splits an argument into the app, task and runID components.
 // It relies on the fact that the arguments have already been validated
 // in the cobra.Command
-func (c *diffInputsCmd) parseDiffSpec(s string) (app, task, runID string) {
+func parseDiffSpec(s string) (app, task, runID string) {
 	if strings.Contains(s, ".") {
 		spl := strings.Split(s, ".")
 		app = spl[0]
@@ -170,19 +212,17 @@ func (c *diffInputsCmd) parseDiffSpec(s string) (app, task, runID string) {
 	return "", "", s
 }
 
-func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, app, task, runID string) (*baur.Inputs, *storage.TaskRunWithID, error) {
-	taskRun, err := getTaskRun(repo, app, task, runID)
+func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID, error) {
+	taskRun, err := getTaskRun(repo, argDetails)
 	if err != nil {
 		exitOnErr(err)
 	}
 
 	var inputs *baur.Inputs
 	if taskRun == nil {
-		task := mustArgToTask(repo, fmt.Sprintf("%s.%s", app, task))
-
 		inputResolver := baur.NewInputResolver()
 
-		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, task)
+		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
 		if err != nil {
 			exitOnErr(err)
 		}
@@ -208,37 +248,37 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, app, task, runID
 	return inputs, taskRun, nil
 }
 
-func getTaskRun(repo *baur.Repository, app, task, runID string) (*storage.TaskRunWithID, error) {
-	if runID == "" {
+func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) (*storage.TaskRunWithID, error) {
+	if argDetails.task != nil {
 		return nil, nil
 	}
 
 	psql := mustNewCompatibleStorage(repo)
 
-	if strings.Contains(runID, "^") {
-		return getPreviousTaskRun(repo, psql, app, task, runID)
+	if strings.Contains(argDetails.runID, "^") {
+		return getPreviousTaskRun(repo, psql, argDetails)
 	}
 
-	id, err := strconv.Atoi(runID)
+	id, err := strconv.Atoi(argDetails.runID)
 	if err != nil {
 		exitOnErr(err)
 	}
 	return getTaskRunByID(repo, psql, id)
 }
 
-func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, app, task string, position string) (*storage.TaskRunWithID, error) {
+func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *diffInputArgDetails) (*storage.TaskRunWithID, error) {
 	var filters []*storage.Filter
 
 	filters = append(filters, &storage.Filter{
 		Field:    storage.FieldApplicationName,
 		Operator: storage.OpEQ,
-		Value:    app,
+		Value:    argDetails.appName,
 	})
 
 	filters = append(filters, &storage.Filter{
 		Field:    storage.FieldTaskName,
 		Operator: storage.OpEQ,
-		Value:    task,
+		Value:    argDetails.taskName,
 	})
 
 	var sorters = []*storage.Sorter{
@@ -263,11 +303,11 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, app, task st
 		exitOnErr(err)
 	}
 
-	if len(taskRuns) < len(position) {
-		exitOnErr(fmt.Errorf("%s.%s%s does not exist, only %d task-run(s) exist(s)", app, task, position, len(taskRuns)))
+	if len(taskRuns) < len(argDetails.runID) {
+		exitOnErr(fmt.Errorf("%s.%s%s does not exist, only %d task-run(s) exist(s)", argDetails.appName, argDetails.taskName, argDetails.runID, len(taskRuns)))
 	}
 
-	taskRun := taskRuns[len(position)-1]
+	taskRun := taskRuns[len(argDetails.runID)-1]
 
 	return taskRun, nil
 }
