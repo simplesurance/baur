@@ -110,14 +110,16 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 		exitOnErr(fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1]))
 	}
 
+	repo := mustFindRepository()
+
 	app1, task1, runID1 := c.parseDiffSpec(args[0])
-	inputs1, run1, err := c.getTaskRunInputs(app1, task1, runID1)
+	inputs1, run1, err := c.getTaskRunInputs(repo, app1, task1, runID1)
 	if err != nil {
 		exitOnErr(err)
 	}
 
 	app2, task2, runID2 := c.parseDiffSpec(args[1])
-	inputs2, run2, err := c.getTaskRunInputs(app2, task2, runID2)
+	inputs2, run2, err := c.getTaskRunInputs(repo, app2, task2, runID2)
 	if err != nil {
 		exitOnErr(err)
 	}
@@ -168,9 +170,7 @@ func (c *diffInputsCmd) parseDiffSpec(s string) (app, task, runID string) {
 	return "", "", s
 }
 
-func (c *diffInputsCmd) getTaskRunInputs(app, task, runID string) (*baur.Inputs, *storage.TaskRunWithID, error) {
-	repo := mustFindRepository()
-
+func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, app, task, runID string) (*baur.Inputs, *storage.TaskRunWithID, error) {
 	taskRun, err := getTaskRun(repo, app, task, runID)
 	if err != nil {
 		exitOnErr(err)
@@ -213,18 +213,20 @@ func getTaskRun(repo *baur.Repository, app, task, runID string) (*storage.TaskRu
 		return nil, nil
 	}
 
+	psql := mustNewCompatibleStorage(repo)
+
 	if strings.Contains(runID, "^") {
-		return getPreviousTaskRun(repo, app, task, runID)
+		return getPreviousTaskRun(repo, psql, app, task, runID)
 	}
 
 	id, err := strconv.Atoi(runID)
 	if err != nil {
 		exitOnErr(err)
 	}
-	return getTaskRunByID(repo, id)
+	return getTaskRunByID(repo, psql, id)
 }
 
-func getPreviousTaskRun(repo *baur.Repository, app, task string, position string) (*storage.TaskRunWithID, error) {
+func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, app, task string, position string) (*storage.TaskRunWithID, error) {
 	var filters []*storage.Filter
 
 	filters = append(filters, &storage.Filter{
@@ -245,8 +247,6 @@ func getPreviousTaskRun(repo *baur.Repository, app, task string, position string
 			Order: storage.OrderDesc,
 		},
 	}
-
-	psql := mustNewCompatibleStorage(repo)
 
 	var taskRuns []*storage.TaskRunWithID
 	err := psql.TaskRuns(
@@ -272,7 +272,7 @@ func getPreviousTaskRun(repo *baur.Repository, app, task string, position string
 	return taskRun, nil
 }
 
-func getTaskRunByID(repo *baur.Repository, id int) (*storage.TaskRunWithID, error) {
+func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) (*storage.TaskRunWithID, error) {
 	var filters []*storage.Filter
 	filters = append(filters, &storage.Filter{
 		Field:    storage.FieldID,
@@ -286,8 +286,6 @@ func getTaskRunByID(repo *baur.Repository, id int) (*storage.TaskRunWithID, erro
 			Order: storage.OrderDesc,
 		},
 	}
-
-	psql := mustNewCompatibleStorage(repo)
 
 	var taskRun *storage.TaskRunWithID
 	err := psql.TaskRuns(
