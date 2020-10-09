@@ -239,7 +239,12 @@ func getPreviousTaskRun(repo *baur.Repository, app, task string, position string
 		Value:    task,
 	})
 
-	sorters := getSorters()
+	var sorters = []*storage.Sorter{
+		{
+			Field: storage.FieldID,
+			Order: storage.OrderDesc,
+		},
+	}
 
 	psql := mustNewCompatibleStorage(repo)
 
@@ -275,7 +280,12 @@ func getTaskRunByID(repo *baur.Repository, id int) (*storage.TaskRunWithID, erro
 		Value:    id,
 	})
 
-	sorters := getSorters()
+	var sorters = []*storage.Sorter{
+		{
+			Field: storage.FieldID,
+			Order: storage.OrderDesc,
+		},
+	}
 
 	psql := mustNewCompatibleStorage(repo)
 
@@ -298,19 +308,6 @@ func getTaskRunByID(repo *baur.Repository, id int) (*storage.TaskRunWithID, erro
 	}
 
 	return taskRun, nil
-}
-
-func getSorters() []*storage.Sorter {
-	var sorters []*storage.Sorter
-
-	defaultSorter := storage.Sorter{
-		Field: storage.FieldID,
-		Order: storage.OrderDesc,
-	}
-
-	sorters = append(sorters, &defaultSorter)
-
-	return sorters
 }
 
 func getDigest(inputs *baur.Inputs) string {
