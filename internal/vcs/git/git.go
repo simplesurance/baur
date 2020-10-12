@@ -3,14 +3,13 @@ package git
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	stdexec "os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/v1/internal/exec"
 	"github.com/simplesurance/baur/v1/internal/fs"
@@ -74,7 +73,7 @@ func CommitID(dir string) (string, error) {
 
 	commitID := strings.TrimSpace(res.StrOutput())
 	if len(commitID) == 0 {
-		return "", errors.Wrap(err, "executing git rev-parse HEAD failed, no Stdout output")
+		return "", errors.New("executing git rev-parse HEAD failed, no Stdout output")
 	}
 
 	return commitID, err
@@ -109,7 +108,7 @@ func LsFiles(dir string, errorUnmatch bool, arg ...string) (string, error) {
 		}
 
 		if err := scanner.Err(); err != nil {
-			return "", errors.Wrap(err, "scanning cmd output failed")
+			return "", fmt.Errorf("scanning cmd output failed: %w", err)
 		}
 
 		if len(errMsgs) != 0 {

@@ -3,10 +3,10 @@ package docker
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/pkg/errors"
 )
 
 // DefaultRegistry is the registry for that authentication data is used
@@ -119,7 +119,7 @@ func (c *Client) Upload(image, registryAddr, repository, tag string) (string, er
 		Tag:  tag,
 	})
 	if err != nil {
-		return "", errors.Wrapf(err, "tagging image failed")
+		return "", fmt.Errorf("tagging image failed: %w", err)
 	}
 
 	auth := c.getAuth(registryAddr)
