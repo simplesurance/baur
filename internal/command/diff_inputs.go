@@ -337,13 +337,6 @@ func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) *storage
 	return taskRun
 }
 
-func getDigest(inputs *baur.Inputs) string {
-	digest, err := inputs.Digest()
-	exitOnErr(err)
-
-	return digest.String()
-}
-
 func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
 	if !c.quiet || c.csv {
 		var formatter format.Formatter
