@@ -63,13 +63,16 @@ func DiffInputs(a, b *Inputs) ([]*InputDiff, error) {
 }
 
 func inputsToStrMap(inputs []Input) (map[string]string, error) {
-	inputsMap := make(map[string]string)
+	inputsMap := make(map[string]string, len(inputs))
+
 	for _, input := range inputs {
 		digest, err := input.Digest()
 		if err != nil {
 			return nil, err
 		}
+
 		inputsMap[input.String()] = digest.String()
 	}
+
 	return inputsMap, nil
 }
