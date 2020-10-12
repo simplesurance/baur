@@ -12,8 +12,10 @@ const (
 	Added
 )
 
+var diffTypeStrings = [...]string{"D", "-", "+"}
+
 func (d DiffType) String() string {
-	return [...]string{"D", "-", "+"}[d]
+	return diffTypeStrings[d]
 }
 
 type InputDiff struct {
