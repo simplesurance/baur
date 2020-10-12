@@ -214,38 +214,31 @@ func parseDiffSpec(s string) (app, task, runID string) {
 }
 
 func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID) {
-	taskRun := getTaskRun(repo, argDetails)
-
-	var inputs *baur.Inputs
-	if taskRun == nil {
+	if argDetails.task != nil {
 		inputResolver := baur.NewInputResolver()
 
 		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
 		exitOnErr(err)
 
-		inputs = baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr))
-	} else {
-		psql := mustNewCompatibleStorage(repo)
-		storageInputs, err := psql.Inputs(ctx, taskRun.ID)
-		exitOnErr(err)
-
-		// Convert the inputs from the DB into baur.Input interface implementation
-		var baurInputs []baur.Input
-		for _, input := range storageInputs {
-			baurInputs = append(baurInputs, &storageInput{input})
-		}
-
-		inputs = baur.NewInputs(baur.InputAddStrIfNotEmpty(baurInputs, c.inputStr))
+		return baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr)), nil
 	}
 
-	return inputs, taskRun
+	taskRun := getTaskRun(repo, argDetails)
+
+	psql := mustNewCompatibleStorage(repo)
+	storageInputs, err := psql.Inputs(ctx, taskRun.ID)
+	exitOnErr(err)
+
+	// Convert the inputs from the DB into baur.Input interface implementation
+	var baurInputs []baur.Input
+	for _, input := range storageInputs {
+		baurInputs = append(baurInputs, &storageInput{input})
+	}
+
+	return baur.NewInputs(baur.InputAddStrIfNotEmpty(baurInputs, c.inputStr)), taskRun
 }
 
 func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
-	if argDetails.task != nil {
-		return nil
-	}
-
 	psql := mustNewCompatibleStorage(repo)
 
 	if strings.Contains(argDetails.runID, "^") {
