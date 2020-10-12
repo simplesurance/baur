@@ -135,15 +135,8 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	repo := mustFindRepository()
 	argDetails := getDiffInputArgDetails(repo, args)
 
-	inputs1, run1, err := c.getTaskRunInputs(repo, argDetails[0])
-	if err != nil {
-		exitOnErr(err)
-	}
-
-	inputs2, run2, err := c.getTaskRunInputs(repo, argDetails[1])
-	if err != nil {
-		exitOnErr(err)
-	}
+	inputs1, run1 := c.getTaskRunInputs(repo, argDetails[0])
+	inputs2, run2 := c.getTaskRunInputs(repo, argDetails[1])
 
 	if run1 != nil && run2 != nil {
 		if run1.ID == run2.ID {
@@ -234,29 +227,21 @@ func parseDiffSpec(s string) (app, task, runID string) {
 	return "", "", s
 }
 
-func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID, error) {
-	taskRun, err := getTaskRun(repo, argDetails)
-	if err != nil {
-		exitOnErr(err)
-	}
+func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID) {
+	taskRun := getTaskRun(repo, argDetails)
 
 	var inputs *baur.Inputs
 	if taskRun == nil {
 		inputResolver := baur.NewInputResolver()
 
 		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
-		if err != nil {
-			exitOnErr(err)
-		}
+		exitOnErr(err)
 
 		inputs = baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr))
 	} else {
 		psql := mustNewCompatibleStorage(repo)
 		storageInputs, err := psql.Inputs(ctx, taskRun.ID)
-
-		if err != nil {
-			exitOnErr(err)
-		}
+		exitOnErr(err)
 
 		// Convert the inputs from the DB into baur.Input interface implementation
 		var baurInputs []baur.Input
@@ -267,12 +252,12 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 		inputs = baur.NewInputs(baur.InputAddStrIfNotEmpty(baurInputs, c.inputStr))
 	}
 
-	return inputs, taskRun, nil
+	return inputs, taskRun
 }
 
-func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) (*storage.TaskRunWithID, error) {
+func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
 	if argDetails.task != nil {
-		return nil, nil
+		return nil
 	}
 
 	psql := mustNewCompatibleStorage(repo)
@@ -282,13 +267,12 @@ func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) (*storag
 	}
 
 	id, err := strconv.Atoi(argDetails.runID)
-	if err != nil {
-		exitOnErr(err)
-	}
+	exitOnErr(err)
+
 	return getTaskRunByID(repo, psql, id)
 }
 
-func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *diffInputArgDetails) (*storage.TaskRunWithID, error) {
+func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
 	var filters []*storage.Filter
 
 	filters = append(filters, &storage.Filter{
@@ -336,10 +320,10 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *
 		exitOnErr(fmt.Errorf("%s does not exist, only %d task-run(s) exist(s)", argDetails.arg, retrieved))
 	}
 
-	return taskRun, nil
+	return taskRun
 }
 
-func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) (*storage.TaskRunWithID, error) {
+func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) *storage.TaskRunWithID {
 	filters := []*storage.Filter{
 		{
 			Field:    storage.FieldID,
@@ -366,22 +350,17 @@ func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) (*storag
 		},
 	)
 
-	if err != nil {
-		if err == storage.ErrNotExist {
-			err = fmt.Errorf("task-run %d does not exist", id)
-		}
-
-		exitOnErr(err)
+	if err != nil && err == storage.ErrNotExist {
+		err = fmt.Errorf("task-run %d does not exist", id)
 	}
+	exitOnErr(err)
 
-	return taskRun, nil
+	return taskRun
 }
 
 func getDigest(inputs *baur.Inputs) string {
 	digest, err := inputs.Digest()
-	if err != nil {
-		exitOnErr(err)
-	}
+	exitOnErr(err)
 
 	return digest.String()
 }
