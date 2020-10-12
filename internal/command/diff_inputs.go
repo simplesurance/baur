@@ -388,15 +388,11 @@ func getDigest(inputs *baur.Inputs) string {
 
 func (c *diffInputsCmd) printOutput(inputs1, inputs2 *baur.Inputs) {
 	var formatter format.Formatter
-	var headers []string
-
-	if !c.csv {
-		headers = []string{"State", "Path", "Digest1", "Digest2"}
-	}
 
 	if c.csv {
-		formatter = csv.New(headers, stdout)
+		formatter = csv.New(nil, stdout)
 	} else {
+		headers := []string{"State", "Path", "Digest1", "Digest2"}
 		formatter = table.New(headers, stdout)
 	}
 
