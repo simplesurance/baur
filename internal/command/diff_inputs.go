@@ -49,14 +49,27 @@ type diffInputsCmd struct {
 	inputStr string
 }
 
+const diffInputslongHelp = `
+List the difference of inputs between tasks or task-runs.
+
+States:
+	D - digests do not match,
+	+ - the input is missing in the first task(-run)
+	- - the input is missing in the second task(-run)
+
+Exit Codes:
+	0 - Inputs are the same
+	1 - Internal error
+	2 - Inputs differ
+`
+
 func newDiffInputsCmd() *diffInputsCmd {
 	cmd := diffInputsCmd{
 		Command: cobra.Command{
 			Use:   "inputs <APP-NAME>.<TASK-NAME>|<RUN-ID> <APP-NAME>.<TASK-NAME>|<RUN-ID>",
 			Short: "list inputs that differ between two task-runs",
-			Long: `if the inputs match exit code 0 is returned, exit code 2 if they are different or exit code 1 if an error occurs.
-when outputting the differences, State 'D' indicates the digests do not match, '+' indicates the input is missing from the first argument and '-' indicates the input is missing from the second argument`,
-			Args: diffArgs(),
+			Long:  strings.TrimSpace(diffInputslongHelp),
+			Args:  diffArgs(),
 		},
 	}
 
@@ -66,7 +79,7 @@ when outputting the differences, State 'D' indicates the digests do not match, '
 		"show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"do not show anything, if the inputs match exit code 0 is returned, exit code 2 if they are different or exit code 1 if an error occurs")
+		"do not show anything, the result is indicated by the exit code")
 
 	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
 		"include a string as input")
