@@ -158,15 +158,22 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	app1Digest := getDigest(inputs1)
 	app2Digest := getDigest(inputs2)
 
+	if !c.csv && !c.quiet {
+		stdout.Println()
+	}
+
 	if app1Digest == app2Digest {
-		if c.quiet && !c.csv {
-			stdout.Printf("the inputs for %s and %s match", args[0], args[1])
+		if !c.csv {
+			stdout.Printf("the inputs of %s and %s are the same\n", args[0], args[1])
 		}
+
 		exitFunc(0)
 	}
-	if c.quiet && !c.csv {
-		stdout.Printf("the inputs for %s and %s differ", args[0], args[1])
+
+	if !c.csv {
+		stdout.Printf("the inputs of %s and %s differ\n", args[0], args[1])
 	}
+
 	exitFunc(2)
 }
 
@@ -370,7 +377,6 @@ func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) (*storag
 
 func getDigest(inputs *baur.Inputs) string {
 	digest, err := inputs.Digest()
-
 	if err != nil {
 		exitOnErr(err)
 	}
