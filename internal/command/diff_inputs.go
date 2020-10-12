@@ -171,7 +171,7 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputArgDetails {
-	var results []*diffInputArgDetails
+	results := make([]*diffInputArgDetails, 0, len(args))
 
 	for _, arg := range args {
 		app, task, runID := parseDiffSpec(arg)
