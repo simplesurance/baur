@@ -340,14 +340,15 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *
 }
 
 func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) (*storage.TaskRunWithID, error) {
-	var filters []*storage.Filter
-	filters = append(filters, &storage.Filter{
-		Field:    storage.FieldID,
-		Operator: storage.OpEQ,
-		Value:    id,
-	})
+	filters := []*storage.Filter{
+		{
+			Field:    storage.FieldID,
+			Operator: storage.OpEQ,
+			Value:    id,
+		},
+	}
 
-	var sorters = []*storage.Sorter{
+	sorters := []*storage.Sorter{
 		{
 			Field: storage.FieldID,
 			Order: storage.OrderDesc,
@@ -367,8 +368,9 @@ func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) (*storag
 
 	if err != nil {
 		if err == storage.ErrNotExist {
-			exitOnErr(fmt.Errorf("task-run %d does not exist", id))
+			err = fmt.Errorf("task-run %d does not exist", id)
 		}
+
 		exitOnErr(err)
 	}
 
