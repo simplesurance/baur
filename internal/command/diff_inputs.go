@@ -144,30 +144,16 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if !c.quiet || c.csv {
-		c.printOutput(inputs1, inputs2)
+	diffs, err := baur.DiffInputs(inputs1, inputs2)
+	exitOnErr(err)
+
+	c.printOutput(diffs)
+
+	if len(diffs) > 0 {
+		exitFunc(2)
 	}
 
-	app1Digest := getDigest(inputs1)
-	app2Digest := getDigest(inputs2)
-
-	if !c.csv && !c.quiet {
-		stdout.Println()
-	}
-
-	if app1Digest == app2Digest {
-		if !c.csv {
-			stdout.Printf("the inputs of %s and %s are the same\n", args[0], args[1])
-		}
-
-		exitFunc(0)
-	}
-
-	if !c.csv {
-		stdout.Printf("the inputs of %s and %s differ\n", args[0], args[1])
-	}
-
-	exitFunc(2)
+	exitFunc(0)
 }
 
 func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputArgDetails {
@@ -365,23 +351,36 @@ func getDigest(inputs *baur.Inputs) string {
 	return digest.String()
 }
 
-func (c *diffInputsCmd) printOutput(inputs1, inputs2 *baur.Inputs) {
-	var formatter format.Formatter
+func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
+	if !c.quiet || c.csv {
+		var formatter format.Formatter
 
-	if c.csv {
-		formatter = csv.New(nil, stdout)
+		if c.csv {
+			formatter = csv.New(nil, stdout)
+		} else {
+			headers := []string{"State", "Path", "Digest1", "Digest2"}
+			formatter = table.New(headers, stdout)
+		}
+
+		for _, diff := range diffs {
+			mustWriteRow(formatter, diff.State, diff.Path, diff.Digest1, diff.Digest2)
+		}
+
+		err := formatter.Flush()
+		exitOnErr(err)
+	}
+
+	if !c.quiet && !c.csv {
+		stdout.Println()
+	}
+
+	if len(diffs) > 0 {
+		if !c.csv {
+			stdout.Printf("the inputs differ\n")
+		}
 	} else {
-		headers := []string{"State", "Path", "Digest1", "Digest2"}
-		formatter = table.New(headers, stdout)
+		if !c.csv {
+			stdout.Printf("the inputs are the same\n")
+		}
 	}
-
-	diffs, err := baur.DiffInputs(inputs1, inputs2)
-	exitOnErr(err)
-
-	for _, diff := range diffs {
-		mustWriteRow(formatter, diff.State, diff.Path, diff.Digest1, diff.Digest2)
-	}
-
-	err = formatter.Flush()
-	exitOnErr(err)
 }
