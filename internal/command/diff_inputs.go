@@ -96,6 +96,10 @@ func diffArgs() cobra.PositionalArgs {
 			return fmt.Errorf("accepts 2 args, received %d", len(args))
 		}
 
+		if args[0] == args[1] {
+			return fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1])
+		}
+
 		validArgRE := regexp.MustCompile(`^\w+\.[\w\^]+$|^[0-9]+\d*$`)
 		for _, arg := range args {
 			if !validArgRE.MatchString(arg) {
@@ -107,10 +111,6 @@ func diffArgs() cobra.PositionalArgs {
 }
 
 func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
-	if args[0] == args[1] {
-		exitOnErr(fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1]))
-	}
-
 	repo := mustFindRepository()
 	argDetails := getDiffInputArgDetails(repo, args)
 

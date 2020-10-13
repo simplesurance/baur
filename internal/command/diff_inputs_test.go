@@ -171,11 +171,10 @@ func TestCurrentInputsAgainstSameTaskCurrentInputsReturnsExitCode1(t *testing.T)
 	r := repotest.CreateBaurRepository(t)
 	r.CreateAppWithNoOutputs(t, appOneName)
 
-	assertExitCode(t, 1)
-
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appOneWithBuildTask})
-	executeWithoutError(t, diffInputsCmd)
+	err := diffInputsCmd.Execute()
+	assert.EqualError(t, err, fmt.Sprintf("%s and %s refer to the same task-run", appOneWithBuildTask, appOneWithBuildTask))
 }
 
 func TestNonExistentRunReturnsExitCode1(t *testing.T) {
