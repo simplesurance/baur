@@ -1,6 +1,10 @@
 # Golang CircleCI 2.0 configuration file
 # Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.2.0
+
 jobs:
   test:
     docker:
@@ -47,6 +51,17 @@ jobs:
 
       - store_test_results:
           path: /tmp/test-results
+
+  test_windows:
+    executor: win/default
+
+    steps:
+      - checkout
+
+      - run:
+          name: Preparing Test Environment
+          command: |
+            docker run -d -e POSTGRES_USER=root -e POSTGRES_DB=baur -e POSTGRES_HOST_AUTH_METHOD=trust circleci/postgres:12
 
   build:
     docker:
