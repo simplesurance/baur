@@ -185,7 +185,7 @@ func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputAr
 
 		for _, argDetails := range results {
 			if argDetails.runID == "" && argDetails.task == nil {
-				exitOnErr(fmt.Errorf("task not found for %s", argDetails.arg))
+				exitOnErr(fmt.Errorf("%s: task not found", argDetails.arg))
 			}
 		}
 	}
