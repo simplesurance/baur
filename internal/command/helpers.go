@@ -141,11 +141,11 @@ func mustArgToTasks(repo *baur.Repository, args []string) []*baur.Task {
 	exitOnErr(err)
 
 	if len(tasks) == 0 {
-		log.Fatalf("could not find any tasks\n"+
+		exitOnErr(fmt.Errorf("could not find any tasks\n"+
 			"- ensure the [Discover] section is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file with task definitions",
-			repo.CfgPath, baur.AppCfgFile)
+			repo.CfgPath, baur.AppCfgFile))
 	}
 
 	return tasks
@@ -216,4 +216,18 @@ func mustTaskRepoRelPath(repositoryDir string, task *baur.Task) string {
 	exitOnErr(err)
 
 	return path
+}
+
+func subStr(input string, start int, length int) string {
+	asRunes := []rune(input)
+
+	if start >= len(asRunes) {
+		return ""
+	}
+
+	if start+length > len(asRunes) {
+		length = len(asRunes) - start
+	}
+
+	return string(asRunes[start : start+length])
 }

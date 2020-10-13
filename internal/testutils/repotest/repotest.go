@@ -9,6 +9,7 @@ import (
 
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/cfg"
+	"github.com/simplesurance/baur/v1/internal/digest"
 	"github.com/simplesurance/baur/v1/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
 )
@@ -118,6 +119,71 @@ echo "check successful"
 	fstest.Chmod(t, checkFilePath, os.ModePerm)
 
 	return &app
+}
+
+func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
+	t.Helper()
+
+	inputFileName := fmt.Sprintf("%s.txt", appName)
+
+	app := cfg.App{
+		Name: appName,
+		Tasks: []*cfg.Task{
+			{
+				Name:    "build",
+				Command: []string{"echo", "build", appName},
+				Input: cfg.Input{
+					Files: []cfg.FileInputs{
+						{
+							Paths: []string{"**"},
+						},
+					},
+				},
+			},
+			{
+				Name:    "test",
+				Command: []string{"echo", "test", appName},
+				Input: cfg.Input{
+					Files: []cfg.FileInputs{
+						{
+							Paths: []string{"**"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	appDir := filepath.Join(r.Dir, appName)
+
+	if err := os.Mkdir(appDir, 0775); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := app.ToFile(filepath.Join(appDir, baur.AppCfgFile)); err != nil {
+		t.Fatalf("writing app cfg file failed: %s", err)
+	}
+
+	r.AppCfgs = append(r.AppCfgs, &app)
+
+	inputFilePath := filepath.Join(filepath.Join(appDir, inputFileName))
+	fstest.WriteToFile(t, []byte(appName), inputFilePath)
+
+	return &app
+}
+
+func (r *Repo) WriteAdditionalFileContents(t *testing.T, appName, fileName, contents string) *digest.Digest {
+	t.Helper()
+
+	file := baur.NewFile(r.Dir, filepath.Join(appName, fileName))
+	fstest.WriteToFile(t, []byte(contents), file.AbsPath)
+
+	digest, err := file.CalcDigest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return digest
 }
 
 type Repo struct {
