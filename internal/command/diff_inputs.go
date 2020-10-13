@@ -53,6 +53,15 @@ type diffInputsCmd struct {
 const diffInputslongHelp = `
 List the difference of inputs between tasks or task-runs.
 
+An argument can either reference a task or a task-run.
+If a task is specified the current inputs of the task in the filesystem are
+compared. A task is specified in the format <APP-NAME>.<TASK-NAME>.
+A past task-run that was recorded in the database can be specified by:
+- it's run-id,
+- or by the git-like syntax <APP-NAME>.<TASK-NAME>^, the number of ^ characters
+  specify the run-id, ^ refers the last recorded run, '^^' the run before the
+  last, and so on
+
 States:
 	D - digests do not match,
 	+ - the input is missing in the first task(-run)
@@ -64,13 +73,25 @@ Exit Codes:
 	2 - Inputs differ
 `
 
+const diffInputsExample = `
+baur diff inputs calc.build calc.check  - Compare current inputs of the
+					  build and check tasks of the calc app
+baur diff inputs calc.build 312		- Compare current inputs of the build
+					  task of the calc app with the recorded
+					  run with ID 312.
+baur diff inputs calc.build calc.build^ - Compare current inputs and the one
+					  of the last recorded run of the calc
+					  task of the build app.
+`
+
 func newDiffInputsCmd() *diffInputsCmd {
 	cmd := diffInputsCmd{
 		Command: cobra.Command{
-			Use:   "inputs <APP-NAME>.<TASK-NAME>|<RUN-ID> <APP-NAME>.<TASK-NAME>|<RUN-ID>",
-			Short: "list inputs that differ between two task-runs",
-			Long:  strings.TrimSpace(diffInputslongHelp),
-			Args:  diffArgs(),
+			Use:     "inputs <APP-NAME>.<TASK-NAME>[^]...|<RUN-ID> <APP-NAME>.<TASK-NAME>[^]...|<RUN-ID>",
+			Short:   "list inputs that differ between two task-runs",
+			Long:    strings.TrimSpace(diffInputslongHelp),
+			Example: strings.TrimSpace(diffInputsExample),
+			Args:    diffArgs(),
 		},
 	}
 
