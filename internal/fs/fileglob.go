@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/simplesurance/baur/fs"
 )
 
@@ -22,7 +20,7 @@ func FileGlob(pattern string) ([]string, error) {
 	if strings.Contains(pattern, "**") {
 		expandedPaths, err := expandDoubleStarGlob(pattern)
 		if err != nil {
-			return nil, errors.Wrap(err, "expanding '**' failed")
+			return nil, fmt.Errorf("expanding '**' failed: %w", err)
 		}
 
 		globPaths = expandedPaths
@@ -48,7 +46,7 @@ func FileGlob(pattern string) ([]string, error) {
 	for _, p := range paths {
 		isFile, err := fs.IsFile(p)
 		if err != nil {
-			return nil, errors.Wrapf(err, "resolved path %q does not exist", p)
+			return nil, fmt.Errorf("resolved path %q does not exist: %w", p, err)
 		}
 
 		if isFile {
@@ -62,7 +60,7 @@ func FileGlob(pattern string) ([]string, error) {
 func findAllDirsNoDups(result map[string]struct{}, path string) error {
 	isDir, err := fs.IsDir(path)
 	if err != nil {
-		return errors.Wrapf(err, "IsDir(%s) failed", path)
+		return fmt.Errorf("IsDir(%s) failed: %w", path, err)
 	}
 
 	if !isDir {
@@ -71,7 +69,7 @@ func findAllDirsNoDups(result map[string]struct{}, path string) error {
 
 	path, err = filepath.EvalSymlinks(path)
 	if err != nil {
-		return errors.Wrapf(err, "resolving symlinks in %q failed", path)
+		return fmt.Errorf("resolving symlinks in %q failed: %w", path, err)
 	}
 
 	if _, exist := result[path]; exist {
@@ -82,7 +80,7 @@ func findAllDirsNoDups(result map[string]struct{}, path string) error {
 	globPath := filepath.Join(path, "*")
 	rootGlob, err := filepath.Glob(globPath) // is filepath.Walk() faster?
 	if err != nil {
-		return errors.Wrapf(err, "glob of %q failed", globPath)
+		return fmt.Errorf("glob of %q failed: %w", globPath, err)
 	}
 
 	for _, path := range rootGlob {

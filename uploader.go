@@ -2,6 +2,7 @@ package baur
 
 import (
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"time"
 )
@@ -115,7 +116,9 @@ func (u *Uploader) DockerImage(o *OutputDockerImage) (*UploadResult, error) {
 func (u *Uploader) FileCopy(o *OutputFile) (*UploadResult, error) {
 	startTime := time.Now()
 
-	url, err := u.filecopyUploader.Upload(o.AbsPath, o.UploadsFilecopy.DestinationPath)
+	destFile := filepath.Join(o.UploadsFilecopy.DestinationPath, filepath.Base(o.AbsPath))
+
+	url, err := u.filecopyUploader.Upload(o.AbsPath, destFile)
 	if err != nil {
 		return nil, err
 	}

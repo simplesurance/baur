@@ -3,8 +3,6 @@ package version
 import (
 	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 var (
@@ -28,7 +26,7 @@ var (
 func LoadPackageVars() error {
 	s, err := FromString(Version)
 	if err != nil {
-		return errors.Wrapf(err, "parsing version '%s' failed", Version)
+		return fmt.Errorf("parsing version %q failed: %w", Version, err)
 	}
 
 	CurSemVer = *s
@@ -74,7 +72,7 @@ func FromString(ver string) (*SemVer, error) {
 
 	matches, err := fmt.Sscanf(ver, "%d.%d.%d-%s", &major, &minor, &patch, &appendix)
 	if (err != nil && err != io.ErrUnexpectedEOF) || matches < 1 {
-		return nil, errors.Wrapf(err, "invalid format, should be <Major>[.<Minor>[.<Patch>[-appendix]]]")
+		return nil, fmt.Errorf("invalid format, should be <Major>[.<Minor>[.<Patch>[-appendix]]]: %w", err)
 	}
 
 	return &SemVer{
