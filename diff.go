@@ -32,6 +32,7 @@ func DiffInputs(a, b *Inputs) ([]*InputDiff, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	bMap, err := inputsToStrMap(b.Inputs())
 	if err != nil {
 		return nil, err
@@ -40,12 +41,14 @@ func DiffInputs(a, b *Inputs) ([]*InputDiff, error) {
 	var diffs []*InputDiff
 
 	for aPath, aDigest := range aMap {
-		if bDigest, exists := bMap[aPath]; !exists {
+		bDigest, exists := bMap[aPath]
+		if !exists {
 			diffs = append(diffs, &InputDiff{State: Removed, Path: aPath, Digest1: aDigest})
-		} else {
-			if aDigest != bDigest {
-				diffs = append(diffs, &InputDiff{State: DigestMismatch, Path: aPath, Digest1: aDigest, Digest2: bDigest})
-			}
+			continue
+		}
+
+		if aDigest != bDigest {
+			diffs = append(diffs, &InputDiff{State: DigestMismatch, Path: aPath, Digest1: aDigest, Digest2: bDigest})
 		}
 	}
 
