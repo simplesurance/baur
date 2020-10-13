@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -197,7 +198,10 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 		inputResolver := baur.NewInputResolver()
 
 		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
-		exitOnErr(err)
+		if err != nil {
+			stderr.TaskPrintf(argDetails.task, "resolving inputs failed: %s\n", err)
+			os.Exit(1)
+		}
 
 		return baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr)), nil
 	}
@@ -275,7 +279,7 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *
 	}
 
 	if runPosition > retrieved {
-		exitOnErr(fmt.Errorf("%s does not exist, only %d task-run(s) exist(s)", argDetails.arg, retrieved))
+		exitOnErr(fmt.Errorf("run %s does not exist, only %d task-run(s) exist(s)", argDetails.arg, retrieved))
 	}
 
 	return taskRun

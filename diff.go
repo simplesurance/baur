@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -71,7 +72,7 @@ func inputsToStrMap(inputs []Input) (map[string]string, error) {
 	for _, input := range inputs {
 		digest, err := input.Digest()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: calculating digest failed: %w", input, err)
 		}
 
 		inputsMap[input.String()] = digest.String()
