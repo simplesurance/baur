@@ -3,12 +3,11 @@ package sha384
 import (
 	"bytes"
 	"crypto/sha512"
+	"fmt"
 	stdhash "hash"
 	"io"
 	"os"
 	"sort"
-
-	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/v1/internal/digest"
 )
@@ -27,13 +26,13 @@ func New() *Hash {
 func (h *Hash) AddFile(path string) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return errors.Wrap(err, "opening file failed")
+		return fmt.Errorf("opening file failed: %w", err)
 	}
 
 	defer f.Close()
 
 	if _, err := io.Copy(h.hash, f); err != nil {
-		return errors.Wrap(err, "reading file failed")
+		return fmt.Errorf("reading file failed: %w", err)
 	}
 
 	return nil
@@ -53,7 +52,7 @@ func (h *Hash) Digest() *digest.Digest {
 func (h *Hash) AddBytes(b []byte) error {
 	_, err := h.hash.Write(b)
 	if err != nil {
-		return errors.Wrap(err, "writing to hash stream failed")
+		return fmt.Errorf("writing to hash stream failed: %w", err)
 	}
 
 	return nil

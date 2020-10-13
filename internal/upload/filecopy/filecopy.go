@@ -1,11 +1,10 @@
 package filecopy
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/v1/internal/fs"
 )
@@ -30,7 +29,7 @@ func New(debugLogFn func(string, ...interface{})) *Client {
 func copyFile(src, dst string) error {
 	srcFd, err := os.Open(src)
 	if err != nil {
-		return errors.Wrapf(err, "opening %s failed", src)
+		return fmt.Errorf("opening %s failed: %w", src, err)
 	}
 
 	// nolint: errcheck
@@ -38,14 +37,14 @@ func copyFile(src, dst string) error {
 
 	srcFi, err := os.Stat(src)
 	if err != nil {
-		return errors.Wrapf(err, "stat %s failed", src)
+		return fmt.Errorf("stat %s failed: %w", src, err)
 	}
 
 	srcFileMode := srcFi.Mode().Perm()
 
 	dstFd, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcFileMode)
 	if err != nil {
-		return errors.Wrapf(err, "opening %s failed", dst)
+		return fmt.Errorf("opening %s failed: %w", dst, err)
 	}
 
 	_, err = io.Copy(dstFd, srcFd)
@@ -73,13 +72,12 @@ func (c *Client) Upload(src string, dst string) (string, error) {
 
 		err = fs.Mkdir(destDir)
 		if err != nil {
-			return "", errors.Wrapf(err, "creating directory '%s' failed", destDir)
+			return "", fmt.Errorf("creating directory %s failed: %w", destDir, err)
 		}
-
 		c.debugLogFn("filecopy: created directory '%s'", destDir)
 	} else {
 		if !isDir {
-			return "", errors.Wrapf(err, "%s is not a directory", destDir)
+			return "", fmt.Errorf("%s is not a directory", destDir)
 		}
 	}
 
@@ -93,7 +91,7 @@ func (c *Client) Upload(src string, dst string) (string, error) {
 	}
 
 	if !regFile {
-		return "", errors.Wrapf(err, "'%s' exist but is not a regular file", dst)
+		return "", fmt.Errorf("%s exist but is not a regular file", dst)
 	}
 
 	sameFile, err := fs.SameFile(src, dst)

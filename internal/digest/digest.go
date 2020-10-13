@@ -2,10 +2,9 @@ package digest
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // Algorithm describes the digest algorithm
@@ -66,12 +65,12 @@ func FromString(in string) (*Digest, error) {
 
 		algorithm = SHA384
 	default:
-		return nil, errors.New("unsupported format %q")
+		return nil, fmt.Errorf("unsupported format %q", a)
 	}
 
 	sum, err := hex.DecodeString(spl[1])
 	if err != nil {
-		return nil, errors.Wrap(err, "converting string sum to hex failed")
+		return nil, fmt.Errorf("converting string sum to hex failed: %w", err)
 	}
 
 	return &Digest{

@@ -1,10 +1,9 @@
 package baur
 
 import (
+	"fmt"
 	"path/filepath"
 	"sort"
-
-	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/v1/cfg"
 )
@@ -26,7 +25,7 @@ func NewApp(appCfg *cfg.App, repositoryRootPath string) (*App, error) {
 
 	appRelPath, err := filepath.Rel(repositoryRootPath, appDir)
 	if err != nil {
-		return nil, errors.Wrapf(err, "%s: resolving repository relative application path failed", appCfg.Name)
+		return nil, fmt.Errorf("%s: resolving repository relative application path failed: %w", appCfg.Name, err)
 	}
 
 	app := App{

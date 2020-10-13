@@ -1,10 +1,9 @@
 package baur
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 
 	"github.com/simplesurance/baur/v1/cfg"
 	"github.com/simplesurance/baur/v1/internal/fs"
@@ -43,14 +42,14 @@ func FindRepositoryCfgCwd() (string, error) {
 func NewRepository(cfgPath string) (*Repository, error) {
 	repoCfg, err := cfg.RepositoryFromFile(cfgPath)
 	if err != nil {
-		return nil, errors.Wrapf(err,
-			"reading repository config %s failed", cfgPath)
+		return nil, fmt.Errorf(
+			"reading repository config %s failed: %w", cfgPath, err)
 	}
 
 	err = repoCfg.Validate()
 	if err != nil {
-		return nil, errors.Wrapf(err,
-			"validating repository config %q failed", cfgPath)
+		return nil, fmt.Errorf(
+			"validating repository config %q failed: %w", cfgPath, err)
 	}
 	repoPath := filepath.Dir(cfgPath)
 
