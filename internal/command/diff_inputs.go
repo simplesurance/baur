@@ -97,32 +97,12 @@ func diffArgs() cobra.PositionalArgs {
 			return fmt.Errorf("accepts 2 args, received %d", len(args))
 		}
 
-		containsWildCardPattern := "^\\*\\..+$|^.+\\.\\*$"
-		isNumericPattern := "^\\d+$"
-		containsTaskPattern := "^.+\\..+$"
-
+		validArgRE := regexp.MustCompile(`^\w+\.[\w\^]+$|^[0-9]+\d*$`)
 		for _, arg := range args {
-			containsWildCard, err := regexp.MatchString(containsWildCardPattern, arg)
-
-			if err != nil {
-				return err
-			}
-
-			if containsWildCard {
-				return fmt.Errorf("%s contains a wild card character, wild card characters are not allowed", arg)
-			}
-
-			isValid, err := regexp.MatchString(fmt.Sprintf("%s|%s", isNumericPattern, containsTaskPattern), arg)
-
-			if err != nil {
-				return err
-			}
-
-			if !isValid {
-				return fmt.Errorf("%s does not specify a task or task-run ID", arg)
+			if !validArgRE.MatchString(arg) {
+				return fmt.Errorf("invalid argument: %q", arg)
 			}
 		}
-
 		return nil
 	}
 }

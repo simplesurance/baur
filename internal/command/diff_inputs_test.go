@@ -70,12 +70,20 @@ func TestWildCardsNotAllowed(t *testing.T) {
 		appTask  string
 	}{
 		{
-			testname: "withAppWildCard",
+			testname: "withAppOnlyWildCard",
 			appTask:  "*.task",
 		},
 		{
-			testname: "withTaskWildCard",
+			testname: "withAppContainingWildCard",
+			appTask:  "app*.task",
+		},
+		{
+			testname: "withTaskOnlyWildCard",
 			appTask:  "app.*",
+		},
+		{
+			testname: "withTaskContainingWildCard",
+			appTask:  "app.task*",
 		},
 	}
 
@@ -88,7 +96,7 @@ func TestWildCardsNotAllowed(t *testing.T) {
 			diffInputsCmd.SetArgs([]string{tc.appTask, "app.task"})
 			err := diffInputsCmd.Execute()
 
-			assert.EqualError(t, err, fmt.Sprintf("%s contains a wild card character, wild card characters are not allowed", tc.appTask))
+			assert.EqualError(t, err, fmt.Sprintf("invalid argument: \"%s\"", tc.appTask))
 		})
 	}
 }
@@ -121,7 +129,7 @@ func TestAppAndTaskRequired(t *testing.T) {
 			diffInputsCmd.SetArgs([]string{tc.appTask, "app.task"})
 			err := diffInputsCmd.Execute()
 
-			assert.EqualError(t, err, fmt.Sprintf("%s does not specify a task or task-run ID", tc.appTask))
+			assert.EqualError(t, err, fmt.Sprintf("invalid argument: \"%s\"", tc.appTask))
 		})
 	}
 }
