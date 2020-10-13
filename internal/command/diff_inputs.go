@@ -79,7 +79,7 @@ func newDiffInputsCmd() *diffInputsCmd {
 		"show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"do not show anything, the result is indicated by the exit code")
+		"do not list the inputs that differ")
 
 	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
 		"include a string as input")
@@ -318,7 +318,7 @@ func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) *storage
 }
 
 func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
-	if !c.quiet || c.csv {
+	if !c.quiet {
 		var formatter format.Formatter
 
 		if c.csv {
@@ -336,17 +336,17 @@ func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
 		exitOnErr(err)
 	}
 
-	if !c.quiet && !c.csv {
+	if c.csv {
+		return
+	}
+
+	if !c.quiet {
 		stdout.Println()
 	}
 
 	if len(diffs) > 0 {
-		if !c.csv {
-			stdout.Printf("the inputs differ\n")
-		}
+		stdout.Printf("the inputs differ\n")
 	} else {
-		if !c.csv {
-			stdout.Printf("the inputs are the same\n")
-		}
+		stdout.Printf("the inputs are the same\n")
 	}
 }
