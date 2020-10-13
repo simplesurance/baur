@@ -89,7 +89,6 @@ func newDiffInputsCmd() *diffInputsCmd {
 
 // diffArgs returns an error in the following scenarios:
 // - there is less than or greater than 2 args specified
-// - the <APP-NAME> or <TASK-NAME> is a wildcard character (*)
 // - either arg is not in the format <APP-NAME>.<TASK-NAME> or a numeric value
 func diffArgs() cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
