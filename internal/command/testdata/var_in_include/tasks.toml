@@ -2,4 +2,4 @@
   include_id = "build"
   includes = ["$ROOT/inputs.toml#input"]
   name = "build"
-  command = ["ls", "$APPNAME.txt"]
+  command = ["more", "$APPNAME.txt"]
