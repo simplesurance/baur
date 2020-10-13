@@ -256,21 +256,20 @@ func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage
 }
 
 func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
-	var filters []*storage.Filter
+	filters := []*storage.Filter{
+		{
+			Field:    storage.FieldApplicationName,
+			Operator: storage.OpEQ,
+			Value:    argDetails.appName,
+		},
+		{
+			Field:    storage.FieldTaskName,
+			Operator: storage.OpEQ,
+			Value:    argDetails.taskName,
+		},
+	}
 
-	filters = append(filters, &storage.Filter{
-		Field:    storage.FieldApplicationName,
-		Operator: storage.OpEQ,
-		Value:    argDetails.appName,
-	})
-
-	filters = append(filters, &storage.Filter{
-		Field:    storage.FieldTaskName,
-		Operator: storage.OpEQ,
-		Value:    argDetails.taskName,
-	})
-
-	var sorters = []*storage.Sorter{
+	sorters := []*storage.Sorter{
 		{
 			Field: storage.FieldID,
 			Order: storage.OrderDesc,
