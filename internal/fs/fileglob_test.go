@@ -172,6 +172,11 @@ func Test_Resolve(t *testing.T) {
 	for _, tc := range testcases {
 		tempdir := t.TempDir()
 
+		// The path separators in the test cases are Unix style "/", they need to be converted to "\" when running on Windows
+		for i := range tc.expectedMatches {
+			tc.expectedMatches[i] = filepath.FromSlash(tc.expectedMatches[i])
+		}
+
 		if len(tc.dir) != 0 {
 			err := os.MkdirAll(filepath.Join(tempdir, tc.dir), os.ModePerm)
 			if err != nil {
