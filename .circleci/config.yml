@@ -57,10 +57,11 @@ jobs:
 
     environment:
       GOFLAGS: -mod=vendor
-      TEST_RESULTS: C:\test-results
+      TEST_RESULTS: ~/test-results
       BAUR_TEST_POSTGRESQL_URL: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 
     working_directory: ~/baur
+    
     steps:
       - checkout
 
@@ -69,24 +70,22 @@ jobs:
           command: |
             choco install golang --version=1.15.2 -y
             choco install postgresql12 --params '/Password:postgres' -y
-
-            $go111module = $Env:GO111MODULE
-            $Env:GO111MODULE="off"
-            go get github.com/jstemmer/go-junit-report
-            $Env:GO111MODULE=$go111module
-
             mkdir -p $Env:TEST_RESULTS
 
       - run:
           name: Run Tests
           command: |
+            $go111module = $Env:GO111MODULE
+            $Env:GO111MODULE="off"
+            go get github.com/jstemmer/go-junit-report
+            $Env:GO111MODULE=$go111module
             git config --global user.email "circleci-baurtest@example.com"
             git config --global user.name "baur"
             try { go test --tags=dbtest -v -timeout 5m .\... | Tee-Object -FilePath $Env:TEST_RESULTS\go-test.out } `
-            finally { Get-Content -Path $Env:TEST_RESULTS\go-test.out | $Env:GOPATH\bin\go-junit-report.exe > $Env:TEST_RESULTS\go-test-report.xml }
+            finally { Get-Content -Path $Env:TEST_RESULTS\go-test.out | go-junit-report > $Env:TEST_RESULTS\go-test-report.xml }
 
       - store_test_results:
-          path: c:\test-results
+          path: ~\test-results
 
   build:
     docker:
