@@ -6,7 +6,7 @@ orbs:
   win: circleci/windows@2.2.0
 
 jobs:
-  test:
+  test_linux:
     docker:
       - image: circleci/golang:1
         environment:
@@ -61,7 +61,7 @@ jobs:
       BAUR_TEST_POSTGRESQL_URL: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 
     working_directory: ~/baur
-    
+
     steps:
       - checkout
 
@@ -87,7 +87,7 @@ jobs:
       - store_test_results:
           path: ~\test-results
 
-  build:
+  build_linux:
     docker:
       - image: circleci/golang:1
 
@@ -99,7 +99,7 @@ jobs:
           name: Building baur
           command: make baur
 
-  static_analysis:
+  static_analysis_linux:
     docker:
       - image: golangci/golangci-lint:v1.31.0
 
@@ -115,7 +115,7 @@ workflows:
   version: 2.1
   workflow:
     jobs:
-      - build
-      - test
+      - build_linux
+      - test_linux
       - test_windows
-      - static_analysis
+      - static_analysis_linux
