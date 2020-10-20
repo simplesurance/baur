@@ -70,7 +70,7 @@ jobs:
           command: |
             choco install golang --version=1.15.2 -y
             choco install postgresql12 --params '/Password:postgres' -y
-            mkdir -p $Env:TEST_RESULTS
+            New-Item -ItemType Directory -Force -Path $Env:TEST_RESULTS
 
       - run:
           name: Run Tests
@@ -81,8 +81,12 @@ jobs:
             $Env:GO111MODULE=$go111module
             git config --global user.email "circleci-baurtest@example.com"
             git config --global user.name "baur"
-            try { go test --tags=dbtest -v -timeout 5m .\... | Tee-Object -FilePath $Env:TEST_RESULTS\go-test.out } `
-            finally { Get-Content -Path $Env:TEST_RESULTS\go-test.out | go-junit-report > $Env:TEST_RESULTS\go-test-report.xml }
+            $testResultDir = Resolve-Path $Env:TEST_RESULTS
+            $testOutputPath = Join-Path $testResultDir "go-test.out"
+            $testReportPath = Join-Path $testResultDir "go-test-report.xml"
+            try { go test --tags=dbtest -v -timeout 5m .\... | Tee-Object -FilePath $testOutputPath } `
+            finally { Get-Content -Path $testOutputPath | go-junit-report > $testReportPath; `
+            [System.Io.File]::ReadAllText($testReportPath) | Out-File -FilePath $testReportPath -Encoding utf8 }
 
       - store_test_results:
           path: ~\test-results
