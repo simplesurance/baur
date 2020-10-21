@@ -1,8 +1,12 @@
 # Golang CircleCI 2.0 configuration file
 # Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.2.0
+
 jobs:
-  test:
+  test_linux:
     docker:
       - image: circleci/golang:1
         environment:
@@ -48,7 +52,46 @@ jobs:
       - store_test_results:
           path: /tmp/test-results
 
-  build:
+  test_windows:
+    executor: win/default
+
+    environment:
+      GOFLAGS: -mod=vendor
+      TEST_RESULTS: ~/test-results
+      BAUR_TEST_POSTGRESQL_URL: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+
+    working_directory: ~/baur
+
+    steps:
+      - checkout
+
+      - run:
+          name: Preparing Test Environment
+          command: |
+            choco install golang --version=1.15.2 -y
+            choco install postgresql12 --params '/Password:postgres' -y
+            New-Item -ItemType Directory -Force -Path $Env:TEST_RESULTS
+
+      - run:
+          name: Run Tests
+          command: |
+            $go111module = $Env:GO111MODULE
+            $Env:GO111MODULE="off"
+            go get github.com/jstemmer/go-junit-report
+            $Env:GO111MODULE=$go111module
+            git config --global user.email "circleci-baurtest@example.com"
+            git config --global user.name "baur"
+            $testResultDir = Resolve-Path $Env:TEST_RESULTS
+            $testOutputPath = Join-Path $testResultDir "go-test.out"
+            $testReportPath = Join-Path $testResultDir "go-test-report.xml"
+            try { go test --tags=dbtest -v -timeout 5m .\... | Tee-Object -FilePath $testOutputPath } `
+            finally { Get-Content -Path $testOutputPath | go-junit-report > $testReportPath; `
+            [System.Io.File]::ReadAllText($testReportPath) | Out-File -FilePath $testReportPath -Encoding utf8 }
+
+      - store_test_results:
+          path: ~\test-results
+
+  build_linux:
     docker:
       - image: circleci/golang:1
 
@@ -60,7 +103,7 @@ jobs:
           name: Building baur
           command: make baur
 
-  static_analysis:
+  static_analysis_linux:
     docker:
       - image: golangci/golangci-lint:v1.31.0
 
@@ -73,9 +116,10 @@ jobs:
           command: golangci-lint run
 
 workflows:
-  version: 2
+  version: 2.1
   workflow:
     jobs:
-      - build
-      - test
-      - static_analysis
+      - build_linux
+      - test_linux
+      - test_windows
+      - static_analysis_linux

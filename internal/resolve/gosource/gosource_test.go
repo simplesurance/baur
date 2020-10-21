@@ -56,6 +56,8 @@ func TestResolve(t *testing.T) {
 
 			for i := range testCfg.ExpectedResults {
 				testCfg.ExpectedResults[i] = strings.Replace(testCfg.ExpectedResults[i], "$WORKDIR", cwd, -1)
+				// The path separators in the test config are Unix style "/", they need to be converted to "\" when running on Windows
+				testCfg.ExpectedResults[i] = filepath.FromSlash(testCfg.ExpectedResults[i])
 			}
 
 			resolvedFiles, err := NewResolver(t.Logf).Resolve(

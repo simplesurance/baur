@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/simplesurance/baur/v1"
@@ -43,16 +44,33 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 
 	appName := "simpleApp"
 
+	buildFile := "build.sh"
+	if runtime.GOOS == "windows" {
+		buildFile = "build.bat"
+	}
+	checkFile := "check.sh"
+	if runtime.GOOS == "windows" {
+		checkFile = "check.bat"
+	}
+	buildCommand := []string{"sh", fmt.Sprintf("./%s", buildFile)}
+	if runtime.GOOS == "windows" {
+		buildCommand = []string{"cmd", "/C", buildFile}
+	}
+	checkCommand := []string{"sh", fmt.Sprintf("./%s", checkFile)}
+	if runtime.GOOS == "windows" {
+		checkCommand = []string{"cmd", "/C", checkFile}
+	}
+
 	app := cfg.App{
 		Name: appName,
 		Tasks: []*cfg.Task{
 			{
 				Name:    "build",
-				Command: []string{"sh", "./build.sh"},
+				Command: buildCommand,
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{
-							Paths: []string{"build.sh", "output_content.txt"},
+							Paths: []string{buildFile, "output_content.txt"},
 						},
 					},
 				},
@@ -70,11 +88,11 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 
 			{
 				Name:    "check",
-				Command: []string{"sh", "./check.sh"},
+				Command: checkCommand,
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{
-							Paths: []string{"check.sh"},
+							Paths: []string{checkFile},
 						},
 					},
 				},
@@ -94,14 +112,14 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 
 	r.AppCfgs = append(r.AppCfgs, &app)
 
-	buildFilePath := filepath.Join(filepath.Join(appDir, "build.sh"))
-	checkFilePath := filepath.Join(filepath.Join(appDir, "check.sh"))
+	buildFilePath := filepath.Join(filepath.Join(appDir, buildFile))
+	checkFilePath := filepath.Join(filepath.Join(appDir, checkFile))
 
 	fstest.WriteToFile(t, []byte(`
 #!/bin/sh
 
 echo "building app"
-cat output_content.txt > output
+more output_content.txt > output
 `),
 		buildFilePath)
 
@@ -126,12 +144,20 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 
 	inputFileName := fmt.Sprintf("%s.txt", appName)
 
+	shell := []string{}
+	if runtime.GOOS == "windows" {
+		shell = []string{"cmd", "/C"}
+	}
+
+	buildCommand := append(shell, "echo", "build", appName)
+	testCommand := append(shell, "echo", "test", appName)
+
 	app := cfg.App{
 		Name: appName,
 		Tasks: []*cfg.Task{
 			{
 				Name:    "build",
-				Command: []string{"echo", "build", appName},
+				Command: buildCommand,
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{
@@ -142,7 +168,7 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 			},
 			{
 				Name:    "test",
-				Command: []string{"echo", "test", appName},
+				Command: testCommand,
 				Input: cfg.Input{
 					Files: []cfg.FileInputs{
 						{

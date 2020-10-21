@@ -1,13 +1,30 @@
 package exec
 
 import (
+	"fmt"
+	"runtime"
 	"testing"
 )
 
 func TestEchoStdout(t *testing.T) {
 	const echoStr = "hello world!"
 
-	res, err := Command("echo", "-n", echoStr).Run()
+	// Windows returns StrOutput with surrounding quotation marks
+	var expected string
+	if runtime.GOOS == "windows" {
+		expected = fmt.Sprintf("\"%s\"", echoStr)
+	} else {
+		expected = echoStr
+	}
+
+	var res *Result
+	var err error
+	if runtime.GOOS == "windows" {
+		res, err = Command("cmd", "/C", "echo", echoStr).Run()
+	} else {
+		res, err = Command("echo", "-n", echoStr).Run()
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -16,13 +33,19 @@ func TestEchoStdout(t *testing.T) {
 		t.Fatalf("cmd exited with code %d, expected 0", res.ExitCode)
 	}
 
-	if res.StrOutput() != echoStr {
-		t.Errorf("expected output '%s', got '%s'", echoStr, res.StrOutput())
+	if res.StrOutput() != expected {
+		t.Errorf("expected output '%s', got '%s'", expected, res.StrOutput())
 	}
 }
 
 func TestCommandFails(t *testing.T) {
-	res, err := Command("false").Run()
+	var res *Result
+	var err error
+	if runtime.GOOS == "windows" {
+		res, err = Command("cmd", "/C", "exit", "1").Run()
+	} else {
+		res, err = Command("false").Run()
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +60,13 @@ func TestCommandFails(t *testing.T) {
 }
 
 func TestExpectSuccess(t *testing.T) {
-	res, err := Command("false").ExpectSuccess().Run()
+	var res *Result
+	var err error
+	if runtime.GOOS == "windows" {
+		res, err = Command("cmd", "/C", "exit", "1").ExpectSuccess().Run()
+	} else {
+		res, err = Command("false").ExpectSuccess().Run()
+	}
 	if err == nil {
 		t.Fatal("Command did not return an error")
 	}

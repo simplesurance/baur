@@ -3,6 +3,7 @@ package command
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -21,9 +22,18 @@ func TestUpgrade(t *testing.T) {
 
 	initTest(t)
 
-	tempdir := t.TempDir()
+	// When running on Windows we need to change the working directory back to the original
+	// working directory so the temporary directory that is used can be deleted
+	var originalDir string
+	var err error
+	if runtime.GOOS == "windows" {
+		originalDir, err = os.Getwd()
+		assert.NoError(t, err)
+	}
 
-	gitDir := filepath.Join(tempdir, "git")
+	tempDir := t.TempDir()
+
+	gitDir := filepath.Join(tempDir, "git")
 
 	require.NoError(t, os.Chdir("/"))
 	gittest.Clone(t, gitDir, gitURL, commit)
@@ -57,4 +67,8 @@ func TestUpgrade(t *testing.T) {
 	assert.Contains(t, taskIDs, "myredis.build")
 	assert.Contains(t, taskIDs, "random.build")
 	assert.Contains(t, taskIDs, "unixtime.build")
+
+	if runtime.GOOS == "windows" {
+		require.NoError(t, os.Chdir(originalDir))
+	}
 }

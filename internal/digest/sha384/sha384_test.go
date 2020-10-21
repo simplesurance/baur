@@ -126,6 +126,8 @@ func TestHashingNonExistingFileFails(t *testing.T) {
 	if err != nil {
 		t.Fatal("creating tempfile failed:", err.Error())
 	}
+	// The file must be closed before it can be deleted on Windows
+	file.Close()
 	os.Remove(file.Name())
 
 	sha := sha384.New()
