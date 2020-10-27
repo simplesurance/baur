@@ -102,7 +102,7 @@ func (a *App) ToFile(filepath string, opts ...ToFileOpt) error {
 	return toFile(a, filepath, opts...)
 }
 
-// FilePath returns the path of the file from which the configuration was loaded.
+// FilePath returns the path of the app configuration file
 func (a *App) FilePath() string {
 	return a.filepath
 }
