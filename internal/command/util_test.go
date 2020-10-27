@@ -41,10 +41,3 @@ func redirectOutputToLogger(t *testing.T) {
 	stdout = term.NewStream(logwriter.New(t, ioutil.Discard))
 	stderr = term.NewStream(logwriter.New(t, ioutil.Discard))
 }
-
-func runInitDb(t *testing.T) {
-	t.Helper()
-
-	t.Log("creating database schema")
-	initDb(initDbCmd, nil)
-}
