@@ -19,13 +19,6 @@ import (
 	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
 )
 
-func runInitDb(t *testing.T) {
-	t.Helper()
-
-	t.Log("creating database schema")
-	initDb(initDbCmd, nil)
-}
-
 var testdataDir string
 
 func init() {

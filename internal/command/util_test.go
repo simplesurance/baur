@@ -11,7 +11,7 @@ import (
 )
 
 // interceptCmdOutput changes the stdout and stderr streams to that the
-// commands write to the returned buffers, all output is additionaly still
+// commands write to the returned buffers, all output is additionally still
 // logged via the test logger
 func interceptCmdOutput(t *testing.T) (stdoutBuf, stderrBuf *bytes.Buffer) {
 	var bufStdout bytes.Buffer
@@ -33,7 +33,18 @@ func initTest(t *testing.T) {
 		t.Fatalf("baur command exited with code %d", code)
 	}
 
+	redirectOutputToLogger(t)
+}
+
+func redirectOutputToLogger(t *testing.T) {
 	exec.DefaultDebugfFn = t.Logf
 	stdout = term.NewStream(logwriter.New(t, ioutil.Discard))
 	stderr = term.NewStream(logwriter.New(t, ioutil.Discard))
+}
+
+func runInitDb(t *testing.T) {
+	t.Helper()
+
+	t.Log("creating database schema")
+	initDb(initDbCmd, nil)
 }
