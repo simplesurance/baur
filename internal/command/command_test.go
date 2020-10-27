@@ -30,6 +30,13 @@ func init() {
 	testdataDir = filepath.Join(wd, "testdata")
 }
 
+func runInitDb(t *testing.T) {
+	t.Helper()
+
+	t.Log("creating database schema")
+	initDb(initDbCmd, nil)
+}
+
 // baurCSVLsApps runs "baur ls apps --csv" and returns a slice where each
 // element is a slice of csv fields per line
 func baurCSVLsApps(t *testing.T) [][]string {
