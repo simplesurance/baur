@@ -29,13 +29,6 @@ func doInitDb(t *testing.T) {
 	initDb(initDbCmd, nil)
 }
 
-func assertExitCode(t *testing.T, expected int) {
-	exitFunc = func(code int) {
-		assert.Equal(t, expected, code)
-		t.SkipNow()
-	}
-}
-
 func Test2ArgsRequired(t *testing.T) {
 	testcases := []struct {
 		testname string
@@ -53,7 +46,7 @@ func Test2ArgsRequired(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -91,7 +84,7 @@ func TestWildCardsNotAllowed(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -125,7 +118,7 @@ func TestAppAndTaskRequired(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -159,21 +152,19 @@ func TestUnknownAppOrTaskReturnsExitCode1(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
-			assertExitCode(t, 1)
-
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{tc.appTask, appOneWithBuildTask})
-			executeWithoutError(t, diffInputsCmd)
+			execCmd(t, diffInputsCmd, 1)
 		})
 	}
 }
 
 func TestCurrentInputsAgainstSameTaskCurrentInputsReturnsExitCode1(t *testing.T) {
-	redirectOutputToLogger(t)
+	initTest(t)
 	r := repotest.CreateBaurRepository(t)
 	r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -200,7 +191,7 @@ func TestNonExistentRunReturnsExitCode1(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -209,11 +200,9 @@ func TestNonExistentRunReturnsExitCode1(t *testing.T) {
 			runCmd := newRunCmd()
 			runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
-			assertExitCode(t, 1)
-
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{appOneWithBuildTask, tc.run})
-			executeWithoutError(t, diffInputsCmd)
+			execCmd(t, diffInputsCmd, 1)
 		})
 	}
 }
@@ -235,7 +224,7 @@ func TestCurrentInputsAgainstPreviousRunThatHasSameInputsReturnsExitCode0(t *tes
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -244,11 +233,9 @@ func TestCurrentInputsAgainstPreviousRunThatHasSameInputsReturnsExitCode0(t *tes
 			runCmd := newRunCmd()
 			runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
-			assertExitCode(t, 0)
-
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{appOneWithBuildTask, tc.previousRun})
-			executeWithoutError(t, diffInputsCmd)
+			execCmd(t, diffInputsCmd, 0)
 		})
 	}
 }
@@ -270,7 +257,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasSameInputsReturnsExitCode0(t
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -280,11 +267,9 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasSameInputsReturnsExitCode0(t
 			runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 			runCmd.run(&runCmd.Command, []string{appOneWithTestTask})
 
-			assertExitCode(t, 0)
-
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{"2", tc.previousRun})
-			executeWithoutError(t, diffInputsCmd)
+			execCmd(t, diffInputsCmd, 0)
 		})
 	}
 }
@@ -306,7 +291,7 @@ func TestCurrentInputsAgainstPreviousRunThatHasDifferentInputsReturnsExitCode2(t
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -316,11 +301,9 @@ func TestCurrentInputsAgainstPreviousRunThatHasDifferentInputsReturnsExitCode2(t
 			runCmd.inputStr = "an_input"
 			runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
-			assertExitCode(t, 2)
-
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{appOneWithBuildTask, tc.previousRun})
-			executeWithoutError(t, diffInputsCmd)
+			execCmd(t, diffInputsCmd, 2)
 		})
 	}
 }
@@ -342,7 +325,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasDifferentInputsReturnsExitCo
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			redirectOutputToLogger(t)
+			initTest(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -353,33 +336,29 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasDifferentInputsReturnsExitCo
 			runCmd.inputStr = "an_input"
 			runCmd.run(&runCmd.Command, []string{appOneWithTestTask})
 
-			assertExitCode(t, 2)
-
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{"2", tc.previousRun})
-			executeWithoutError(t, diffInputsCmd)
+			execCmd(t, diffInputsCmd, 2)
 		})
 	}
 }
 
 // Different apps will always return exit code 2 because their .app.toml files differ
 func TestDifferentAppsReturnExitCode2(t *testing.T) {
-	redirectOutputToLogger(t)
+	initTest(t)
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 	r.CreateAppWithNoOutputs(t, appOneName)
 	r.CreateAppWithNoOutputs(t, appTwoName)
 
 	doInitDb(t)
 
-	assertExitCode(t, 2)
-
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appTwoWithBuildTask})
-	executeWithoutError(t, diffInputsCmd)
+	execCmd(t, diffInputsCmd, 2)
 }
 
 func TestDifferencesOutputWithCorrectState(t *testing.T) {
-	redirectOutputToLogger(t)
+	initTest(t)
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 	r.CreateAppWithNoOutputs(t, appOneName)
 	fileName := "diff_test.txt"
@@ -395,14 +374,12 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	runCmd.inputStr = "run_two"
 	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
-	exitFunc = func(code int) {}
-
 	stdoutBuf, _ := interceptCmdOutput(t)
 
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.csv = true
 	diffInputsCmd.SetArgs([]string{fmt.Sprintf("%s^^", appOneWithBuildTask), fmt.Sprintf("%s^", appOneWithBuildTask)})
-	executeWithoutError(t, diffInputsCmd)
+	execCmd(t, diffInputsCmd, -1)
 
 	expectedOutput := [][]string{
 		{"D", filepath.FromSlash("app_one/diff_test.txt"), originalDigest.String(), newDigest.String()},
@@ -416,7 +393,33 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	assert.ElementsMatch(t, expectedOutput, actualOutput)
 }
 
-func executeWithoutError(t *testing.T, cmd *diffInputsCmd) {
+func execCmd(t *testing.T, cmd *diffInputsCmd, expectedExitCode int) {
+	t.Helper()
+
+	defer func() {
+		t.Helper()
+
+		r := recover()
+		if r == nil {
+			return
+		}
+
+		if info, ok := r.(*exitInfo); ok {
+			if expectedExitCode == -1 {
+				return
+			}
+
+			// exitCode is validated via assertExitCode()
+			if info.Code != expectedExitCode {
+				t.Fatalf("command exited with code %d, expected: %d", info.Code, expectedExitCode)
+			}
+
+			return
+		}
+
+		panic(r)
+	}()
+
 	err := cmd.Execute()
 	assert.Nil(t, err)
 }

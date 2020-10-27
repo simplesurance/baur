@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -24,14 +25,23 @@ func interceptCmdOutput(t *testing.T) (stdoutBuf, stderrBuf *bytes.Buffer) {
 	return &bufStdout, &bufStderr
 }
 
+type exitInfo struct {
+	Code int
+}
+
+func (e *exitInfo) String() string {
+	return fmt.Sprintf("program terminated with exit code: %d", e.Code)
+}
+
 // initTest does the following:
-// - changes the exitFunc to fail the testcase when it is called with an exitCode !=0.
+// - changes the exitFunc to panic instead of calling os.Exit(),
+// - changes stdout and stderr streams for the command to be redirect to the test logger
 // - changes the exec debug function to the test logger,
 func initTest(t *testing.T) {
 	t.Helper()
 
 	exitFunc = func(code int) {
-		t.Fatalf("baur command exited with code %d", code)
+		panic(&exitInfo{Code: code})
 	}
 
 	redirectOutputToLogger(t)
