@@ -53,6 +53,7 @@ func Test2ArgsRequired(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -90,6 +91,7 @@ func TestWildCardsNotAllowed(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -123,6 +125,7 @@ func TestAppAndTaskRequired(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -156,6 +159,7 @@ func TestUnknownAppOrTaskReturnsExitCode1(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t)
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -169,6 +173,7 @@ func TestUnknownAppOrTaskReturnsExitCode1(t *testing.T) {
 }
 
 func TestCurrentInputsAgainstSameTaskCurrentInputsReturnsExitCode1(t *testing.T) {
+	redirectOutputToLogger(t)
 	r := repotest.CreateBaurRepository(t)
 	r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -195,6 +200,7 @@ func TestNonExistentRunReturnsExitCode1(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -229,6 +235,7 @@ func TestCurrentInputsAgainstPreviousRunThatHasSameInputsReturnsExitCode0(t *tes
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -263,6 +270,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasSameInputsReturnsExitCode0(t
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -298,6 +306,7 @@ func TestCurrentInputsAgainstPreviousRunThatHasDifferentInputsReturnsExitCode2(t
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -333,6 +342,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasDifferentInputsReturnsExitCo
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
+			redirectOutputToLogger(t)
 			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 			r.CreateAppWithNoOutputs(t, appOneName)
 
@@ -354,6 +364,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasDifferentInputsReturnsExitCo
 
 // Different apps will always return exit code 2 because their .app.toml files differ
 func TestDifferentAppsReturnExitCode2(t *testing.T) {
+	redirectOutputToLogger(t)
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 	r.CreateAppWithNoOutputs(t, appOneName)
 	r.CreateAppWithNoOutputs(t, appTwoName)
@@ -368,6 +379,7 @@ func TestDifferentAppsReturnExitCode2(t *testing.T) {
 }
 
 func TestDifferencesOutputWithCorrectState(t *testing.T) {
+	redirectOutputToLogger(t)
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 	r.CreateAppWithNoOutputs(t, appOneName)
 	fileName := "diff_test.txt"
