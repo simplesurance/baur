@@ -385,7 +385,7 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 
 	exitFunc = func(code int) {}
 
-	stdoutBuf, _ := interceptCmdOutput()
+	stdoutBuf, _ := interceptCmdOutput(t)
 
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.csv = true

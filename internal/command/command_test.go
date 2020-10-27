@@ -42,7 +42,7 @@ func init() {
 func baurCSVLsApps(t *testing.T) [][]string {
 	t.Helper()
 
-	stdoutBuf, _ := interceptCmdOutput()
+	stdoutBuf, _ := interceptCmdOutput(t)
 
 	lsAppsCmd := newLsAppsCmd()
 	lsAppsCmd.csv = true
@@ -65,7 +65,7 @@ type csvStatus struct {
 func baurCSVStatus(t *testing.T, inputStr, lookupInputStr string) []*csvStatus {
 	t.Helper()
 
-	stdoutBuf, _ := interceptCmdOutput()
+	stdoutBuf, _ := interceptCmdOutput(t)
 
 	statusCmd := newStatusCmd()
 	statusCmd.csv = true
