@@ -2,20 +2,23 @@ package command
 
 import (
 	"bytes"
+	"io/ioutil"
 	"testing"
 
 	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/internal/exec"
+	"github.com/simplesurance/baur/v1/internal/testutils/logwriter"
 )
 
 // interceptCmdOutput changes the stdout and stderr streams to that the
-// commands write to the returned buffers
-func interceptCmdOutput() (stdoutBuf, stderrBuf *bytes.Buffer) {
+// commands write to the returned buffers, all output is additionaly still
+// logged via the test logger
+func interceptCmdOutput(t *testing.T) (stdoutBuf, stderrBuf *bytes.Buffer) {
 	var bufStdout bytes.Buffer
 	var bufStderr bytes.Buffer
 
-	stdout = term.NewStream(&bufStdout)
-	stderr = term.NewStream(&bufStderr)
+	stdout = term.NewStream(logwriter.New(t, &bufStdout))
+	stderr = term.NewStream(logwriter.New(t, &bufStderr))
 
 	return &bufStdout, &bufStderr
 }
@@ -31,4 +34,6 @@ func initTest(t *testing.T) {
 	}
 
 	exec.DefaultDebugfFn = t.Logf
+	stdout = term.NewStream(logwriter.New(t, ioutil.Discard))
+	stderr = term.NewStream(logwriter.New(t, ioutil.Discard))
 }

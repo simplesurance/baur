@@ -38,7 +38,7 @@ func TestUpgrade(t *testing.T) {
 	require.NoError(t, os.Chdir("/"))
 	gittest.Clone(t, gitDir, gitURL, commit)
 
-	stdoutBuf, stderrBuf := interceptCmdOutput()
+	stdoutBuf, stderrBuf := interceptCmdOutput(t)
 
 	require.NoError(t, os.Chdir(gitDir))
 
