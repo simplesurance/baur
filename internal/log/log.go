@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/fatih/color"
 )
@@ -13,7 +14,18 @@ var errorPrefix = color.New(color.FgRed).Sprint("ERROR: ")
 // Logger logs messages
 type Logger struct {
 	debugEnabled bool
-	logger       *log.Logger
+
+	output     Output
+	outputLock sync.Mutex
+}
+
+// Output defines the output channel of a logger to that all log messages are
+// written.
+type Output interface {
+	Printf(format string, v ...interface{})
+	Println(v ...interface{})
+	Fatalf(format string, v ...interface{})
+	Fatalln(v ...interface{})
 }
 
 // StdLogger is the logger that is used from the log functions in this package
@@ -24,7 +36,7 @@ var StdLogger = New(false)
 func New(debugEnabled bool) *Logger {
 	return &Logger{
 		debugEnabled: debugEnabled,
-		logger:       log.New(os.Stderr, "", 0),
+		output:       log.New(os.Stderr, "", 0),
 	}
 }
 
@@ -45,7 +57,7 @@ func (l *Logger) Debugln(v ...interface{}) {
 		return
 	}
 
-	l.logger.Println(v...)
+	l.getOutput().Println(v...)
 }
 
 // Debugf logs a debug message to stdout.
@@ -55,7 +67,7 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 		return
 	}
 
-	l.logger.Printf(format, v...)
+	l.getOutput().Printf(format, v...)
 }
 
 // Fatalln logs a message to stderr and terminates the application with an error
@@ -64,12 +76,12 @@ func (l *Logger) Fatalln(v ...interface{}) {
 		v[0] = fmt.Sprintf("%s%s", errorPrefix, v[0])
 	}
 
-	l.logger.Fatalln(v...)
+	l.getOutput().Fatalln(v...)
 }
 
 // Fatalf logs a message to stderr and terminates the application with an error
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-	l.logger.Fatalf(errorPrefix+format, v...)
+	l.getOutput().Fatalf(errorPrefix+format, v...)
 }
 
 // Errorln logs a message to stderr
@@ -78,12 +90,27 @@ func (l *Logger) Errorln(v ...interface{}) {
 		v[0] = fmt.Sprintf("%s %s", errorPrefix, v[0])
 	}
 
-	l.logger.Println(v...)
+	l.getOutput().Println(v...)
 }
 
 // Errorf logs a message to stderr
 func (l *Logger) Errorf(format string, v ...interface{}) {
-	l.logger.Printf(errorPrefix+" "+format, v...)
+	l.getOutput().Printf(errorPrefix+" "+format, v...)
+}
+
+func (l *Logger) getOutput() Output {
+	l.outputLock.Lock()
+	defer l.outputLock.Unlock()
+
+	return l.output
+}
+
+// SetOutput changes the output of the logger
+func (l *Logger) SetOutput(o Output) {
+	l.outputLock.Lock()
+	defer l.outputLock.Unlock()
+
+	l.output = o
 }
 
 // DebugEnabled returns true if the Stdlogger logs debug messages
