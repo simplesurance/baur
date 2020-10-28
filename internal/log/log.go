@@ -84,20 +84,6 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 	l.getOutput().Fatalf(errorPrefix+format, v...)
 }
 
-// Errorln logs a message to stderr
-func (l *Logger) Errorln(v ...interface{}) {
-	if len(v) != 0 {
-		v[0] = fmt.Sprintf("%s %s", errorPrefix, v[0])
-	}
-
-	l.getOutput().Println(v...)
-}
-
-// Errorf logs a message to stderr
-func (l *Logger) Errorf(format string, v ...interface{}) {
-	l.getOutput().Printf(errorPrefix+" "+format, v...)
-}
-
 func (l *Logger) getOutput() Output {
 	l.outputLock.Lock()
 	defer l.outputLock.Unlock()
@@ -138,14 +124,4 @@ func Fatalln(v ...interface{}) {
 // Fatalf logs a message to stderr and terminates the application with an error
 func Fatalf(format string, v ...interface{}) {
 	StdLogger.Fatalf(format, v...)
-}
-
-// Errorln logs a message to stderr
-func Errorln(v ...interface{}) {
-	StdLogger.Errorln(v...)
-}
-
-// Errorf logs a message to stderr
-func Errorf(format string, v ...interface{}) {
-	StdLogger.Errorf(format, v...)
 }
