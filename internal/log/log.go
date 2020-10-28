@@ -1,15 +1,10 @@
 package log
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"sync"
-
-	"github.com/fatih/color"
 )
-
-var errorPrefix = color.New(color.FgRed).Sprint("ERROR: ")
 
 // Logger logs messages
 type Logger struct {
@@ -24,8 +19,6 @@ type Logger struct {
 type Output interface {
 	Printf(format string, v ...interface{})
 	Println(v ...interface{})
-	Fatalf(format string, v ...interface{})
-	Fatalln(v ...interface{})
 }
 
 // StdLogger is the logger that is used from the log functions in this package
@@ -70,20 +63,6 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 	l.getOutput().Printf(format, v...)
 }
 
-// Fatalln logs a message to stderr and terminates the application with an error
-func (l *Logger) Fatalln(v ...interface{}) {
-	if len(v) != 0 {
-		v[0] = fmt.Sprintf("%s%s", errorPrefix, v[0])
-	}
-
-	l.getOutput().Fatalln(v...)
-}
-
-// Fatalf logs a message to stderr and terminates the application with an error
-func (l *Logger) Fatalf(format string, v ...interface{}) {
-	l.getOutput().Fatalf(errorPrefix+format, v...)
-}
-
 func (l *Logger) getOutput() Output {
 	l.outputLock.Lock()
 	defer l.outputLock.Unlock()
@@ -114,14 +93,4 @@ func Debugln(v ...interface{}) {
 // It's only shown if debugging is enabled.
 func Debugf(format string, v ...interface{}) {
 	StdLogger.Debugf(format, v...)
-}
-
-// Fatalln logs a message to stderr and terminates the application with an error
-func Fatalln(v ...interface{}) {
-	StdLogger.Fatalln(v...)
-}
-
-// Fatalf logs a message to stderr and terminates the application with an error
-func Fatalf(format string, v ...interface{}) {
-	StdLogger.Fatalf(format, v...)
 }

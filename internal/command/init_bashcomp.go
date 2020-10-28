@@ -9,7 +9,6 @@ import (
 
 	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/internal/fs"
-	"github.com/simplesurance/baur/v1/internal/log"
 )
 
 const bashCompLongHelp = `
@@ -72,12 +71,14 @@ func mustCreatebashComplDir(path string) {
 		}
 
 		if !isDir {
-			log.Fatalf("'%s' must be a directory", path)
+			stderr.Printf("'%s' must be a directory", path)
+			exitFunc(1)
 		}
 	}
 
 	if !os.IsNotExist(err) {
-		log.Fatalln(err)
+		stderr.Println(err)
+		exitFunc(1)
 	}
 
 	err = fs.Mkdir(path)

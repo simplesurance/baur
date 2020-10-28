@@ -51,15 +51,16 @@ func (c *lsOutputsCmd) run(cmd *cobra.Command, args []string) {
 
 	taskRunID, err := strconv.Atoi(args[0])
 	if err != nil {
-		log.Fatalf("'%s' is not a numeric task run ID", args[0])
+		stderr.Printf("'%s' is not a numeric task run ID", args[0])
+		exitFunc(1)
 	}
 
 	_, err = pgClient.TaskRun(ctx, taskRunID)
 	if err != nil {
 		if err == storage.ErrNotExist {
-			log.Fatalf("task run with ID %d does not exist", taskRunID)
+			stderr.Printf("task run with ID %d does not exist", taskRunID)
+			exitFunc(1)
 		}
-
 	}
 
 	outputs, err := pgClient.Outputs(ctx, taskRunID)

@@ -13,7 +13,6 @@ import (
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/format/table"
 	"github.com/simplesurance/baur/v1/internal/fs"
-	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/storage"
 )
 
@@ -267,10 +266,12 @@ func (*showCmd) showBuild(taskRunID int) {
 	taskRun, err := storageClt.TaskRun(ctx, taskRunID)
 	if err != nil {
 		if err == storage.ErrNotExist {
-			log.Fatalf("task run with id %d does not exist\n", taskRunID)
+			stderr.Printf("task run with id %d does not exist\n", taskRunID)
+			exitFunc(1)
 		}
 
-		exitOnErr(err)
+		stderr.Println(err)
+		exitFunc(1)
 	}
 
 	outputs, err := storageClt.Outputs(ctx, taskRun.ID)

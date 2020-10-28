@@ -10,7 +10,6 @@ import (
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/cfg"
 	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/log"
 )
 
 func init() {
@@ -48,10 +47,12 @@ func initRepo(cmd *cobra.Command, args []string) {
 	err = repoCfg.ToFile(repoCfgPath)
 	if err != nil {
 		if os.IsExist(err) {
-			log.Fatalf("%s already exist\n", repoCfgPath)
+			stderr.Printf("%s already exist\n", repoCfgPath)
+			exitFunc(1)
 		}
 
-		log.Fatalln(err)
+		stderr.Println(err)
+		exitFunc(1)
 	}
 
 	stdout.Printf("Repository configuration was written to %s\n",

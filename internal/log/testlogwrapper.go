@@ -19,11 +19,3 @@ func (l *TestLogOutput) Printf(format string, v ...interface{}) {
 func (l *TestLogOutput) Println(v ...interface{}) {
 	l.t.Log(v...)
 }
-
-func (l *TestLogOutput) Fatalf(format string, v ...interface{}) {
-	l.t.Fatalf(format, v...)
-}
-
-func (l *TestLogOutput) Fatalln(v ...interface{}) {
-	l.t.Fatal(v...)
-}

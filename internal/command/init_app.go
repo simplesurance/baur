@@ -10,7 +10,6 @@ import (
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/cfg"
 	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/log"
 )
 
 func init() {
@@ -50,10 +49,12 @@ func initApp(cmd *cobra.Command, args []string) {
 	err = appCfg.ToFile(filepath.Join(cwd, baur.AppCfgFile), cfg.ToFileOptCommented())
 	if err != nil {
 		if os.IsExist(err) {
-			log.Fatalf("%s already exist\n", baur.AppCfgFile)
+			stderr.Printf("%s already exist\n", baur.AppCfgFile)
+			exitFunc(1)
 		}
 
-		log.Fatalln(err)
+		stderr.Println(err)
+		exitFunc(1)
 	}
 
 	stdout.Printf("Application configuration file was written to %s\n",

@@ -8,7 +8,6 @@ import (
 
 	"github.com/simplesurance/baur/v1/cfg"
 	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/log"
 )
 
 func init() {
@@ -45,10 +44,12 @@ func initInclude(cmd *cobra.Command, args []string) {
 	err := cfgInclude.ToFile(filename, cfg.ToFileOptCommented())
 	if err != nil {
 		if os.IsExist(err) {
-			log.Fatalf("%s already exist\n", filename)
+			stderr.Printf("%s already exist\n", filename)
+			exitFunc(1)
 		}
 
-		log.Fatalln(err)
+		stderr.Println(err)
+		exitFunc(1)
 	}
 
 	stdout.Printf("Include configuration file was written to %s\n",
