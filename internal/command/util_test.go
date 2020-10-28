@@ -7,6 +7,7 @@ import (
 
 	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/internal/exec"
+	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/internal/testutils/logwriter"
 )
 
@@ -37,6 +38,7 @@ func initTest(t *testing.T) {
 }
 
 func redirectOutputToLogger(t *testing.T) {
+	log.StdLogger.SetOutput(log.NewTestLogOutput(t))
 	exec.DefaultDebugfFn = t.Logf
 	stdout = term.NewStream(logwriter.New(t, ioutil.Discard))
 	stderr = term.NewStream(logwriter.New(t, ioutil.Discard))
