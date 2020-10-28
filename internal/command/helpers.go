@@ -37,11 +37,12 @@ func mustFindRepository() *baur.Repository {
 	repo, err := findRepository()
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			log.Fatalf("baur repository not found, ensure a %q file exist in the current or a parent directory\n",
+			stderr.Printf("baur repository not found, ensure a %q file exist in the current or a parent directory\n",
 				baur.RepositoryCfgFile)
+			exitFunc(1)
 		}
-
-		exitOnErr(err, "locating baur repository failed")
+		stderr.Println("locating baur repository failed")
+		exitFunc(1)
 	}
 
 	return repo
@@ -50,7 +51,8 @@ func mustFindRepository() *baur.Repository {
 func mustArgToTask(repo *baur.Repository, arg string) *baur.Task {
 	tasks := mustArgToTasks(repo, []string{arg})
 	if len(tasks) > 1 {
-		log.Fatalf("argument %q matches multiple tasks, must match only 1 task\n", arg)
+		stderr.Printf("argument %q matches multiple tasks, must match only 1 task\n", arg)
+		exitFunc(1)
 	}
 
 	// mustArgToApps ensures that >=1 apps are returned
@@ -60,7 +62,8 @@ func mustArgToTask(repo *baur.Repository, arg string) *baur.Task {
 func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	apps := mustArgToApps(repo, []string{arg})
 	if len(apps) > 1 {
-		log.Fatalf("argument %q matches multiple apps, must match only 1 app\n", arg)
+		stderr.Printf("argument %q matches multiple apps, must match only 1 app\n", arg)
+		exitFunc(1)
 	}
 
 	// mustArgToApps ensures that >=1 apps are returned
@@ -102,9 +105,10 @@ func mustHavePSQLURI(r *baur.Repository) {
 	}
 
 	if len(os.Getenv(envVarPSQLURL)) == 0 {
-		log.Fatalf("PostgreSQL connection information is missing.\n"+
+		stderr.Printf("PostgreSQL connection information is missing.\n"+
 			"- set postgres_url in your repository config or\n"+
 			"- set the $%s environment variable", envVarPSQLURL)
+		exitFunc(1)
 	}
 }
 

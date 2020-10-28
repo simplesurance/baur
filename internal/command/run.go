@@ -221,7 +221,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 		if runResult.Result.ExitCode != 0 {
 			statusStr := term.RedHighlight("failed")
 
-			log.Fatalf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
+			stderr.Printf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
 				t.task,
 				statusStr,
 				term.FormatDuration(
@@ -229,6 +229,7 @@ func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
 				),
 				runResult.ExitCode,
 				runResult.StrOutput())
+			exitFunc(1)
 		}
 
 		statusStr := term.GreenHighlight("successful")

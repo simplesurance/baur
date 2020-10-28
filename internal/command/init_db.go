@@ -9,7 +9,6 @@ import (
 
 	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/log"
 )
 
 const initDbExample = `
@@ -44,12 +43,14 @@ func initDb(cmd *cobra.Command, args []string) {
 		repo, err := findRepository()
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Fatalf("could not find '%s' repository config file.\n"+
+				stderr.Printf("could not find '%s' repository config file.\n"+
 					"Run '%s' first or pass the Postgres URL as argument.",
 					term.Highlight(baur.RepositoryCfgFile), term.Highlight(cmdInitRepo))
+				exitFunc(1)
 			}
 
-			log.Fatalln(err)
+			stderr.Println(err)
+			exitFunc(1)
 		}
 
 		dbURL = repo.PSQLURL

@@ -47,13 +47,10 @@ func initSb(_ *cobra.Command, _ []string) {
 
 	if cpuProfilingFlag {
 		cpuProfFile, err := os.Create(defCPUProfFile)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		exitOnErr(err)
 
-		if err := pprof.StartCPUProfile(cpuProfFile); err != nil {
-			log.Fatalln(err)
-		}
+		err = pprof.StartCPUProfile(cpuProfFile)
+		exitOnErr(err)
 	}
 }
 
@@ -69,9 +66,8 @@ func Execute() {
 		fmt.Sprintf("enable cpu profiling, result is written to %q", defCPUProfFile))
 	rootCmd.PersistentFlags().BoolVar(&noColorFlag, "no-color", false, "disable color output")
 
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
-	}
+	err := rootCmd.Execute()
+	exitOnErr(err)
 
 	if cpuProfilingFlag {
 		stdout.Printf("\ncpu profile written to %q\n", defCPUProfFile)

@@ -12,7 +12,6 @@ import (
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/format/csv"
 	"github.com/simplesurance/baur/v1/internal/format/table"
-	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/storage"
 )
 
@@ -145,10 +144,11 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 
 	if err != nil {
 		if err == storage.ErrNotExist {
-			log.Fatalf("no matching task runs exist")
+			stderr.Printf("no matching task runs exist")
+			exitFunc(1)
 		}
-
-		exitOnErr(err)
+		stderr.Println(err)
+		exitFunc(1)
 	}
 
 	exitOnErr(formatter.Flush())
