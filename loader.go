@@ -45,27 +45,6 @@ func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), 
 	}, nil
 }
 
-// splitSpecifiers splits the specifiers by apps to load by Name or by Path.
-// If the specifiers contain a '*' specifier, nil slices are returned and star is true.
-func splitSpecifiers(specifiers []string) (names, cfgPaths []string, star bool) {
-	for _, spec := range specifiers {
-		if spec == "*" {
-			return nil, nil, true
-		}
-
-		cfgPath, isAppDir := IsAppDirectory(spec)
-		if isAppDir {
-			cfgPaths = append(cfgPaths, cfgPath)
-
-			continue
-		}
-
-		names = append(names, spec)
-	}
-
-	return names, cfgPaths, false
-}
-
 // LoadTasks loads the tasks of apps that match the passed specifier.
 // Specifier format is <APP-SPEC>[.<TASK-SPEC>].
 // <APP-SPEC> is:
@@ -79,37 +58,31 @@ func splitSpecifiers(specifiers []string) (names, cfgPaths []string, star bool) 
 func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
 	var result []*Task
 
-	if len(specifier) == 0 {
-		specifier = []string{"*"}
+	specs, err := parseSpecs(specifier)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, spec := range specifier {
-		spl := strings.Split(spec, ".")
+	specs.all = specs.all || len(specifier) == 0
 
-		if len(spl) == 0 {
-			// impossible condition
-			panic(fmt.Sprintf("strings.Split(\"%s\", \".\") returned empty slice", spec))
-		}
-
-		if len(spl) > 2 {
-			return nil, fmt.Errorf("specifier: %q contains > 1 dots ", specifier)
-		}
-
-		apps, err := a.LoadApps(spl[0])
-		if err != nil {
-			return nil, err
-		}
-
-		// specifier contains only <APP-SPEC>
-		if len(spl) == 1 {
-			result = append(result, a.taskSpec(apps, "*")...)
-			continue
-		}
-
-		result = append(result, a.taskSpec(apps, spl[1])...)
+	apps, err := a.apps(specs)
+	if err != nil {
+		return nil, err
 	}
 
-	return result, nil
+	if specs.all {
+		return a.allTasks(apps), nil
+	}
+
+	result = a.allTasks(apps)
+
+	tasks, err := a.tasks(specs.taskSpecs)
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, tasks...)
+
+	return dedupTasks(result), nil
 }
 
 // LoadApps loads the apps that match the passed specifiers.
@@ -120,30 +93,18 @@ func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
 // If no specifier is passed all apps are returned.
 // If multiple specifiers match the same app, it's only returned 1x in the returned slice.
 func (a *Loader) LoadApps(specifier ...string) ([]*App, error) {
-	names, cfgPaths, star := splitSpecifiers(specifier)
-
-	if star || len(specifier) == 0 {
-		return a.allApps()
-	}
-
-	result := make([]*App, 0, len(specifier))
-	for _, path := range cfgPaths {
-		app, err := a.AppPath(path)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", path, err)
-		}
-
-		result = append(result, app)
-	}
-
-	apps, err := a.AppNames(names...)
+	specs, err := parseSpecs(specifier)
 	if err != nil {
 		return nil, err
 	}
 
-	result = append(result, apps...)
+	if len(specs.taskSpecs) > 0 {
+		return nil, fmt.Errorf("invalid app specifiers: %s", specs.taskSpecs)
+	}
 
-	return dedupApps(result), nil
+	specs.all = specs.all || len(specifier) == 0
+
+	return a.apps(specs)
 }
 
 // AppNames discovers and loads the apps with the given names.
@@ -215,6 +176,34 @@ func (a *Loader) allApps() ([]*App, error) {
 	return result, nil
 }
 
+func (a *Loader) allTasks(apps []*App) []*Task {
+	var result []*Task
+
+	for _, app := range apps {
+		result = append(result, app.Tasks()...)
+	}
+
+	return result
+}
+
+// AppDirs load apps from the given directories.
+func (a *Loader) AppDirs(dirs ...string) ([]*App, error) {
+	result := make([]*App, 0, len(dirs))
+
+	for _, dir := range dirs {
+		cfgPath := filepath.Join(dir, AppCfgFile)
+
+		app, err := a.AppPath(cfgPath)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", cfgPath, err)
+		}
+
+		result = append(result, app)
+	}
+
+	return result, nil
+}
+
 // AppPath loads the app from the config file.
 func (a *Loader) AppPath(appConfigPath string) (*App, error) {
 	a.logger.Debugf("loader: loading app from %q", appConfigPath)
@@ -232,24 +221,79 @@ func (a *Loader) AppPath(appConfigPath string) (*App, error) {
 	return a.fromCfg(appCfg)
 }
 
-func (a *Loader) taskSpec(apps []*App, spec string) []*Task {
-	var result []*Task
+// tasks load all tasks for the given taskSpecs.
+// wildcards are  only supported for appNames.
+func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
+	result := make([]*Task, 0, len(taskSpecs))
+	taskSpecMap := make(map[string][]string, len(taskSpecs))
+	appNames := make([]string, 0, len(taskSpecs))
 
-	for _, app := range apps {
-		if spec == "*" {
-			result = append(result, app.Tasks()...)
-
+	for _, t := range taskSpecs {
+		val, exist := taskSpecMap[t.appName]
+		if exist {
+			taskSpecMap[t.appName] = append(val, t.taskName)
 			continue
 		}
 
-		for _, task := range app.Tasks() {
-			if task.Name == spec {
-				result = append(result, task)
+		appNames = append(appNames, t.appName)
+		taskSpecMap[t.appName] = []string{t.taskName}
+	}
+
+	var apps []*App
+	var err error
+	if _, exist := taskSpecMap["*"]; exist {
+		apps, err = a.allApps()
+	} else {
+		apps, err = a.AppNames(appNames...)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	for _, app := range apps {
+		taskSpecs := taskSpecMap[app.Name]
+		taskSpecs = append(taskSpecs, taskSpecMap["*"]...)
+
+		if len(taskSpecs) == 0 {
+			panic(fmt.Sprintf("app %q was loaded which was not part of taskSpecs: %v", app.Name, taskSpecs))
+		}
+
+		for _, spec := range taskSpecs {
+			for _, task := range app.Tasks() {
+				if task.Name == spec {
+					result = append(result, task)
+				}
 			}
 		}
 	}
 
-	return result
+	return result, nil
+}
+
+func (a *Loader) apps(specs *specs) ([]*App, error) {
+	if specs.all {
+		return a.allApps()
+	}
+
+	result := make([]*App, 0, len(specs.appDirs)+len(specs.appNames))
+
+	for _, path := range specs.appDirs {
+		apps, err := a.AppDirs(path)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", path, err)
+		}
+
+		result = append(result, apps...)
+	}
+
+	apps, err := a.AppNames(specs.appNames...)
+	if err != nil {
+		return nil, err
+	}
+
+	result = append(result, apps...)
+
+	return dedupApps(result), nil
 }
 
 func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
@@ -279,13 +323,12 @@ func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
 	return app, nil
 }
 
-// IsAppDirectory returns true and the path to the app config file if the
-// directory contains an app config file.
-func IsAppDirectory(dir string) (string, bool) {
+// IsAppDirectory returns true if the directory contains an app config file.
+func isAppDirectory(dir string) bool {
 	cfgPath := filepath.Join(dir, AppCfgFile)
 	isFile, _ := fs.IsFile(cfgPath)
 
-	return cfgPath, isFile
+	return isFile
 }
 
 func findAppConfigs(searchDirs []string, searchDepth int) ([]string, error) {
@@ -322,6 +365,26 @@ func dedupApps(apps []*App) []*App {
 
 	for _, app := range dedupMap {
 		result = append(result, app)
+	}
+
+	return result
+}
+
+func dedupTasks(tasks []*Task) []*Task {
+	dedupMap := make(map[string]*Task, len(tasks))
+
+	for _, task := range tasks {
+		if _, exist := dedupMap[task.ID()]; exist {
+			continue
+		}
+
+		dedupMap[task.ID()] = task
+	}
+
+	result := make([]*Task, 0, len(dedupMap))
+
+	for _, task := range dedupMap {
+		result = append(result, task)
 	}
 
 	return result
