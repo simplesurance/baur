@@ -201,12 +201,12 @@ func exitOnErr(err error, msg ...interface{}) {
 	}
 
 	if len(msg) == 0 {
-		fmt.Fprintln(os.Stderr, errorPrefix, err)
+		stderr.Println(errorPrefix, err)
 		exitFunc(1)
 	}
 
 	wholeMsg := fmt.Sprint(msg...)
-	fmt.Fprintf(os.Stderr, "%s %s: %s\n", errorPrefix, wholeMsg, err)
+	stderr.Printf("%s %s: %s\n", errorPrefix, wholeMsg, err)
 
 	exitFunc(1)
 }
