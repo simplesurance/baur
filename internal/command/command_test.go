@@ -285,8 +285,4 @@ func TestVarInInclude(t *testing.T) {
 
 	runCmd := newRunCmd()
 	runCmd.Command.Run(&runCmd.Command, []string{"app1", "app2"})
-
-	exitFunc = func(code int) {
-		t.Errorf("baur command exited with code %d", code)
-	}
 }
