@@ -165,6 +165,10 @@ func ls(cmd *cobra.Command, args []string) {
 }
 
 func storageQueryIsNeeded() bool {
+	if lsAppsConfig.buildStatus.IsSet() {
+		return true
+	}
+
 	for _, f := range lsAppsConfig.fields.Fields {
 		switch f {
 		case lsAppBuildStatusParam:
