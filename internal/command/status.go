@@ -188,6 +188,10 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func (c *statusCmd) storageQueryIsNeeded() bool {
+	if c.buildStatus.IsSet() {
+		return true
+	}
+
 	for _, f := range c.fields.Fields {
 		switch f {
 		case statusStatusParam:
