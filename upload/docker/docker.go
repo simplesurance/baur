@@ -3,7 +3,9 @@ package docker
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
+	"net/url"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
@@ -11,6 +13,7 @@ import (
 
 // DefaultRegistry is the registry for that authentication data is used
 const DefaultRegistry = "https://index.docker.io/v1/"
+const dockerRegistryDefaultPort = "5000"
 
 // Client is a docker client
 type Client struct {
@@ -86,10 +89,18 @@ func NewClient(debugLogFn func(string, ...interface{})) (*Client, error) {
 	}, nil
 }
 
+func hostPort(host, port string) string {
+	return fmt.Sprintf("%s:%s", host, port)
+}
+
+// getAuth returns authentication date for the given server, server can be a
+// hostname or URL.
 // getAuth returns c.auth if it's not nil otherwise:
-// if the client has no authentication data (c.auths is empty), an empty AuthConfiguration is returned.
-// If server is not empty, the authentication data for the server is returned if it exist.
-// If server is an empty string, the authentication data for DefaultRegistry is returned if it exists.
+// if server is empty, the function panics.
+// If server is not empty, authentication data is returned for a registry with a matching address.
+// if the client has no authentication data or no authentication data for the
+// server exist, an AuthConfiguration is returned with only the
+// ServerAddress set to server.
 func (c *Client) getAuth(server string) docker.AuthConfiguration {
 	if c.auth != nil {
 		return *c.auth
@@ -99,35 +110,51 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 		return docker.AuthConfiguration{}
 	}
 
-	if len(server) != 0 {
-		for registry, v := range c.auths.Configs {
-			if registry == server {
-				c.debugLogFn("docker: using auth data for registry '%s'", registry)
-				return v
+	if server == "" {
+		panic("server is empty")
+	}
+
+	if len(server) == 0 {
+		for registry, auth := range c.auths.Configs {
+			if registry == DefaultRegistry {
+				c.debugLogFn("docker: no registry specified, using auth data for default registry %q", registry)
+				return auth
+			}
+		}
+	}
+
+	for _, cfg := range c.auths.Configs {
+		c.debugLogFn("docker: found credentials for registry %q, searching %q credentials", cfg.ServerAddress, server)
+
+		if cfg.ServerAddress == server {
+			c.debugLogFn("docker: using auth data for registry '%s'", cfg.ServerAddress)
+			return cfg
+		}
+
+		url, err := url.Parse(cfg.ServerAddress)
+		if err != nil || url.Hostname() == "" {
+			continue
+		}
+
+		if url.Port() == "" {
+			if url.Hostname() == server || hostPort(url.Hostname(), dockerRegistryDefaultPort) == server {
+				c.debugLogFn("docker: using auth data for registry '%s'", cfg.ServerAddress)
+				return cfg
 			}
 
-			c.debugLogFn("docker: found credentials for registry %q, searching %q credentials", registry, server)
+			continue
+		}
+
+		registryHostPort := hostPort(url.Hostname(), url.Port())
+		if registryHostPort == server || registryHostPort == hostPort(server, dockerRegistryDefaultPort) {
+			c.debugLogFn("docker: using auth data for registry '%s'", cfg.ServerAddress)
+			return cfg
 		}
 	}
 
-	// try to find an entry for DefaultRegistry
-	for registry, auth := range c.auths.Configs {
-		if registry == DefaultRegistry {
-			c.debugLogFn("docker: using auth data for default registry '%s'", registry)
-			return auth
-		}
-	}
+	c.debugLogFn("docker: no auth configuration for registry %q found", server)
 
-	// otherwise use the first entry in the map
-	for registry, auth := range c.auths.Configs {
-		c.debugLogFn("docker: using auth data for registry '%s'", registry)
-
-		return auth
-	}
-
-	// this can't happen, auths must have been non-empty and
-	// therefore we can return the first element
-	panic("docker: could not find any auth data in a config.json")
+	return docker.AuthConfiguration{ServerAddress: server}
 }
 
 // Upload tags and uploads an image into a docker registry repository
@@ -137,12 +164,11 @@ func (c *Client) Upload(image, registryAddr, repository, tag string) (string, er
 	var destURI string
 
 	if registryAddr == "" {
-		addrRepo = repository
-		destURI = repository + ":" + tag
-	} else {
-		addrRepo = registryAddr + "/" + repository
-		destURI = registryAddr + "/" + repository + ":" + tag
+		registryAddr = DefaultRegistry
 	}
+
+	addrRepo = registryAddr + "/" + repository
+	destURI = registryAddr + "/" + repository + ":" + tag
 
 	c.debugLogFn("docker: creating tag, repo: %q, tag: %q referring to image %q", addrRepo, tag, image)
 	err := c.clt.TagImage(image, docker.TagImageOptions{
