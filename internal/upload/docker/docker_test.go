@@ -18,11 +18,19 @@ func base64EncUserPasswd(user, password string) string {
 }
 
 func TestGetAuth(t *testing.T) {
-	const gcrHost = "eu.gcr.io"
-	const gcrUser = "guest"
-	const gcrPasswd = "123"
 	const defRegistryUser = "guest"
 	const defRegistryPasswd = "1234"
+
+	const exampleHostname = "example.com"
+	exampleURL := fmt.Sprintf("https://%s/v3", exampleHostname)
+	const exampleUser = "thepresident"
+	const examplePasswd = "abc"
+
+	const myRegistryHostname = "myregistry.com"
+	const myRegistryPort = dockerRegistryDefaultPort
+	myRegistryURL := fmt.Sprintf("https://%s:%s", myRegistryHostname, myRegistryPort)
+	const myRegistryUser = "hugo"
+	const myRegistryPasswd = "hello"
 
 	jsonAuthcfg := fmt.Sprintf(`{
 	"auths": {
@@ -31,14 +39,20 @@ func TestGetAuth(t *testing.T) {
 		},
 		"%s": {
 			"auth": "%s"
+		},
+		"%s": {
+			"auth": "%s"
 		}
 	}
 }`,
-		gcrHost,
-		base64EncUserPasswd(gcrUser, gcrPasswd),
-
 		DefaultRegistry,
 		base64EncUserPasswd(defRegistryUser, defRegistryPasswd),
+
+		exampleURL,
+		base64EncUserPasswd(exampleUser, examplePasswd),
+
+		myRegistryURL,
+		base64EncUserPasswd(myRegistryUser, myRegistryPasswd),
 	)
 
 	reader := bytes.NewBufferString(jsonAuthcfg)
@@ -46,26 +60,79 @@ func TestGetAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	client := &Client{
-		debugLogFn: func(string, ...interface{}) {},
-		auths:      authCfg,
+		auths: authCfg,
 	}
 
-	auth := client.getAuth(gcrHost)
-	require.NotNil(t, auth)
-	assert.Equal(t, auth.ServerAddress, gcrHost)
-	assert.Equal(t, auth.Password, gcrPasswd)
-	assert.Equal(t, auth.Username, gcrUser)
+	t.Run("default-url", func(t *testing.T) {
+		client.debugLogFn = t.Logf
 
-	auth = client.getAuth(DefaultRegistry)
-	require.NotNil(t, auth)
-	assert.Equal(t, auth.ServerAddress, DefaultRegistry)
-	assert.Equal(t, auth.Password, defRegistryPasswd)
-	assert.Equal(t, auth.Username, defRegistryUser)
+		auth := client.getAuth(DefaultRegistry)
+		require.NotNil(t, auth)
 
-	// should return DefaultRegistry auth data
-	auth = client.getAuth("")
-	require.NotNil(t, auth)
-	assert.Equal(t, auth.ServerAddress, DefaultRegistry)
-	assert.Equal(t, auth.Password, defRegistryPasswd)
-	assert.Equal(t, auth.Username, defRegistryUser)
+		assert.Equal(t, auth.ServerAddress, DefaultRegistry)
+		assert.Equal(t, auth.Password, defRegistryPasswd)
+		assert.Equal(t, auth.Username, defRegistryUser)
+	})
+
+	t.Run("example-url", func(t *testing.T) {
+		client.debugLogFn = t.Logf
+
+		auth := client.getAuth(exampleURL)
+		require.NotNil(t, auth)
+
+		assert.Equal(t, auth.ServerAddress, exampleURL)
+		assert.Equal(t, auth.Password, examplePasswd)
+		assert.Equal(t, auth.Username, exampleUser)
+	})
+
+	// when a URL is used as server and the image is tagged without url
+	// (e.g. gcr.eu.io/image:tag, getAuth() only gets the hostname as arg
+	t.Run("example-hostname", func(t *testing.T) {
+		client.debugLogFn = t.Logf
+
+		auth := client.getAuth(exampleHostname)
+		require.NotNil(t, auth)
+
+		assert.Equal(t, exampleURL, auth.ServerAddress)
+		assert.Equal(t, examplePasswd, auth.Password)
+		assert.Equal(t, exampleUser, auth.Username)
+	})
+
+	t.Run("no-server-panic", func(t *testing.T) {
+		client.debugLogFn = t.Logf
+		require.Panics(t, func() { client.getAuth("") })
+	})
+
+	t.Run("myregistry-host", func(t *testing.T) {
+		client.debugLogFn = t.Logf
+
+		auth := client.getAuth(myRegistryHostname)
+		require.NotNil(t, auth)
+
+		assert.Equal(t, myRegistryURL, auth.ServerAddress)
+		assert.Equal(t, myRegistryPasswd, auth.Password)
+		assert.Equal(t, myRegistryUser, auth.Username)
+	})
+
+	t.Run("myregistry-hostport", func(t *testing.T) {
+		client.debugLogFn = t.Logf
+
+		auth := client.getAuth(fmt.Sprintf("%s:%s", myRegistryHostname, myRegistryPort))
+		require.NotNil(t, auth)
+
+		assert.Equal(t, myRegistryURL, auth.ServerAddress)
+		assert.Equal(t, myRegistryPasswd, auth.Password)
+		assert.Equal(t, myRegistryUser, auth.Username)
+	})
+
+	t.Run("myregistry-url", func(t *testing.T) {
+		client.debugLogFn = t.Logf
+
+		auth := client.getAuth(myRegistryURL)
+		require.NotNil(t, auth)
+
+		assert.Equal(t, myRegistryURL, auth.ServerAddress)
+		assert.Equal(t, myRegistryPasswd, auth.Password)
+		assert.Equal(t, myRegistryUser, auth.Username)
+	})
 }
