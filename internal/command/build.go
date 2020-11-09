@@ -26,9 +26,6 @@ import (
 )
 
 const (
-	dockerEnvUsernameVar = "BAUR_DOCKER_USERNAME"
-	dockerEnvPasswordVar = "BAUR_DOCKER_PASSWORD"
-
 	appColSep = " => "
 	sepLen    = len(appColSep)
 )
@@ -51,8 +48,6 @@ The following Environment Variables are supported:
     %s
     %s
     %s
-    %s
-    %s
 `,
 	coloredBuildStatus(baur.BuildStatusPending),
 	coloredBuildStatus(baur.BuildStatusInputsUndefined),
@@ -63,8 +58,6 @@ The following Environment Variables are supported:
 	highlight("AWS_ACCESS_KEY_ID"),
 	highlight("AWS_SECRET_ACCESS_KEY"),
 
-	highlight(dockerEnvUsernameVar),
-	highlight(dockerEnvPasswordVar),
 	highlight("DOCKER_HOST"),
 	highlight("DOCKER_API_VERSION"),
 	highlight("DOCKER_CERT_PATH"),
@@ -212,10 +205,6 @@ func outputCount(apps []*baur.App) int {
 	return cnt
 }
 
-func dockerAuthFromEnv() (string, string) {
-	return os.Getenv(dockerEnvUsernameVar), os.Getenv(dockerEnvPasswordVar)
-}
-
 func calcDigests(app *baur.App) ([]*storage.Input, string) {
 	var totalDigest string
 	var storageInputs []*storage.Input
@@ -287,15 +276,7 @@ func startBGUploader(outputCnt int, uploadChan chan *scheduler.Result) scheduler
 		log.Fatalln(err.Error())
 	}
 
-	dockerUser, dockerPass := dockerAuthFromEnv()
-	if len(dockerUser) != 0 {
-		log.Debugf("using docker authentication data from %s, %s Environment variables, authenticating as '%s'",
-			dockerEnvUsernameVar, dockerEnvPasswordVar, dockerUser)
-		dockerUploader, err = docker.NewClientwAuth(log.StdLogger.Debugf, dockerUser, dockerPass)
-	} else {
-		log.Debugf("environment variable %s not set", dockerEnvUsernameVar)
-		dockerUploader, err = docker.NewClient(log.StdLogger.Debugf)
-	}
+	dockerUploader, err = docker.NewClient(log.StdLogger.Debugf)
 	if err != nil {
 		log.Fatalln(err)
 	}
