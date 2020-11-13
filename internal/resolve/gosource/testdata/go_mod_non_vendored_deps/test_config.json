@@ -2,7 +2,7 @@
         "Cfg": {
                 "Environment": [
                         "GO111MODULE=on",
-                        "-mod=readonly"
+                        "GOFLAGS=-mod=readonly"
                 ],
                 "Queries": ["file=./main.go"]
         },
