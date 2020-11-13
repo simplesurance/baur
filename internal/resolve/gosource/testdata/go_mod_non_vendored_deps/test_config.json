@@ -1,0 +1,25 @@
+{
+        "Cfg": {
+                "Environment": [
+                        "GO111MODULE=on",
+                        "-mod=readonly"
+                ],
+                "Queries": ["file=./main.go"]
+        },
+        "ExpectedResults": [
+                "$WORKDIR/main.go",
+                "$WORKDIR/generator/generator.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/dce.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/doc.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/hash.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/marshal.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/node.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/node_net.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/sql.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/time.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/util.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/uuid.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/version1.go",
+                "$GOMODCACHE/github.com/google/uuid@v1.1.1/version4.go"
+        ]
+}

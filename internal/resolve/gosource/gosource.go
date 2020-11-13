@@ -10,7 +10,6 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/simplesurance/baur/v1/internal/exec"
 	"github.com/simplesurance/baur/v1/internal/fs"
 )
 
@@ -37,61 +36,6 @@ func NewResolver(debugLogFn func(string, ...interface{})) *Resolver {
 	return &Resolver{
 		logFn: logFn,
 	}
-}
-
-// GOROOT runs "go env GOROOT" to determine the GOROOT and returns it.
-func GOROOT() (string, error) {
-	res, err := exec.Command("go", "env", "GOROOT").ExpectSuccess().Run()
-	if err != nil {
-		return "", err
-	}
-
-	goroot := strings.TrimSpace(res.StrOutput())
-	if goroot == "" {
-		return "", fmt.Errorf("%s did not print anything", res.Command)
-	}
-
-	return goroot, nil
-}
-
-// getEnvValue iterates in reverse order through env and returns the value of
-// the first found environment variable with the given key.
-// If no environment variable with the key is found, an empty string is returned.
-func getEnvValue(env []string, key string) string {
-	for i := len(env) - 1; i >= 0; i-- {
-		idx := strings.Index(env[i], key+"=")
-		if idx != -1 {
-			return env[i][idx:]
-		}
-	}
-
-	return ""
-}
-
-func findGoRoot(env []string) (string, error) {
-	goroot := getEnvValue(env, "GOROOT")
-
-	var err error
-	if goroot == "" {
-		goroot, err = GOROOT()
-		if err != nil {
-			return "", err
-		}
-
-	}
-
-	if err := fs.DirsExist(goroot); err != nil {
-		if !os.IsNotExist(err) {
-			return "", fmt.Errorf(
-				"GOROOT directory '%s' does not exist, ensure that 'go env root' returns the right path",
-				goroot,
-			)
-		}
-
-		return "", fmt.Errorf("checking if GOROOT directory %q exists, failed: %w", goroot, err)
-	}
-
-	return goroot, nil
 }
 
 func resolveGlobs(workDir string, queries []string) ([]string, error) {
@@ -147,12 +91,12 @@ func (r *Resolver) Resolve(
 		return nil, fmt.Errorf("resolving globs in queries failed: %w", err)
 	}
 
-	goroot, err := findGoRoot(env)
+	goEnv, err := getGoEnv(env)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.resolve(ctx, workdir, goroot, env, buildFlags, withTests, queries)
+	return r.resolve(ctx, workdir, goEnv, env, buildFlags, withTests, queries)
 }
 
 // whitelistedEnvVars returns whitelisted environment variables from the host
@@ -192,14 +136,18 @@ func whitelistedEnv() []string {
 func (r *Resolver) resolve(
 	ctx context.Context,
 	workdir string,
-	goroot string,
+	goEnv *goEnv,
 	env []string,
 	buildFlags []string,
 	withTests bool,
 	queries []string,
 ) ([]string, error) {
-	r.logFn("gosource-resolver: resolving in directory: %q with goroot: %q, env: %+v, buildFlags: %v, the queries: %v",
-		workdir, goroot, env, buildFlags, queries)
+	r.logFn("gosource-resolver: resolving queries: %+v\n"+
+		"workdir: %s\n"+
+		"env: %+v\n"+
+		"goenv: %+v\n"+
+		"buildFlags: %+v\n",
+		queries, workdir, env, goEnv, buildFlags)
 
 	cfg := &packages.Config{
 		Context:    ctx,
@@ -244,7 +192,7 @@ func (r *Resolver) resolve(
 
 	var srcFiles []string
 	for _, lpkg := range lpkgs {
-		err = sourceFiles(&srcFiles, goroot, lpkg)
+		err = sourceFiles(&srcFiles, goEnv, lpkg)
 		if err != nil {
 			return nil, fmt.Errorf("resolving sourcefiles of package '%s' failed: %w", lpkg.Name, err)
 		}
@@ -259,13 +207,13 @@ func (r *Resolver) resolve(
 
 // sourceFiles returns GoFiles and OtherFiles of the package that are not part
 // of the stdlib
-func sourceFiles(result *[]string, goroot string, pkg *packages.Package) error {
-	err := withoutStdblibPackages(result, goroot, pkg.GoFiles)
+func sourceFiles(result *[]string, env *goEnv, pkg *packages.Package) error {
+	err := withoutStdblibPackages(result, env, pkg.GoFiles)
 	if err != nil {
 		return err
 	}
 
-	err = withoutStdblibPackages(result, goroot, pkg.OtherFiles)
+	err = withoutStdblibPackages(result, env, pkg.OtherFiles)
 	if err != nil {
 		return err
 	}
@@ -273,14 +221,19 @@ func sourceFiles(result *[]string, goroot string, pkg *packages.Package) error {
 	return nil
 }
 
-func withoutStdblibPackages(result *[]string, goroot string, paths []string) error {
+func withoutStdblibPackages(result *[]string, env *goEnv, paths []string) error {
 	for _, path := range paths {
 		abs, err := filepath.Abs(path)
 		if err != nil {
 			return err
 		}
+		// use HasPrefix() + Replace() to ensure we only replace the
+		// path if is the prefix
+		if strings.HasPrefix(abs, env.GoModCache) {
+			abs = strings.Replace(abs, env.GoModCache, "$GOMODCACHE", 1)
+		}
 
-		if strings.HasPrefix(abs, goroot) {
+		if strings.HasPrefix(abs, env.GoRoot) {
 			continue
 		}
 
