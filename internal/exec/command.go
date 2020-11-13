@@ -32,6 +32,7 @@ func (e ExitCodeError) Error() string {
 type Cmd struct {
 	path string
 	args []string
+	env  []string
 
 	dir           string
 	debugfFn      func(format string, v ...interface{})
@@ -57,6 +58,13 @@ func Command(name string, arg ...string) *Cmd {
 // Directory changes the directory in which the command is executed.
 func (c *Cmd) Directory(dir string) *Cmd {
 	c.dir = dir
+	return c
+}
+
+// Env specifies the environment variables that the process uses.
+// Each element is in the format KEY=VALUE.
+func (c *Cmd) Env(env []string) *Cmd {
+	c.env = env
 	return c
 }
 
@@ -133,6 +141,7 @@ func exitCodeFromErr(err error) (int, error) {
 func (c *Cmd) Run() (*Result, error) {
 	cmd := exec.Command(c.path, c.args...)
 	cmd.Dir = c.dir
+	cmd.Env = c.env
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
