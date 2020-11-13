@@ -2,7 +2,7 @@
 	"Cfg": {
 		"Environment": [
 			"GO111MODULE=on",
-			"-mod=vendor"
+			"GOFLAGS=-mod=vendor"
 		],
 		"Queries": ["fileglob=**/*_test.go"],
 		"Tests": true
