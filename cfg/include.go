@@ -48,9 +48,25 @@ func IncludeFromFile(path string) (*Include, error) {
 		return nil, err
 	}
 
-	config.filePath = path
+	config.setFilepaths(path)
 
 	return &config, err
+}
+
+func (incl *Include) setFilepaths(path string) {
+	incl.filePath = path
+
+	for _, in := range incl.Input {
+		in.filepath = path
+	}
+
+	for _, out := range incl.Output {
+		out.filepath = path
+	}
+
+	for _, task := range incl.Task {
+		task.cfgFiles = map[string]struct{}{path: {}}
+	}
 }
 
 // ValidateUniqIncludeIDs validates that IDs of all Input, Output and Task

@@ -124,6 +124,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 
 	tmpdir := t.TempDir()
 
+	absInclFilepath := filepath.Join(tmpdir, inclFilePath)
 	cfgToFile(t, include, filepath.Join(tmpdir, inclFilePath))
 
 	includeDB := NewIncludeDB(t.Logf)
@@ -147,6 +148,8 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 
 	assert.Equal(t, include.Output[0].DockerImage, loadedIncl.Output.DockerImage)
 	assert.Equal(t, include.Output[0].File, loadedIncl.Output.File)
+
+	assert.Contains(t, loadedIncl.cfgFiles, absInclFilepath)
 }
 
 func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
@@ -182,9 +185,14 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDir), 0775))
 	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, outputInclDir), 0775))
 
-	cfgToFile(t, inputIncl, filepath.Join(tmpdir, inputInclFilename))
-	cfgToFile(t, outputIncl, filepath.Join(tmpdir, outputInclFilename))
-	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
+	absInputInclFilepath := filepath.Join(tmpdir, inputInclFilename)
+	cfgToFile(t, inputIncl, absInputInclFilepath)
+
+	absOutputInclFilepath := filepath.Join(tmpdir, outputInclFilename)
+	cfgToFile(t, outputIncl, absOutputInclFilepath)
+
+	absTaskInclFilepath := filepath.Join(tmpdir, taskInclFilename)
+	cfgToFile(t, taskIncl, absTaskInclFilepath)
 
 	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.loadTaskInclude(
@@ -195,6 +203,11 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, loadedIncl)
+
+	assert.Len(t, loadedIncl.cfgFiles, 3)
+	assert.Contains(t, loadedIncl.cfgFiles, absInputInclFilepath)
+	assert.Contains(t, loadedIncl.cfgFiles, absOutputInclFilepath)
+	assert.Contains(t, loadedIncl.cfgFiles, absTaskInclFilepath)
 }
 
 // TestIncludePathsAreRelativeToCfg ensures that the paths in the Includes list
@@ -484,6 +497,10 @@ func TestTaskInclude(t *testing.T) {
 			// current validation logic also only works with exactly 1 task
 			require.Len(t, loadedApp.Tasks, 1)
 			loadedTask := loadedApp.Tasks[0]
+
+			assert.Contains(t, loadedTask.cfgFiles, appCfgPath)
+			assert.Contains(t, loadedTask.cfgFiles, includeCfgPath)
+			assert.Len(t, loadedTask.cfgFiles, 2)
 
 			for _, inputIncl := range tc.includeConfig.cfg.Input {
 				for _, f := range inputIncl.FileInputs() {

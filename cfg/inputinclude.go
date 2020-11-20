@@ -9,6 +9,8 @@ type InputInclude struct {
 	Files         []FileInputs    `comment:"Inputs specified by file glob paths"`
 	GitFiles      []GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
 	GolangSources []GolangSources `comment:"Inputs specified by directories containing Golang applications"`
+
+	filepath string
 }
 
 func (in *InputInclude) FileInputs() []FileInputs {
@@ -45,7 +47,9 @@ func (in *InputInclude) Validate() error {
 
 func (in *InputInclude) clone() *InputInclude {
 	var clone InputInclude
+
 	deepcopy.MustCopy(in, &clone)
+	clone.filepath = in.filepath
 
 	return &clone
 }

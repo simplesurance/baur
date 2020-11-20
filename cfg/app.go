@@ -25,7 +25,6 @@ type App struct {
 func ExampleApp(name string) *App {
 	return &App{
 		Name: name,
-
 		Tasks: []*Task{
 			{
 				Name:    "build",
@@ -93,6 +92,10 @@ func AppFromFile(path string) (*App, error) {
 
 	config.filepath = path
 
+	for _, task := range config.Tasks {
+		task.cfgFiles = map[string]struct{}{config.filepath: {}}
+	}
+
 	return &config, err
 }
 
@@ -122,7 +125,7 @@ func (a *App) Resolve(resolvers resolver.Resolver) error {
 // then appeneded to the task list.
 func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver) error {
 	for _, includeID := range a.Includes {
-		include, err := includedb.loadTaskInclude(includeSpecResolvers, filepath.Dir(a.filepath), includeID)
+		taskInclude, err := includedb.loadTaskInclude(includeSpecResolvers, filepath.Dir(a.filepath), includeID)
 		if err != nil {
 			if errors.Is(err, ErrIncludeIDNotFound) {
 				return fmt.Errorf("%s: Task include with given ID not found in include file", includeID)
@@ -131,11 +134,12 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 			return fmt.Errorf("%s: %w", includeID, err)
 		}
 
-		a.Tasks = append(a.Tasks, include.toTask())
+		a.Tasks = append(a.Tasks, taskInclude.toTask())
 	}
 
 	for _, task := range a.Tasks {
-		if err := TaskMerge(task, filepath.Dir(a.filepath), includeSpecResolvers, includedb); err != nil {
+		err := TaskMerge(task, filepath.Dir(a.filepath), includeSpecResolvers, includedb)
+		if err != nil {
 			return FieldErrorWrap(err, "Tasks", task.Name)
 		}
 	}

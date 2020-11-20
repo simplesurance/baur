@@ -53,7 +53,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 
 	// Add the .app.toml file of the app to the inputs
 	// TODO: add the files that were included in the .app.toml and it's includes
-	allInputsPaths = append(allInputsPaths, filepath.Join(task.Directory, AppCfgFile))
+	allInputsPaths = append(allInputsPaths, task.CfgFilepaths...)
 
 	uniqInputs, err := i.pathsToUniqInputs(repositoryDir, allInputsPaths)
 	if err != nil {

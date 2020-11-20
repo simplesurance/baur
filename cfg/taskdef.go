@@ -13,6 +13,7 @@ type TaskDef interface {
 	GetInput() *Input
 	GetName() string
 	GetOutput() *Output
+	addCfgFilepath(path string)
 }
 
 // TaskMerge loads the includes of the task and merges them with the task itself.
@@ -22,6 +23,7 @@ func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, incl
 		if err == nil {
 			inputInclude = inputInclude.clone()
 			task.GetInput().Merge(inputInclude)
+			task.addCfgFilepath(inputInclude.filepath)
 
 			continue
 		}
@@ -44,6 +46,8 @@ func TaskMerge(task TaskDef, workingDir string, resolver resolver.Resolver, incl
 
 		outputInclude = outputInclude.clone()
 		task.GetOutput().Merge(outputInclude)
+
+		task.addCfgFilepath(outputInclude.filepath)
 	}
 
 	return nil

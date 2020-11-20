@@ -175,6 +175,7 @@ func (db *IncludeDB) parseIncludeSpec(resolver resolver.Resolver, workingDir, in
 // Includes referenced in TaskIncludes a recursively loaded and included.
 func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 	db.logf("includedb: loading %q", path)
+
 	include, err := IncludeFromFile(path)
 	if err != nil {
 		// the error includes the path to the file

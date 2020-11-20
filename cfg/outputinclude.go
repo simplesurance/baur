@@ -12,6 +12,8 @@ type OutputInclude struct {
 
 	DockerImage []DockerImageOutput `comment:"Docker images that are produced by the [Task.command]"`
 	File        []FileOutput        `comment:"Files that are produces by the [Task.command]"`
+
+	filepath string
 }
 
 func (out *OutputInclude) DockerImageOutputs() []DockerImageOutput {
@@ -44,7 +46,9 @@ func (out *OutputInclude) Validate() error {
 
 func (out *OutputInclude) clone() *OutputInclude {
 	var clone OutputInclude
+
 	deepcopy.MustCopy(out, &clone)
+	clone.filepath = out.filepath
 
 	return &clone
 }
