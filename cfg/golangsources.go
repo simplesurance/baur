@@ -12,13 +12,6 @@ type GolangSources struct {
 	Tests       bool     `toml:"tests" comment:"If true queries are resolved to test files, otherwise testfiles are ignored."`
 }
 
-func (g *GolangSources) IsEmpty() bool {
-	return len(g.Environment) == 0 &&
-		len(g.Queries) == 0 &&
-		len(g.BuildFlags) == 0 &&
-		!g.Tests
-}
-
 func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 	for i, env := range g.Environment {
 		var err error

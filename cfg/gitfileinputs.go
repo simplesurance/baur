@@ -9,11 +9,6 @@ type GitFileInputs struct {
 	Optional bool     `toml:"optional" comment:"If true, baur will not fail if a Path does not resolve to a file."`
 }
 
-// Merge merges two GitFileInputs structs
-func (g *GitFileInputs) Merge(other *GitFileInputs) {
-	g.Paths = append(g.Paths, other.Paths...)
-}
-
 func (g *GitFileInputs) Resolve(resolvers resolver.Resolver) error {
 	for i, p := range g.Paths {
 		var err error

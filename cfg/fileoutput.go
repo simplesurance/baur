@@ -37,8 +37,3 @@ func (f *FileOutput) Validate() error {
 
 	return f.S3Upload.Validate()
 }
-
-// IsEmpty returns true if the object stores no data.
-func (f *FileOutput) IsEmpty() bool {
-	return f.Path == "" && f.S3Upload.IsEmpty() && f.FileCopy.IsEmpty()
-}
