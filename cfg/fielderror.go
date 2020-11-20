@@ -6,42 +6,42 @@ import (
 	"strings"
 )
 
-// FieldError describes an error related to an element in a configuration struct.
-type FieldError struct {
+// fieldError describes an error related to an element in a configuration struct.
+type fieldError struct {
 	elementPath []string
 	err         error
 }
 
-// NewFieldError creates a new FieldError with the given error message and ElementPath.
-func NewFieldError(msg string, path ...string) *FieldError {
-	return &FieldError{
+// newFieldError creates a new FieldError with the given error message and ElementPath.
+func newFieldError(msg string, path ...string) *fieldError {
+	return &fieldError{
 		err:         errors.New(msg),
 		elementPath: path,
 	}
 }
 
-// FieldErrorWrap returns a new FieldError thats wraps the passed err, if err
+// fieldErrorWrap returns a new FieldError thats wraps the passed err, if err
 // is not of type FieldError.
 // If it is of type FieldError, the passed paths are prepended to it's
 // ElementPath and err is returned.
-func FieldErrorWrap(err error, path ...string) error {
-	valError, ok := err.(*FieldError)
+func fieldErrorWrap(err error, path ...string) error {
+	valError, ok := err.(*fieldError)
 	if ok {
 		valError.elementPath = append(path, valError.elementPath...)
 		return err
 	}
 
-	return &FieldError{
+	return &fieldError{
 		elementPath: path,
 		err:         err,
 	}
 }
 
-func (f *FieldError) Error() string {
+func (f *fieldError) Error() string {
 	return fmt.Sprintf("%s: %s", strings.Join(f.elementPath, "."), f.err)
 }
 
-func (f *FieldError) Unwrap() error {
+func (f *fieldError) Unwrap() error {
 	if err := errors.Unwrap(f.err); err != nil {
 		return err
 	}

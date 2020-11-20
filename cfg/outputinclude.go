@@ -24,11 +24,11 @@ func (out *OutputInclude) FileOutputs() []FileOutput {
 	return out.File
 }
 
-// Validate checks if the stored information is valid.
-func (out *OutputInclude) Validate() error {
+// validate checks if the stored information is valid.
+func (out *OutputInclude) validate() error {
 	if err := validateIncludeID(out.IncludeID); err != nil {
 		if out.IncludeID != "" {
-			err = FieldErrorWrap(err, out.IncludeID)
+			err = fieldErrorWrap(err, out.IncludeID)
 		}
 		return err
 	}
@@ -37,7 +37,7 @@ func (out *OutputInclude) Validate() error {
 		return errors.New("no output is defined")
 	}
 
-	if err := OutputValidate(out); err != nil {
+	if err := outputValidate(out); err != nil {
 		return err
 	}
 

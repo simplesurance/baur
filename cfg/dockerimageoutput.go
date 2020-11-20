@@ -16,24 +16,24 @@ func (d *DockerImageOutput) Resolve(resolvers resolver.Resolver) error {
 	var err error
 
 	if d.IDFile, err = resolvers.Resolve(d.IDFile); err != nil {
-		return FieldErrorWrap(err, "idfile")
+		return fieldErrorWrap(err, "idfile")
 	}
 
 	if err = d.RegistryUpload.Resolve(resolvers); err != nil {
-		return FieldErrorWrap(err, "RegistryUpload")
+		return fieldErrorWrap(err, "RegistryUpload")
 	}
 
 	return nil
 }
 
-// Validate validates its content
-func (d *DockerImageOutput) Validate() error {
+// validate validates its content
+func (d *DockerImageOutput) validate() error {
 	if len(d.IDFile) == 0 {
-		return NewFieldError("can not be empty", "idfile")
+		return newFieldError("can not be empty", "idfile")
 	}
 
-	if err := d.RegistryUpload.Validate(); err != nil {
-		return FieldErrorWrap(err, "RegistryUpload")
+	if err := d.RegistryUpload.validate(); err != nil {
+		return fieldErrorWrap(err, "RegistryUpload")
 	}
 
 	return nil

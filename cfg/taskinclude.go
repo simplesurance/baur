@@ -41,15 +41,15 @@ func (t *TaskInclude) GetOutput() *Output {
 	return &t.Output
 }
 
-func (t *TaskInclude) Validate() error {
+func (t *TaskInclude) validate() error {
 	if err := validateIncludeID(t.IncludeID); err != nil {
 		if t.IncludeID != "" {
-			err = FieldErrorWrap(err, t.IncludeID)
+			err = fieldErrorWrap(err, t.IncludeID)
 		}
 		return err
 	}
 
-	if err := TaskValidate(t); err != nil {
+	if err := taskValidate(t); err != nil {
 		return err
 	}
 

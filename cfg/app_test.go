@@ -72,7 +72,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 		},
 	}
 
-	require.NoError(t, taskIncl.Task.Validate())
+	require.NoError(t, taskIncl.Task.validate())
 
 	tmpdir := t.TempDir()
 

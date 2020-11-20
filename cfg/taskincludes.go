@@ -4,11 +4,11 @@ import "github.com/simplesurance/baur/v1/cfg/resolver"
 
 type TaskIncludes []*TaskInclude
 
-func (tasks TaskIncludes) Validate() error {
+func (tasks TaskIncludes) validate() error {
 	for _, task := range tasks {
-		if err := task.Validate(); err != nil {
+		if err := task.validate(); err != nil {
 			if task.Name != "" {
-				err = FieldErrorWrap(err, "Task")
+				err = fieldErrorWrap(err, "Task")
 			}
 
 			return err
@@ -18,12 +18,12 @@ func (tasks TaskIncludes) Validate() error {
 	return nil
 }
 
-func (tasks TaskIncludes) Merge(workingDir string, resolver resolver.Resolver, db *IncludeDB) error {
+func (tasks TaskIncludes) merge(workingDir string, resolver resolver.Resolver, db *IncludeDB) error {
 	for _, task := range tasks {
-		err := TaskMerge(task, workingDir, resolver, db)
+		err := taskMerge(task, workingDir, resolver, db)
 		if err != nil {
 			if task.Name != "" {
-				err = FieldErrorWrap(err, task.Name)
+				err = fieldErrorWrap(err, task.Name)
 			}
 
 			return err
