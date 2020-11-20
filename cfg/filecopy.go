@@ -12,11 +12,11 @@ func (f *FileCopy) IsEmpty() bool {
 	return len(f.Path) == 0
 }
 
-func (f *FileCopy) Resolve(resolvers resolver.Resolver) error {
+func (f *FileCopy) resolve(resolvers resolver.Resolver) error {
 	var err error
 
 	if f.Path, err = resolvers.Resolve(f.Path); err != nil {
-		return FieldErrorWrap(err, "path")
+		return fieldErrorWrap(err, "path")
 	}
 
 	return nil

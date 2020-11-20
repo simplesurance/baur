@@ -69,14 +69,14 @@ func (incl *Include) setFilepaths(path string) {
 	}
 }
 
-// ValidateUniqIncludeIDs validates that IDs of all Input, Output and Task
+// validateUniqIncludeIDs validates that IDs of all Input, Output and Task
 // includes are unique.
-func (incl *Include) ValidateUniqIncludeIDs() error {
+func (incl *Include) validateUniqIncludeIDs() error {
 	uniqIncludeIDs := map[string]struct{}{}
 
 	for _, in := range incl.Input {
 		if _, exist := uniqIncludeIDs[in.IncludeID]; exist {
-			return NewFieldError(
+			return newFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", in.IncludeID),
 				"Input", "include_id",
 			)
@@ -87,7 +87,7 @@ func (incl *Include) ValidateUniqIncludeIDs() error {
 
 	for _, out := range incl.Output {
 		if _, exist := uniqIncludeIDs[out.IncludeID]; exist {
-			return NewFieldError(
+			return newFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", out.IncludeID),
 				"Input", "include_id",
 			)
@@ -98,7 +98,7 @@ func (incl *Include) ValidateUniqIncludeIDs() error {
 
 	for _, task := range incl.Task {
 		if _, exist := uniqIncludeIDs[task.IncludeID]; exist {
-			return NewFieldError(
+			return newFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", task.IncludeID),
 				"Input", "include_id",
 			)
@@ -192,11 +192,11 @@ func ExampleInclude(id string) *Include {
 func validateIncludes(includes []string) error {
 	for _, in := range includes {
 		if filepath.IsAbs(in) {
-			return NewFieldError("include specifier is an absolute path, must be a repository relative path", in)
+			return newFieldError("include specifier is an absolute path, must be a repository relative path", in)
 		}
 
 		if !includeSpecRegex.MatchString(in) {
-			return NewFieldError("invalid include specifier, must be in format "+includeSpecFmt, in)
+			return newFieldError("invalid include specifier, must be in format "+includeSpecFmt, in)
 		}
 	}
 

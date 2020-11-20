@@ -21,7 +21,7 @@ func (out *Output) FileOutputs() []FileOutput {
 func (out *Output) Resolve(resolvers resolver.Resolver) error {
 	for i, dockerImage := range out.DockerImage {
 		if err := dockerImage.Resolve(resolvers); err != nil {
-			return FieldErrorWrap(err, "DockerImage")
+			return fieldErrorWrap(err, "DockerImage")
 		}
 
 		// replace the slice element because dockerImage is a copy
@@ -29,8 +29,8 @@ func (out *Output) Resolve(resolvers resolver.Resolver) error {
 	}
 
 	for i, file := range out.File {
-		if err := file.Resolve(resolvers); err != nil {
-			return FieldErrorWrap(err, "FileOutput")
+		if err := file.resolve(resolvers); err != nil {
+			return fieldErrorWrap(err, "FileOutput")
 		}
 
 		// replace the slice element because file is a copy
@@ -46,17 +46,16 @@ func (out *Output) Merge(other OutputDef) {
 	out.File = append(out.File, other.FileOutputs()...)
 }
 
-// Validate checks that the stored information is valid.
-func OutputValidate(o OutputDef) error {
+func outputValidate(o OutputDef) error {
 	for _, f := range o.FileOutputs() {
-		if err := f.Validate(); err != nil {
-			return FieldErrorWrap(err, "File")
+		if err := f.validate(); err != nil {
+			return fieldErrorWrap(err, "File")
 		}
 	}
 
 	for _, d := range o.DockerImageOutputs() {
-		if err := d.Validate(); err != nil {
-			return FieldErrorWrap(err, "DockerImage")
+		if err := d.validate(); err != nil {
+			return fieldErrorWrap(err, "DockerImage")
 		}
 	}
 

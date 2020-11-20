@@ -25,11 +25,11 @@ func (in *InputInclude) GolangSourcesInputs() []GolangSources {
 	return in.GolangSources
 }
 
-// Validate checks if the stored information is valid.
-func (in *InputInclude) Validate() error {
+// validate checks if the stored information is valid.
+func (in *InputInclude) validate() error {
 	if err := validateIncludeID(in.IncludeID); err != nil {
 		if in.IncludeID != "" {
-			err = FieldErrorWrap(err, in.IncludeID)
+			err = fieldErrorWrap(err, in.IncludeID)
 		}
 		return err
 	}
@@ -38,7 +38,7 @@ func (in *InputInclude) Validate() error {
 		return nil
 	}
 
-	if err := InputValidate(in); err != nil {
+	if err := inputValidate(in); err != nil {
 		return err
 	}
 

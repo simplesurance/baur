@@ -9,12 +9,12 @@ type GitFileInputs struct {
 	Optional bool     `toml:"optional" comment:"If true, baur will not fail if a Path does not resolve to a file."`
 }
 
-func (g *GitFileInputs) Resolve(resolvers resolver.Resolver) error {
+func (g *GitFileInputs) resolve(resolvers resolver.Resolver) error {
 	for i, p := range g.Paths {
 		var err error
 
 		if g.Paths[i], err = resolvers.Resolve(p); err != nil {
-			return FieldErrorWrap(err, "Paths", p)
+			return fieldErrorWrap(err, "Paths", p)
 		}
 	}
 

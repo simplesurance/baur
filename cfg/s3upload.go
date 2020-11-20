@@ -15,32 +15,32 @@ func (s *S3Upload) IsEmpty() bool {
 	return len(s.Bucket) == 0 && len(s.Key) == 0
 }
 
-func (s *S3Upload) Resolve(resolvers resolver.Resolver) error {
+func (s *S3Upload) resolve(resolvers resolver.Resolver) error {
 	var err error
 
 	if s.Bucket, err = resolvers.Resolve(s.Bucket); err != nil {
-		return FieldErrorWrap(err, "bucket")
+		return fieldErrorWrap(err, "bucket")
 	}
 
 	if s.Key, err = resolvers.Resolve(s.Key); err != nil {
-		return FieldErrorWrap(err, "dest_file")
+		return fieldErrorWrap(err, "dest_file")
 	}
 
 	return nil
 }
 
-// Validate validates a [[Task.Output.File]] section
-func (s *S3Upload) Validate() error {
+// validate validates a [[Task.Output.File]] section
+func (s *S3Upload) validate() error {
 	if s.IsEmpty() {
 		return nil
 	}
 
 	if len(s.Key) == 0 {
-		return NewFieldError("can not be empty", "destfile")
+		return newFieldError("can not be empty", "destfile")
 	}
 
 	if len(s.Bucket) == 0 {
-		return NewFieldError("can not be empty", "bucket")
+		return newFieldError("can not be empty", "bucket")
 	}
 
 	return nil
