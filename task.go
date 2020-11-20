@@ -20,6 +20,7 @@ type Task struct {
 	Command          []string
 	UnresolvedInputs *cfg.Input
 	Outputs          *cfg.Output
+	CfgFilepaths     []string
 }
 
 // NewTask returns a new Task.
@@ -28,6 +29,7 @@ func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string) *Task
 		RepositoryRoot:   repositoryRootdir,
 		Directory:        workingDir,
 		Outputs:          &cfg.Output,
+		CfgFilepaths:     cfg.Filepaths(),
 		Command:          cfg.Command,
 		Name:             cfg.Name,
 		AppName:          appName,

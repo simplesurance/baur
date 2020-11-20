@@ -11,6 +11,29 @@ type Task struct {
 	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory.\n Valid variables: $ROOT."`
 	Input    Input    `toml:"Input" comment:"Specification of task inputs like source files, Makefiles, etc"`
 	Output   Output   `toml:"Output" comment:"Specification of task outputs produced by the Task.command"`
+
+	// multiple include sections of the same file can be included, use a map
+	// instead of a slice to act as a Set datastructure
+	cfgFiles map[string]struct{}
+}
+
+func (t *Task) addCfgFilepath(path string) {
+	if path == "" {
+		panic("path is empty")
+	}
+	t.cfgFiles[path] = struct{}{}
+}
+
+// Filepaths returns a list of all parsed config files.
+// This is the app config file and files of the included sections.
+func (t *Task) Filepaths() []string {
+	result := make([]string, 0, len(t.cfgFiles))
+
+	for p := range t.cfgFiles {
+		result = append(result, p)
+	}
+
+	return result
 }
 
 func (t *Task) GetCommand() []string {

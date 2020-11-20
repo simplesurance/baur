@@ -20,7 +20,8 @@ func (tasks TaskIncludes) Validate() error {
 
 func (tasks TaskIncludes) Merge(workingDir string, resolver resolver.Resolver, db *IncludeDB) error {
 	for _, task := range tasks {
-		if err := TaskMerge(task, workingDir, resolver, db); err != nil {
+		err := TaskMerge(task, workingDir, resolver, db)
+		if err != nil {
 			if task.Name != "" {
 				err = FieldErrorWrap(err, task.Name)
 			}
