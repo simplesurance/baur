@@ -12,11 +12,6 @@ type FileInputs struct {
 	Optional bool     `toml:"optional" comment:"If true, baur will not fail if a Path does not resolve to a file."`
 }
 
-// Merge appends the paths in other to f.
-func (f *FileInputs) Merge(other *FileInputs) {
-	f.Paths = append(f.Paths, other.Paths...)
-}
-
 func (f *FileInputs) Resolve(resolvers resolver.Resolver) error {
 	for i, p := range f.Paths {
 		var err error

@@ -11,11 +11,6 @@ type DockerImageRegistryUpload struct {
 	Tag        string `toml:"tag" comment:"Tag that is applied to the image.\n Valid variables: $APPNAME, $UUID, $GITCOMMIT"`
 }
 
-//IsEmpty returns true if the struct contains no information.
-func (d *DockerImageRegistryUpload) IsEmpty() bool {
-	return len(d.Registry) == 0 && len(d.Repository) == 0 && len(d.Tag) == 0
-}
-
 func (d *DockerImageRegistryUpload) Resolve(resolvers resolver.Resolver) error {
 	var err error
 

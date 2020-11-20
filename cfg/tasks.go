@@ -8,16 +8,6 @@ import (
 
 type Tasks []*Task
 
-func (tasks Tasks) Merge(workingDir string, resolver resolver.Resolver, includedb *IncludeDB) error {
-	for _, task := range tasks {
-		if err := TaskMerge(task, workingDir, resolver, includedb); err != nil {
-			return FieldErrorWrap(err, "Task")
-		}
-	}
-
-	return nil
-}
-
 func (tasks Tasks) Resolve(resolvers resolver.Resolver) error {
 	for _, t := range tasks {
 		if err := t.Resolve(resolvers); err != nil {
