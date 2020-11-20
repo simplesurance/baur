@@ -41,7 +41,7 @@ func mustFindRepository() *baur.Repository {
 				baur.RepositoryCfgFile)
 			exitFunc(1)
 		}
-		stderr.Println("locating baur repository failed")
+		stderr.Printf("locating baur repository failed: %s\n", err)
 		exitFunc(1)
 	}
 
