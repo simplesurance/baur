@@ -11,24 +11,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v1"
-	"github.com/simplesurance/baur/v1/internal/digest"
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/format/csv"
 	"github.com/simplesurance/baur/v1/internal/format/table"
 	"github.com/simplesurance/baur/v1/storage"
 )
-
-type storageInput struct {
-	input *storage.Input
-}
-
-func (i *storageInput) Digest() (*digest.Digest, error) {
-	return digest.FromString(i.input.Digest)
-}
-
-func (i *storageInput) String() string {
-	return i.input.URI
-}
 
 type diffInputArgDetails struct {
 	arg      string
@@ -236,10 +223,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	exitOnErr(err)
 
 	// Convert the inputs from the DB into baur.Input interface implementation
-	var baurInputs []baur.Input
-	for _, input := range storageInputs {
-		baurInputs = append(baurInputs, &storageInput{input})
-	}
+	baurInputs := toBaurInputs(storageInputs)
 
 	return baur.NewInputs(baur.InputAddStrIfNotEmpty(baurInputs, c.inputStr)), taskRun
 }
