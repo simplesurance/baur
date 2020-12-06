@@ -102,6 +102,19 @@ type Storer interface {
 		callback func(*TaskRunWithID) error,
 	) error
 
+	// TaskRunsWithInputDigest queries the storage for runs that match the filters
+	// and contain an input with the given digest value.
+	// The found results are passed in iterative manner to the callback
+	// function. When the callback function returns an error, the iteration
+	// stops.
+	// When no matching records exist, the method returns ErrNotExist.
+	TaskRunsWithInputDigest(ctx context.Context,
+		filters []*Filter,
+		sorters []*Sorter,
+		digest string,
+		callback func(*TaskRunWithID) error,
+	) error
+
 	Inputs(ctx context.Context, taskRunID int) ([]*Input, error)
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
 }

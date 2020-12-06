@@ -207,6 +207,36 @@ func TestNonExistentRunReturnsExitCode1(t *testing.T) {
 	}
 }
 
+func TestNoPreviousRunWithInputStrReturnsExitCode1(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateAppWithNoOutputs(t, appOneName)
+
+	doInitDb(t)
+
+	runCmd := newRunCmd()
+	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
+
+	diffInputsCmd := newDiffInputsCmd()
+	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, fmt.Sprintf("%s^", appOneWithBuildTask), "--input-str=foo"})
+	execCmd(t, diffInputsCmd, 1)
+}
+
+func TestNoPreviousRunWithInputStrOrLookupInputStrReturnsExitCode1(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateAppWithNoOutputs(t, appOneName)
+
+	doInitDb(t)
+
+	runCmd := newRunCmd()
+	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
+
+	diffInputsCmd := newDiffInputsCmd()
+	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, fmt.Sprintf("%s^", appOneWithBuildTask), "--input-str=foo", "--lookup-input-str=bar"})
+	execCmd(t, diffInputsCmd, 1)
+}
+
 func TestCurrentInputsAgainstPreviousRunThatHasSameInputsReturnsExitCode0(t *testing.T) {
 	testcases := []struct {
 		testname    string
@@ -238,6 +268,42 @@ func TestCurrentInputsAgainstPreviousRunThatHasSameInputsReturnsExitCode0(t *tes
 			execCmd(t, diffInputsCmd, 0)
 		})
 	}
+}
+
+func TestCurrentInputsAgainstPreviousRunWithInputStrThatHasSameInputsReturnsExitCode0(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateAppWithNoOutputs(t, appOneName)
+
+	doInitDb(t)
+
+	inputStr := "foo"
+
+	runCmd := newRunCmd()
+	runCmd.SetArgs([]string{appOneWithBuildTask, fmt.Sprintf("--input-str=%s", inputStr)})
+	runCmd.Execute()
+
+	diffInputsCmd := newDiffInputsCmd()
+	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, fmt.Sprintf("%s^", appOneWithBuildTask), fmt.Sprintf("--input-str=%s", inputStr)})
+	execCmd(t, diffInputsCmd, 0)
+}
+
+func TestCurrentInputsAgainstPreviousRunWithLookupInputStrThatHasSameInputsReturnsExitCode0(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateAppWithNoOutputs(t, appOneName)
+
+	doInitDb(t)
+
+	lookupInputStr := "bar"
+
+	runCmd := newRunCmd()
+	runCmd.SetArgs([]string{appOneWithBuildTask, fmt.Sprintf("--input-str=%s", lookupInputStr)})
+	runCmd.Execute()
+
+	diffInputsCmd := newDiffInputsCmd()
+	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, fmt.Sprintf("%s^", appOneWithBuildTask), "--input-str=foo", fmt.Sprintf("--lookup-input-str=%s", lookupInputStr)})
+	execCmd(t, diffInputsCmd, 0)
 }
 
 func TestPreviousRunAgainstAnotherPreviousRunThatHasSameInputsReturnsExitCode0(t *testing.T) {

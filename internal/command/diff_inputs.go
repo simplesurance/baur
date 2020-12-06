@@ -31,11 +31,15 @@ func (i *storageInput) String() string {
 }
 
 type diffInputArgDetails struct {
-	arg      string
-	appName  string
-	taskName string
-	runID    string
-	task     *baur.Task
+	arg                  string
+	appName              string
+	taskName             string
+	runID                string
+	inputStr             string
+	inputStrDigest       string
+	lookupInputStr       string
+	lookupInputStrDigest string
+	task                 *baur.Task
 }
 
 func init() {
@@ -45,9 +49,10 @@ func init() {
 type diffInputsCmd struct {
 	cobra.Command
 
-	csv      bool
-	quiet    bool
-	inputStr string
+	csv            bool
+	quiet          bool
+	inputStr       string
+	lookupInputStr string
 }
 
 const diffInputslongHelp = `
@@ -106,6 +111,9 @@ func newDiffInputsCmd() *diffInputsCmd {
 	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
 		"include a string as input")
 
+	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
+		"if a previous run can not be found with the input-str provided, try to find a previous run with this value as input-string")
+
 	return &cmd
 }
 
@@ -134,7 +142,7 @@ func diffArgs() cobra.PositionalArgs {
 
 func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	repo := mustFindRepository()
-	argDetails := getDiffInputArgDetails(repo, args)
+	argDetails := getDiffInputArgDetails(repo, args, c.inputStr, c.lookupInputStr)
 
 	inputs1, run1 := c.getTaskRunInputs(repo, argDetails[0])
 	inputs2, run2 := c.getTaskRunInputs(repo, argDetails[1])
@@ -157,12 +165,25 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	exitFunc(0)
 }
 
-func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputArgDetails {
+func getDiffInputArgDetails(repo *baur.Repository, args []string, inputStr string, lookupInputStr string) []*diffInputArgDetails {
 	results := make([]*diffInputArgDetails, 0, len(args))
 
 	for _, arg := range args {
 		app, task, runID := parseDiffSpec(arg)
-		results = append(results, &diffInputArgDetails{arg: arg, appName: app, taskName: task, runID: runID})
+		inputStrDigest, err := baur.NewInputString(inputStr).Digest()
+		exitOnErr(err)
+		lookupInputStrDigest, err := baur.NewInputString(lookupInputStr).Digest()
+		exitOnErr(err)
+		results = append(results, &diffInputArgDetails{
+			arg:                  arg,
+			appName:              app,
+			taskName:             task,
+			runID:                runID,
+			inputStr:             inputStr,
+			inputStrDigest:       inputStrDigest.String(),
+			lookupInputStr:       lookupInputStr,
+			lookupInputStrDigest: lookupInputStrDigest.String(),
+		})
 	}
 
 	var mustHaveTasks []string
@@ -234,9 +255,13 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	exitOnErr(err)
 
 	// Convert the inputs from the DB into baur.Input interface implementation
+	// Do not add inputs with a digest that matches the passed in input-str or lookup-input-str
+	// as the input-str value provided will be added to the final list of inputs
 	var baurInputs []baur.Input
 	for _, input := range storageInputs {
-		baurInputs = append(baurInputs, &storageInput{input})
+		if input.Digest != argDetails.inputStrDigest && input.Digest != argDetails.lookupInputStrDigest {
+			baurInputs = append(baurInputs, &storageInput{input})
+		}
 	}
 
 	return baur.NewInputs(baur.InputAddStrIfNotEmpty(baurInputs, c.inputStr)), taskRun
@@ -276,30 +301,75 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *
 		},
 	}
 
+	var err error
 	var taskRun *storage.TaskRunWithID
 	found := errors.New("found_task_run")
 	runPosition := len(argDetails.runID)
 	retrieved := 0
-	err := psql.TaskRuns(
-		ctx,
-		filters,
-		sorters,
-		func(record *storage.TaskRunWithID) error {
-			retrieved++
-			if retrieved == runPosition {
-				taskRun = record
-				return found
-			}
-			return nil
-		},
-	)
+	if argDetails.inputStr != "" {
+		err = psql.TaskRunsWithInputDigest(
+			ctx,
+			filters,
+			sorters,
+			argDetails.inputStrDigest,
+			func(record *storage.TaskRunWithID) error {
+				retrieved++
+				if retrieved == runPosition {
+					taskRun = record
+					return found
+				}
+				return nil
+			},
+		)
+		if err != nil && err == storage.ErrNotExist {
+			err = psql.TaskRunsWithInputDigest(
+				ctx,
+				filters,
+				sorters,
+				argDetails.lookupInputStrDigest,
+				func(record *storage.TaskRunWithID) error {
+					retrieved++
+					if retrieved == runPosition {
+						taskRun = record
+						return found
+					}
+					return nil
+				},
+			)
+		}
+	} else {
+		err = psql.TaskRuns(
+			ctx,
+			filters,
+			sorters,
+			func(record *storage.TaskRunWithID) error {
+				retrieved++
+				if retrieved == runPosition {
+					taskRun = record
+					return found
+				}
+				return nil
+			},
+		)
+	}
 
-	if err != nil && errors.Unwrap(err) != found {
+	if err != nil && err != storage.ErrNotExist && errors.Unwrap(err) != found {
 		exitOnErr(err)
 	}
 
 	if runPosition > retrieved {
-		exitOnErr(fmt.Errorf("run %s does not exist, only %d task-run(s) exist(s)", argDetails.arg, retrieved))
+		var errDetails string
+		if argDetails.inputStr != "" {
+			errDetails = fmt.Sprintf(" with input-str %s", argDetails.inputStr)
+			if argDetails.lookupInputStr != "" {
+				errDetails = fmt.Sprintf("%s or lookup-input-str %s", errDetails, argDetails.lookupInputStr)
+			}
+		} else {
+			if retrieved > 0 {
+				errDetails = fmt.Sprintf(", only %d task-run(s) exist(s)", retrieved)
+			}
+		}
+		exitOnErr(fmt.Errorf("run %s does not exist%s", argDetails.arg, errDetails))
 	}
 
 	return taskRun
