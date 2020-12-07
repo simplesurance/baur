@@ -77,7 +77,9 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 
 func (c *lsInputsCmd) mustGetTaskRunInputs(taskRunID int) []baur.Input {
 	repo := mustFindRepository()
+
 	storageClt := mustNewCompatibleStorage(repo)
+	defer storageClt.Close()
 
 	inputs, err := storageClt.Inputs(ctx, taskRunID)
 	exitOnErr(err)
