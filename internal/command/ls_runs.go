@@ -113,6 +113,7 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 
 	repo := mustFindRepository()
 	psql := mustNewCompatibleStorage(repo)
+	defer psql.Close()
 
 	var formatter format.Formatter
 	if c.csv {

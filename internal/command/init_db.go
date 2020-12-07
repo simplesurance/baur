@@ -60,6 +60,7 @@ func initDb(cmd *cobra.Command, args []string) {
 
 	storageClt, err := newStorageClient(dbURL)
 	exitOnErr(err, "establishing connection failed")
+	defer storageClt.Close()
 
 	err = storageClt.Init(ctx)
 	exitOnErr(err)

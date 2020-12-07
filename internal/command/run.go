@@ -113,6 +113,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	c.repoRootPath = repo.Path
 
 	c.storage = mustNewCompatibleStorage(repo)
+	defer c.storage.Close()
 
 	c.uploadRoutinePool = routines.NewPool(1) // run 1 upload in parallel with builds
 

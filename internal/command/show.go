@@ -262,6 +262,7 @@ func vcsStr(v *storage.TaskRun) string {
 func (*showCmd) showBuild(taskRunID int) {
 	repo := mustFindRepository()
 	storageClt := mustNewCompatibleStorage(repo)
+	defer storageClt.Close()
 
 	taskRun, err := storageClt.TaskRun(ctx, taskRunID)
 	if err != nil {
