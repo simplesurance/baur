@@ -133,6 +133,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 
 	if storageQueryNeeded {
 		storageClt = mustNewCompatibleStorage(repo)
+		defer storageClt.Close()
 	}
 
 	if writeHeaders {
