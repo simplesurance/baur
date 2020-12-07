@@ -185,15 +185,15 @@ func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
-	if err := include.ValidateUniqIncludeIDs(); err != nil {
+	if err := include.validateUniqIncludeIDs(); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	// Inputs and Outputs are loaded and indexed before the Tasks. This
 	// allows to include inputs and outputs of the same file in the TaskInclude.
 
-	if err := include.Input.Validate(); err != nil {
-		return fmt.Errorf("validation failed: %w", FieldErrorWrap(err, "Input"))
+	if err := include.Input.validate(); err != nil {
+		return fmt.Errorf("validation failed: %w", fieldErrorWrap(err, "Input"))
 	}
 
 	for _, input := range include.Input {
@@ -202,8 +202,8 @@ func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 		}
 	}
 
-	if err := include.Output.Validate(); err != nil {
-		return fmt.Errorf("validation failed: %w", FieldErrorWrap(err, "Output"))
+	if err := include.Output.validate(); err != nil {
+		return fmt.Errorf("validation failed: %w", fieldErrorWrap(err, "Output"))
 	}
 
 	for _, output := range include.Output {
@@ -212,12 +212,12 @@ func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
 		}
 	}
 
-	if err := include.Task.Merge(filepath.Dir(path), resolver, db); err != nil {
-		return fmt.Errorf("merge failed: %w", FieldErrorWrap(err, "Task"))
+	if err := include.Task.merge(filepath.Dir(path), resolver, db); err != nil {
+		return fmt.Errorf("merge failed: %w", fieldErrorWrap(err, "Task"))
 	}
 
-	if err := include.Task.Validate(); err != nil {
-		return fmt.Errorf("validation failed: %w", FieldErrorWrap(err, "Task"))
+	if err := include.Task.validate(); err != nil {
+		return fmt.Errorf("validation failed: %w", fieldErrorWrap(err, "Task"))
 	}
 
 	for _, task := range include.Task {

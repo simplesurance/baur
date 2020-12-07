@@ -11,34 +11,29 @@ type FileOutput struct {
 	S3Upload S3Upload `comment:"Upload the file to S3."`
 }
 
-func (f *FileOutput) Resolve(resolvers resolver.Resolver) error {
+func (f *FileOutput) resolve(resolvers resolver.Resolver) error {
 	var err error
 
 	if f.Path, err = resolvers.Resolve(f.Path); err != nil {
-		return FieldErrorWrap(err, "path")
+		return fieldErrorWrap(err, "path")
 	}
 
-	if err = f.FileCopy.Resolve(resolvers); err != nil {
-		return FieldErrorWrap(err, "FileCopy")
+	if err = f.FileCopy.resolve(resolvers); err != nil {
+		return fieldErrorWrap(err, "FileCopy")
 	}
 
-	if err = f.S3Upload.Resolve(resolvers); err != nil {
-		return FieldErrorWrap(err, "S3Upload")
+	if err = f.S3Upload.resolve(resolvers); err != nil {
+		return fieldErrorWrap(err, "S3Upload")
 	}
 
 	return nil
 }
 
-// Validate checks that the stored information is valid.
-func (f *FileOutput) Validate() error {
+// validate checks that the stored information is valid.
+func (f *FileOutput) validate() error {
 	if len(f.Path) == 0 {
-		return NewFieldError("can not be empty", "path")
+		return newFieldError("can not be empty", "path")
 	}
 
-	return f.S3Upload.Validate()
-}
-
-// IsEmpty returns true if the object stores no data.
-func (f *FileOutput) IsEmpty() bool {
-	return f.Path == "" && f.S3Upload.IsEmpty() && f.FileCopy.IsEmpty()
+	return f.S3Upload.validate()
 }

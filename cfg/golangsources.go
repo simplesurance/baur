@@ -12,19 +12,12 @@ type GolangSources struct {
 	Tests       bool     `toml:"tests" comment:"If true queries are resolved to test files, otherwise testfiles are ignored."`
 }
 
-func (g *GolangSources) IsEmpty() bool {
-	return len(g.Environment) == 0 &&
-		len(g.Queries) == 0 &&
-		len(g.BuildFlags) == 0 &&
-		!g.Tests
-}
-
-func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
+func (g *GolangSources) resolve(resolvers resolver.Resolver) error {
 	for i, env := range g.Environment {
 		var err error
 
 		if g.Environment[i], err = resolvers.Resolve(env); err != nil {
-			return FieldErrorWrap(err, "Environment", env)
+			return fieldErrorWrap(err, "Environment", env)
 		}
 	}
 
@@ -32,7 +25,7 @@ func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 		var err error
 
 		if g.Queries[i], err = resolvers.Resolve(q); err != nil {
-			return FieldErrorWrap(err, "Paths", q)
+			return fieldErrorWrap(err, "Paths", q)
 		}
 	}
 
@@ -40,23 +33,23 @@ func (g *GolangSources) Resolve(resolvers resolver.Resolver) error {
 		var err error
 
 		if g.BuildFlags[i], err = resolvers.Resolve(f); err != nil {
-			return FieldErrorWrap(err, "build_flags", f)
+			return fieldErrorWrap(err, "build_flags", f)
 		}
 	}
 
 	return nil
 }
 
-// Validate checks that the stored information is valid.
-func (g *GolangSources) Validate() error {
+// validate checks that the stored information is valid.
+func (g *GolangSources) validate() error {
 	if (len(g.Environment) != 0 || len(g.BuildFlags) != 0 || g.Tests) &&
 		len(g.Queries) == 0 {
-		return NewFieldError("must be set if environment, build_flags or tests is set", "query")
+		return newFieldError("must be set if environment, build_flags or tests is set", "query")
 	}
 
 	for _, q := range g.Queries {
 		if len(q) == 0 {
-			return NewFieldError("empty string is an invalid query", "query")
+			return newFieldError("empty string is an invalid query", "query")
 		}
 	}
 

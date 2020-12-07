@@ -113,8 +113,8 @@ func (a *App) FilePath() string {
 // Resolve runs the resolvers on string fields that can contain special strings.
 // These special strings are replaced with concrete values by the resolvers.
 func (a *App) Resolve(resolvers resolver.Resolver) error {
-	if err := a.Tasks.Resolve(resolvers); err != nil {
-		return FieldErrorWrap(err, "Tasks")
+	if err := a.Tasks.resolve(resolvers); err != nil {
+		return fieldErrorWrap(err, "Tasks")
 	}
 
 	return nil
@@ -138,9 +138,9 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 	}
 
 	for _, task := range a.Tasks {
-		err := TaskMerge(task, filepath.Dir(a.filepath), includeSpecResolvers, includedb)
+		err := taskMerge(task, filepath.Dir(a.filepath), includeSpecResolvers, includedb)
 		if err != nil {
-			return FieldErrorWrap(err, "Tasks", task.Name)
+			return fieldErrorWrap(err, "Tasks", task.Name)
 		}
 	}
 
@@ -151,19 +151,19 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 // It should be called after Merge().
 func (a *App) Validate() error {
 	if len(a.Name) == 0 {
-		return NewFieldError("can not be empty", "name")
+		return newFieldError("can not be empty", "name")
 	}
 
 	if strings.Contains(a.Name, ".") {
-		return NewFieldError("dots are not allowed in application names", "name")
+		return newFieldError("dots are not allowed in application names", "name")
 	}
 
 	if err := validateIncludes(a.Includes); err != nil {
-		return FieldErrorWrap(err, "includes")
+		return fieldErrorWrap(err, "includes")
 	}
 
-	if err := a.Tasks.Validate(); err != nil {
-		return FieldErrorWrap(err, "Tasks")
+	if err := a.Tasks.validate(); err != nil {
+		return fieldErrorWrap(err, "Tasks")
 	}
 
 	return nil

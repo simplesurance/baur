@@ -84,7 +84,7 @@ func (r *Repository) FilePath() string {
 // Validate validates a repository configuration
 func (r *Repository) Validate() error {
 	if r.ConfigVersion == 0 {
-		return NewFieldError("can not be unset or 0", "config_version")
+		return newFieldError("can not be unset or 0", "config_version")
 	}
 	if r.ConfigVersion != Version {
 		return fmt.Errorf("incompatible configuration files\n"+
@@ -92,22 +92,22 @@ func (r *Repository) Validate() error {
 			"Update your baur configuration files or downgrade baur.", r.ConfigVersion, Version)
 	}
 
-	err := r.Discover.Validate()
+	err := r.Discover.validate()
 	if err != nil {
-		return FieldErrorWrap(err, "Discover")
+		return fieldErrorWrap(err, "Discover")
 	}
 
 	return nil
 }
 
-// Validate validates the Discover section and sets defaults.
-func (d *Discover) Validate() error {
+// validate validates the Discover section and sets defaults.
+func (d *Discover) validate() error {
 	if len(d.Dirs) == 0 {
-		return NewFieldError("can not be empty", "application_dirs")
+		return newFieldError("can not be empty", "application_dirs")
 	}
 
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {
-		return NewFieldError(fmt.Sprintf("search_depth parameter must be in range (%d, %d]",
+		return newFieldError(fmt.Sprintf("search_depth parameter must be in range (%d, %d]",
 			minSearchDepth, maxSearchDepth),
 			"search_depth",
 		)

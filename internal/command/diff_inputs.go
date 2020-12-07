@@ -11,24 +11,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v1"
-	"github.com/simplesurance/baur/v1/internal/digest"
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/format/csv"
 	"github.com/simplesurance/baur/v1/internal/format/table"
 	"github.com/simplesurance/baur/v1/storage"
 )
-
-type storageInput struct {
-	input *storage.Input
-}
-
-func (i *storageInput) Digest() (*digest.Digest, error) {
-	return digest.FromString(i.input.Digest)
-}
-
-func (i *storageInput) String() string {
-	return i.input.URI
-}
 
 type diffInputArgDetails struct {
 	arg                  string
@@ -251,6 +238,8 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	taskRun := getTaskRun(repo, argDetails)
 
 	psql := mustNewCompatibleStorage(repo)
+	defer psql.Close()
+
 	storageInputs, err := psql.Inputs(ctx, taskRun.ID)
 	exitOnErr(err)
 
@@ -260,7 +249,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	var baurInputs []baur.Input
 	for _, input := range storageInputs {
 		if input.Digest != argDetails.inputStrDigest && input.Digest != argDetails.lookupInputStrDigest {
-			baurInputs = append(baurInputs, &storageInput{input})
+			baurInputs = append(baurInputs, &storageInput{input: input})
 		}
 	}
 
@@ -269,6 +258,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 
 func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
 	psql := mustNewCompatibleStorage(repo)
+	defer psql.Close()
 
 	if strings.Contains(argDetails.runID, "^") {
 		return getPreviousTaskRun(repo, psql, argDetails)

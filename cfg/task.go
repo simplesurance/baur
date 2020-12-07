@@ -55,21 +55,21 @@ func (t *Task) GetOutput() *Output {
 	return &t.Output
 }
 
-func (t *Task) Resolve(resolvers resolver.Resolver) error {
+func (t *Task) resolve(resolvers resolver.Resolver) error {
 	var err error
 
 	for i, elem := range t.Command {
 		if t.Command[i], err = resolvers.Resolve(elem); err != nil {
-			return FieldErrorWrap(err, "Command")
+			return fieldErrorWrap(err, "Command")
 		}
 	}
 
-	if err := t.Input.Resolve(resolvers); err != nil {
-		return FieldErrorWrap(err, "Input")
+	if err := t.Input.resolve(resolvers); err != nil {
+		return fieldErrorWrap(err, "Input")
 	}
 
 	if err := t.Output.Resolve(resolvers); err != nil {
-		return FieldErrorWrap(err, "Output")
+		return fieldErrorWrap(err, "Output")
 	}
 
 	return nil

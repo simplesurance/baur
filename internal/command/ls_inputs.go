@@ -1,7 +1,9 @@
 package command
 
 import (
+	"os"
 	"sort"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -28,8 +30,8 @@ type lsInputsCmd struct {
 func newLsInputsCmd() *lsInputsCmd {
 	cmd := lsInputsCmd{
 		Command: cobra.Command{
-			Use:   "inputs <APP-NAME>.<TASK-NAME>]",
-			Short: "list resolved task inputs of an application",
+			Use:   "inputs (<APP-NAME>.<TASK-NAME>)|<TASK-RUN-ID>",
+			Short: "list inputs of a task or task run",
 			Args:  cobra.ExactArgs(1),
 		},
 	}
@@ -37,10 +39,10 @@ func newLsInputsCmd() *lsInputsCmd {
 	cmd.Run = cmd.run
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"Show output in RFC4180 CSV format")
+		"show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Only show filepaths")
+		"only show filepaths")
 
 	cmd.Flags().BoolVar(&cmd.showDigest, "digests", false,
 		"show digests")
@@ -52,17 +54,54 @@ func newLsInputsCmd() *lsInputsCmd {
 }
 
 func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
+	var inputs []baur.Input
+
+	if taskID, err := strconv.Atoi(args[0]); err == nil {
+		if c.inputStr != "" {
+			stderr.Printf("--input-str can only be specified for task-names")
+			os.Exit(1)
+		}
+
+		inputs = c.mustGetTaskRunInputs(taskID)
+	} else {
+		inputs = c.mustGetTaskInputs(args[0])
+		inputs = baur.InputAddStrIfNotEmpty(inputs, c.inputStr)
+	}
+
+	sort.Slice(inputs, func(i, j int) bool {
+		return inputs[i].String() < inputs[j].String()
+	})
+
+	c.mustPrintTaskInputs(baur.NewInputs(inputs))
+}
+
+func (c *lsInputsCmd) mustGetTaskRunInputs(taskRunID int) []baur.Input {
+	repo := mustFindRepository()
+
+	storageClt := mustNewCompatibleStorage(repo)
+	defer storageClt.Close()
+
+	inputs, err := storageClt.Inputs(ctx, taskRunID)
+	exitOnErr(err)
+
+	return toBaurInputs(inputs)
+}
+
+func (c *lsInputsCmd) mustGetTaskInputs(taskSpec string) []baur.Input {
+	repo := mustFindRepository()
+	task := mustArgToTask(repo, taskSpec)
+	inputResolver := baur.NewInputResolver()
+
+	inputs, err := inputResolver.Resolve(ctx, repo.Path, task)
+	exitOnErr(err)
+
+	return inputs
+}
+
+func (c *lsInputsCmd) mustPrintTaskInputs(inputs *baur.Inputs) {
 	var formatter format.Formatter
 	var headers []string
-
-	rep := mustFindRepository()
-	task := mustArgToTask(rep, args[0])
 	writeHeaders := !c.quiet && !c.csv
-
-	if !task.HasInputs() {
-		stderr.TaskPrintf(task, "has no inputs configured")
-		exitFunc(1)
-	}
 
 	if writeHeaders {
 		headers = []string{"Input"}
@@ -78,19 +117,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 		formatter = table.New(headers, stdout)
 	}
 
-	inputResolver := baur.NewInputResolver()
-
-	inputFiles, err := inputResolver.Resolve(ctx, rep.Path, task)
-	exitOnErr(err)
-
-	inputs := baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr))
-
-	inputsSlice := baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr)).Inputs()
-	sort.Slice(inputsSlice, func(i, j int) bool {
-		return inputsSlice[i].String() < inputsSlice[j].String()
-	})
-
-	for _, input := range inputsSlice {
+	for _, input := range inputs.Inputs() {
 		if !c.showDigest || c.quiet {
 			mustWriteRow(formatter, input)
 			continue
@@ -102,7 +129,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 		mustWriteRow(formatter, input, digest.String())
 	}
 
-	err = formatter.Flush()
+	err := formatter.Flush()
 	exitOnErr(err)
 
 	if c.showDigest && !c.quiet && !c.csv {

@@ -23,29 +23,29 @@ func (in *Input) GolangSourcesInputs() []GolangSources {
 	return in.GolangSources
 }
 
-// Merge appends the information in other to in.
-func (in *Input) Merge(other InputDef) {
+// merge appends the information in other to in.
+func (in *Input) merge(other InputDef) {
 	in.Files = append(in.Files, other.FileInputs()...)
 	in.GitFiles = append(in.GitFiles, other.GitFileInputs()...)
 	in.GolangSources = append(in.GolangSources, other.GolangSourcesInputs()...)
 }
 
-func (in *Input) Resolve(resolvers resolver.Resolver) error {
+func (in *Input) resolve(resolvers resolver.Resolver) error {
 	for _, f := range in.Files {
-		if err := f.Resolve(resolvers); err != nil {
-			return FieldErrorWrap(err, "Files")
+		if err := f.resolve(resolvers); err != nil {
+			return fieldErrorWrap(err, "Files")
 		}
 	}
 
 	for _, g := range in.GitFiles {
-		if err := g.Resolve(resolvers); err != nil {
-			return FieldErrorWrap(err, "Gitfiles")
+		if err := g.resolve(resolvers); err != nil {
+			return fieldErrorWrap(err, "Gitfiles")
 		}
 	}
 
 	for i, gs := range in.GolangSources {
-		if err := gs.Resolve(resolvers); err != nil {
-			return FieldErrorWrap(err, "GoLangSources")
+		if err := gs.resolve(resolvers); err != nil {
+			return fieldErrorWrap(err, "GoLangSources")
 		}
 
 		// TODO is this needed? If not why not?
@@ -55,17 +55,17 @@ func (in *Input) Resolve(resolvers resolver.Resolver) error {
 	return nil
 }
 
-// InputValidate validates the Input section
-func InputValidate(i InputDef) error {
+// inputValidate validates the Input section
+func inputValidate(i InputDef) error {
 	for _, f := range i.FileInputs() {
-		if err := f.Validate(); err != nil {
-			return FieldErrorWrap(err, "Files")
+		if err := f.validate(); err != nil {
+			return fieldErrorWrap(err, "Files")
 		}
 	}
 
 	for _, gs := range i.GolangSourcesInputs() {
-		if err := gs.Validate(); err != nil {
-			return FieldErrorWrap(err, "GolangSources")
+		if err := gs.validate(); err != nil {
+			return fieldErrorWrap(err, "GolangSources")
 		}
 	}
 
