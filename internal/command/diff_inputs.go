@@ -109,7 +109,7 @@ func diffArgs() cobra.PositionalArgs {
 			return fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1])
 		}
 
-		validArgRE := regexp.MustCompile(`^[\w-]+\.[\w-\^]+$|^[0-9]+\d*$`)
+		validArgRE := regexp.MustCompile(`^[\w-]+\.[\w-]+\^*$|^[0-9]+\d*$`)
 		for _, arg := range args {
 			if !validArgRE.MatchString(arg) {
 				return fmt.Errorf("invalid argument: %q", arg)
