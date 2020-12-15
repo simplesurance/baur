@@ -14,8 +14,8 @@ import (
 	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
 )
 
-var appOneName = "app_one"
-var appTwoName = "app_two"
+var appOneName = "app-one"
+var appTwoName = "app-two"
 var buildTaskName = "build"
 var testTaskName = "test"
 var appOneWithBuildTask = fmt.Sprintf("%s.%s", appOneName, buildTaskName)
