@@ -14,8 +14,8 @@ import (
 	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
 )
 
-var appOneName = "app_one"
-var appTwoName = "app_two"
+var appOneName = "app-one"
+var appTwoName = "app-two"
 var buildTaskName = "build"
 var testTaskName = "test"
 var appOneWithBuildTask = fmt.Sprintf("%s.%s", appOneName, buildTaskName)
@@ -382,7 +382,7 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	execCmd(t, diffInputsCmd, -1)
 
 	expectedOutput := [][]string{
-		{"D", filepath.FromSlash("app_one/diff_test.txt"), originalDigest.String(), newDigest.String()},
+		{"D", filepath.FromSlash("app-one/diff_test.txt"), originalDigest.String(), newDigest.String()},
 		{"-", "string:run_one", "sha384:95e52b4c9863a13d596d34df980988cb78bea9ec3381ba981e1656a84cc1c7456f6830bca0e8931be5f0f48593cb5d06", ""},
 		{"+", "string:run_two", "", "sha384:f3d5e46502641c5591563a0d3157f19a9739616f07bdb4bbc0285cb0a12bd511c026db94f12c719378a20d0ffe85090e"},
 	}
