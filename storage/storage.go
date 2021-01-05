@@ -78,6 +78,10 @@ type TaskRunWithID struct {
 	TaskRun
 }
 
+const (
+	NoLimit int = 0
+)
+
 // Storer is an interface for storing and retrieving baur task runs
 type Storer interface {
 	Close() error
@@ -92,6 +96,7 @@ type Storer interface {
 
 	TaskRun(ctx context.Context, id int) (*TaskRunWithID, error)
 	// TaskRuns queries the storage for runs that match the filters.
+	// A limit value of 0 will return all results.
 	// The found results are passed in iterative manner to the callback
 	// function. When the callback function returns an error, the iteration
 	// stops.
@@ -99,11 +104,13 @@ type Storer interface {
 	TaskRuns(ctx context.Context,
 		filters []*Filter,
 		sorters []*Sorter,
+		limit int,
 		callback func(*TaskRunWithID) error,
 	) error
 
 	// TaskRunsWithInputURI queries the storage for runs that match the filters
 	// and contain an input with the given URI value.
+	// A limit value of 0 will return all results.
 	// The found results are passed in iterative manner to the callback
 	// function. When the callback function returns an error, the iteration
 	// stops.
@@ -111,6 +118,7 @@ type Storer interface {
 	TaskRunsWithInputURI(ctx context.Context,
 		filters []*Filter,
 		sorters []*Sorter,
+		limit int,
 		uri string,
 		callback func(*TaskRunWithID) error,
 	) error

@@ -21,7 +21,7 @@ func (c *Client) TaskRun(ctx context.Context, id int) (*storage.TaskRunWithID, e
 		},
 	}
 
-	err := c.TaskRuns(ctx, idFilter, nil, func(tr *storage.TaskRunWithID) error {
+	err := c.TaskRuns(ctx, idFilter, nil, storage.NoLimit, func(tr *storage.TaskRunWithID) error {
 		taskRun = tr
 
 		return nil
@@ -204,6 +204,7 @@ func (c *Client) TaskRuns(
 	ctx context.Context,
 	filters []*storage.Filter,
 	sorters []*storage.Sorter,
+	limit int,
 	cb func(*storage.TaskRunWithID) error,
 ) error {
 	const queryStr = `
@@ -228,13 +229,14 @@ func (c *Client) TaskRuns(
 	       ) tr
 	  `
 
-	return taskRuns(ctx, queryStr, c.db, filters, sorters, cb)
+	return taskRuns(ctx, queryStr, c.db, filters, sorters, limit, cb)
 }
 
 func (c *Client) TaskRunsWithInputURI(
 	ctx context.Context,
 	filters []*storage.Filter,
 	sorters []*storage.Sorter,
+	limit int,
 	digest string,
 	cb func(*storage.TaskRunWithID) error,
 ) error {
@@ -268,7 +270,7 @@ func (c *Client) TaskRunsWithInputURI(
 		Value:    digest,
 	})
 
-	return taskRuns(ctx, queryStr, c.db, filters, sorters, cb)
+	return taskRuns(ctx, queryStr, c.db, filters, sorters, limit, cb)
 }
 
 func taskRuns(
@@ -277,6 +279,7 @@ func taskRuns(
 	db dbConn,
 	filters []*storage.Filter,
 	sorters []*storage.Sorter,
+	limit int,
 	cb func(*storage.TaskRunWithID) error,
 ) error {
 	var queryReturnedRows bool
@@ -285,6 +288,7 @@ func taskRuns(
 		BaseQuery: queryStr,
 		Filters:   filters,
 		Sorters:   sorters,
+		Limit:     limit,
 	}
 
 	query, args, err := q.Compile()

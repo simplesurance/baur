@@ -524,7 +524,7 @@ func TestTaskRuns(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			var result []*storage.TaskRunWithID
 
-			err := client.TaskRuns(ctx, testcase.filters, testcase.sorters, func(tr *storage.TaskRunWithID) error {
+			err := client.TaskRuns(ctx, testcase.filters, testcase.sorters, storage.NoLimit, func(tr *storage.TaskRunWithID) error {
 				result = append(result, tr)
 				return nil
 			})

@@ -29,7 +29,9 @@ baur ls runs -s duration-desc calc               list task runs of the calc
 						 application, sorted by
 						 run duration
 baur ls runs --csv --after=2018.09.27-11:30 '*'  list all task runs in csv format that
-						 were started after 2018.09.27 11:30`
+						 were started after 2018.09.27 11:30
+baur ls runs --limit=1 calc                      list a single task run of the calc
+						 application`
 
 func init() {
 	lsCmd.AddCommand(&newLsRunsCmd().Command)
@@ -43,6 +45,7 @@ type lsRunsCmd struct {
 	before   flag.DateTimeFlagValue
 	inputStr string
 	sort     *flag.Sort
+	limit    int
 	quiet    bool
 
 	app  string
@@ -75,6 +78,9 @@ func newLsRunsCmd() *lsRunsCmd {
 
 	cmd.Flags().VarP(cmd.sort, "sort", "s",
 		cmd.sort.Usage(term.Highlight))
+
+	cmd.Flags().IntVarP(&cmd.limit, "limit", "l", storage.NoLimit,
+		"Limit the number of runs shown, 0 will show all runs")
 
 	cmd.Flags().VarP(&cmd.after, "after", "a",
 		fmt.Sprintf("Only show runs that were started after this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
@@ -144,6 +150,7 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 			ctx,
 			filters,
 			sorters,
+			c.limit,
 			baur.NewInputString(c.inputStr).String(),
 			func(taskRun *storage.TaskRunWithID) error {
 				c.printTaskRun(formatter, taskRun)
@@ -155,6 +162,7 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 			ctx,
 			filters,
 			sorters,
+			c.limit,
 			func(taskRun *storage.TaskRunWithID) error {
 				c.printTaskRun(formatter, taskRun)
 				return nil
