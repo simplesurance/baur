@@ -207,7 +207,7 @@ func (c *Client) TaskRuns(
 	cb func(*storage.TaskRunWithID) error,
 ) error {
 	const queryStr = `
-	SELECT *
+	SELECT task_run_id, application_name, task_name, revision, dirty, total_digest, start_timestamp, stop_timestamp, result
 	  FROM (
 	       SELECT DISTINCT ON (task_run.id)
 		      task_run.id AS task_run_id,
@@ -228,6 +228,57 @@ func (c *Client) TaskRuns(
 	       ) tr
 	  `
 
+	return taskRuns(ctx, queryStr, c.db, filters, sorters, cb)
+}
+
+func (c *Client) TaskRunsWithInputURI(
+	ctx context.Context,
+	filters []*storage.Filter,
+	sorters []*storage.Sorter,
+	digest string,
+	cb func(*storage.TaskRunWithID) error,
+) error {
+	const queryStr = `
+	SELECT task_run_id, application_name, task_name, revision, dirty, total_digest, start_timestamp, stop_timestamp, result
+	  FROM (
+	       SELECT DISTINCT ON (task_run.id, input.uri)
+		      task_run.id AS task_run_id,
+		      application.name AS application_name,
+		      task.name AS task_name,
+		      vcs.revision,
+		      vcs.dirty,
+		      task_run_input.total_digest,
+		      task_run.start_timestamp AS start_timestamp,
+		      task_run.stop_timestamp,
+		      task_run.result,
+		      input.uri AS uri,
+		      (EXTRACT(EPOCH FROM (task_run.stop_timestamp - task_run.start_timestamp))::bigint * 1000000000) AS duration
+		 FROM application
+		 JOIN task ON application.id = task.application_id
+		 JOIN task_run ON task.id = task_run.task_id
+		 JOIN task_run_input ON task_run_input.task_run_id = task_run.id
+		 JOIN input ON task_run_input.input_id = input.id
+		 LEFT OUTER JOIN vcs ON vcs.id = task_run.vcs_id
+	       ) tr
+	  `
+
+	filters = append(filters, &storage.Filter{
+		Field:    storage.FieldURI,
+		Operator: storage.OpEQ,
+		Value:    digest,
+	})
+
+	return taskRuns(ctx, queryStr, c.db, filters, sorters, cb)
+}
+
+func taskRuns(
+	ctx context.Context,
+	queryStr string,
+	db dbConn,
+	filters []*storage.Filter,
+	sorters []*storage.Sorter,
+	cb func(*storage.TaskRunWithID) error,
+) error {
 	var queryReturnedRows bool
 
 	q := query{
@@ -241,7 +292,7 @@ func (c *Client) TaskRuns(
 		return fmt.Errorf("compiling query string failed: %w", err)
 	}
 
-	rows, err := c.db.Query(ctx, query, args...)
+	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)
 	}
@@ -261,7 +312,6 @@ func (c *Client) TaskRuns(
 			&taskRun.StartTimestamp,
 			&taskRun.StopTimestamp,
 			&taskRun.Result,
-			nil, // skip scanning of duration value, it's only used for filtering and sorting
 		)
 
 		if err != nil {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/command/flag"
 	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/internal/format"
@@ -37,11 +38,12 @@ func init() {
 type lsRunsCmd struct {
 	cobra.Command
 
-	csv    bool
-	after  flag.DateTimeFlagValue
-	before flag.DateTimeFlagValue
-	sort   *flag.Sort
-	quiet  bool
+	csv      bool
+	after    flag.DateTimeFlagValue
+	before   flag.DateTimeFlagValue
+	inputStr string
+	sort     *flag.Sort
+	quiet    bool
 
 	app  string
 	task string
@@ -79,6 +81,9 @@ func newLsRunsCmd() *lsRunsCmd {
 
 	cmd.Flags().VarP(&cmd.before, "before", "b",
 		fmt.Sprintf("Only show runs that were started before this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
+
+	cmd.Flags().StringVar(&cmd.inputStr, "has-input-str", "",
+		"Only show runs that include this value as an input-str value")
 
 	return &cmd
 }
@@ -133,15 +138,29 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 
 	sorters = append(sorters, &defaultSorter)
 
-	err := psql.TaskRuns(
-		ctx,
-		filters,
-		sorters,
-		func(taskRun *storage.TaskRunWithID) error {
-			c.printTaskRun(formatter, taskRun)
-			return nil
-		},
-	)
+	var err error
+	if c.inputStr != "" {
+		err = psql.TaskRunsWithInputURI(
+			ctx,
+			filters,
+			sorters,
+			baur.NewInputString(c.inputStr).String(),
+			func(taskRun *storage.TaskRunWithID) error {
+				c.printTaskRun(formatter, taskRun)
+				return nil
+			},
+		)
+	} else {
+		err = psql.TaskRuns(
+			ctx,
+			filters,
+			sorters,
+			func(taskRun *storage.TaskRunWithID) error {
+				c.printTaskRun(formatter, taskRun)
+				return nil
+			},
+		)
+	}
 
 	if err != nil {
 		if err == storage.ErrNotExist {
