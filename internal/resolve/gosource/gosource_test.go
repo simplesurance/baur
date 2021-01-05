@@ -3,6 +3,7 @@ package gosource
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,6 +15,15 @@ import (
 	"github.com/simplesurance/baur/v1/internal/prettyprint"
 	"github.com/simplesurance/baur/v1/internal/testutils/strtest"
 )
+
+func containsGoPath(envs []string) bool {
+	for _, env := range envs {
+		if strings.Contains(env, "GOPATH") {
+			return true
+		}
+	}
+	return false
+}
 
 func TestResolve(t *testing.T) {
 	const testCfgFilename = "test_config.json"
@@ -49,6 +59,14 @@ func TestResolve(t *testing.T) {
 
 			cwd, err := os.Getwd()
 			require.NoError(t, err)
+
+			if os.Getenv("GOCACHE") == "" {
+				os.Setenv("GOCACHE", t.TempDir())
+			}
+
+			if !containsGoPath(testCfg.Cfg.Environment) {
+				testCfg.Cfg.Environment = append(testCfg.Cfg.Environment, fmt.Sprintf("GOPATH=%s", os.Getenv("GOPATH")))
+			}
 
 			for i := range testCfg.Cfg.Environment {
 				testCfg.Cfg.Environment[i] = strings.Replace(testCfg.Cfg.Environment[i], "$WORKDIR", cwd, -1)
