@@ -222,6 +222,7 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 			mustWriteRow(formatter, "", "", "", "Registry:", term.Highlight(dest.Registry))
 			mustWriteRow(formatter, "", "", "", "Repository:", term.Highlight(dest.Repository))
 			mustWriteRow(formatter, "", "", "", "Tag:", term.Highlight(dest.Tag))
+
 			if i+1 < len(di.RegistryUpload) {
 				mustWriteRow(formatter, "", "", "", "", "")
 			}
@@ -239,14 +240,33 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 
 		mustWriteRow(formatter, "", "", "Type:", term.Highlight("File"))
 		mustWriteRow(formatter, "", "", "Path:", term.Highlight(file.Path))
+		mustWriteRow(formatter, "", "", "")
 
-		if !file.FileCopy.IsEmpty() {
-			mustWriteRow(formatter, "", "", "Filecopy Destination:", term.Highlight(file.FileCopy.Path))
+		mustWriteRow(formatter, "", "", term.Underline("Uploads:"), "", "")
+
+		if len(file.FileCopy) > 0 {
+			for i, fc := range file.FileCopy {
+				mustWriteRow(formatter, "", "", "", "Filecopy Destination:", term.Highlight(fc.Path))
+
+				if i+1 < len(file.FileCopy) {
+					mustWriteRow(formatter, "", "", "", "", "")
+				}
+			}
 		}
 
-		if !file.S3Upload.IsEmpty() {
-			mustWriteRow(formatter, "", "", "S3 Bucket:", term.Highlight(file.S3Upload.Bucket))
-			mustWriteRow(formatter, "", "", "S3 Key:", term.Highlight(file.S3Upload.Key))
+		if len(file.S3Upload) > 0 {
+			if len(file.FileCopy) > 0 {
+				mustWriteRow(formatter, "", "", "", "", "")
+			}
+
+			for i, s3 := range file.S3Upload {
+				mustWriteRow(formatter, "", "", "", "S3 Bucket:", term.Highlight(s3.Bucket))
+				mustWriteRow(formatter, "", "", "", "S3 Key:", term.Highlight(s3.Key))
+
+				if i+1 < len(file.S3Upload) {
+					mustWriteRow(formatter, "", "", "", "", "")
+				}
+			}
 		}
 
 		if i+1 < len(task.Outputs.File) {

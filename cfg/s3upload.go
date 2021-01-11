@@ -10,11 +10,6 @@ type S3Upload struct {
 	Key    string `toml:"key" comment:"Identifier for the object in the bucket. Valid variables: $ROOT, $APPNAME, $UUID, $GITCOMMIT"`
 }
 
-// IsEmpty returns true if S3Upload is empty
-func (s *S3Upload) IsEmpty() bool {
-	return len(s.Bucket) == 0 && len(s.Key) == 0
-}
-
 func (s *S3Upload) resolve(resolvers resolver.Resolver) error {
 	var err error
 
@@ -31,10 +26,6 @@ func (s *S3Upload) resolve(resolvers resolver.Resolver) error {
 
 // validate validates a [[Task.Output.File]] section
 func (s *S3Upload) validate() error {
-	if s.IsEmpty() {
-		return nil
-	}
-
 	if len(s.Key) == 0 {
 		return newFieldError("can not be empty", "destfile")
 	}

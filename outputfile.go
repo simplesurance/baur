@@ -8,19 +8,17 @@ import (
 // OutputFile is a file created by a task run.
 type OutputFile struct {
 	*File
-	name string
-	// UploadsS3 can be nil
-	UploadsS3 *UploadInfoS3
-	// UploadsFilecopy can be nil
-	UploadsFilecopy *UploadInfoFileCopy
+	name            string
+	UploadsS3       []*UploadInfoS3
+	UploadsFilecopy []*UploadInfoFileCopy
 }
 
-func NewOutputFile(name, absPath string, s3upload *UploadInfoS3, filecopyUpload *UploadInfoFileCopy) *OutputFile {
+func NewOutputFile(name, absPath string, s3uploads []*UploadInfoS3, filecopyUploads []*UploadInfoFileCopy) *OutputFile {
 	return &OutputFile{
 		name:            name,
 		File:            &File{AbsPath: absPath},
-		UploadsS3:       s3upload,
-		UploadsFilecopy: filecopyUpload,
+		UploadsS3:       s3uploads,
+		UploadsFilecopy: filecopyUploads,
 	}
 }
 

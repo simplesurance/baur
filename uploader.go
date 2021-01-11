@@ -64,10 +64,10 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		}
 
 	case *OutputFile:
-		if o.UploadsFilecopy != nil {
-			uploadStartCb(o, o.UploadsFilecopy)
+		for _, dest := range o.UploadsFilecopy {
+			uploadStartCb(o, dest)
 
-			result, err := u.FileCopy(o)
+			result, err := u.FileCopy(o, dest)
 			if err != nil {
 				return fmt.Errorf("filecopy failed: %w", err)
 			}
@@ -75,10 +75,10 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 			resultCb(o, result)
 		}
 
-		if o.UploadsS3 != nil {
-			uploadStartCb(o, o.UploadsS3)
+		for _, dest := range o.UploadsS3 {
+			uploadStartCb(o, dest)
 
-			result, err := u.S3(o)
+			result, err := u.S3(o, dest)
 			if err != nil {
 				return fmt.Errorf("s3 upload failed: %w", err)
 			}
@@ -115,10 +115,10 @@ func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*U
 	}, nil
 }
 
-func (u *Uploader) FileCopy(o *OutputFile) (*UploadResult, error) {
+func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadResult, error) {
 	startTime := time.Now()
 
-	destFile := filepath.Join(o.UploadsFilecopy.DestinationPath, filepath.Base(o.AbsPath))
+	destFile := filepath.Join(dest.DestinationPath, filepath.Base(o.AbsPath))
 
 	url, err := u.filecopyUploader.Upload(o.AbsPath, destFile)
 	if err != nil {
@@ -134,10 +134,10 @@ func (u *Uploader) FileCopy(o *OutputFile) (*UploadResult, error) {
 	}, nil
 }
 
-func (u *Uploader) S3(o *OutputFile) (*UploadResult, error) {
+func (u *Uploader) S3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
 	startTime := time.Now()
 
-	url, err := u.s3client.Upload(o.AbsPath, o.UploadsS3.Bucket, o.UploadsS3.Key)
+	url, err := u.s3client.Upload(o.AbsPath, dest.Bucket, dest.Key)
 	if err != nil {
 		return nil, err
 	}

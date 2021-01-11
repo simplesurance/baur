@@ -82,12 +82,16 @@ func outputInclude() OutputIncludes {
 			File: []FileOutput{
 				{
 					Path: "a.out",
-					FileCopy: FileCopy{
-						Path: "/tmp/a.out",
+					FileCopy: []FileCopy{
+						{
+							Path: "/tmp/a.out",
+						},
 					},
-					S3Upload: S3Upload{
-						Bucket: "mybucket",
-						Key:    "the-binary",
+					S3Upload: []S3Upload{
+						{
+							Bucket: "mybucket",
+							Key:    "the-binary",
+						},
 					},
 				},
 			},
@@ -442,10 +446,12 @@ func TestTaskInclude(t *testing.T) {
 							File: []FileOutput{
 								{
 									Path:     "path",
-									FileCopy: FileCopy{Path: "/tmp/"},
-									S3Upload: S3Upload{
-										Bucket: "bucket",
-										Key:    "dest",
+									FileCopy: []FileCopy{{Path: "/tmp/"}},
+									S3Upload: []S3Upload{
+										{
+											Bucket: "bucket",
+											Key:    "dest",
+										},
 									},
 								},
 							},
@@ -467,10 +473,12 @@ func TestTaskInclude(t *testing.T) {
 							File: []FileOutput{
 								{
 									Path:     "path",
-									FileCopy: FileCopy{Path: "/data/"},
-									S3Upload: S3Upload{
-										Bucket: "bucket1",
-										Key:    "dest1",
+									FileCopy: []FileCopy{{Path: "/data/"}},
+									S3Upload: []S3Upload{
+										{
+											Bucket: "bucket1",
+											Key:    "dest1",
+										},
 									},
 								},
 							},
@@ -598,7 +606,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 				File: []FileOutput{
 					{
 						Path:     "path",
-						FileCopy: FileCopy{Path: "/tmp/"},
+						FileCopy: []FileCopy{{Path: "/tmp/"}},
 					},
 				},
 			},
@@ -678,8 +686,9 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				File: []FileOutput{
 					{
 						Path: "$APPNAME",
-						FileCopy: FileCopy{
+						FileCopy: []FileCopy{{
 							Path: "/tmp/f",
+						},
 						},
 					},
 				},

@@ -7,11 +7,6 @@ type FileCopy struct {
 	Path string `toml:"path" comment:"Destination directory\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT, $UUID."`
 }
 
-// IsEmpty returns true if FileCopy is empty
-func (f *FileCopy) IsEmpty() bool {
-	return len(f.Path) == 0
-}
-
 func (f *FileCopy) resolve(resolvers resolver.Resolver) error {
 	var err error
 
