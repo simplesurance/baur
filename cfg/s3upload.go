@@ -18,7 +18,7 @@ func (s *S3Upload) resolve(resolvers resolver.Resolver) error {
 	}
 
 	if s.Key, err = resolvers.Resolve(s.Key); err != nil {
-		return fieldErrorWrap(err, "dest_file")
+		return fieldErrorWrap(err, "key")
 	}
 
 	return nil
@@ -27,7 +27,7 @@ func (s *S3Upload) resolve(resolvers resolver.Resolver) error {
 // validate validates a [[Task.Output.File]] section
 func (s *S3Upload) validate() error {
 	if len(s.Key) == 0 {
-		return newFieldError("can not be empty", "destfile")
+		return newFieldError("can not be empty", "key")
 	}
 
 	if len(s.Bucket) == 0 {
