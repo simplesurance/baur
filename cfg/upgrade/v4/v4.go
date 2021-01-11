@@ -77,10 +77,12 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		for _, f := range old.BuildOutput.File {
 			output.File = append(output.File, cfg.FileOutput{
 				Path:     f.Path,
-				FileCopy: cfg.FileCopy{Path: f.FileCopy.Path},
-				S3Upload: cfg.S3Upload{
-					Bucket: f.S3Upload.Bucket,
-					Key:    f.S3Upload.DestFile,
+				FileCopy: []cfg.FileCopy{{Path: f.FileCopy.Path}},
+				S3Upload: []cfg.S3Upload{
+					{
+						Bucket: f.S3Upload.Bucket,
+						Key:    f.S3Upload.DestFile,
+					},
 				},
 			})
 		}
@@ -146,13 +148,26 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	}
 
 	for _, f := range old.Build.Output.File {
+		var fc []cfg.FileCopy
+		var s3 []cfg.S3Upload
+
+		if f.FileCopy.Path != "" {
+			fc = []cfg.FileCopy{{Path: f.FileCopy.Path}}
+		}
+
+		if f.S3Upload.Bucket != "" {
+			s3 = []cfg.S3Upload{
+				{
+					Bucket: f.S3Upload.Bucket,
+					Key:    f.S3Upload.DestFile,
+				},
+			}
+		}
+
 		task.Output.File = append(task.Output.File, cfg.FileOutput{
 			Path:     f.Path,
-			FileCopy: cfg.FileCopy{Path: f.FileCopy.Path},
-			S3Upload: cfg.S3Upload{
-				Bucket: f.S3Upload.Bucket,
-				Key:    f.S3Upload.DestFile,
-			},
+			FileCopy: fc,
+			S3Upload: s3,
 		})
 	}
 

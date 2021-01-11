@@ -78,8 +78,10 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 					File: []cfg.FileOutput{
 						{
 							Path: "output",
-							FileCopy: cfg.FileCopy{
-								Path: r.FilecopyArtifactDir,
+							FileCopy: []cfg.FileCopy{
+								{
+									Path: r.FilecopyArtifactDir,
+								},
 							},
 						},
 					},

@@ -70,30 +70,29 @@ func fileOutputs(task *Task) ([]Output, error) {
 	result := make([]Output, 0, len(task.Outputs.File))
 
 	for _, fileOutput := range task.Outputs.File {
-		var s3Upload *UploadInfoS3
-		var fileCopyUpload *UploadInfoFileCopy
+		var s3Uploads []*UploadInfoS3
+		var fileCopyUploads []*UploadInfoFileCopy
 
-		if fileOutput.S3Upload.IsEmpty() && fileOutput.FileCopy.IsEmpty() {
+		if len(fileOutput.S3Upload) == 0 && len(fileOutput.FileCopy) == 0 {
 			return nil, fmt.Errorf("no upload method for output %q is specified", fileOutput.Path)
 		}
 
-		// TODO: use pointers in the outputfile struct for filecopy and S3 instead of having to provide and use IsEmpty)
-		if !fileOutput.S3Upload.IsEmpty() {
-			s3Upload = &UploadInfoS3{
-				Bucket: fileOutput.S3Upload.Bucket,
-				Key:    fileOutput.S3Upload.Key,
-			}
+		for _, s3 := range fileOutput.S3Upload {
+			s3Uploads = append(s3Uploads, &UploadInfoS3{
+				Bucket: s3.Bucket,
+				Key:    s3.Key,
+			})
 		}
 
-		if !fileOutput.FileCopy.IsEmpty() {
-			fileCopyUpload = &UploadInfoFileCopy{DestinationPath: fileOutput.FileCopy.Path}
+		for _, fc := range fileOutput.FileCopy {
+			fileCopyUploads = append(fileCopyUploads, &UploadInfoFileCopy{DestinationPath: fc.Path})
 		}
 
 		result = append(result, NewOutputFile(
 			fileOutput.Path,
 			filepath.Join(task.Directory, fileOutput.Path),
-			s3Upload,
-			fileCopyUpload,
+			s3Uploads,
+			fileCopyUploads,
 		))
 	}
 

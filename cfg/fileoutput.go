@@ -6,9 +6,9 @@ import (
 
 // FileOutput describes where a file output is stored.
 type FileOutput struct {
-	Path     string   `toml:"path" comment:"Path relative to the application directory.\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT."`
-	FileCopy FileCopy `comment:"Copy the file to a local directory."`
-	S3Upload S3Upload `comment:"Upload the file to S3."`
+	Path     string     `toml:"path" comment:"Path relative to the application directory.\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT."`
+	FileCopy []FileCopy `comment:"Copy the file to a local directory."`
+	S3Upload []S3Upload `comment:"Upload the file to S3."`
 }
 
 func (f *FileOutput) resolve(resolvers resolver.Resolver) error {
@@ -18,12 +18,20 @@ func (f *FileOutput) resolve(resolvers resolver.Resolver) error {
 		return fieldErrorWrap(err, "path")
 	}
 
-	if err = f.FileCopy.resolve(resolvers); err != nil {
-		return fieldErrorWrap(err, "FileCopy")
+	for i, fc := range f.FileCopy {
+		if err = fc.resolve(resolvers); err != nil {
+			return fieldErrorWrap(err, "FileCopy")
+		}
+
+		f.FileCopy[i] = fc
 	}
 
-	if err = f.S3Upload.resolve(resolvers); err != nil {
-		return fieldErrorWrap(err, "S3Upload")
+	for i, s3 := range f.S3Upload {
+		if err = s3.resolve(resolvers); err != nil {
+			return fieldErrorWrap(err, "S3Upload")
+		}
+
+		f.S3Upload[i] = s3
 	}
 
 	return nil
@@ -35,5 +43,12 @@ func (f *FileOutput) validate() error {
 		return newFieldError("can not be empty", "path")
 	}
 
-	return f.S3Upload.validate()
+	for _, s3 := range f.S3Upload {
+		err := s3.validate()
+		if err != nil {
+			return fieldErrorWrap(err, "S3Upload")
+		}
+	}
+
+	return nil
 }
