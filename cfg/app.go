@@ -63,9 +63,11 @@ func ExampleApp(name string) *App {
 					DockerImage: []DockerImageOutput{
 						{
 							IDFile: "$APPNAME-container.id",
-							RegistryUpload: DockerImageRegistryUpload{
-								Repository: "my-company/$APPNAME",
-								Tag:        "$GITCOMMIT",
+							RegistryUpload: []DockerImageRegistryUpload{
+								{
+									Repository: "my-company/$APPNAME",
+									Tag:        "$GITCOMMIT",
+								},
 							},
 						},
 					},

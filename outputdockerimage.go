@@ -16,7 +16,7 @@ type DockerInfoClient interface {
 type OutputDockerImage struct {
 	name              string
 	ImageID           string
-	UploadDestination *UploadInfoDocker
+	UploadDestination []*UploadInfoDocker // TODO: rename to plural form
 	dockerClient      DockerInfoClient
 	digest            *digest.Digest
 }
@@ -25,7 +25,7 @@ func NewOutputDockerImageFromIIDFile(
 	dockerClient DockerInfoClient,
 	name,
 	iidfile string,
-	uploadDest *UploadInfoDocker,
+	uploadDest []*UploadInfoDocker,
 ) (*OutputDockerImage, error) {
 	id, err := fs.FileReadLine(iidfile)
 	if err != nil {

@@ -8,8 +8,8 @@ import (
 
 // DockerImageOutput describes where a docker container is uploaded to.
 type DockerImageOutput struct {
-	IDFile         string                    `toml:"idfile" comment:"Path to a file that is created by the [Task.Command] and contains the image ID of the produced image (docker build --iidfile).\n Valid variables: $ROOT, $APPNAME"`
-	RegistryUpload DockerImageRegistryUpload `comment:"Registry and repository the image is uploaded to"`
+	IDFile         string                      `toml:"idfile" comment:"Path to a file that is created by the [Task.Command] and contains the image ID of the produced image (docker build --iidfile).\n Valid variables: $ROOT, $APPNAME"`
+	RegistryUpload []DockerImageRegistryUpload `comment:"Registry and repository the image is uploaded to"`
 }
 
 func (d *DockerImageOutput) Resolve(resolvers resolver.Resolver) error {
@@ -19,8 +19,12 @@ func (d *DockerImageOutput) Resolve(resolvers resolver.Resolver) error {
 		return fieldErrorWrap(err, "idfile")
 	}
 
-	if err = d.RegistryUpload.Resolve(resolvers); err != nil {
-		return fieldErrorWrap(err, "RegistryUpload")
+	for i, upload := range d.RegistryUpload {
+		if err = upload.Resolve(resolvers); err != nil {
+			return fieldErrorWrap(err, "RegistryUpload")
+		}
+
+		d.RegistryUpload[i] = upload
 	}
 
 	return nil
@@ -32,8 +36,10 @@ func (d *DockerImageOutput) validate() error {
 		return newFieldError("can not be empty", "idfile")
 	}
 
-	if err := d.RegistryUpload.validate(); err != nil {
-		return fieldErrorWrap(err, "RegistryUpload")
+	for _, upload := range d.RegistryUpload {
+		if err := upload.validate(); err != nil {
+			return fieldErrorWrap(err, "RegistryUpload")
+		}
 	}
 
 	return nil

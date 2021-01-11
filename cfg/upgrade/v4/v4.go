@@ -63,12 +63,15 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		for _, di := range old.BuildOutput.DockerImage {
 			output.DockerImage = append(output.DockerImage, cfg.DockerImageOutput{
 				IDFile: di.IDFile,
-				RegistryUpload: cfg.DockerImageRegistryUpload{
-					Registry:   di.RegistryUpload.Registry,
-					Repository: di.RegistryUpload.Repository,
-					Tag:        di.RegistryUpload.Tag,
+				RegistryUpload: []cfg.DockerImageRegistryUpload{
+					{
+						Registry:   di.RegistryUpload.Registry,
+						Repository: di.RegistryUpload.Repository,
+						Tag:        di.RegistryUpload.Tag,
+					},
 				},
-			})
+			},
+			)
 		}
 
 		for _, f := range old.BuildOutput.File {
@@ -132,10 +135,12 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	for _, di := range old.Build.Output.DockerImage {
 		task.Output.DockerImage = append(task.Output.DockerImage, cfg.DockerImageOutput{
 			IDFile: di.IDFile,
-			RegistryUpload: cfg.DockerImageRegistryUpload{
-				Registry:   di.RegistryUpload.Registry,
-				Repository: di.RegistryUpload.Repository,
-				Tag:        di.RegistryUpload.Tag,
+			RegistryUpload: []cfg.DockerImageRegistryUpload{
+				{
+					Registry:   di.RegistryUpload.Registry,
+					Repository: di.RegistryUpload.Repository,
+					Tag:        di.RegistryUpload.Tag,
+				},
 			},
 		})
 	}

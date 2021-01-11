@@ -70,10 +70,12 @@ func outputInclude() OutputIncludes {
 			DockerImage: []DockerImageOutput{
 				{
 					IDFile: "idfile",
-					RegistryUpload: DockerImageRegistryUpload{
-						Registry:   "localhost:123",
-						Repository: "myrepo/calc",
-						Tag:        "latest",
+					RegistryUpload: []DockerImageRegistryUpload{
+						{
+							Registry:   "localhost:123",
+							Repository: "myrepo/calc",
+							Tag:        "latest",
+						},
 					},
 				},
 			},
@@ -428,10 +430,12 @@ func TestTaskInclude(t *testing.T) {
 							DockerImage: []DockerImageOutput{
 								{
 									IDFile: "idfile",
-									RegistryUpload: DockerImageRegistryUpload{
-										Registry:   "registry",
-										Repository: "repo",
-										Tag:        "tag",
+									RegistryUpload: []DockerImageRegistryUpload{
+										{
+											Registry:   "registry",
+											Repository: "repo",
+											Tag:        "tag",
+										},
 									},
 								},
 							},
@@ -451,10 +455,12 @@ func TestTaskInclude(t *testing.T) {
 							DockerImage: []DockerImageOutput{
 								{
 									IDFile: "idfile1",
-									RegistryUpload: DockerImageRegistryUpload{
-										Registry:   "registry1",
-										Repository: "repo1",
-										Tag:        "tag",
+									RegistryUpload: []DockerImageRegistryUpload{
+										{
+											Registry:   "registry1",
+											Repository: "repo1",
+											Tag:        "tag",
+										},
 									},
 								},
 							},
@@ -657,9 +663,15 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				DockerImage: []DockerImageOutput{
 					{
 						IDFile: "$APPNAME",
-						RegistryUpload: DockerImageRegistryUpload{
-							Tag:        "test",
-							Repository: "$APPNAME",
+						RegistryUpload: []DockerImageRegistryUpload{
+							{
+								Tag:        "test",
+								Repository: "$APPNAME",
+							},
+							{
+								Tag:        "latest",
+								Repository: "$APPNAME",
+							},
 						},
 					},
 				},
@@ -722,7 +734,11 @@ func TestVarsInIncludeFiles(t *testing.T) {
 
 		require.Len(t, loadedApp.Tasks[0].Output.DockerImage, 1)
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].IDFile)
-		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload.Repository)
+		require.Len(t, loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload, 2)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload[0].Repository)
+		require.Equal(t, "test", loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload[0].Tag)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload[1].Repository)
+		require.Equal(t, "latest", loadedApp.Tasks[0].Output.DockerImage[0].RegistryUpload[1].Tag)
 
 		require.Len(t, loadedApp.Tasks[0].Output.File, 1)
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.File[0].Path)
