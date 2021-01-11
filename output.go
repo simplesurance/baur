@@ -39,15 +39,21 @@ func dockerOutputs(dockerClient DockerInfoClient, task *Task) ([]Output, error) 
 	result := make([]Output, 0, len(task.Outputs.DockerImage))
 
 	for _, dockerOutput := range task.Outputs.DockerImage {
+		uploadInfos := make([]*UploadInfoDocker, 0, len(dockerOutput.RegistryUpload))
+
+		for _, ru := range dockerOutput.RegistryUpload {
+			uploadInfos = append(uploadInfos, &UploadInfoDocker{
+				Registry:   ru.Registry,
+				Repository: ru.Repository,
+				Tag:        ru.Tag,
+			})
+		}
+
 		d, err := NewOutputDockerImageFromIIDFile(
 			dockerClient,
 			dockerOutput.IDFile,
 			filepath.Join(task.Directory, dockerOutput.IDFile),
-			&UploadInfoDocker{
-				Registry:   dockerOutput.RegistryUpload.Registry,
-				Repository: dockerOutput.RegistryUpload.Repository,
-				Tag:        dockerOutput.RegistryUpload.Tag,
-			},
+			uploadInfos,
 		)
 
 		if err != nil {

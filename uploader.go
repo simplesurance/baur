@@ -52,14 +52,16 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 			break
 		}
 
-		uploadStartCb(o, o.UploadDestination)
+		for _, dest := range o.UploadDestination {
+			uploadStartCb(o, dest)
 
-		result, err := u.DockerImage(o)
-		if err != nil {
-			return fmt.Errorf("docker upload failed: %w", err)
+			result, err := u.DockerImage(o, dest)
+			if err != nil {
+				return fmt.Errorf("docker upload failed: %w", err)
+			}
+
+			resultCb(o, result)
 		}
-
-		resultCb(o, result)
 
 	case *OutputFile:
 		if o.UploadsFilecopy != nil {
@@ -91,14 +93,14 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 	return nil
 }
 
-func (u *Uploader) DockerImage(o *OutputDockerImage) (*UploadResult, error) {
+func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*UploadResult, error) {
 	startTime := time.Now()
 
 	url, err := u.dockerclient.Upload(
 		o.ImageID,
-		o.UploadDestination.Registry,
-		o.UploadDestination.Repository,
-		o.UploadDestination.Tag,
+		dest.Registry,
+		dest.Repository,
+		dest.Tag,
 	)
 	if err != nil {
 		return nil, err

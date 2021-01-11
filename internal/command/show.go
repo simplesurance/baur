@@ -215,12 +215,20 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 	for i, di := range task.Outputs.DockerImage {
 		mustWriteRow(formatter, "", "", "Type:", term.Highlight("Docker Image"))
 		mustWriteRow(formatter, "", "", "IDFile:", term.Highlight(di.IDFile))
-		mustWriteRow(formatter, "", "", "Registry:", term.Highlight(di.RegistryUpload.Registry))
-		mustWriteRow(formatter, "", "", "Repository:", term.Highlight(di.RegistryUpload.Repository))
-		mustWriteRow(formatter, "", "", "Tag:", term.Highlight(di.RegistryUpload.Tag))
+		mustWriteRow(formatter, "", "", "")
+		mustWriteRow(formatter, "", "", term.Underline("Uploads:"), "", "")
+
+		for i, dest := range di.RegistryUpload {
+			mustWriteRow(formatter, "", "", "", "Registry:", term.Highlight(dest.Registry))
+			mustWriteRow(formatter, "", "", "", "Repository:", term.Highlight(dest.Repository))
+			mustWriteRow(formatter, "", "", "", "Tag:", term.Highlight(dest.Tag))
+			if i+1 < len(di.RegistryUpload) {
+				mustWriteRow(formatter, "", "", "", "", "")
+			}
+		}
 
 		if i+1 < len(task.Outputs.DockerImage) {
-			mustWriteRow(formatter, "", "", "", "")
+			mustWriteRow(formatter, "", "", "", "", "")
 		}
 	}
 

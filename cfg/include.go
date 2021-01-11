@@ -153,9 +153,11 @@ func ExampleInclude(id string) *Include {
 				DockerImage: []DockerImageOutput{
 					{
 						IDFile: "$APPNAME-container.id",
-						RegistryUpload: DockerImageRegistryUpload{
-							Repository: "my-company/$APPNAME",
-							Tag:        "$GITCOMMIT",
+						RegistryUpload: []DockerImageRegistryUpload{
+							{
+								Repository: "my-company/$APPNAME",
+								Tag:        "$GITCOMMIT",
+							},
 						},
 					},
 				},
