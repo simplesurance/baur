@@ -8,7 +8,7 @@ import (
 
 // FileInputs stores glob paths to inputs of a task.
 type FileInputs struct {
-	Paths    []string `toml:"paths" comment:"Relative path to source files.\n Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)\n and ** is supported to match files recursively.\n Valid variables: $ROOT, $APPNAME, $GITCOMMIT."`
+	Paths    []string `toml:"paths" comment:"Relative path to source files.\n Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)\n and ** is supported to match files recursively."`
 	Optional bool     `toml:"optional" comment:"If true, baur will not fail if a Path does not resolve to a file."`
 }
 

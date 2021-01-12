@@ -15,7 +15,7 @@ import (
 // App stores an application configuration.
 type App struct {
 	Name     string   `toml:"name" comment:"Name of the application"`
-	Includes []string `toml:"includes" comment:"Task-includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory.\n. Valid variables: $ROOT."`
+	Includes []string `toml:"includes" comment:"Task-includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory."`
 	Tasks    Tasks    `toml:"Task"`
 
 	filepath string
