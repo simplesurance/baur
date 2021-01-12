@@ -140,27 +140,27 @@ func ExampleInclude(id string) *Include {
 				IncludeID: id + "_output",
 				File: []FileOutput{
 					{
-						Path: "dist/$APPNAME.tar.xz",
+						Path: "dist/{{ .appname }}.tar.xz",
 						S3Upload: []S3Upload{
 							{
 								Bucket: "go-artifacts/",
-								Key:    "$APPNAME-$GITCOMMIT.tar.xz",
+								Key:    "{{ .appname }}-{{ .gitcommit }}.tar.xz",
 							},
 						},
 						FileCopy: []FileCopy{
 							{
-								Path: "/mnt/fileserver/build_artifacts/$APPNAME-$GITCOMMIT.tar.xz",
+								Path: "/mnt/fileserver/build_artifacts/{{ .appname }}-{{ .gitcommit }}.tar.xz",
 							},
 						},
 					},
 				},
 				DockerImage: []DockerImageOutput{
 					{
-						IDFile: "$APPNAME-container.id",
+						IDFile: "{{ .appname }}-container.id",
 						RegistryUpload: []DockerImageRegistryUpload{
 							{
-								Repository: "my-company/$APPNAME",
-								Tag:        "$GITCOMMIT",
+								Repository: "my-company/{{ .appname }}",
+								Tag:        "{{ .gitcommit }}",
 							},
 						},
 					},

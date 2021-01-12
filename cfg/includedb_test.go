@@ -659,7 +659,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				IncludeID: inputInclID,
 				Files: []FileInputs{
 					{
-						Paths: []string{"$APPNAME"},
+						Paths: []string{"{{ .appname }}"},
 					},
 				},
 			},
@@ -670,22 +670,22 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				IncludeID: outputInclID,
 				DockerImage: []DockerImageOutput{
 					{
-						IDFile: "$APPNAME",
+						IDFile: "{{ .appname }}",
 						RegistryUpload: []DockerImageRegistryUpload{
 							{
 								Tag:        "test",
-								Repository: "$APPNAME",
+								Repository: "{{ .appname }}",
 							},
 							{
 								Tag:        "latest",
-								Repository: "$APPNAME",
+								Repository: "{{ .appname }}",
 							},
 						},
 					},
 				},
 				File: []FileOutput{
 					{
-						Path: "$APPNAME",
+						Path: "{{ .appname }}",
 						FileCopy: []FileCopy{{
 							Path: "/tmp/f",
 						},
@@ -698,7 +698,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 			{
 				IncludeID: taskInclID,
 				Name:      "check",
-				Command:   []string{"$APPNAME"},
+				Command:   []string{"{{ .appname }}"},
 			},
 		},
 	}
@@ -730,7 +730,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 	for i, loadedApp := range loadedApps {
 		variableVal := fmt.Sprintf("var%d", i)
 
-		err = loadedApp.Resolve(&resolver.StrReplacement{Old: "$APPNAME", New: variableVal})
+		err = loadedApp.Resolve(&resolver.StrReplacement{Old: "{{ .appname }}", New: variableVal})
 		require.NoError(t, err)
 
 		require.Len(t, loadedApp.Tasks, 2)

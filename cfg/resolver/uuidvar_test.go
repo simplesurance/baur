@@ -8,9 +8,9 @@ import (
 )
 
 func TestUUIDVar(t *testing.T) {
-	r := &UUIDVar{Old: "$UUID"}
+	r := &UUIDVar{Old: "{{ .uuid }}"}
 
-	result, err := r.Resolve("$UUID")
+	result, err := r.Resolve("{{ .uuid }}")
 	assert.NoError(t, err)
 
 	matched, err := regexp.MatchString(`(?i)^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$`, result)
