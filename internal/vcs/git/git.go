@@ -80,14 +80,17 @@ func CommitID(dir string) (string, error) {
 }
 
 // LsFiles runs git ls-files in dir, passes args as argument and returns the
-// output.
-// If no files match and errorUnmatch is true, ErrNotExist is returned
-func LsFiles(dir string, errorUnmatch bool, arg ...string) (string, error) {
-	args := append([]string{"-c", "core.quotepath=off", "ls-files"}, arg...)
-
-	if errorUnmatch {
-		args = append(args, "--error-unmatch")
-	}
+// output. If a patchspec matches no files ErrNotExist is returned.
+// All pathspecs are treated literally, globs are not resolved.
+func LsFiles(dir string, pathspec ...string) (string, error) {
+	args := append(
+		[]string{
+			"--noglob-pathspecs",
+			"-c", "core.quotepath=off",
+			"ls-files",
+			"--error-unmatch",
+		},
+		pathspec...)
 
 	res, err := exec.Command("git", args...).Directory(dir).Run()
 	if err != nil {

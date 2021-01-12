@@ -81,7 +81,6 @@ func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, in
 		}
 
 		result = append(result, gitPaths...)
-
 	}
 
 	return result, nil
