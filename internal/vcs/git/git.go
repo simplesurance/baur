@@ -59,7 +59,7 @@ func IsGitDir(dir string) (bool, error) {
 		return false, nil
 	}
 
-	return false, fmt.Errorf("executing %q in %q exited with code $d, expeted 0 or 128",
+	return false, fmt.Errorf("executing %q in %q exited with code $d, expected 0 or 128",
 		result.Command, result.ExitCode)
 }
 
