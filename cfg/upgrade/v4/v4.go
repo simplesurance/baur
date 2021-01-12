@@ -2,6 +2,7 @@ package v4
 
 import (
 	"fmt"
+	"strings"
 
 	cfgv0 "github.com/simplesurance/baur/cfg"
 
@@ -34,17 +35,17 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		in := &cfg.InputInclude{IncludeID: NewIncludeID}
 
 		if len(old.BuildInput.GitFiles.Paths) > 0 {
-			in.GitFiles = []cfg.GitFileInputs{{Paths: old.BuildInput.GitFiles.Paths}}
+			in.GitFiles = []cfg.GitFileInputs{{Paths: replaceVariablesStrSlice(old.BuildInput.GitFiles.Paths)}}
 		}
 
 		if len(old.BuildInput.Files.Paths) > 0 {
-			in.Files = []cfg.FileInputs{{Paths: old.BuildInput.Files.Paths}}
+			in.Files = []cfg.FileInputs{{Paths: replaceVariablesStrSlice(old.BuildInput.Files.Paths)}}
 		}
 
 		if len(old.BuildInput.GolangSources.Environment) > 0 || len(old.BuildInput.GolangSources.Paths) > 0 {
 			in.GolangSources = []cfg.GolangSources{
 				{
-					Environment: old.BuildInput.GolangSources.Environment,
+					Environment: replaceVariablesStrSlice(old.BuildInput.GolangSources.Environment),
 					Queries:     golangSourcesPathsToQuery(old.BuildInput.GolangSources.Paths),
 					Tests:       false,
 				},
@@ -62,12 +63,12 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 
 		for _, di := range old.BuildOutput.DockerImage {
 			output.DockerImage = append(output.DockerImage, cfg.DockerImageOutput{
-				IDFile: di.IDFile,
+				IDFile: replaceVariables(di.IDFile),
 				RegistryUpload: []cfg.DockerImageRegistryUpload{
 					{
-						Registry:   di.RegistryUpload.Registry,
-						Repository: di.RegistryUpload.Repository,
-						Tag:        di.RegistryUpload.Tag,
+						Registry:   replaceVariables(di.RegistryUpload.Registry),
+						Repository: replaceVariables(di.RegistryUpload.Repository),
+						Tag:        replaceVariables(di.RegistryUpload.Tag),
 					},
 				},
 			},
@@ -76,12 +77,12 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 
 		for _, f := range old.BuildOutput.File {
 			output.File = append(output.File, cfg.FileOutput{
-				Path:     f.Path,
-				FileCopy: []cfg.FileCopy{{Path: f.FileCopy.Path}},
+				Path:     replaceVariables(f.Path),
+				FileCopy: []cfg.FileCopy{{Path: replaceVariables(f.FileCopy.Path)}},
 				S3Upload: []cfg.S3Upload{
 					{
-						Bucket: f.S3Upload.Bucket,
-						Key:    f.S3Upload.DestFile,
+						Bucket: replaceVariables(f.S3Upload.Bucket),
+						Key:    replaceVariables(f.S3Upload.DestFile),
 					},
 				},
 			})
@@ -93,11 +94,31 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 	return include
 }
 
+func replaceVariables(in string) string {
+	in = strings.ReplaceAll(in, "$ROOT", "{{ .root }}")
+	in = strings.ReplaceAll(in, "$APPNAME", "{{ .appname }}")
+	in = strings.ReplaceAll(in, "$UUID", "{{ .uuid }}")
+	in = strings.ReplaceAll(in, "$GITCOMMIT", "{{ .gitcommit }}")
+
+	return in
+}
+
+func replaceVariablesStrSlice(in []string) []string {
+	result := make([]string, 0, len(in))
+
+	for _, e := range in {
+		result = append(result, replaceVariables(e))
+	}
+
+	return result
+}
+
 func golangSourcesPathsToQuery(paths []string) []string {
 	result := make([]string, 0, len(paths))
+
 	for _, p := range paths {
 		p = p + "/..."
-		result = append(result, p)
+		result = append(result, replaceVariables(p))
 	}
 
 	return result
@@ -112,21 +133,21 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 
 	task := cfg.Task{
 		Name:    "build",
-		Command: []string{"sh", "-c", old.Build.Command},
+		Command: []string{"sh", "-c", replaceVariables(old.Build.Command)},
 	}
 
 	if len(old.Build.Input.Files.Paths) > 0 {
-		task.Input.Files = []cfg.FileInputs{{Paths: old.Build.Input.Files.Paths}}
+		task.Input.Files = []cfg.FileInputs{{Paths: replaceVariablesStrSlice(old.Build.Input.Files.Paths)}}
 	}
 
 	if len(old.Build.Input.GitFiles.Paths) > 0 {
-		task.Input.GitFiles = []cfg.GitFileInputs{{Paths: old.Build.Input.GitFiles.Paths}}
+		task.Input.GitFiles = []cfg.GitFileInputs{{Paths: replaceVariablesStrSlice(old.Build.Input.GitFiles.Paths)}}
 	}
 
 	if len(old.Build.Input.GolangSources.Environment) > 0 || len(old.Build.Input.GolangSources.Paths) > 0 {
 		task.Input.GolangSources = []cfg.GolangSources{
 			{
-				Environment: old.Build.Input.GolangSources.Environment,
+				Environment: replaceVariablesStrSlice(old.Build.Input.GolangSources.Environment),
 				Queries:     golangSourcesPathsToQuery(old.Build.Input.GolangSources.Paths),
 				Tests:       false,
 			},
@@ -136,12 +157,12 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	//TODO: dedup code for converting outputs, same code is used used in UpgradeIncludeConfig
 	for _, di := range old.Build.Output.DockerImage {
 		task.Output.DockerImage = append(task.Output.DockerImage, cfg.DockerImageOutput{
-			IDFile: di.IDFile,
+			IDFile: replaceVariables(di.IDFile),
 			RegistryUpload: []cfg.DockerImageRegistryUpload{
 				{
-					Registry:   di.RegistryUpload.Registry,
-					Repository: di.RegistryUpload.Repository,
-					Tag:        di.RegistryUpload.Tag,
+					Registry:   replaceVariables(di.RegistryUpload.Registry),
+					Repository: replaceVariables(di.RegistryUpload.Repository),
+					Tag:        replaceVariables(di.RegistryUpload.Tag),
 				},
 			},
 		})
@@ -152,20 +173,20 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 		var s3 []cfg.S3Upload
 
 		if f.FileCopy.Path != "" {
-			fc = []cfg.FileCopy{{Path: f.FileCopy.Path}}
+			fc = []cfg.FileCopy{{Path: replaceVariables(f.FileCopy.Path)}}
 		}
 
 		if f.S3Upload.Bucket != "" {
 			s3 = []cfg.S3Upload{
 				{
-					Bucket: f.S3Upload.Bucket,
-					Key:    f.S3Upload.DestFile,
+					Bucket: replaceVariables(f.S3Upload.Bucket),
+					Key:    replaceVariables(f.S3Upload.DestFile),
 				},
 			}
 		}
 
 		task.Output.File = append(task.Output.File, cfg.FileOutput{
-			Path:     f.Path,
+			Path:     replaceVariables(f.Path),
 			FileCopy: fc,
 			S3Upload: s3,
 		})
@@ -173,7 +194,7 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 
 	for _, includePath := range old.Build.Includes {
 		task.Includes = append(task.Includes,
-			fmt.Sprintf("%s#%s", includePath, NewIncludeID),
+			fmt.Sprintf("%s#%s", replaceVariables(includePath), NewIncludeID),
 		)
 	}
 
