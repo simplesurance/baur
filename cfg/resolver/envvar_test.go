@@ -12,8 +12,8 @@ func TestEnvVarResolve(t *testing.T) {
 	const envVar = "_baurTestEnvVar"
 	const envVarVal = "hello123"
 
-	testStr := fmt.Sprintf("test {{ env %s }} {{ env %s }} bye", envVar, envVar)
-	expectedResult := fmt.Sprintf("test %s %s bye", envVarVal, envVarVal)
+	testStr := fmt.Sprintf("test {{ env %s }} {{ env %s }}bye", envVar, envVar)
+	expectedResult := fmt.Sprintf("test %s %sbye", envVarVal, envVarVal)
 
 	resolver := &EnvVar{}
 

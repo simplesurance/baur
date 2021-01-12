@@ -6,8 +6,8 @@ import (
 
 // S3Upload contains S3 upload information
 type S3Upload struct {
-	Bucket string `toml:"bucket" comment:"Bucket name, valid variables: $APPNAME, $UUID, $GITCOMMIT"`
-	Key    string `toml:"key" comment:"Identifier for the object in the bucket. Valid variables: $ROOT, $APPNAME, $UUID, $GITCOMMIT"`
+	Bucket string `toml:"bucket" comment:"Bucket name"`
+	Key    string `toml:"key" comment:"Identifier for the object in the bucket."`
 }
 
 func (s *S3Upload) resolve(resolvers resolver.Resolver) error {
