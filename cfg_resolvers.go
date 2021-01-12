@@ -32,6 +32,7 @@ func DefaultAppCfgResolvers(rootPath, appName string, gitCommitFn func() (string
 
 			},
 		},
+		&resolver.EnvVar{},
 	}
 }
 
@@ -41,5 +42,6 @@ func IncludeCfgVarResolvers(rootPath, appName string) resolver.Resolver {
 	return resolver.List{
 		&resolver.StrReplacement{Old: appVarName, New: appName},
 		&resolver.StrReplacement{Old: rootVarName, New: rootPath},
+		&resolver.EnvVar{},
 	}
 }

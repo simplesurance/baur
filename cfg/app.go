@@ -70,7 +70,7 @@ func ExampleApp(name string) *App {
 							RegistryUpload: []DockerImageRegistryUpload{
 								{
 									Repository: "my-company/$APPNAME",
-									Tag:        "$GITCOMMIT",
+									Tag:        "{{ ENV BRANCH_NAME }}-$GITCOMMIT",
 								},
 							},
 						},
