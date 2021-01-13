@@ -11,7 +11,7 @@ type query struct {
 	BaseQuery string
 	Filters   []*storage.Filter
 	Sorters   []*storage.Sorter
-	Limit     int
+	Limit     uint
 }
 
 func columnName(f storage.Field) (string, error) {

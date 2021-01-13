@@ -79,7 +79,7 @@ type TaskRunWithID struct {
 }
 
 const (
-	NoLimit int = 0
+	NoLimit uint = 0
 )
 
 // Storer is an interface for storing and retrieving baur task runs
@@ -104,7 +104,7 @@ type Storer interface {
 	TaskRuns(ctx context.Context,
 		filters []*Filter,
 		sorters []*Sorter,
-		limit int,
+		limit uint,
 		callback func(*TaskRunWithID) error,
 	) error
 

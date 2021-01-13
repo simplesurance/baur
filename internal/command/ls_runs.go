@@ -45,7 +45,7 @@ type lsRunsCmd struct {
 	before   flag.DateTimeFlagValue
 	inputStr string
 	sort     *flag.Sort
-	limit    int
+	limit    uint
 	quiet    bool
 
 	app  string
@@ -79,7 +79,7 @@ func newLsRunsCmd() *lsRunsCmd {
 	cmd.Flags().VarP(cmd.sort, "sort", "s",
 		cmd.sort.Usage(term.Highlight))
 
-	cmd.Flags().IntVarP(&cmd.limit, "limit", "l", storage.NoLimit,
+	cmd.Flags().UintVarP(&cmd.limit, "limit", "l", storage.NoLimit,
 		"Limit the number of runs shown, 0 will show all runs")
 
 	cmd.Flags().VarP(&cmd.after, "after", "a",

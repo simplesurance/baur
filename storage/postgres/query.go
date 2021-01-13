@@ -205,7 +205,7 @@ func (c *Client) TaskRuns(
 	ctx context.Context,
 	filters []*storage.Filter,
 	sorters []*storage.Sorter,
-	limit int,
+	limit uint,
 	cb func(*storage.TaskRunWithID) error,
 ) error {
 	const queryTemplate = `
