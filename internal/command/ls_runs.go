@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/command/flag"
 	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/internal/format"
@@ -31,7 +30,10 @@ baur ls runs -s duration-desc calc		 list task runs of the calc
 baur ls runs --csv --after=2018.09.27-11:30 '*'	 list all task runs in csv format that
 						 were started after 2018.09.27 11:30
 baur ls runs --limit=1 calc			 list a single task run of the calc
-						 application`
+						 application
+baur ls runs --has-input=string:master calc	 list task runs of the calc
+						 application that contain an input
+						 of 'string:master'`
 
 func init() {
 	lsCmd.AddCommand(&newLsRunsCmd().Command)
@@ -43,7 +45,7 @@ type lsRunsCmd struct {
 	csv      bool
 	after    flag.DateTimeFlagValue
 	before   flag.DateTimeFlagValue
-	inputStr string
+	inputURI string
 	sort     *flag.Sort
 	limit    uint
 	quiet    bool
@@ -88,8 +90,10 @@ func newLsRunsCmd() *lsRunsCmd {
 	cmd.Flags().VarP(&cmd.before, "before", "b",
 		fmt.Sprintf("Only show runs that were started before this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
 
-	cmd.Flags().StringVar(&cmd.inputStr, "has-input-str", "",
-		"Only show runs that include this value as an input-str value")
+	cmd.Flags().StringVar(&cmd.inputURI, "has-input", "",
+		`Only show runs that include this value as an input.
+File inputs should be specified by their path e.g. /path/to/myfile.txt
+String inputs should be specified with a 'string:' prefix e.g. string:my_input_str`)
 
 	return &cmd
 }
@@ -234,12 +238,11 @@ func (c *lsRunsCmd) getFilters() []*storage.Filter {
 		})
 	}
 
-	if c.inputStr != "" {
-		inputStrURI := baur.NewInputString(c.inputStr).String()
+	if c.inputURI != "" {
 		filters = append(filters, &storage.Filter{
 			Field:    storage.FieldURI,
 			Operator: storage.OpEQ,
-			Value:    inputStrURI,
+			Value:    c.inputURI,
 		})
 	}
 
