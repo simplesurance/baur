@@ -130,6 +130,11 @@ func whitelistedEnv() []string {
 		env = append(env, "home="+home)
 	}
 
+	// windows
+	if appData, exist := os.LookupEnv("LocalAppData"); exist {
+		env = append(env, "LocalAppData="+appData)
+	}
+
 	return env
 }
 
