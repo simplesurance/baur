@@ -26,7 +26,7 @@ func columnName(f storage.Field) (string, error) {
 		return "start_timestamp", nil
 	case storage.FieldID:
 		return "task_run_id", nil
-	case storage.FieldURI:
+	case storage.FieldInput:
 		return "uri", nil
 
 	default:

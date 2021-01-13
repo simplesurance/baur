@@ -234,7 +234,7 @@ func (c *Client) TaskRuns(
 
 	containsURIFilter := false
 	for _, filter := range filters {
-		if filter.Field == storage.FieldURI {
+		if filter.Field == storage.FieldInput {
 			containsURIFilter = true
 			break
 		}

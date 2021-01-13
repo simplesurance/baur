@@ -240,7 +240,7 @@ func (c *lsRunsCmd) getFilters() []*storage.Filter {
 
 	if c.inputURI != "" {
 		filters = append(filters, &storage.Filter{
-			Field:    storage.FieldURI,
+			Field:    storage.FieldInput,
 			Operator: storage.OpEQ,
 			Value:    c.inputURI,
 		})
