@@ -27,11 +27,11 @@ func getGoEnv(workdir string, env []string) (*goEnv, error) {
 	}
 
 	if result.GoModCache == "" {
-		return nil, fmt.Errorf("go env returned an GOMODCACHE variable, the variable must be set")
+		return nil, fmt.Errorf("go env returned an empty GOMODCACHE variable, the variable must be set")
 	}
 
 	if result.GoRoot == "" {
-		return nil, fmt.Errorf("go env returned an GOROOT variable, the variable must be set")
+		return nil, fmt.Errorf("go env returned an empty GOROOT variable, the variable must be set")
 	}
 
 	// the variables can contain e.g. trailing directory seperators, when
