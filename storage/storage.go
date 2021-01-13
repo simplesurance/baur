@@ -108,21 +108,6 @@ type Storer interface {
 		callback func(*TaskRunWithID) error,
 	) error
 
-	// TaskRunsWithInputURI queries the storage for runs that match the filters
-	// and contain an input with the given URI value.
-	// A limit value of 0 will return all results.
-	// The found results are passed in iterative manner to the callback
-	// function. When the callback function returns an error, the iteration
-	// stops.
-	// When no matching records exist, the method returns ErrNotExist.
-	TaskRunsWithInputURI(ctx context.Context,
-		filters []*Filter,
-		sorters []*Sorter,
-		limit int,
-		uri string,
-		callback func(*TaskRunWithID) error,
-	) error
-
 	Inputs(ctx context.Context, taskRunID int) ([]*Input, error)
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
 }

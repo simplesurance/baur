@@ -144,31 +144,16 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 
 	sorters = append(sorters, &defaultSorter)
 
-	var err error
-	if c.inputStr != "" {
-		err = psql.TaskRunsWithInputURI(
-			ctx,
-			filters,
-			sorters,
-			c.limit,
-			baur.NewInputString(c.inputStr).String(),
-			func(taskRun *storage.TaskRunWithID) error {
-				c.printTaskRun(formatter, taskRun)
-				return nil
-			},
-		)
-	} else {
-		err = psql.TaskRuns(
-			ctx,
-			filters,
-			sorters,
-			c.limit,
-			func(taskRun *storage.TaskRunWithID) error {
-				c.printTaskRun(formatter, taskRun)
-				return nil
-			},
-		)
-	}
+	err := psql.TaskRuns(
+		ctx,
+		filters,
+		sorters,
+		c.limit,
+		func(taskRun *storage.TaskRunWithID) error {
+			c.printTaskRun(formatter, taskRun)
+			return nil
+		},
+	)
 
 	if err != nil {
 		if err == storage.ErrNotExist {
@@ -246,6 +231,15 @@ func (c *lsRunsCmd) getFilters() []*storage.Filter {
 			Field:    storage.FieldStartTime,
 			Operator: storage.OpGT,
 			Value:    c.after.Time,
+		})
+	}
+
+	if c.inputStr != "" {
+		inputStrURI := baur.NewInputString(c.inputStr).String()
+		filters = append(filters, &storage.Filter{
+			Field:    storage.FieldURI,
+			Operator: storage.OpEQ,
+			Value:    inputStrURI,
 		})
 	}
 
