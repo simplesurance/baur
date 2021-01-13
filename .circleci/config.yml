@@ -8,7 +8,7 @@ orbs:
 jobs:
   test_linux:
     docker:
-      - image: circleci/golang:1.15.4
+      - image: circleci/golang:1.15.6
         environment:
           GOFLAGS: -mod=vendor
           TEST_RESULTS: /tmp/test-results
@@ -84,16 +84,16 @@ jobs:
             $testResultDir = Resolve-Path $Env:TEST_RESULTS
             $testOutputPath = Join-Path $testResultDir "go-test.out"
             $testReportPath = Join-Path $testResultDir "go-test-report.xml"
-            try { go test --tags=dbtest -v -timeout 5m .\... | Tee-Object -FilePath $testOutputPath } `
+            try { go test --tags=dbtest -v -timeout 5m .\... | Tee-Object -FilePath $testOutputPath; $testExitCode = $LastExitCode } `
             finally { Get-Content -Path $testOutputPath | go-junit-report > $testReportPath; `
-            [System.Io.File]::ReadAllText($testReportPath) | Out-File -FilePath $testReportPath -Encoding utf8 }
+            [System.Io.File]::ReadAllText($testReportPath) | Out-File -FilePath $testReportPath -Encoding utf8; Exit $testExitCode }
 
       - store_test_results:
           path: ~\test-results
 
   build_linux:
     docker:
-      - image: circleci/golang:1.15.4
+      - image: circleci/golang:1.15.6
 
     working_directory: ~/baur
     steps:
@@ -105,7 +105,7 @@ jobs:
 
   static_analysis_linux:
     docker:
-      - image: golangci/golangci-lint:v1.32.2
+      - image: golangci/golangci-lint:v1.35.2
 
     working_directory: ~/baur
     steps:

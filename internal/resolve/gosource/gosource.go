@@ -130,6 +130,16 @@ func whitelistedEnv() []string {
 		env = append(env, "home="+home)
 	}
 
+	// windows: LocalAppData is used to determine default GOCACHE dir
+	if appData, exist := os.LookupEnv("LocalAppData"); exist {
+		env = append(env, "LocalAppData="+appData)
+	}
+
+	// windows: USERPROFILE is used to determine default GOPATH
+	if userprofile, exist := os.LookupEnv("USERPROFILE"); exist {
+		env = append(env, "USERPROFILE="+userprofile)
+	}
+
 	return env
 }
 

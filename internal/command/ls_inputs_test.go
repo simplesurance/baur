@@ -4,6 +4,7 @@ package command
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,8 +40,8 @@ func TestLsInputsTaskAndRunInputsAreTheSame(t *testing.T) {
 	err = lsInputsCmd.Execute()
 	require.NoError(t, err)
 
-	appInputFile := fmt.Sprintf("%s/%s.txt", app.Name, app.Name)
-	appTomlFile := fmt.Sprintf("%s/%s", app.Name, baur.AppCfgFile)
+	appInputFile := fmt.Sprintf("%s%c%s.txt", app.Name, os.PathSeparator, app.Name)
+	appTomlFile := fmt.Sprintf("%s%c%s", app.Name, os.PathSeparator, baur.AppCfgFile)
 
 	lsTaskRunOutput := stdout.String()
 	assert.Contains(t, lsTaskRunOutput, appInputFile)
