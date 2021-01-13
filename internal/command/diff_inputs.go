@@ -271,6 +271,7 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *
 		ctx,
 		filters,
 		sorters,
+		storage.NoLimit,
 		func(record *storage.TaskRunWithID) error {
 			retrieved++
 			if retrieved == runPosition {
@@ -313,6 +314,7 @@ func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) *storage
 		ctx,
 		filters,
 		sorters,
+		storage.NoLimit,
 		func(run *storage.TaskRunWithID) error {
 			taskRun = run
 			return nil

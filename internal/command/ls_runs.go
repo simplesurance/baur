@@ -24,11 +24,16 @@ Arguments:
 `
 
 const lsRunsExample = `
-baur ls runs -s duration-desc calc               list task runs of the calc
+baur ls runs -s duration-desc calc		 list task runs of the calc
 						 application, sorted by
 						 run duration
-baur ls runs --csv --after=2018.09.27-11:30 '*'  list all task runs in csv format that
-						 were started after 2018.09.27 11:30`
+baur ls runs --csv --after=2018.09.27-11:30 '*'	 list all task runs in csv format that
+						 were started after 2018.09.27 11:30
+baur ls runs --limit=1 calc			 list a single task run of the calc
+						 application
+baur ls runs --has-input=string:master calc	 list task runs of the calc
+						 application that have a
+						 'string:master' input`
 
 func init() {
 	lsCmd.AddCommand(&newLsRunsCmd().Command)
@@ -40,7 +45,9 @@ type lsRunsCmd struct {
 	csv    bool
 	after  flag.DateTimeFlagValue
 	before flag.DateTimeFlagValue
+	input  string
 	sort   *flag.Sort
+	limit  uint
 	quiet  bool
 
 	app  string
@@ -74,11 +81,22 @@ func newLsRunsCmd() *lsRunsCmd {
 	cmd.Flags().VarP(cmd.sort, "sort", "s",
 		cmd.sort.Usage(term.Highlight))
 
+	cmd.Flags().UintVarP(&cmd.limit, "limit", "l", storage.NoLimit,
+		fmt.Sprintf("Limit the number of runs shown, %s shows all runs", term.Highlight("0")))
+
 	cmd.Flags().VarP(&cmd.after, "after", "a",
 		fmt.Sprintf("Only show runs that were started after this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
 
 	cmd.Flags().VarP(&cmd.before, "before", "b",
 		fmt.Sprintf("Only show runs that were started before this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
+
+	cmd.Flags().StringVar(&cmd.input, "has-input", "",
+		fmt.Sprintf(
+			`Only show runs that have the given input.
+File inputs are specified their path.
+String inputs are specified with a '%s' prefix, e.g. string:my_input_str.`,
+			term.Highlight("string:")),
+	)
 
 	return &cmd
 }
@@ -137,6 +155,7 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 		ctx,
 		filters,
 		sorters,
+		c.limit,
 		func(taskRun *storage.TaskRunWithID) error {
 			c.printTaskRun(formatter, taskRun)
 			return nil
@@ -219,6 +238,14 @@ func (c *lsRunsCmd) getFilters() []*storage.Filter {
 			Field:    storage.FieldStartTime,
 			Operator: storage.OpGT,
 			Value:    c.after.Time,
+		})
+	}
+
+	if c.input != "" {
+		filters = append(filters, &storage.Filter{
+			Field:    storage.FieldInput,
+			Operator: storage.OpEQ,
+			Value:    c.input,
 		})
 	}
 

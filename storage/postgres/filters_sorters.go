@@ -11,6 +11,7 @@ type query struct {
 	BaseQuery string
 	Filters   []*storage.Filter
 	Sorters   []*storage.Sorter
+	Limit     uint
 }
 
 func columnName(f storage.Field) (string, error) {
@@ -25,6 +26,8 @@ func columnName(f storage.Field) (string, error) {
 		return "start_timestamp", nil
 	case storage.FieldID:
 		return "task_run_id", nil
+	case storage.FieldInput:
+		return "uri", nil
 
 	default:
 		return "", fmt.Errorf("no postgresql mapping for storage field %s exists", f)
@@ -113,6 +116,14 @@ func (q *query) compileSorterStr() (string, error) {
 	return "ORDER BY " + sorterStr, nil
 }
 
+func (q *query) compileLimitStr() string {
+	if q.Limit == storage.NoLimit {
+		return ""
+	}
+
+	return fmt.Sprintf("LIMIT %d", q.Limit)
+}
+
 // Compile creates the SQL query string and returns it with the arguments for the query
 func (q *query) Compile() (query string, args []interface{}, err error) {
 	if len(q.Filters) == 0 && len(q.Sorters) == 0 {
@@ -129,5 +140,7 @@ func (q *query) Compile() (query string, args []interface{}, err error) {
 		return "", nil, err
 	}
 
-	return fmt.Sprintf("%s %s %s", q.BaseQuery, filterStr, orderStr), args, nil
+	limitStr := q.compileLimitStr()
+
+	return fmt.Sprintf("%s %s %s %s", q.BaseQuery, filterStr, orderStr, limitStr), args, nil
 }

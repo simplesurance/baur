@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v4"
 
@@ -21,7 +22,7 @@ func (c *Client) TaskRun(ctx context.Context, id int) (*storage.TaskRunWithID, e
 		},
 	}
 
-	err := c.TaskRuns(ctx, idFilter, nil, func(tr *storage.TaskRunWithID) error {
+	err := c.TaskRuns(ctx, idFilter, nil, storage.NoLimit, func(tr *storage.TaskRunWithID) error {
 		taskRun = tr
 
 		return nil
@@ -204,12 +205,13 @@ func (c *Client) TaskRuns(
 	ctx context.Context,
 	filters []*storage.Filter,
 	sorters []*storage.Sorter,
+	limit uint,
 	cb func(*storage.TaskRunWithID) error,
 ) error {
-	const queryStr = `
-	SELECT *
+	const queryTemplate = `
+	SELECT task_run_id, application_name, task_name, revision, dirty, total_digest, start_timestamp, stop_timestamp, result
 	  FROM (
-	       SELECT DISTINCT ON (task_run.id)
+	       SELECT DISTINCT ON ({distinct_on})
 		      task_run.id AS task_run_id,
 	              application.name AS application_name,
 	              task.name AS task_name,
@@ -219,14 +221,38 @@ func (c *Client) TaskRuns(
 	              task_run.start_timestamp AS start_timestamp,
 	              task_run.stop_timestamp,
 	              task_run.result,
+	              {fields}
 	              (EXTRACT(EPOCH FROM (task_run.stop_timestamp - task_run.start_timestamp))::bigint * 1000000000) AS duration
 	         FROM application
 	         JOIN task ON application.id = task.application_id
 	         JOIN task_run ON task.id = task_run.task_id
-	         JOIN task_run_input ON task_run_input.task_run_id = task_run.id
+		 JOIN task_run_input ON task_run_input.task_run_id = task_run.id
+		 {joins}
 	         LEFT OUTER JOIN vcs ON vcs.id = task_run.vcs_id
 	       ) tr
 	  `
+
+	containsURIFilter := false
+	for _, filter := range filters {
+		if filter.Field == storage.FieldInput {
+			containsURIFilter = true
+			break
+		}
+	}
+
+	var replacer *strings.Replacer
+	if containsURIFilter {
+		replacer = strings.NewReplacer(
+			"{distinct_on}", "task_run.id, input.uri",
+			"{fields}", "input.uri AS uri,",
+			"{joins}", "JOIN input ON task_run_input.input_id = input.id")
+	} else {
+		replacer = strings.NewReplacer(
+			"{distinct_on}", "task_run.id",
+			"{fields}", "",
+			"{joins}", "")
+	}
+	queryStr := replacer.Replace(queryTemplate)
 
 	var queryReturnedRows bool
 
@@ -234,6 +260,7 @@ func (c *Client) TaskRuns(
 		BaseQuery: queryStr,
 		Filters:   filters,
 		Sorters:   sorters,
+		Limit:     limit,
 	}
 
 	query, args, err := q.Compile()
@@ -261,7 +288,6 @@ func (c *Client) TaskRuns(
 			&taskRun.StartTimestamp,
 			&taskRun.StopTimestamp,
 			&taskRun.Result,
-			nil, // skip scanning of duration value, it's only used for filtering and sorting
 		)
 
 		if err != nil {
