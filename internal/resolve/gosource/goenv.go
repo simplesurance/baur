@@ -14,10 +14,10 @@ type goEnv struct {
 	GoPath     string
 }
 
-func getGoEnv(env []string) (*goEnv, error) {
+func getGoEnv(workdir string, env []string) (*goEnv, error) {
 	var result goEnv
 
-	res, err := exec.Command("go", "env", "-json").Env(env).ExpectSuccess().Run()
+	res, err := exec.Command("go", "env", "-json").Directory(workdir).Env(env).ExpectSuccess().Run()
 	if err != nil {
 		return nil, err
 	}
