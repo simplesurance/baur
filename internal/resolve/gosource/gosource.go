@@ -91,7 +91,7 @@ func (r *Resolver) Resolve(
 		return nil, fmt.Errorf("resolving globs in queries failed: %w", err)
 	}
 
-	goEnv, err := getGoEnv(workdir, env)
+	goEnv, err := getGoEnv(env)
 	if err != nil {
 		return nil, err
 	}
