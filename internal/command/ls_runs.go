@@ -25,12 +25,12 @@ Arguments:
 `
 
 const lsRunsExample = `
-baur ls runs -s duration-desc calc               list task runs of the calc
+baur ls runs -s duration-desc calc		 list task runs of the calc
 						 application, sorted by
 						 run duration
-baur ls runs --csv --after=2018.09.27-11:30 '*'  list all task runs in csv format that
+baur ls runs --csv --after=2018.09.27-11:30 '*'	 list all task runs in csv format that
 						 were started after 2018.09.27 11:30
-baur ls runs --limit=1 calc                      list a single task run of the calc
+baur ls runs --limit=1 calc			 list a single task run of the calc
 						 application`
 
 func init() {
