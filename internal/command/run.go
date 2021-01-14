@@ -151,7 +151,30 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			len(pendingTasks), len(tasks), term.ColoredTaskStatus(baur.TaskStatusExecutionPending))
 	}
 
-	c.runUploadStore(pendingTasks)
+	for _, pt := range pendingTasks {
+		task := pt.task
+		runResult := c.runTask(task)
+
+		outputs, err := baur.OutputsFromTask(c.dockerClient, task)
+		exitOnErrf(err, "%s", task.ID())
+
+		if !outputsExist(task, outputs) {
+			exitFunc(1)
+		}
+
+		if c.skipUpload {
+			continue
+		}
+
+		// copy the iteration variable, to prevent that it's value
+		// changes in the closure to 't' of the next iteration before
+		// the closure is executed
+		ptCopy := pt
+		c.uploadRoutinePool.Queue(func() {
+			c.uploadAndRecord(ctx, ptCopy.task, ptCopy.inputs, outputs, runResult)
+		})
+	}
+
 	stdout.Println("all tasks executed, waiting for uploads to finish...")
 	c.uploadRoutinePool.Wait()
 	stdout.PrintSep()
@@ -160,6 +183,39 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			time.Since(startTime),
 		),
 	)
+}
+
+func (c *runCmd) runTask(task *baur.Task) *baur.RunResult {
+	result, err := baur.NewTaskRunner().Run(task)
+	exitOnErrf(err, "%s", task.ID())
+
+	if result.Result.ExitCode != 0 {
+		statusStr := term.RedHighlight("failed")
+
+		stderr.Printf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
+			task,
+			statusStr,
+			term.FormatDuration(
+				result.StopTime.Sub(result.StartTime),
+			),
+			result.ExitCode,
+			result.StrOutput())
+
+		// TODO: record the result as failed if run exitCode is != 0
+		// except when a flag like --errors-are-fatal is passed
+		exitFunc(1)
+	}
+
+	statusStr := term.GreenHighlight("successful")
+
+	stdout.TaskPrintf(task, "execution %s (%s)\n",
+		statusStr,
+		term.FormatDuration(
+			result.StopTime.Sub(result.StartTime),
+		),
+	)
+
+	return result
 }
 
 type pendingTask struct {
@@ -208,59 +264,6 @@ func (c *runCmd) uploadAndRecord(
 	exitOnErrf(err, "%s", task.ID())
 
 	stdout.TaskPrintf(task, "run stored in database with ID %s\n", term.Highlight(id))
-}
-
-func (c *runCmd) runUploadStore(taskToRun []*pendingTask) {
-	taskRunner := baur.NewTaskRunner()
-
-	for _, t := range taskToRun {
-		// TODO: record the result as failed if run exitCode is != 0
-		// except when a flag like --errors-are-fatal is passed
-		runResult, err := taskRunner.Run(t.task)
-		exitOnErrf(err, "%s", t.task.ID())
-
-		if runResult.Result.ExitCode != 0 {
-			statusStr := term.RedHighlight("failed")
-
-			stderr.Printf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
-				t.task,
-				statusStr,
-				term.FormatDuration(
-					runResult.StopTime.Sub(runResult.StartTime),
-				),
-				runResult.ExitCode,
-				runResult.StrOutput())
-			exitFunc(1)
-		}
-
-		statusStr := term.GreenHighlight("successful")
-
-		stdout.TaskPrintf(t.task, "execution %s (%s)\n",
-			statusStr,
-			term.FormatDuration(
-				runResult.StopTime.Sub(runResult.StartTime),
-			),
-		)
-
-		outputs, err := baur.OutputsFromTask(c.dockerClient, t.task)
-		exitOnErrf(err, "%s", t.task.ID())
-
-		if !outputsExist(t.task, outputs) {
-			exitFunc(1)
-		}
-
-		if c.skipUpload {
-			continue
-		}
-
-		// copy the iteration variable, to prevent that it's value
-		// changes in the closure to 't' of the next iteration before
-		// the closure is executed
-		taskCopy := t
-		c.uploadRoutinePool.Queue(func() {
-			c.uploadAndRecord(ctx, taskCopy.task, taskCopy.inputs, outputs, runResult)
-		})
-	}
 }
 
 func outputsExist(task *baur.Task, outputs []baur.Output) bool {
