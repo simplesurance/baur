@@ -243,9 +243,6 @@ func (c *runCmd) uploadAndRecord(
 				size, err := o.Size()
 				exitOnErrf(err, "%s: %s:", task.ID(), output)
 
-				term.FormatDuration(
-					result.Stop.Sub(result.Start),
-				)
 				bps := uint64(math.Round(float64(size) / result.Stop.Sub(result.Start).Seconds()))
 
 				stdout.TaskPrintf(task, "%s uploaded to %s (%s/s)\n",
