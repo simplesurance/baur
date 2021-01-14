@@ -118,7 +118,7 @@ func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*U
 func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadResult, error) {
 	startTime := time.Now()
 
-	destFile := filepath.Join(dest.DestinationPath, filepath.Base(o.AbsPath))
+	destFile := filepath.Join(dest.Path, filepath.Base(o.AbsPath))
 
 	url, err := u.filecopyUploader.Upload(o.AbsPath, destFile)
 	if err != nil {
