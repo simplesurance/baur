@@ -15,16 +15,11 @@ const (
 )
 
 type UploadInfo interface {
-	Method() UploadMethod
 	String() string
 }
 
 type UploadInfoS3 struct {
 	*cfg.S3Upload
-}
-
-func (s *UploadInfoS3) Method() UploadMethod {
-	return UploadMethodS3
 }
 
 func (s *UploadInfoS3) String() string {
@@ -33,10 +28,6 @@ func (s *UploadInfoS3) String() string {
 
 type UploadInfoDocker struct {
 	*cfg.DockerImageRegistryUpload
-}
-
-func (d *UploadInfoDocker) Method() UploadMethod {
-	return UploadMethodDocker
 }
 
 func (d *UploadInfoDocker) String() string {
@@ -49,10 +40,6 @@ func (d *UploadInfoDocker) String() string {
 
 type UploadInfoFileCopy struct {
 	*cfg.FileCopy
-}
-
-func (f *UploadInfoFileCopy) Method() UploadMethod {
-	return UploadMethodFilecopy
 }
 
 func (f *UploadInfoFileCopy) String() string {
