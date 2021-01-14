@@ -80,15 +80,13 @@ func CommitID(dir string) (string, error) {
 }
 
 // LsFiles runs git ls-files in dir, passes args as argument and returns a list
-// of paths . If a patchspec matches no files ErrNotExist is returned.
-// All pathspecs are treated literally, globs are not resolved.
+// of paths. All pathspecs are treated literally, globs are not resolved.
 func LsFiles(dir string, pathspec ...string) ([]string, error) {
 	args := append(
 		[]string{
 			"--noglob-pathspecs",
 			"-c", "core.quotepath=off",
 			"ls-files",
-			"--error-unmatch",
 		},
 		pathspec...)
 

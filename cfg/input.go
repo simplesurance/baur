@@ -7,16 +7,11 @@ import (
 // Input contains information about task inputs
 type Input struct {
 	Files         []FileInputs    `comment:"Inputs specified by file glob paths"`
-	GitFiles      []GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
 	GolangSources []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
 }
 
 func (in *Input) FileInputs() []FileInputs {
 	return in.Files
-}
-
-func (in *Input) GitFileInputs() []GitFileInputs {
-	return in.GitFiles
 }
 
 func (in *Input) GolangSourcesInputs() []GolangSources {
@@ -26,7 +21,6 @@ func (in *Input) GolangSourcesInputs() []GolangSources {
 // merge appends the information in other to in.
 func (in *Input) merge(other InputDef) {
 	in.Files = append(in.Files, other.FileInputs()...)
-	in.GitFiles = append(in.GitFiles, other.GitFileInputs()...)
 	in.GolangSources = append(in.GolangSources, other.GolangSourcesInputs()...)
 }
 
@@ -34,12 +28,6 @@ func (in *Input) resolve(resolvers resolver.Resolver) error {
 	for _, f := range in.Files {
 		if err := f.resolve(resolvers); err != nil {
 			return fieldErrorWrap(err, "Files")
-		}
-	}
-
-	for _, g := range in.GitFiles {
-		if err := g.resolve(resolvers); err != nil {
-			return fieldErrorWrap(err, "Gitfiles")
 		}
 	}
 

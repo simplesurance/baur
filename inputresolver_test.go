@@ -44,14 +44,16 @@ func TestFilesOptional(t *testing.T) {
 			filesToCreate: []string{"file.1"},
 			task: Task{
 				UnresolvedInputs: &cfg.Input{
-					GitFiles: []cfg.GitFileInputs{
+					Files: []cfg.FileInputs{
 						{
-							Paths:    []string{"*.1"},
-							Optional: false,
+							Paths:          []string{"*.1"},
+							Optional:       false,
+							GitTrackedOnly: true,
 						},
 						{
-							Paths:    []string{"*.2"},
-							Optional: true,
+							Paths:          []string{"*.2"},
+							Optional:       true,
+							GitTrackedOnly: true,
 						},
 					},
 				},
@@ -77,10 +79,11 @@ func TestFilesOptional(t *testing.T) {
 			filesToCreate: []string{"file.1"},
 			task: Task{
 				UnresolvedInputs: &cfg.Input{
-					GitFiles: []cfg.GitFileInputs{
+					Files: []cfg.FileInputs{
 						{
-							Paths:    []string{"*.1", "*.2"},
-							Optional: true,
+							Paths:          []string{"*.1", "*.2"},
+							Optional:       true,
+							GitTrackedOnly: true,
 						},
 					},
 				},
@@ -106,10 +109,11 @@ func TestFilesOptional(t *testing.T) {
 			filesToCreate: []string{"file.1", "file.2"},
 			task: Task{
 				UnresolvedInputs: &cfg.Input{
-					GitFiles: []cfg.GitFileInputs{
+					Files: []cfg.FileInputs{
 						{
-							Paths:    []string{"*.1", "*.2"},
-							Optional: true,
+							Paths:          []string{"*.1", "*.2"},
+							Optional:       true,
+							GitTrackedOnly: true,
 						},
 					},
 				},
@@ -137,10 +141,11 @@ func TestFilesOptional(t *testing.T) {
 			expectError:   true,
 			task: Task{
 				UnresolvedInputs: &cfg.Input{
-					GitFiles: []cfg.GitFileInputs{
+					Files: []cfg.FileInputs{
 						{
-							Paths:    []string{"*.1", "*.2"},
-							Optional: false,
+							Paths:          []string{"*.1", "*.2"},
+							Optional:       false,
+							GitTrackedOnly: true,
 						},
 					},
 				},
@@ -166,10 +171,11 @@ func TestFilesOptional(t *testing.T) {
 			filesToCreate: []string{"file.1", "file.2"},
 			task: Task{
 				UnresolvedInputs: &cfg.Input{
-					GitFiles: []cfg.GitFileInputs{
+					Files: []cfg.FileInputs{
 						{
-							Paths:    []string{"*.1", "*.2"},
-							Optional: false,
+							Paths:          []string{"*.1", "*.2"},
+							Optional:       false,
+							GitTrackedOnly: true,
 						},
 					},
 				},
@@ -197,10 +203,11 @@ func TestFilesOptional(t *testing.T) {
 			expectError:   true,
 			task: Task{
 				UnresolvedInputs: &cfg.Input{
-					GitFiles: []cfg.GitFileInputs{
+					Files: []cfg.FileInputs{
 						{
-							Paths:    []string{"*.1", "*.2"},
-							Optional: false,
+							Paths:          []string{"*.1", "*.2"},
+							Optional:       false,
+							GitTrackedOnly: true,
 						},
 					},
 				},

@@ -7,7 +7,6 @@ type InputInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
 
 	Files         []FileInputs    `comment:"Inputs specified by file glob paths"`
-	GitFiles      []GitFileInputs `comment:"Inputs specified by path, matching only Git tracked files"`
 	GolangSources []GolangSources `comment:"Inputs specified by directories containing Golang applications"`
 
 	filepath string
@@ -15,10 +14,6 @@ type InputInclude struct {
 
 func (in *InputInclude) FileInputs() []FileInputs {
 	return in.Files
-}
-
-func (in *InputInclude) GitFileInputs() []GitFileInputs {
-	return in.GitFiles
 }
 
 func (in *InputInclude) GolangSourcesInputs() []GolangSources {
@@ -49,6 +44,7 @@ func (in *InputInclude) clone() *InputInclude {
 	var clone InputInclude
 
 	deepcopy.MustCopy(in, &clone)
+	// TODO why is filepath assignment manually and not cloned?
 	clone.filepath = in.filepath
 
 	return &clone

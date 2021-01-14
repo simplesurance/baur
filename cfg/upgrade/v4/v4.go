@@ -34,12 +34,15 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 
 		in := &cfg.InputInclude{IncludeID: NewIncludeID}
 
-		if len(old.BuildInput.GitFiles.Paths) > 0 {
-			in.GitFiles = []cfg.GitFileInputs{{Paths: upgradeGitFilePaths(old.BuildInput.GitFiles.Paths)}}
-		}
-
 		if len(old.BuildInput.Files.Paths) > 0 {
 			in.Files = []cfg.FileInputs{{Paths: replaceVariablesStrSlice(old.BuildInput.Files.Paths)}}
+		}
+
+		if len(old.BuildInput.GitFiles.Paths) > 0 {
+			in.Files = append(in.Files, cfg.FileInputs{
+				Paths:          upgradeGitFilePaths(old.BuildInput.GitFiles.Paths),
+				GitTrackedOnly: true,
+			})
 		}
 
 		if len(old.BuildInput.GolangSources.Environment) > 0 || len(old.BuildInput.GolangSources.Paths) > 0 {
@@ -133,7 +136,7 @@ func upgradeGitFilePaths(paths []string) []string {
 			continue
 		}
 
-		result = append(result, p)
+		result = append(result, replaceVariables(p))
 	}
 
 	return result
@@ -156,7 +159,10 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	}
 
 	if len(old.Build.Input.GitFiles.Paths) > 0 {
-		task.Input.GitFiles = []cfg.GitFileInputs{{Paths: upgradeGitFilePaths(old.Build.Input.GitFiles.Paths)}}
+		task.Input.Files = append(task.Input.Files, cfg.FileInputs{
+			Paths:          upgradeGitFilePaths(old.Build.Input.GitFiles.Paths),
+			GitTrackedOnly: true,
+		})
 	}
 
 	if len(old.Build.Input.GolangSources.Environment) > 0 || len(old.Build.Input.GolangSources.Paths) > 0 {

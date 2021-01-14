@@ -35,11 +35,6 @@ func ExampleApp(name string) *App {
 							Paths: []string{"dbmigrations/*.sql"},
 						},
 					},
-					GitFiles: []GitFileInputs{
-						{
-							Paths: []string{"Makefile"},
-						},
-					},
 					GolangSources: []GolangSources{
 						{
 							Queries:     []string{"./..."},
