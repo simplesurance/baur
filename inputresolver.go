@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/simplesurance/baur/v1/cfg"
 	"github.com/simplesurance/baur/v1/internal/log"
@@ -36,7 +35,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
 
-	gitPaths, err := i.resolveGitGlobPaths(repositoryDir, task.Directory, task.UnresolvedInputs.GitFiles)
+	gitPaths, err := i.resolveGitGlobPaths(task.Directory, task.UnresolvedInputs.GitFiles)
 	if err != nil {
 		return nil, fmt.Errorf("resolving git-file inputs failed: %w", err)
 	}
@@ -63,24 +62,22 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	return uniqInputs, nil
 }
 
-func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs []cfg.GitFileInputs) ([]string, error) {
+func (i *InputResolver) resolveGitGlobPaths(appDir string, inputs []cfg.GitFileInputs) ([]string, error) {
 	var result []string
 
 	for _, in := range inputs {
-		if len(in.Paths) == 0 {
-			return nil, nil
-		}
+		for _, path := range in.Paths {
+			resolvedPaths, err := i.gitGlobPathResolver.Resolve(appDir, path)
+			if err != nil {
+				return nil, err
+			}
 
-		gitPaths, err := i.gitGlobPathResolver.Resolve(appDir, !in.Optional, in.Paths...)
-		if err != nil {
-			return nil, err
-		}
+			if !in.Optional && len(resolvedPaths) == 0 {
+				return nil, fmt.Errorf("'%s' matched 0 files", path)
+			}
 
-		if !in.Optional && len(gitPaths) == 0 {
-			return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(in.Paths, ", "))
+			result = append(result, resolvedPaths...)
 		}
-
-		result = append(result, gitPaths...)
 	}
 
 	return result, nil

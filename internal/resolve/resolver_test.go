@@ -41,7 +41,7 @@ func TestFilesAndGitFilesPatternBehaveTheSame(t *testing.T) {
 
 	for _, pattern := range testPatterns {
 		t.Run(pattern, func(t *testing.T) {
-			gitResult, err := gitResolver.Resolve(gitDir, false, pattern)
+			gitResult, err := gitResolver.Resolve(gitDir, pattern)
 			require.NoError(t, err, "gitresolver failed")
 
 			globResult, err := globResolver.Resolve(filepath.Join(gitDir, pattern))
