@@ -49,11 +49,11 @@ type UploadResultFn func(Output, *UploadResult)
 func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb UploadResultFn) error {
 	switch o := output.(type) {
 	case *OutputDockerImage:
-		if o.UploadDestination == nil {
+		if o.UploadDestinations == nil {
 			return errors.New("uploadDestination is nil")
 		}
 
-		for _, dest := range o.UploadDestination {
+		for _, dest := range o.UploadDestinations {
 			uploadStartCb(o, dest)
 
 			result, err := u.DockerImage(o, dest)
