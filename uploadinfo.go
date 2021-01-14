@@ -1,6 +1,10 @@
 package baur
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/simplesurance/baur/v1/cfg"
+)
 
 type UploadMethod int
 
@@ -16,8 +20,7 @@ type UploadInfo interface {
 }
 
 type UploadInfoS3 struct {
-	Bucket string
-	Key    string
+	*cfg.S3Upload
 }
 
 func (s *UploadInfoS3) Method() UploadMethod {
@@ -29,9 +32,7 @@ func (s *UploadInfoS3) String() string {
 }
 
 type UploadInfoDocker struct {
-	Registry   string
-	Repository string
-	Tag        string
+	*cfg.DockerImageRegistryUpload
 }
 
 func (d *UploadInfoDocker) Method() UploadMethod {
@@ -47,7 +48,7 @@ func (d *UploadInfoDocker) String() string {
 }
 
 type UploadInfoFileCopy struct {
-	DestinationPath string
+	*cfg.FileCopy
 }
 
 func (f *UploadInfoFileCopy) Method() UploadMethod {
@@ -55,5 +56,5 @@ func (f *UploadInfoFileCopy) Method() UploadMethod {
 }
 
 func (f *UploadInfoFileCopy) String() string {
-	return f.DestinationPath
+	return f.Path
 }
