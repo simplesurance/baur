@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/simplesurance/baur/v1/internal/fs"
 	"github.com/simplesurance/baur/v1/internal/vcs/git"
@@ -46,12 +45,11 @@ func (r *Resolver) Resolve(workingDir string, errorUnmatch bool, globs ...string
 		return resolvedPaths, nil
 	}
 
-	out, err := git.LsFiles(workingDir, resolvedPaths...)
+	relPaths, err := git.LsFiles(workingDir, resolvedPaths...)
 	if err != nil {
 		return nil, fmt.Errorf("git ls-files failed: %w", err)
 	}
 
-	relPaths := strings.Split(out, "\n")
 	res := make([]string, 0, len(relPaths))
 
 	for _, relPath := range relPaths {
