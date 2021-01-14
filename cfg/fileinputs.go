@@ -8,8 +8,9 @@ import (
 
 // FileInputs stores glob paths to inputs of a task.
 type FileInputs struct {
-	Paths    []string `toml:"paths" comment:"Relative path to source files.\n Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)\n and ** is supported to match files recursively."`
-	Optional bool     `toml:"optional" comment:"If true, baur will not fail if a Path does not resolve to a file."`
+	Paths          []string `toml:"paths" comment:"Relative path to source files.\n Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)\n and ** is supported to match files recursively."`
+	Optional       bool     `toml:"optional" comment:"If true, baur will not fail if a Path resolves to 0 files."`
+	GitTrackedOnly bool     `toml:"git_tracked_only" comment:"Ignore files that are not tracked in git."`
 }
 
 func (f *FileInputs) resolve(resolvers resolver.Resolver) error {

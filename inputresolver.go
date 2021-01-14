@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/simplesurance/baur/v1/cfg"
 	"github.com/simplesurance/baur/v1/internal/log"
@@ -36,23 +35,15 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
 
-	gitPaths, err := i.resolveGitGlobPaths(repositoryDir, task.Directory, task.UnresolvedInputs.GitFiles)
+	globPaths, err := i.resolveFileInputs(task.Directory, task.UnresolvedInputs.Files)
 	if err != nil {
-		return nil, fmt.Errorf("resolving git-file inputs failed: %w", err)
+		return nil, fmt.Errorf("resolving file inputs failed: %w", err)
 	}
 
-	globPaths, err := i.resolveGlobPaths(task.Directory, task.UnresolvedInputs.Files)
-	if err != nil {
-		return nil, fmt.Errorf("resolving glob file inputs failed: %w", err)
-	}
-
-	allInputsPaths := make([]string, 0, len(goSourcePaths)+len(globPaths)+len(gitPaths)+1)
-	allInputsPaths = append(allInputsPaths, gitPaths...)
+	allInputsPaths := make([]string, 0, len(goSourcePaths)+len(globPaths)+len(task.CfgFilepaths))
 	allInputsPaths = append(allInputsPaths, globPaths...)
 	allInputsPaths = append(allInputsPaths, goSourcePaths...)
 
-	// Add the .app.toml file of the app to the inputs
-	// TODO: add the files that were included in the .app.toml and it's includes
 	allInputsPaths = append(allInputsPaths, task.CfgFilepaths...)
 
 	uniqInputs, err := i.pathsToUniqInputs(repositoryDir, allInputsPaths)
@@ -63,43 +54,24 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	return uniqInputs, nil
 }
 
-func (i *InputResolver) resolveGitGlobPaths(repositoryRootDir, appDir string, inputs []cfg.GitFileInputs) ([]string, error) {
-	var result []string
-
-	for _, in := range inputs {
-		if len(in.Paths) == 0 {
-			return nil, nil
-		}
-
-		gitPaths, err := i.gitGlobPathResolver.Resolve(appDir, !in.Optional, in.Paths...)
-		if err != nil {
-			return nil, err
-		}
-
-		if !in.Optional && len(gitPaths) == 0 {
-			return nil, fmt.Errorf("'%s' matched 0 files", strings.Join(in.Paths, ", "))
-		}
-
-		result = append(result, gitPaths...)
-	}
-
-	return result, nil
-}
-
-func (i *InputResolver) resolveGlobPaths(appDir string, inputs []cfg.FileInputs) ([]string, error) {
+func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs) ([]string, error) {
 	var result []string
 
 	for _, in := range inputs {
 		for _, path := range in.Paths {
-			var absGlobPath string
+			var resolvedPaths []string
+			var err error
 
-			if filepath.IsAbs(path) {
-				absGlobPath = path
-			} else {
-				absGlobPath = filepath.Join(appDir, path)
+			if !filepath.IsAbs(path) {
+				path = filepath.Join(appDir, path)
 			}
 
-			resolvedPaths, err := i.globPathResolver.Resolve(absGlobPath)
+			if in.GitTrackedOnly {
+				resolvedPaths, err = i.gitGlobPathResolver.Resolve(appDir, path)
+			} else {
+				resolvedPaths, err = i.globPathResolver.Resolve(path)
+			}
+
 			if err != nil {
 				return nil, err
 			}

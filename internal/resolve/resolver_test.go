@@ -37,11 +37,12 @@ func TestFilesAndGitFilesPatternBehaveTheSame(t *testing.T) {
 		filepath.Join("subdir", "*"),
 		filepath.Join("subdir", "file*"),
 		filepath.Join("subdir", "file?.txt"),
+		filepath.Join("subdir", "*.txt"),
 	}
 
 	for _, pattern := range testPatterns {
 		t.Run(pattern, func(t *testing.T) {
-			gitResult, err := gitResolver.Resolve(gitDir, false, pattern)
+			gitResult, err := gitResolver.Resolve(gitDir, filepath.Join(gitDir, pattern))
 			require.NoError(t, err, "gitresolver failed")
 
 			globResult, err := globResolver.Resolve(filepath.Join(gitDir, pattern))

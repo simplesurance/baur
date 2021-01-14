@@ -45,14 +45,11 @@ func inputInclude() InputIncludes {
 				{
 					Paths: []string{"Makefile"},
 				},
-			},
-
-			GitFiles: []GitFileInputs{
 				{
-					Paths: []string{"*.c", "*.h"},
+					Paths:          []string{"*.c", "*.h"},
+					GitTrackedOnly: true,
 				},
 			},
-
 			GolangSources: []GolangSources{
 				{
 					Environment: []string{"GOPATH=."},
@@ -148,8 +145,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 	assert.Equal(t, include.Task[0].Command, loadedIncl.Command)
 	assert.Equal(t, include.Task[0].Includes, loadedIncl.Includes)
 
-	assert.Equal(t, include.Input[0].Files, loadedIncl.Input.Files)
-	assert.Equal(t, include.Input[0].GitFiles, loadedIncl.Input.GitFiles)
+	assert.ElementsMatch(t, loadedIncl.Input.Files, include.Input[0].Files)
 	assert.Equal(t, include.Input[0].GolangSources, loadedIncl.Input.GolangSources)
 
 	assert.Equal(t, include.Output[0].DockerImage, loadedIncl.Output.DockerImage)
@@ -393,11 +389,6 @@ func TestTaskInclude(t *testing.T) {
 									Paths: []string{"*.go", "*.sh", "*.bat"},
 								},
 							},
-							GitFiles: []GitFileInputs{
-								{
-									Paths: []string{"*.txt", "*.d"},
-								},
-							},
 							GolangSources: []GolangSources{
 								{
 									Environment: []string{"A=B"},
@@ -410,12 +401,9 @@ func TestTaskInclude(t *testing.T) {
 							IncludeID: "input2",
 							Files: []FileInputs{
 								{
-									Paths: []string{"*.c", "*.sh"},
-								},
-							},
-							GitFiles: []GitFileInputs{
-								{
-									Paths: []string{"*.txt", "hellofile"},
+									Paths:          []string{"*.c", "*.sh"},
+									GitTrackedOnly: true,
+									Optional:       true,
 								},
 							},
 							GolangSources: []GolangSources{
@@ -519,10 +507,6 @@ func TestTaskInclude(t *testing.T) {
 			for _, inputIncl := range tc.includeConfig.cfg.Input {
 				for _, f := range inputIncl.FileInputs() {
 					assert.Contains(t, loadedTask.Input.FileInputs(), f)
-				}
-
-				for _, path := range inputIncl.GitFileInputs() {
-					assert.Contains(t, loadedTask.Input.GitFileInputs(), path, "GitFileInput missing")
 				}
 
 				for _, gs := range inputIncl.GolangSources {
