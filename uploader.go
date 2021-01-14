@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -49,7 +50,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 	switch o := output.(type) {
 	case *OutputDockerImage:
 		if o.UploadDestination == nil {
-			break
+			return errors.New("uploadDestination is nil")
 		}
 
 		for _, dest := range o.UploadDestination {
