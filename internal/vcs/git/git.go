@@ -79,10 +79,10 @@ func CommitID(dir string) (string, error) {
 	return commitID, err
 }
 
-// LsFiles runs git ls-files in dir, passes args as argument and returns the
-// output. If a patchspec matches no files ErrNotExist is returned.
+// LsFiles runs git ls-files in dir, passes args as argument and returns a list
+// of paths . If a patchspec matches no files ErrNotExist is returned.
 // All pathspecs are treated literally, globs are not resolved.
-func LsFiles(dir string, pathspec ...string) (string, error) {
+func LsFiles(dir string, pathspec ...string) ([]string, error) {
 	args := append(
 		[]string{
 			"--noglob-pathspecs",
@@ -94,7 +94,7 @@ func LsFiles(dir string, pathspec ...string) (string, error) {
 
 	res, err := exec.Command("git", args...).Directory(dir).Run()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if res.ExitCode != 0 {
@@ -111,17 +111,19 @@ func LsFiles(dir string, pathspec ...string) (string, error) {
 		}
 
 		if err := scanner.Err(); err != nil {
-			return "", fmt.Errorf("scanning cmd output failed: %w", err)
+			return nil, fmt.Errorf("scanning cmd output failed: %w", err)
 		}
 
 		if len(errMsgs) != 0 {
-			return "", errors.New("the following paths did not match any files: " + strings.Join(errMsgs, ", "))
+			return nil, errors.New("the following paths did not match any files: " + strings.Join(errMsgs, ", "))
 		}
 
-		return "", res.ExpectSuccess()
+		return nil, res.ExpectSuccess()
 	}
 
-	return res.StrOutput(), nil
+	paths := strings.Split(res.StrOutput(), "\n")
+
+	return paths, nil
 }
 
 // WorktreeIsDirty returns true if the repository contains modified files,

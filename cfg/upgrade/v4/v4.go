@@ -35,7 +35,7 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		in := &cfg.InputInclude{IncludeID: NewIncludeID}
 
 		if len(old.BuildInput.GitFiles.Paths) > 0 {
-			in.GitFiles = []cfg.GitFileInputs{{Paths: replaceVariablesStrSlice(old.BuildInput.GitFiles.Paths)}}
+			in.GitFiles = []cfg.GitFileInputs{{Paths: upgradeGitFilePaths(old.BuildInput.GitFiles.Paths)}}
 		}
 
 		if len(old.BuildInput.Files.Paths) > 0 {
@@ -124,6 +124,21 @@ func golangSourcesPathsToQuery(paths []string) []string {
 	return result
 }
 
+func upgradeGitFilePaths(paths []string) []string {
+	result := make([]string, 0, len(paths))
+
+	for _, p := range paths {
+		if p == "." {
+			result = append(result, "**")
+			continue
+		}
+
+		result = append(result, p)
+	}
+
+	return result
+}
+
 // UpgradeAppConfig converts a version 4 app config to version 5.
 // Includes are not upgrades, NewIncludeID is appened to include references.
 func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
@@ -141,7 +156,7 @@ func UpgradeAppConfig(old *cfgv0.App) *cfg.App {
 	}
 
 	if len(old.Build.Input.GitFiles.Paths) > 0 {
-		task.Input.GitFiles = []cfg.GitFileInputs{{Paths: replaceVariablesStrSlice(old.Build.Input.GitFiles.Paths)}}
+		task.Input.GitFiles = []cfg.GitFileInputs{{Paths: upgradeGitFilePaths(old.Build.Input.GitFiles.Paths)}}
 	}
 
 	if len(old.Build.Input.GolangSources.Environment) > 0 || len(old.Build.Input.GolangSources.Paths) > 0 {
