@@ -14,11 +14,11 @@ type DockerInfoClient interface {
 
 // OutputDockerImage is a docker image artifact.
 type OutputDockerImage struct {
-	name              string
-	ImageID           string
-	UploadDestination []*UploadInfoDocker // TODO: rename to plural form
-	dockerClient      DockerInfoClient
-	digest            *digest.Digest
+	name               string
+	ImageID            string
+	UploadDestinations []*UploadInfoDocker
+	dockerClient       DockerInfoClient
+	digest             *digest.Digest
 }
 
 func NewOutputDockerImageFromIIDFile(
@@ -38,11 +38,11 @@ func NewOutputDockerImageFromIIDFile(
 	}
 
 	return &OutputDockerImage{
-		name:              name,
-		dockerClient:      dockerClient,
-		ImageID:           id,
-		UploadDestination: uploadDest,
-		digest:            digest,
+		name:               name,
+		dockerClient:       dockerClient,
+		ImageID:            id,
+		UploadDestinations: uploadDest,
+		digest:             digest,
 	}, nil
 }
 
