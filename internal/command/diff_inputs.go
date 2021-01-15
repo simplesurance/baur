@@ -207,7 +207,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 
 		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
 		if err != nil {
-			stderr.TaskPrintf(argDetails.task, "resolving inputs failed: %s\n", err)
+			stderr.TaskPrintf(argDetails.task, err.Error())
 			os.Exit(1)
 		}
 

@@ -45,7 +45,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 
 	inputFiles, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task)
 	if err != nil {
-		return TaskStatusUndefined, nil, nil, fmt.Errorf("resolving inputs failed: %w", err)
+		return TaskStatusUndefined, nil, nil, err
 	}
 
 	inputs := NewInputs(InputAddStrIfNotEmpty(inputFiles, t.inputStr))
