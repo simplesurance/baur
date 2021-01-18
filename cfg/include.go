@@ -116,75 +116,39 @@ func ExampleInclude(id string) *Include {
 	return &Include{
 		Input: []*InputInclude{
 			{
-				IncludeID: id + "_input",
 				Files: []FileInputs{
-					{
-						Paths: []string{"dbmigrations/*.sql"},
-					},
+					{},
 				},
 				GolangSources: []GolangSources{
-					{
-						Queries:     []string{"."},
-						Environment: []string{"GOFLAGS=-mod=vendor", "GO111MODULE=on"},
-					},
+					{},
 				},
 			},
 		},
 		Output: []*OutputInclude{
 			{
-				IncludeID: id + "_output",
 				File: []FileOutput{
 					{
-						Path: "dist/{{ .appname }}.tar.xz",
-						S3Upload: []S3Upload{
-							{
-								Bucket: "go-artifacts/",
-								Key:    "{{ .appname }}-{{ .gitcommit }}.tar.xz",
-							},
-						},
-						FileCopy: []FileCopy{
-							{
-								Path: "/mnt/fileserver/build_artifacts/{{ .appname }}-{{ .gitcommit }}.tar.xz",
-							},
-						},
+						S3Upload: []S3Upload{{}},
+						FileCopy: []FileCopy{{}},
 					},
 				},
-				DockerImage: []DockerImageOutput{
-					{
-						IDFile: "{{ .appname }}-container.id",
-						RegistryUpload: []DockerImageRegistryUpload{
-							{
-								Repository: "my-company/{{ .appname }}",
-								Tag:        "{{ .gitcommit }}",
-							},
-						},
-					},
-				},
+				DockerImage: []DockerImageOutput{{
+					RegistryUpload: []DockerImageRegistryUpload{{}},
+				}},
 			},
 		},
 		Task: TaskIncludes{
 			{
-				IncludeID: id + "_task_cbuild",
-				Name:      "build",
-				Command:   []string{"make"},
+				Command: []string{"make"},
 				Input: Input{
-					Files: []FileInputs{
-						{
-							Paths: []string{"*.c", "*.h", "Makefile"},
-						},
-					},
+					Files:         []FileInputs{{}},
+					GolangSources: []GolangSources{{}},
 				},
 				Output: Output{
-					File: []FileOutput{
-						{
-							Path: "a.out",
-							FileCopy: []FileCopy{
-								{
-									Path: "/artifacts",
-								},
-							},
-						},
-					},
+					File: []FileOutput{{}},
+					DockerImage: []DockerImageOutput{{
+						RegistryUpload: []DockerImageRegistryUpload{{}},
+					}},
 				},
 			},
 		},
