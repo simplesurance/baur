@@ -2,7 +2,9 @@ package baur
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/simplesurance/baur/v1/cfg"
@@ -73,6 +75,10 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 			}
 
 			if err != nil {
+				if in.Optional && errors.Is(err, os.ErrNotExist) {
+					return result, nil
+				}
+
 				return nil, err
 			}
 

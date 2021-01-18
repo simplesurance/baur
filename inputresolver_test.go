@@ -213,6 +213,37 @@ func TestFilesOptional(t *testing.T) {
 				},
 			},
 		},
+
+		{
+			name:        "optional_dir_not_exist",
+			expectError: false,
+			task: Task{
+				UnresolvedInputs: &cfg.Input{
+					Files: []cfg.FileInputs{
+						{
+							Paths:          []string{"dir/**"},
+							Optional:       true,
+							GitTrackedOnly: false,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "gitfile_optional_dir_not_exist",
+			expectError: false,
+			task: Task{
+				UnresolvedInputs: &cfg.Input{
+					Files: []cfg.FileInputs{
+						{
+							Paths:          []string{"dir/**"},
+							Optional:       true,
+							GitTrackedOnly: true,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -227,7 +258,9 @@ func TestFilesOptional(t *testing.T) {
 
 			if strings.Contains(tc.name, "git") {
 				gittest.CreateRepository(t, tempDir)
-				gittest.CommitFilesToGit(t, tempDir)
+				if len(tc.filesToCreate) > 0 {
+					gittest.CommitFilesToGit(t, tempDir)
+				}
 			}
 
 			tc.task.Directory = tempDir
