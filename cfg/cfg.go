@@ -42,6 +42,7 @@ func toFile(data interface{}, filepath string, opts ...ToFileOpt) error {
 	}
 
 	encoder := toml.NewEncoder(&buf)
+	encoder.ArraysWithOneElementPerLine(true)
 	encoder.Order(toml.OrderPreserve)
 
 	err := encoder.Encode(data)
