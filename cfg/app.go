@@ -130,7 +130,9 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 			return fmt.Errorf("%s: %w", includeID, err)
 		}
 
-		a.Tasks = append(a.Tasks, taskInclude.toTask())
+		task := taskInclude.toTask()
+		task.addCfgFilepath(a.filepath)
+		a.Tasks = append(a.Tasks, task)
 	}
 
 	for _, task := range a.Tasks {
