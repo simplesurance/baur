@@ -160,6 +160,7 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 	mustWriteRow(formatter, "", "Command:", term.Highlight(
 		c.strCmd(task.Command),
 	), "", "")
+	mustWriteStringSliceRows(formatter, "Config Files:", 1, task.CfgFilepaths)
 
 	if task.HasInputs() {
 		mustWriteRow(formatter, "", "", "", "")
