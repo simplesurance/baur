@@ -126,7 +126,7 @@ func (c *showCmd) showApp(appName string) {
 	baur.SortTasksByID(tasks)
 
 	mustWriteRow(formatter, "Application Name:", term.Highlight(app.Name), "", "")
-	mustWriteRow(formatter, "Path:", term.Highlight(app.RelPath), "")
+	mustWriteRow(formatter, "Directory:", term.Highlight(app.RelPath), "")
 
 	mustWriteRow(formatter, "", "", "", "")
 	for taskIdx, task := range tasks {
