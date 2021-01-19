@@ -8,7 +8,7 @@ import (
 type TaskInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
 
-	Name     string   `toml:"name" comment:"Identifies the task, currently the name must be 'build'."`
+	Name     string   `toml:"name"`
 	Command  []string `toml:"command" comment:"Command to execute. The first element is the command, the following it's arguments.\n If the command element contains no path seperators, it's paths is tried to be looked up via the $PATH environment variable."`
 	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the include file location."`
 	Input    Input    `toml:"Input" comment:"Specification of task inputs like source files, Makefiles, etc"`
