@@ -21,6 +21,7 @@ func (t *Task) addCfgFilepath(path string) {
 	if path == "" {
 		panic("path is empty")
 	}
+
 	t.cfgFiles[path] = struct{}{}
 }
 
