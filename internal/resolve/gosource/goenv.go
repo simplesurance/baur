@@ -9,6 +9,7 @@ import (
 )
 
 type goEnv struct {
+	GoCache    string
 	GoModCache string
 	GoRoot     string
 	GoPath     string
@@ -41,6 +42,7 @@ func getGoEnv(env []string) (*goEnv, error) {
 	result.GoModCache = filepath.Clean(result.GoModCache)
 	result.GoRoot = filepath.Clean(result.GoRoot)
 	result.GoPath = filepath.Clean(result.GoPath)
+	result.GoCache = filepath.Clean(result.GoCache)
 
 	return &result, nil
 }
