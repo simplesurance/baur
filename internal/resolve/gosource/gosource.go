@@ -237,6 +237,11 @@ func withoutStdblibPackages(result *[]string, env *goEnv, paths []string) error 
 		if err != nil {
 			return err
 		}
+
+		if strings.Contains(abs, env.GoCache) {
+			continue
+		}
+
 		// use HasPrefix() + Replace() to ensure we only replace the
 		// path if is the prefix
 		if strings.HasPrefix(abs, env.GoModCache) {
