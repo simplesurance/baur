@@ -238,7 +238,7 @@ func withoutStdblibPackages(result *[]string, env *goEnv, paths []string) error 
 			return err
 		}
 
-		if strings.Contains(abs, env.GoCache) {
+		if strings.HasPrefix(abs, env.GoCache) {
 			continue
 		}
 
