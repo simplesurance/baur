@@ -221,8 +221,18 @@ func (a *Loader) AppPath(appConfigPath string) (*App, error) {
 	return a.fromCfg(appCfg)
 }
 
+func appTask(app *App, taskName string) *Task {
+	for _, task := range app.Tasks() {
+		if task.Name == taskName {
+			return task
+		}
+	}
+
+	return nil
+}
+
 // tasks load all tasks for the given taskSpecs.
-// wildcards are  only supported for appNames.
+// wildcards are only supported for appNames.
 func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 	result := make([]*Task, 0, len(taskSpecs))
 	taskSpecMap := make(map[string][]string, len(taskSpecs))
@@ -251,18 +261,20 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 	}
 
 	for _, app := range apps {
-		taskSpecs := taskSpecMap[app.Name]
-		taskSpecs = append(taskSpecs, taskSpecMap["*"]...)
+		for _, spec := range taskSpecMap[app.Name] {
+			task := appTask(app, spec)
+			if task == nil {
+				return nil, fmt.Errorf("app %q has no task %q", app, spec)
+			}
 
-		if len(taskSpecs) == 0 {
-			panic(fmt.Sprintf("app %q was loaded which was not part of taskSpecs: %v", app.Name, taskSpecs))
+			result = append(result, task)
 		}
 
-		for _, spec := range taskSpecs {
-			for _, task := range app.Tasks() {
-				if task.Name == spec {
-					result = append(result, task)
-				}
+		// taskSpecs that match all apps are optional,
+		// e.g. it's ok if **not** all apps have a task called "check"
+		for _, spec := range taskSpecMap["*"] {
+			if task := appTask(app, spec); task != nil {
+				result = append(result, task)
 			}
 		}
 	}
