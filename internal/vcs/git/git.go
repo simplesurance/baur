@@ -79,66 +79,9 @@ func CommitID(dir string) (string, error) {
 	return commitID, err
 }
 
-func splitArgs(args []string, maxArgStrLen int) [][]string {
-	var result [][]string
-
-	argSize := 0
-	for i, arg := range args {
-		argSize += len(arg)
-	}
-}
-
 // LsFiles runs git ls-files in dir, passes args as argument and returns a list
 // of paths. All pathspecs are treated literally, globs are not resolved.
 func LsFiles(dir string, pathspec ...string) ([]string, error) {
-	// The maximum size of arguments for exec() on windows is 32767, on
-	// linux it is 1/4 of the stack size which is much higher on most
-	// systems, on macOs it seems to be 256kb
-	// (https://go-review.googlesource.com/c/go/+/229317/3/src/cmd/go/internal/work/exec.go).
-	// 2048 is subtracted as recommended at
-	// https://www.in-ulm.de/~mascheck/various/argmax/ to have some
-	// (little) space for env vars.
-	// The size we use for args might be slightly higher because of the
-	// args that are prepended in lsFiles().  This does not really matter,
-	// cause the reservered space for env vars is only an estimate and much
-	// higher then needed  in most scenarios.
-	const maxArgs = 32767 - 2048
-	result := make([]string, 0, len(pathspec))
-
-	for len(pathspec) > 0 {
-		var paths []string
-
-		argSize := 0
-		for i, arg := range pathspec {
-			argSize += len(arg)
-			if argSize > maxArgs {
-				paths = pathspec[:i-1]
-				pathspec = pathspec[i-1:]
-
-				fmt.Println("SPLIT")
-				break
-			}
-		}
-
-		fmt.Printf("ARGSIZE: %d", argSize)
-		if argSize <= maxArgs {
-			// no split needed,
-			paths = pathspec
-			pathspec = nil
-		}
-
-		paths, err := lsFiles(dir, paths)
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, paths...)
-	}
-
-	return result, nil
-}
-
-func lsFiles(dir string, pathspec []string) ([]string, error) {
 	args := append(
 		[]string{
 			"--noglob-pathspecs",
@@ -146,7 +89,6 @@ func lsFiles(dir string, pathspec []string) ([]string, error) {
 			"ls-files",
 		},
 		pathspec...)
-	fmt.Printf("LSFILES ARG CNT: %d\n", len(args))
 
 	res, err := exec.Command("git", args...).Directory(dir).Run()
 	if err != nil {
