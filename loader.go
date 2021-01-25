@@ -46,7 +46,7 @@ func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), 
 }
 
 // LoadTasks loads the tasks of apps that match the passed specifier.
-// Specifier format is <APP-SPEC>[.<TASK-SPEC>].
+// Specifier format is (<APP-SPEC>[.<TASK-SPEC>])|PATH
 // <APP-SPEC> is:
 //   - <APP-NAME> or
 //   - '*'

@@ -3,6 +3,8 @@ package baur
 import (
 	"fmt"
 	"strings"
+
+	"github.com/simplesurance/baur"
 )
 
 type taskSpec struct {
@@ -44,6 +46,10 @@ func parseSpecs(specifiers []string) (*specs, error) {
 		if isAppDirectory(spec) {
 			result.appDirs = append(result.appDirs, spec)
 			continue
+		}
+
+		if spec == "." {
+			return nil, fmt.Errorf("current directory does not contain an %q file", baur.AppCfgFile)
 		}
 
 		if !strings.Contains(spec, ".") {
