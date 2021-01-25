@@ -238,7 +238,11 @@ func withoutStdblibPackages(result *[]string, env *goEnv, paths []string) error 
 			return err
 		}
 
-		if strings.HasPrefix(abs, env.GoCache) {
+		if len(env.GoCache) > 0 && strings.HasPrefix(abs, env.GoCache) {
+			continue
+		}
+
+		if strings.HasPrefix(abs, env.GoRoot) {
 			continue
 		}
 
@@ -246,10 +250,6 @@ func withoutStdblibPackages(result *[]string, env *goEnv, paths []string) error 
 		// path if is the prefix
 		if strings.HasPrefix(abs, env.GoModCache) {
 			abs = strings.Replace(abs, env.GoModCache, "$GOMODCACHE", 1)
-		}
-
-		if strings.HasPrefix(abs, env.GoRoot) {
-			continue
 		}
 
 		*result = append(*result, abs)

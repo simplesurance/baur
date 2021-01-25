@@ -9,6 +9,7 @@ import (
 )
 
 type goEnv struct {
+	// GoCache is empty when the GOCACHE value is "off"
 	GoCache    string
 	GoModCache string
 	GoRoot     string
@@ -35,6 +36,10 @@ func getGoEnv(env []string) (*goEnv, error) {
 		return nil, fmt.Errorf("go env returned an GOROOT variable, the variable must be set")
 	}
 
+	if result.GoCache == "off" {
+		result.GoCache = ""
+	}
+
 	// the variables can contain e.g. trailing directory seperators, when
 	// they were set manually to such a value, to ensure this does not
 	// cause issues when using them for path replacements later, clean all
@@ -42,7 +47,10 @@ func getGoEnv(env []string) (*goEnv, error) {
 	result.GoModCache = filepath.Clean(result.GoModCache)
 	result.GoRoot = filepath.Clean(result.GoRoot)
 	result.GoPath = filepath.Clean(result.GoPath)
-	result.GoCache = filepath.Clean(result.GoCache)
+
+	if result.GoCache != "" {
+		result.GoCache = filepath.Clean(result.GoCache)
+	}
 
 	return &result, nil
 }
