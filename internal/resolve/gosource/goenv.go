@@ -40,16 +40,29 @@ func getGoEnv(env []string) (*goEnv, error) {
 		result.GoCache = ""
 	}
 
-	// the variables can contain e.g. trailing directory seperators, when
-	// they were set manually to such a value, to ensure this does not
-	// cause issues when using them for path replacements later, clean all
-	// paths
-	result.GoModCache = filepath.Clean(result.GoModCache)
-	result.GoRoot = filepath.Clean(result.GoRoot)
-	result.GoPath = filepath.Clean(result.GoPath)
+	// Which are valid paths for the go environment variables differs.
+	// - If GOCACHE is set to a relative path, "go env" returns "off" as
+	//   value,
+	// - GOROOT and GOMODCACHE can be set to relative paths,
+	// - If GOPATH is set to a relative path "go env" fails with an error
+	// Unclean paths can also be assigned (e.g. trailing slashes).
+	// To have consistent paths, filepath.Abs() is run for each of them.
+	if result.GoModCache, err = filepath.Abs(result.GoModCache); err != nil {
+		return nil, fmt.Errorf("GOMODCACHE: %w", err)
+	}
+
+	if result.GoRoot, err = filepath.Abs(result.GoRoot); err != nil {
+		return nil, fmt.Errorf("GOROOT: %w", err)
+	}
+
+	if result.GoPath, err = filepath.Abs(result.GoPath); err != nil {
+		return nil, fmt.Errorf("GOPATH: %w", err)
+	}
 
 	if result.GoCache != "" {
-		result.GoCache = filepath.Clean(result.GoCache)
+		if result.GoCache, err = filepath.Abs(result.GoCache); err != nil {
+			return nil, fmt.Errorf("GOCACHE: %w", err)
+		}
 	}
 
 	return &result, nil
