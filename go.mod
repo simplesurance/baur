@@ -9,6 +9,7 @@ require (
 	github.com/containerd/continuity v0.0.0-20200927060012-aaa88831d126 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/fsouza/go-dockerclient v1.6.5
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/jackc/pgconn v1.7.0

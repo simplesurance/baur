@@ -315,7 +315,7 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTask, error) 
 	const sep = " => "
 
 	taskIDColLen := maxTaskIDLen(tasks) + len(sep)
-	statusEvaluator := baur.NewTaskStatusEvaluator(c.repoRootPath, c.storage, baur.NewInputResolver(), c.inputStr, c.lookupInputStr)
+	statusEvaluator := baur.NewTaskStatusEvaluator(c.repoRootPath, c.storage, baur.NewCachingInputResolver(), c.inputStr, c.lookupInputStr)
 
 	stdout.Printf("Evaluating status of tasks:\n\n")
 
