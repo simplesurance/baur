@@ -203,7 +203,7 @@ func parseDiffSpec(s string) (app, task, runID string) {
 
 func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID) {
 	if argDetails.task != nil {
-		inputResolver := baur.NewInputResolver()
+		inputResolver := baur.NewCachingInputResolver()
 
 		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
 		if err != nil {

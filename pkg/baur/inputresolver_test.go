@@ -250,7 +250,7 @@ func TestFilesOptional(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 
-			r := NewInputResolver()
+			r := NewCachingInputResolver()
 
 			for _, f := range tc.filesToCreate {
 				fstest.WriteToFile(t, []byte(f), filepath.Join(tempDir, f))

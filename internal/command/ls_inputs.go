@@ -90,7 +90,7 @@ func (c *lsInputsCmd) mustGetTaskRunInputs(taskRunID int) []baur.Input {
 func (c *lsInputsCmd) mustGetTaskInputs(taskSpec string) []baur.Input {
 	repo := mustFindRepository()
 	task := mustArgToTask(repo, taskSpec)
-	inputResolver := baur.NewInputResolver()
+	inputResolver := baur.NewCachingInputResolver()
 
 	inputs, err := inputResolver.Resolve(ctx, repo.Path, task)
 	exitOnErr(err)
