@@ -10,11 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/format/csv"
 	"github.com/simplesurance/baur/v1/internal/format/table"
-	"github.com/simplesurance/baur/v1/storage"
+	"github.com/simplesurance/baur/v1/pkg/baur"
+	"github.com/simplesurance/baur/v1/pkg/storage"
 )
 
 type diffInputArgDetails struct {

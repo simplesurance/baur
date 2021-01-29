@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -10,4 +9,3 @@ import (
 func main() {
 	fmt.Println(generator.RandomNumber())
 }
-

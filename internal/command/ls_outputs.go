@@ -11,7 +11,7 @@ import (
 	"github.com/simplesurance/baur/v1/internal/format/csv"
 	"github.com/simplesurance/baur/v1/internal/format/table"
 	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/storage"
+	"github.com/simplesurance/baur/v1/pkg/storage"
 )
 
 type lsOutputsCmd struct {
