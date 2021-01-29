@@ -1,9 +1,9 @@
 package command
 
 import (
-	"github.com/simplesurance/baur/v1"
 	"github.com/simplesurance/baur/v1/internal/digest"
-	"github.com/simplesurance/baur/v1/storage"
+	"github.com/simplesurance/baur/v1/pkg/baur"
+	"github.com/simplesurance/baur/v1/pkg/storage"
 )
 
 type storageInput struct {

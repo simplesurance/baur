@@ -1,4 +1,3 @@
-
 package generator
 
 import (

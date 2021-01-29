@@ -8,11 +8,11 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/simplesurance/baur/v1"
-	"github.com/simplesurance/baur/v1/cfg"
 	"github.com/simplesurance/baur/v1/internal/digest"
 	"github.com/simplesurance/baur/v1/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v1/pkg/baur"
+	"github.com/simplesurance/baur/v1/pkg/cfg"
 )
 
 func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {

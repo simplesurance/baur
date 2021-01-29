@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v1"
+	"github.com/simplesurance/baur/v1/pkg/baur"
 )
 
 func init() {
