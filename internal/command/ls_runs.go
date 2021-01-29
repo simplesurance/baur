@@ -164,7 +164,7 @@ func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
 
 	if err != nil {
 		if err == storage.ErrNotExist {
-			stderr.Printf("no matching task runs exist")
+			stderr.Println("no matching task runs exist")
 			exitFunc(1)
 		}
 		stderr.Println(err)
