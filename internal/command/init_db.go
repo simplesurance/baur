@@ -44,7 +44,7 @@ func initDb(cmd *cobra.Command, args []string) {
 		if err != nil {
 			if os.IsNotExist(err) {
 				stderr.Printf("could not find '%s' repository config file.\n"+
-					"Run '%s' first or pass the Postgres URL as argument.",
+					"Run '%s' first or pass the Postgres URL as argument.\n",
 					term.Highlight(baur.RepositoryCfgFile), term.Highlight(cmdInitRepo))
 				exitFunc(1)
 			}
