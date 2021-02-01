@@ -5,7 +5,6 @@ import (
 	"crypto/sha512"
 	stdhash "hash"
 	"io"
-	"math/big"
 	"os"
 	"sort"
 
@@ -42,8 +41,7 @@ func (h *Hash) AddFile(path string) error {
 
 // Digest returns the digest of the hash
 func (h *Hash) Digest() *digest.Digest {
-	sum := big.Int{}
-	sum.SetBytes(h.hash.Sum(nil))
+	sum := h.hash.Sum(nil)
 
 	return &digest.Digest{
 		Algorithm: digest.SHA384,
@@ -75,7 +73,7 @@ func Sum(digests []*digest.Digest) (*digest.Digest, error) {
 			return false
 		}
 
-		return digests[i].Sum.Cmp(&digests[j].Sum) == -1
+		return bytes.Compare(digests[i].Sum, digests[j].Sum) == -1
 	})
 
 	for _, d := range digests {
