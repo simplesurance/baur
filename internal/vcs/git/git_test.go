@@ -67,3 +67,18 @@ func TestLsFiles(t *testing.T) {
 		})
 	}
 }
+
+func TestLsFilesNoOutputResolvesToNoPaths(t *testing.T) {
+	tempDir := t.TempDir()
+	gittest.CreateRepository(t, tempDir)
+
+	fname1 := "hello.txt"
+
+	fstest.WriteToFile(t, []byte("1"), filepath.Join(tempDir, fname1))
+	gittest.CommitFilesToGit(t, tempDir)
+
+	paths, err := LsFiles(tempDir, "*.txt")
+
+	require.NoError(t, err)
+	require.Empty(t, paths)
+}
