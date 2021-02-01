@@ -15,8 +15,6 @@ type Repository struct {
 	CfgPath     string
 	Cfg         *cfg.Repository
 	SearchDepth int
-	// TODO: remove PSQLURL
-	PSQLURL string
 }
 
 // FindRepositoryCfg searches for a repository config file. The search starts in
@@ -58,7 +56,6 @@ func NewRepository(cfgPath string) (*Repository, error) {
 		CfgPath:     cfgPath,
 		Path:        repoPath,
 		SearchDepth: repoCfg.Discover.SearchDepth,
-		PSQLURL:     repoCfg.Database.PGSQLURL,
 	}
 
 	return &r, nil
