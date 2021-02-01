@@ -13,6 +13,7 @@
 package unix
 
 import (
+	"runtime"
 	"syscall"
 	"unsafe"
 )
@@ -65,6 +66,19 @@ func Pipe(p []int) (err error) {
 	p[0] = int(pp[0])
 	p[1] = int(pp[1])
 	return nil
+}
+
+//sysnb	pipe2(p *[2]_C_int, flags int) (err error)
+
+func Pipe2(p []int, flags int) error {
+	if len(p) != 2 {
+		return EINVAL
+	}
+	var pp [2]_C_int
+	err := pipe2(&pp, flags)
+	p[0] = int(pp[0])
+	p[1] = int(pp[1])
+	return err
 }
 
 func (sa *SockaddrInet4) sockaddr() (unsafe.Pointer, _Socklen, error) {
@@ -391,7 +405,7 @@ func anyToSockaddr(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
 		for n < len(pp.Path) && pp.Path[n] != 0 {
 			n++
 		}
-		bytes := (*[10000]byte)(unsafe.Pointer(&pp.Path[0]))[0:n]
+		bytes := (*[len(pp.Path)]byte)(unsafe.Pointer(&pp.Path[0]))[0:n]
 		sa.Name = string(bytes)
 		return sa, nil
 
@@ -553,8 +567,10 @@ func Minor(dev uint64) uint32 {
 
 //sys	ioctl(fd int, req uint, arg uintptr) (err error)
 
-func IoctlSetTermio(fd int, req uint, value *Termio) (err error) {
-	return ioctl(fd, req, uintptr(unsafe.Pointer(value)))
+func IoctlSetTermio(fd int, req uint, value *Termio) error {
+	err := ioctl(fd, req, uintptr(unsafe.Pointer(value)))
+	runtime.KeepAlive(value)
+	return err
 }
 
 func IoctlGetTermio(fd int, req uint) (*Termio, error) {
@@ -649,7 +665,7 @@ func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err e
 //sys	Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) (err error)
 //sys	Rmdir(path string) (err error)
 //sys	Seek(fd int, offset int64, whence int) (newoffset int64, err error) = lseek
-//sys	Select(n int, r *FdSet, w *FdSet, e *FdSet, timeout *Timeval) (err error)
+//sys	Select(nfd int, r *FdSet, w *FdSet, e *FdSet, timeout *Timeval) (n int, err error)
 //sysnb	Setegid(egid int) (err error)
 //sysnb	Seteuid(euid int) (err error)
 //sysnb	Setgid(gid int) (err error)

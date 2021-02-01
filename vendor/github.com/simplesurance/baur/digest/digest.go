@@ -1,8 +1,8 @@
 package digest
 
 import (
+	"encoding/hex"
 	"fmt"
-	"math/big"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -34,16 +34,16 @@ func (t Algorithm) String() string {
 
 // Digest contains a checksum
 type Digest struct {
-	Sum       big.Int
+	Sum       []byte
 	Algorithm Algorithm
 }
 
-// String returns '<Algorithm>:<checksum>'
+// String returns '<Algorithm>:<hash>'
 func (d *Digest) String() string {
-	return fmt.Sprintf("%s:%s", d.Algorithm, d.Sum.Text(16))
+	return fmt.Sprintf("%s:%s", d.Algorithm, hex.EncodeToString(d.Sum))
 }
 
-// FromString converts a "sha256:<hash> string to Digest
+// FromString converts a "<Algorithm>:<hash> string to Digest
 func FromString(in string) (*Digest, error) {
 	var algorithm Algorithm
 
@@ -69,10 +69,9 @@ func FromString(in string) (*Digest, error) {
 		return nil, errors.New("unsupported format %q")
 	}
 
-	sum := big.Int{}
-	_, err := fmt.Sscan("0x"+spl[1], &sum)
+	sum, err := hex.DecodeString(spl[1])
 	if err != nil {
-		return nil, errors.Wrap(err, "converting digest to big int failed")
+		return nil, errors.Wrap(err, "converting string sum to hex failed")
 	}
 
 	return &Digest{

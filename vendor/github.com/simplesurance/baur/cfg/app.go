@@ -1,7 +1,6 @@
 package cfg
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -117,7 +116,7 @@ func exampleBuildOutput() BuildOutput {
 		},
 		DockerImage: []*DockerImageOutput{
 			{
-				IDFile: fmt.Sprintf("$APPNAME-container.id"),
+				IDFile: "$APPNAME-container.id",
 				RegistryUpload: DockerImageRegistryUpload{
 					Repository: "my-company/$APPNAME",
 					Tag:        "$GITCOMMIT",

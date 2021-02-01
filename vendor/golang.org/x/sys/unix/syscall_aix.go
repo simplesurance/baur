@@ -19,6 +19,22 @@ import "unsafe"
  * Wrapped
  */
 
+func Access(path string, mode uint32) (err error) {
+	return Faccessat(AT_FDCWD, path, mode, 0)
+}
+
+func Chmod(path string, mode uint32) (err error) {
+	return Fchmodat(AT_FDCWD, path, mode, 0)
+}
+
+func Chown(path string, uid int, gid int) (err error) {
+	return Fchownat(AT_FDCWD, path, uid, gid, 0)
+}
+
+func Creat(path string, mode uint32) (fd int, err error) {
+	return Open(path, O_CREAT|O_WRONLY|O_TRUNC, mode)
+}
+
 //sys	utimes(path string, times *[2]Timeval) (err error)
 func Utimes(path string, tv []Timeval) error {
 	if len(tv) != 2 {
@@ -350,7 +366,7 @@ func (w WaitStatus) Signal() Signal {
 
 func (w WaitStatus) Continued() bool { return w&0x01000000 != 0 }
 
-func (w WaitStatus) CoreDump() bool { return w&0x200 != 0 }
+func (w WaitStatus) CoreDump() bool { return w&0x80 == 0x80 }
 
 func (w WaitStatus) TrapCause() int { return -1 }
 
