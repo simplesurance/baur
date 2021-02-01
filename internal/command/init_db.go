@@ -39,7 +39,10 @@ func init() {
 func initDb(cmd *cobra.Command, args []string) {
 	var dbURL string
 
-	if len(args) == 0 {
+	if len(args) == 1 {
+		dbURL = args[0]
+	} else {
+
 		repo, err := findRepository()
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -53,9 +56,7 @@ func initDb(cmd *cobra.Command, args []string) {
 			exitFunc(1)
 		}
 
-		dbURL = repo.Cfg.Database.PGSQLURL
-	} else {
-		dbURL = args[0]
+		dbURL = mustGetPSQLURI(repo.Cfg)
 	}
 
 	storageClt, err := newStorageClient(dbURL)
