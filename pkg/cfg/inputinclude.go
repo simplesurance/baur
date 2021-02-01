@@ -1,6 +1,8 @@
 package cfg
 
-import "github.com/simplesurance/baur/v1/internal/deepcopy"
+import (
+	"github.com/simplesurance/baur/v1/internal/deepcopy"
+)
 
 // InputInclude is a reusable Input definition.
 type InputInclude struct {
@@ -44,7 +46,7 @@ func (in *InputInclude) clone() *InputInclude {
 	var clone InputInclude
 
 	deepcopy.MustCopy(in, &clone)
-	// TODO why is filepath assignment manually and not cloned?
+	// filepath is assigned manually because filepath is a private field, MustCopy() only clones exported fields
 	clone.filepath = in.filepath
 
 	return &clone

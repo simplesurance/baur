@@ -211,8 +211,6 @@ func (c *runCmd) runTask(task *baur.Task) *baur.RunResult {
 			result.ExitCode,
 			result.StrOutput())
 
-		// TODO: record the result as failed if run exitCode is != 0
-		// except when a flag like --errors-are-fatal is passed
 		exitFunc(1)
 	}
 

@@ -2,8 +2,6 @@ package cfg
 
 import "github.com/simplesurance/baur/v1/pkg/cfg/resolver"
 
-//TODO: make RegistryUpload a pointer so we do not have to check if its empty
-
 // DockerImageOutput describes where a docker container is uploaded to.
 type DockerImageOutput struct {
 	IDFile         string                      `toml:"idfile" comment:"Path to a file that is created by the [Task.Command] and contains the image ID of the produced image (docker build --iidfile)."`
