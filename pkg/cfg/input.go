@@ -36,7 +36,6 @@ func (in *Input) resolve(resolvers resolver.Resolver) error {
 			return fieldErrorWrap(err, "GoLangSources")
 		}
 
-		// TODO is this needed? If not why not?
 		in.GolangSources[i] = gs
 	}
 
@@ -56,8 +55,6 @@ func inputValidate(i InputDef) error {
 			return fieldErrorWrap(err, "GolangSources")
 		}
 	}
-
-	// TODO: add validation for gitfiles section
 
 	return nil
 }

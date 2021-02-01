@@ -79,7 +79,6 @@ func newStatusCmd() *statusCmd {
 	cmd.Flags().BoolVar(&cmd.absPaths, "abs-path", false,
 		"Show absolute instead of relative paths")
 
-	// TODO: refactor buildStatus struct
 	cmd.Flags().VarP(&cmd.buildStatus, "status", "s",
 		cmd.buildStatus.Usage(term.Highlight))
 

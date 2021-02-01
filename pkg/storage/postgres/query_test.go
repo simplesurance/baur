@@ -134,10 +134,6 @@ func TestOutputs_ReturnsErrNotExist(t *testing.T) {
 	assert.Nil(t, outputs)
 }
 
-// TODO: Write Tests for:
-// - Outputs()
-// - Inputs()
-
 func TestOutputs(t *testing.T) {
 	client, cleanupFn := newTestClient(t)
 	defer cleanupFn()
