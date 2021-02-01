@@ -53,7 +53,7 @@ func initDb(cmd *cobra.Command, args []string) {
 			exitFunc(1)
 		}
 
-		dbURL = repo.PSQLURL
+		dbURL = repo.Cfg.Database.PGSQLURL
 	} else {
 		dbURL = args[0]
 	}

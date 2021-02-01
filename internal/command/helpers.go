@@ -13,6 +13,7 @@ import (
 	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/internal/vcs"
 	"github.com/simplesurance/baur/v1/pkg/baur"
+	"github.com/simplesurance/baur/v1/pkg/cfg"
 	"github.com/simplesurance/baur/v1/pkg/storage"
 	"github.com/simplesurance/baur/v1/pkg/storage/postgres"
 )
@@ -108,27 +109,33 @@ func newStorageClient(psqlURI string) (storage.Storer, error) {
 	return client, nil
 }
 
-//mustHavePSQLURI calls log.Fatalf if neither envVarPSQLURL nor the postgres_url
-//in the repository config is set
-func mustHavePSQLURI(r *baur.Repository) {
-	if len(r.PSQLURL) != 0 {
-		return
-	}
-
-	if len(os.Getenv(envVarPSQLURL)) == 0 {
+//mustGetPSQLURI returns if it's set the URI from the environment variable
+//envVarPSQLURL, otherwise if it's set the psql uri from the repository config,
+//if it's also not empty prints an error and exits.
+func mustGetPSQLURI(cfg *cfg.Repository) string {
+	uri := getPSQLURI(cfg)
+	if uri == "" {
 		stderr.Printf("PostgreSQL connection information is missing.\n"+
 			"- set postgres_url in your repository config or\n"+
 			"- set the $%s environment variable", envVarPSQLURL)
 		exitFunc(1)
 	}
+
+	return uri
+}
+
+func getPSQLURI(cfg *cfg.Repository) string {
+	if url := os.Getenv(envVarPSQLURL); url != "" {
+		return url
+	}
+
+	return cfg.Database.PGSQLURL
 }
 
 // mustNewCompatibleStorage initializes a new postgresql storage client.
 // The function ensures that the storage is compatible.
 func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
-	mustHavePSQLURI(r)
-
-	clt, err := newStorageClient(r.PSQLURL)
+	clt, err := newStorageClient(mustGetPSQLURI(r.Cfg))
 	exitOnErr(err, "creating postgresql storage client failed")
 
 	if err := clt.IsCompatible(ctx); err != nil {
