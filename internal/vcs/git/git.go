@@ -176,7 +176,12 @@ func lsFiles(dir string, pathspec []string) ([]string, error) {
 		return nil, res.ExpectSuccess()
 	}
 
-	paths := strings.Split(res.StrOutput(), "\n")
+	out := res.StrOutput()
+	if len(out) == 0 {
+		return []string{}, nil
+	}
+
+	paths := strings.Split(out, "\n")
 
 	return paths, nil
 }
