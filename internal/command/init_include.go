@@ -21,7 +21,7 @@ Create an include config file.
 If no FILENAME argument is passed, the filename will be '` + defIncludeFilename + `'.`
 
 var initIncludeCmd = &cobra.Command{
-	Use:   "include [<FILENAME>]",
+	Use:   "include [FILENAME]",
 	Short: "create an include config file",
 	Long:  strings.TrimSpace(initIncludeLongHelp),
 	Run:   initInclude,

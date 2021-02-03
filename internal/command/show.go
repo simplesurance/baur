@@ -21,7 +21,7 @@ Show information about an application or task run.
 
 If the name or path of an application directory is passed,
 application information are shown.
-If a numeric task-run ID is passed, information about the
+If a numeric task run ID is passed, information about the
 recorded task run are shown.
 `
 
@@ -43,7 +43,7 @@ type showCmd struct {
 func newShowCmd() *showCmd {
 	cmd := showCmd{
 		Command: cobra.Command{
-			Use:     "show <APP-NAME>|<APP-PATH>|<APP-NAME.TASK-NAME>|<TASK-RUN-ID>",
+			Use:     "show <APP_DIR|APP_NAME[.TASK_NAME]|RUN_ID>",
 			Short:   "show information about apps or recorded task runs",
 			Args:    cobra.ExactArgs(1),
 			Long:    strings.TrimSpace(showLongHelp),

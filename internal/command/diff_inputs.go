@@ -42,10 +42,10 @@ List the difference of inputs between tasks or task-runs.
 
 An argument can either reference a task or a task-run.
 If a task is specified the current inputs of the task in the filesystem are
-compared. A task is specified in the format <APP-NAME>.<TASK-NAME>.
+compared. A task is specified in the format APP_NAME.TASK_NAME.
 A past task-run that was recorded in the database can be specified by:
 - it's run-id,
-- or by the git-like syntax <APP-NAME>.<TASK-NAME>^, the number of ^ characters
+- or by the git-like syntax APP_NAME.TASK_NAME^, the number of ^ characters
   specify the run-id, ^ refers the last recorded run, '^^' the run before the
   last, and so on
 
@@ -74,7 +74,7 @@ baur diff inputs calc.build calc.build^ - Compare current inputs and the one
 func newDiffInputsCmd() *diffInputsCmd {
 	cmd := diffInputsCmd{
 		Command: cobra.Command{
-			Use:     "inputs <APP-NAME>.<TASK-NAME>[^]...|<RUN-ID> <APP-NAME>.<TASK-NAME>[^]...|<RUN-ID>",
+			Use:     "inputs <APP_NAME.TASK_NAME[^]|RUN_ID>...",
 			Short:   "list inputs that differ between two task-runs",
 			Long:    strings.TrimSpace(diffInputslongHelp),
 			Example: strings.TrimSpace(diffInputsExample),
@@ -98,7 +98,7 @@ func newDiffInputsCmd() *diffInputsCmd {
 
 // diffArgs returns an error in the following scenarios:
 // - there is less than or greater than 2 args specified
-// - either arg is not in the format <APP-NAME>.<TASK-NAME> or a numeric value
+// - either arg is not in the format APP-NAME.TASK-AME> or a numeric value
 func diffArgs() cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) != 2 {

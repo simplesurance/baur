@@ -28,6 +28,13 @@ const (
 	statusGitCommitParam  = "git-commit"
 )
 
+var statusLongHelp = fmt.Sprintf(
+	`List the task status in the repository.
+
+Arguments:
+%s`,
+	targetHelp)
+
 func init() {
 	rootCmd.AddCommand(&newStatusCmd().Command)
 }
@@ -47,8 +54,9 @@ type statusCmd struct {
 func newStatusCmd() *statusCmd {
 	cmd := statusCmd{
 		Command: cobra.Command{
-			Use:   "status [<SPEC>|<PATH>]...",
+			Use:   "status [TARGET|APP_DIR]...",
 			Short: "list status of tasks",
+			Long:  statusLongHelp,
 			Args:  cobra.ArbitraryArgs,
 		},
 

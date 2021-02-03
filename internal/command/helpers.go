@@ -8,12 +8,23 @@ import (
 
 	"github.com/fatih/color"
 
+	"github.com/simplesurance/baur/v1/internal/command/term"
 	"github.com/simplesurance/baur/v1/internal/format"
 	"github.com/simplesurance/baur/v1/internal/log"
 	"github.com/simplesurance/baur/v1/internal/vcs"
 	"github.com/simplesurance/baur/v1/pkg/baur"
 	"github.com/simplesurance/baur/v1/pkg/storage"
 	"github.com/simplesurance/baur/v1/pkg/storage/postgres"
+)
+
+var targetHelp = fmt.Sprintf(`%s is in the format %s
+Examples:
+- 'shop' matches all tasks of the app named shop
+- 'shop.*' or 'shop' matches all tasks of the app named shop
+- '*.build' matches tasks named build of all applications
+- '*.*' matches all tasks of all applications`,
+	term.Highlight("TARGET"),
+	term.Highlight("(APP_NAME|*)[.TASK_NAME|*]"),
 )
 
 // envVarPSQLURL contains the name of an environment variable in that the

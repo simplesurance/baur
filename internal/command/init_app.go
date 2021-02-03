@@ -24,7 +24,7 @@ const initAppExample = `
 baur init app shop-ui	create an application config with the app name set to shop-ui`
 
 var initAppCmd = &cobra.Command{
-	Use:     "app [APP-NAME]",
+	Use:     "app [APP_NAME]",
 	Short:   "create an application config file in the current directory",
 	Long:    strings.TrimSpace(initAppLongHelp),
 	Example: strings.TrimSpace(initAppExample),

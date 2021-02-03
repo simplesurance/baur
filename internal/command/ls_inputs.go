@@ -30,7 +30,7 @@ type lsInputsCmd struct {
 func newLsInputsCmd() *lsInputsCmd {
 	cmd := lsInputsCmd{
 		Command: cobra.Command{
-			Use:   "inputs (<APP-NAME>.<TASK-NAME>)|<TASK-RUN-ID>",
+			Use:   "inputs APP_NAME.TASK_NAME|RUN_ID APP_NAME.TASK_NAME|RUN_ID",
 			Short: "list inputs of a task or task run",
 			Args:  cobra.ExactArgs(1),
 		},
