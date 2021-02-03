@@ -23,12 +23,17 @@ import (
 const runExample = `
 baur run auth				run all tasks of the auth application, upload the produced outputs
 baur run calc.check			run the check task of the calc application and upload the produced outputs
+baur run *.build			run all tasks named build of the all applications and upload the produced outputs
 baur run --force			run and upload all tasks of applications, independent of their status
 `
 
 var runLongHelp = fmt.Sprintf(`
 Execute tasks of applications.
-By default all tasks of all applications with status %s are run.
+
+If no argument is specified all tasks of all applications with status %s are run.
+
+Arguments:
+%s
 
 The following Environment Variables are supported:
     %s
@@ -45,6 +50,7 @@ The following Environment Variables are supported:
     %s
 `,
 	term.ColoredTaskStatus(baur.TaskStatusExecutionPending),
+	targetHelp,
 
 	term.Highlight(envVarPSQLURL),
 
@@ -83,7 +89,7 @@ type runCmd struct {
 func newRunCmd() *runCmd {
 	cmd := runCmd{
 		Command: cobra.Command{
-			Use:     "run [<SPEC>|<PATH>]...",
+			Use:     "run [TARGET|APP_DIR]...",
 			Short:   "run tasks",
 			Long:    runLongHelp,
 			Example: strings.TrimSpace(runExample),

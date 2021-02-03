@@ -19,7 +19,7 @@ const lsRunsLongHelp = `
 List recorded task runs.
 
 Arguments:
-	'*' can be passed as <APP-NAME> or <TASK-NAME> argument to match
+	'*' can be passed as APP_NAME or TASK_NAME argument to match
 	all Apps or Tasks.
 `
 
@@ -57,7 +57,7 @@ type lsRunsCmd struct {
 func newLsRunsCmd() *lsRunsCmd {
 	cmd := lsRunsCmd{
 		Command: cobra.Command{
-			Use:     "runs <APP-NAME>[.<TASK-NAME>]",
+			Use:     "runs <APP_NAME[.TASK_NAME]>",
 			Short:   "list recorded task runs",
 			Long:    strings.TrimSpace(lsRunsLongHelp),
 			Example: strings.TrimSpace(lsRunsExample),

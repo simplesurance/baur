@@ -24,7 +24,7 @@ by setting the '%s' environment variable.`,
 	term.Highlight(envVarPSQLURL))
 
 var initDbCmd = &cobra.Command{
-	Use:     "db [POSTGRES-URL]",
+	Use:     "db [POSTGRES_URL]",
 	Short:   "create baur tables in a PostgreSQL database",
 	Example: strings.TrimSpace(initDbExample),
 	Long:    strings.TrimSpace(initDbLongHelp),

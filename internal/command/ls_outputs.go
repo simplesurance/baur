@@ -28,7 +28,7 @@ func init() {
 func newLsOutputsCmd() *lsOutputsCmd {
 	cmd := lsOutputsCmd{
 		Command: cobra.Command{
-			Use:   "outputs <TASK-RUN-ID>",
+			Use:   "outputs <RUN_ID>",
 			Short: "list outputs of a task run",
 			Args:  cobra.ExactArgs(1),
 		},
@@ -52,7 +52,7 @@ func (c *lsOutputsCmd) run(cmd *cobra.Command, args []string) {
 
 	taskRunID, err := strconv.Atoi(args[0])
 	if err != nil {
-		stderr.Printf("'%s' is not a numeric task run ID", args[0])
+		stderr.Printf("'%s' is not a numeric task run ID\n", args[0])
 		exitFunc(1)
 	}
 
