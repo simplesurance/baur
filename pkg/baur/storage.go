@@ -43,12 +43,12 @@ func StoreRun(
 		return -1, err
 	}
 
-	storageInputs, err := InputsToStorageInputs(inputs)
+	storageInputs, err := inputsToStorageInputs(inputs)
 	if err != nil {
 		return -1, err
 	}
 
-	storageOutputs, err := ToStorageOutputs(uploads)
+	storageOutputs, err := toStorageOutputs(uploads)
 	if err != nil {
 		return -1, err
 	}
@@ -71,7 +71,7 @@ func StoreRun(
 	return storer.SaveTaskRun(ctx, &tr)
 }
 
-func InputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
+func inputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
 	result := make([]*storage.Input, 0, len(inputs.Inputs()))
 
 	for _, in := range inputs.Inputs() {
@@ -90,7 +90,7 @@ func InputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
 	return result, nil
 }
 
-func ToStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) {
+func toStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) {
 	resultMap := make(map[Output]*storage.Output)
 
 	for _, uploadResult := range uploadResults {
