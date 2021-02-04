@@ -165,7 +165,7 @@ func (a *Loader) allApps() ([]*App, error) {
 	result := make([]*App, 0, len(a.appConfigPaths))
 
 	for _, path := range a.appConfigPaths {
-		app, err := a.AppPath(path)
+		app, err := a.appPath(path)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}
@@ -186,14 +186,14 @@ func (a *Loader) allTasks(apps []*App) []*Task {
 	return result
 }
 
-// AppDirs load apps from the given directories.
-func (a *Loader) AppDirs(dirs ...string) ([]*App, error) {
+// appDirs load apps from the given directories.
+func (a *Loader) appDirs(dirs ...string) ([]*App, error) {
 	result := make([]*App, 0, len(dirs))
 
 	for _, dir := range dirs {
 		cfgPath := filepath.Join(dir, AppCfgFile)
 
-		app, err := a.AppPath(cfgPath)
+		app, err := a.appPath(cfgPath)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", cfgPath, err)
 		}
@@ -204,8 +204,8 @@ func (a *Loader) AppDirs(dirs ...string) ([]*App, error) {
 	return result, nil
 }
 
-// AppPath loads the app from the config file.
-func (a *Loader) AppPath(appConfigPath string) (*App, error) {
+// appPath loads the app from the config file.
+func (a *Loader) appPath(appConfigPath string) (*App, error) {
 	a.logger.Debugf("loader: loading app from %q", appConfigPath)
 
 	appConfigPath, err := filepath.Abs(appConfigPath)
@@ -290,7 +290,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 	result := make([]*App, 0, len(specs.appDirs)+len(specs.appNames))
 
 	for _, path := range specs.appDirs {
-		apps, err := a.AppDirs(path)
+		apps, err := a.appDirs(path)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}
@@ -309,7 +309,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 }
 
 func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
-	resolvers := DefaultAppCfgResolvers(a.repositoryRoot, appCfg.Name, a.gitCommitIDFunc)
+	resolvers := defaultAppCfgResolvers(a.repositoryRoot, appCfg.Name, a.gitCommitIDFunc)
 
 	err := appCfg.Merge(a.includeDB, resolvers)
 	if err != nil {
