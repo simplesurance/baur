@@ -293,3 +293,27 @@ func TestFilesOptional(t *testing.T) {
 		})
 	}
 }
+
+func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
+	const fname = "hello"
+
+	tempDir := t.TempDir()
+	r := NewCachingInputResolver()
+	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
+
+	result, err := r.Resolve(context.Background(), tempDir, &Task{
+		Directory: tempDir,
+		UnresolvedInputs: &cfg.Input{
+			Files: []cfg.FileInputs{
+				{
+					Paths:    []string{"doesnotexist", fname},
+					Optional: true,
+				},
+			},
+		},
+	})
+
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+	assert.Equal(t, fname, result[0].String())
+}

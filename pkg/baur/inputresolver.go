@@ -91,7 +91,7 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 
 			if err != nil {
 				if in.Optional && errors.Is(err, os.ErrNotExist) {
-					return result, nil
+					continue
 				}
 
 				return nil, err
