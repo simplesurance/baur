@@ -309,14 +309,13 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 }
 
 func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
-	includeResolvers := IncludeCfgVarResolvers(a.repositoryRoot, appCfg.Name)
+	resolvers := DefaultAppCfgResolvers(a.repositoryRoot, appCfg.Name, a.gitCommitIDFunc)
 
-	err := appCfg.Merge(a.includeDB, includeResolvers)
+	err := appCfg.Merge(a.includeDB, resolvers)
 	if err != nil {
 		return nil, fmt.Errorf("merging includes failed: %w", err)
 	}
 
-	resolvers := DefaultAppCfgResolvers(a.repositoryRoot, appCfg.Name, a.gitCommitIDFunc)
 	err = appCfg.Resolve(resolvers)
 	if err != nil {
 		return nil, fmt.Errorf("resolving variables in config failed: %w", err)

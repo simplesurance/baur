@@ -35,17 +35,3 @@ func DefaultAppCfgResolvers(rootPath, appName string, gitCommitFn func() (string
 		&resolver.EnvVar{},
 	}
 }
-
-// IncludeCfgVarResolvers returns the default resolvers for variables in the
-// Includes field in config files.
-func IncludeCfgVarResolvers(rootPath, appName string) resolver.Resolver {
-	// TODO: do we really need to distinguish between resolvers for include directives and all other fields?
-	// We should be able to use the the same set of resolvers for all
-	// fields. If somebody wants to use {{ .gitcommit }} in their include
-	// path, they have to cope with it. :-)
-	return resolver.List{
-		&resolver.StrReplacement{Old: appVarName, New: appName},
-		&resolver.StrReplacement{Old: rootVarName, New: rootPath},
-		&resolver.EnvVar{},
-	}
-}
