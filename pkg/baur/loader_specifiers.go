@@ -17,7 +17,10 @@ func (t *taskSpec) String() string {
 }
 
 type specs struct {
-	all       bool
+	// all is true if all tasks of all apps are matched
+	all bool
+	// allApps is true if >=1 spec matches all apps
+	allApps   bool
 	appDirs   []string
 	appNames  []string
 	taskSpecs []*taskSpec
@@ -40,6 +43,7 @@ func parseSpecs(specifiers []string) (*specs, error) {
 	for _, spec := range specifiers {
 		if spec == "*" {
 			result.all = true
+			result.allApps = true
 			return &result, nil
 		}
 
@@ -67,6 +71,15 @@ func parseSpecs(specifiers []string) (*specs, error) {
 		case 2:
 			appName := spl[0]
 			taskName := spl[1]
+
+			if appName == "*" {
+				result.allApps = true
+				if taskName == "*" {
+					result.all = true
+
+					break
+				}
+			}
 
 			if taskName == "*" {
 				result.appNames = append(result.appNames, appName)
