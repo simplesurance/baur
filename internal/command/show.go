@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -154,13 +155,30 @@ func (c *showCmd) showTask(taskName string) {
 	exitOnErr(err)
 }
 
+// sortConfigFileSlice sorts the slice in place
+func (c *showCmd) sortConfigFileSlice(in []string) []string {
+	sort.Slice(in, func(i, j int) bool {
+		if strings.HasSuffix(in[i], baur.AppCfgFile) {
+			return true
+		}
+
+		if strings.HasSuffix(in[j], baur.AppCfgFile) {
+			return false
+		}
+
+		return strings.Compare(in[i], in[j]) == -1
+	})
+
+	return in
+}
+
 func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 	mustWriteRow(formatter, term.Underline("Task"))
 	mustWriteRow(formatter, "", "Name:", term.Highlight(task.Name), "", "")
 	mustWriteRow(formatter, "", "Command:", term.Highlight(
 		c.strCmd(task.Command),
 	), "", "")
-	mustWriteStringSliceRows(formatter, "Config Files:", 1, task.CfgFilepaths)
+	mustWriteStringSliceRows(formatter, "Config Files:", 1, c.sortConfigFileSlice(task.CfgFilepaths))
 
 	if task.HasInputs() {
 		mustWriteRow(formatter, "", "", "", "")
