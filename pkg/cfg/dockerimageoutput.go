@@ -4,8 +4,8 @@ import "github.com/simplesurance/baur/v1/pkg/cfg/resolver"
 
 // DockerImageOutput describes where a docker container is uploaded to.
 type DockerImageOutput struct {
-	IDFile         string                      `toml:"idfile" comment:"Path to a file that is created by the [Task.Command] and contains the image ID of the produced image (docker build --iidfile)."`
-	RegistryUpload []DockerImageRegistryUpload `comment:"Registry and repository the image is uploaded to"`
+	IDFile         string `toml:"idfile" comment:"File containing the image ID of the produced image (docker build --iidfile)."`
+	RegistryUpload []DockerImageRegistryUpload
 }
 
 func (d *DockerImageOutput) Resolve(resolvers resolver.Resolver) error {

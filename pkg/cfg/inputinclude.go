@@ -6,10 +6,10 @@ import (
 
 // InputInclude is a reusable Input definition.
 type InputInclude struct {
-	IncludeID string `toml:"include_id" comment:"identifier of the include"`
+	IncludeID string `toml:"include_id" comment:"Identifier"`
 
-	Files         []FileInputs    `comment:"Inputs specified by file glob paths"`
-	GolangSources []GolangSources `comment:"Inputs specified by directories containing Golang applications"`
+	Files         []FileInputs
+	GolangSources []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
 
 	filepath string
 }

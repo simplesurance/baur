@@ -6,7 +6,7 @@ import (
 
 // Input contains information about task inputs
 type Input struct {
-	Files         []FileInputs    `comment:"Inputs specified by file glob paths"`
+	Files         []FileInputs
 	GolangSources []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
 }
 

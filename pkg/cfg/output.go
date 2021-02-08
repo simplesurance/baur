@@ -6,8 +6,8 @@ import (
 
 // Output is the tasks output section
 type Output struct {
-	DockerImage []DockerImageOutput `comment:"Docker images that are produced by the [Task.command]"`
-	File        []FileOutput        `comment:"Files that are produces by the [Task.command]"`
+	DockerImage []DockerImageOutput
+	File        []FileOutput
 }
 
 func (out *Output) DockerImageOutputs() []DockerImageOutput {
