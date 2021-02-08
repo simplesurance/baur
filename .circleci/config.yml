@@ -8,7 +8,7 @@ orbs:
 jobs:
   test_linux:
     docker:
-      - image: circleci/golang:1.15.6
+      - image: circleci/golang:1.15.8
         environment:
           GOFLAGS: -mod=vendor
           TEST_RESULTS: /tmp/test-results
@@ -68,7 +68,7 @@ jobs:
       - run:
           name: Preparing Test Environment
           command: |
-            choco install golang --version=1.15.6 -y
+            choco install golang --version=1.15.8 -y
             choco install postgresql12 --params '/Password:postgres' -y
             New-Item -ItemType Directory -Force -Path $Env:TEST_RESULTS
 
@@ -93,7 +93,7 @@ jobs:
 
   build_linux:
     docker:
-      - image: circleci/golang:1.15.6
+      - image: circleci/golang:1.15.8
 
     working_directory: ~/baur
     steps:
@@ -105,7 +105,7 @@ jobs:
 
   static_analysis_linux:
     docker:
-      - image: golangci/golangci-lint:v1.35.2
+      - image: golangci/golangci-lint:v1.36.0
 
     working_directory: ~/baur
     steps:
