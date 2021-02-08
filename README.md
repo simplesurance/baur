@@ -39,7 +39,7 @@ This chapter describes a quick way to setup baur for experimenting with it
 without using the Example Repository.
 
 For setting it up in a production environment see the chapter
-[Production Setup](https://github.com/simplesurance/baur/wiki/Configuration#production-setup).
+[Production Setup](https://github.com/simplesurance/baur/wiki/v0-Configuration#production-setup).
 
 ### Installation
 
