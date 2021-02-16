@@ -48,6 +48,12 @@ dist/windows_amd64/baur.exe:
 	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 		$(BUILDFLAGS) -o "$@" cmd/baur/main.go
 
+	$(info * creating $(@D)/baur-windows_amd64-$(VERSION).tar.xz)
+	@tar $(TARFLAGS) -C $(@D) -cJf $(@D)/baur-windows_amd64-$(VERSION).tar.xz $(@F)
+
+	$(info * creating $(@D)/baur-windows_amd64-$(VERSION).tar.xz.sha256)
+	@(cd $(@D) && sha256sum baur-windows_amd64-$(VERSION).tar.xz > baur-windows_amd64-$(VERSION).tar.xz.sha256)
+
 .PHONY: dirty_worktree_check
 dirty_worktree_check:
 	@if ! git diff-files --quiet || git ls-files --other --directory --exclude-standard | grep ".*" > /dev/null ; then \
