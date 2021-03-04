@@ -18,8 +18,8 @@ import (
 const (
 	statusAppNameHeader   = "Application Name"
 	statusAppNameParam    = "app-name"
-	statusNameHeader      = "Task ID"
-	statusNameParam       = "task-id"
+	statusTaskIDHeader    = "Task ID"
+	statusTaskIDParam     = "task-id"
 	statusPathHeader      = "Path"
 	statusPathParam       = "path"
 	statusStatusHeader    = "Status"
@@ -65,14 +65,14 @@ func newStatusCmd() *statusCmd {
 		fields: flag.MustNewFields(
 			[]string{
 				statusAppNameParam,
-				statusNameParam,
+				statusTaskIDParam,
 				statusPathParam,
 				statusRunIDParam,
 				statusStatusParam,
 				statusGitCommitParam,
 			},
 			[]string{
-				statusNameParam,
+				statusTaskIDParam,
 				statusPathParam,
 				statusRunIDParam,
 				statusStatusParam,
@@ -113,8 +113,8 @@ func (c *statusCmd) statusCreateHeader() []string {
 		switch f {
 		case statusAppNameParam:
 			headers = append(headers, statusAppNameHeader)
-		case statusNameParam:
-			headers = append(headers, statusNameHeader)
+		case statusTaskIDParam:
+			headers = append(headers, statusTaskIDHeader)
 		case statusPathParam:
 			headers = append(headers, statusPathHeader)
 		case statusStatusParam:
@@ -236,7 +236,7 @@ func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, tas
 		case statusAppNameParam:
 			row = append(row, task.AppName)
 
-		case statusNameParam:
+		case statusTaskIDParam:
 			row = append(row, task.ID())
 
 		case statusPathParam:
