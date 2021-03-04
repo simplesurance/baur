@@ -60,13 +60,22 @@ func newStatusCmd() *statusCmd {
 			Args:  cobra.ArbitraryArgs,
 		},
 
-		fields: flag.NewFields([]string{
-			statusNameParam,
-			statusPathParam,
-			statusRunIDParam,
-			statusStatusParam,
-			statusGitCommitParam,
-		}),
+		fields: flag.MustNewFields(
+			[]string{
+				statusNameParam,
+				statusPathParam,
+				statusRunIDParam,
+				statusStatusParam,
+				statusGitCommitParam,
+			},
+			[]string{
+				statusNameParam,
+				statusPathParam,
+				statusRunIDParam,
+				statusStatusParam,
+				statusGitCommitParam,
+			},
+		),
 	}
 	cmd.Run = cmd.run
 
