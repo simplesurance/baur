@@ -49,7 +49,7 @@ func (b *TaskStatus) Set(val string) error {
 
 // Type returns the format description of the flag
 func (b *TaskStatus) Type() string {
-	return "<STATUS>"
+	return "STATUS"
 }
 
 // Usage returns a usage description, important parts are passed through
