@@ -83,7 +83,7 @@ func (f *Fields) Set(val string) error {
 		fieldStr := strings.TrimSpace(strings.ToLower(str))
 
 		if _, exist := f.supportedFields[fieldStr]; !exist {
-			return errors.New("<FIELD> must be one of " + f.ValidValues())
+			return errors.New("FIELD must be one of " + f.ValidValues())
 		}
 
 		setFields = append(setFields, fieldStr)
@@ -96,7 +96,7 @@ func (f *Fields) Set(val string) error {
 
 // Type returns the format description
 func (f *Fields) Type() string {
-	return "<FIELD>[,<FIELD>]..."
+	return "FIELD[,FIELD]..."
 }
 
 // Usage returns a usage description, important parts are passed through

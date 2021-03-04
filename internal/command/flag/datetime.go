@@ -46,5 +46,5 @@ func (v *DateTimeFlagValue) Set(timeStr string) error {
 
 // Type returns the value description string
 func (*DateTimeFlagValue) Type() string {
-	return "<datetime>"
+	return "DATETIME"
 }
