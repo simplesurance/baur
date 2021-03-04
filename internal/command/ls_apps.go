@@ -41,10 +41,16 @@ func newLsAppsCmd() *lsAppsCmd {
 			Args:  cobra.ArbitraryArgs,
 		},
 
-		fields: flag.NewFields([]string{
-			lsAppNameParam,
-			lsAppPathParam,
-		}),
+		fields: flag.MustNewFields(
+			[]string{
+				lsAppNameParam,
+				lsAppPathParam,
+			},
+			[]string{
+				lsAppNameParam,
+				lsAppPathParam,
+			},
+		),
 	}
 
 	cmd.Run = cmd.run

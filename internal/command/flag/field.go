@@ -3,13 +3,14 @@ package flag
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 )
 
 // FieldSep specifies the separator when passing multiple values to the flag
 const FieldSep = ","
 
-// Fields is a commandline flag that allows to enable one or more boolean
+// Fields is a flag that accept a comma-separated list of field names.
 // fields by passing them in a format like "-f id,duration,path".
 // The passed values are case-insensitive.
 type Fields struct {
@@ -17,26 +18,41 @@ type Fields struct {
 	Fields          []string
 }
 
-// NewFields returns a new flag that supports the passed fields.
-func NewFields(fields []string) *Fields {
+// MustNewFields returns a new flag that supports the passed fields.
+// The default value of the flag is specified by defaultFields.
+// If an element is in defaultFields but not in supportedFields the function
+// panics.
+func MustNewFields(supportedFields, defaultFields []string) *Fields {
 	res := Fields{
-		supportedFields: map[string]struct{}{},
-		Fields:          make([]string, 0, len(fields)),
+		supportedFields: make(map[string]struct{}, len(supportedFields)),
+		Fields:          make([]string, 0, len(supportedFields)),
 	}
 
-	for _, f := range fields {
+	for _, f := range supportedFields {
 		lf := strings.ToLower(f)
 
 		res.supportedFields[lf] = struct{}{}
+	}
+
+	for _, f := range defaultFields {
+		lf := strings.ToLower(f)
+
+		if _, exist := res.supportedFields[lf]; !exist {
+			panic(fmt.Sprintf("%q listed in defaultFields but not in supportedFields", f))
+		}
+
 		res.Fields = append(res.Fields, lf)
 	}
 
 	return &res
 }
 
-// String returns the default value in the usage output
+// String returns the list of enabled fields.
+// It is used to show the default  value in the usage output.
 func (f *Fields) String() string {
-	return fmt.Sprintf("\"%s\"", strings.Join(f.Fields, ", "))
+	// the returned list does not contains spaces, it must in the same format
+	// that the parameter accepts as value
+	return strings.Join(f.Fields, FieldSep)
 }
 
 // ValidValues returns the values that the flag accepts
@@ -46,6 +62,8 @@ func (f *Fields) ValidValues() string {
 	for k := range f.supportedFields {
 		vals = append(vals, k)
 	}
+
+	sort.Strings(vals)
 
 	return strings.Join(vals, FieldSep+" ")
 }
@@ -84,10 +102,11 @@ func (f *Fields) Type() string {
 // Usage returns a usage description, important parts are passed through
 // highlightFn
 func (f *Fields) Usage(highlightFn func(a ...interface{}) string) string {
-	fields := make([]string, 0, len(f.Fields))
+	fields := make([]string, len(f.Fields))
+	copy(fields, f.Fields)
 
-	for _, f := range f.Fields {
-		fields = append(fields, highlightFn(f))
+	for i, f := range fields {
+		fields[i] = highlightFn(f)
 	}
 
 	return fmt.Sprintf(`Specify the printed fields and their order:
@@ -95,5 +114,6 @@ Format: %s
 where %s is one of: %s
 `,
 		highlightFn(f.Type()),
-		highlightFn("FIELD"), strings.Join(fields, ", "))
+		highlightFn("FIELD"), strings.Join(fields, ", "),
+	)
 }
