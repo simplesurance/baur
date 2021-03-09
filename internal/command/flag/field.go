@@ -102,8 +102,12 @@ func (f *Fields) Type() string {
 // Usage returns a usage description, important parts are passed through
 // highlightFn
 func (f *Fields) Usage(highlightFn func(a ...interface{}) string) string {
-	fields := make([]string, len(f.Fields))
-	copy(fields, f.Fields)
+	fields := make([]string, len(f.supportedFields))
+	for k := range f.supportedFields {
+		fields = append(fields, k)
+	}
+
+	sort.Strings(fields)
 
 	for i, f := range fields {
 		fields[i] = highlightFn(f)
