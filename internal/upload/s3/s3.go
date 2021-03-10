@@ -34,10 +34,9 @@ func NewClient(logger Logger) (*Client, error) {
 	}
 
 	cfg := aws.Config{
-		Logger:           aws.LoggerFunc(logger.Debugln),
-		LogLevel:         loglvl,
-		MaxRetries:       aws.Int(DefaultRetries),
-		S3ForcePathStyle: aws.Bool(true),
+		Logger:     aws.LoggerFunc(logger.Debugln),
+		LogLevel:   loglvl,
+		MaxRetries: aws.Int(DefaultRetries),
 	}
 
 	sess, err := session.NewSession(&cfg)
