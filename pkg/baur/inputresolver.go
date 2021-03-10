@@ -156,7 +156,7 @@ func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, pathSlice ...[]
 				return nil, err
 			}
 
-			res = append(res, NewFile(repositoryRoot, relPath))
+			res = append(res, NewInputFile(repositoryRoot, relPath))
 		}
 	}
 

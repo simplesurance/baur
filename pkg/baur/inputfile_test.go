@@ -22,8 +22,8 @@ func TestDigestDoesNotDependOnRepoPath(t *testing.T) {
 	fstest.WriteToFile(t, []byte("hello"), filepath.Join(repoPath1, relFilepath1))
 	fstest.WriteToFile(t, []byte("hello"), filepath.Join(repoPath2, relFilepath2))
 
-	f1 := NewFile(repoPath1, relFilepath1)
-	f2 := NewFile(repoPath2, relFilepath2)
+	f1 := NewInputFile(repoPath1, relFilepath1)
+	f2 := NewInputFile(repoPath2, relFilepath2)
 
 	d1, err := f1.Digest()
 	require.NoError(t, err)
