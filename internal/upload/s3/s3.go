@@ -50,11 +50,9 @@ func NewClient(logger Logger) (*Client, error) {
 	}, nil
 }
 
-// Upload uploads a file to an s3 bucket, On success it returns the URL to the
+// Upload uploads a file to an s3 bucket, on success it returns the URL to the
 // file.
-// dest must be an URL in the format: s3://<bucket>/<filename>
 func (c *Client) Upload(filepath, bucket, key string) (string, error) {
-
 	f, err := os.Open(filepath)
 	if err != nil {
 		return "", err
