@@ -15,8 +15,8 @@ type Inputfile struct {
 	digest *digest.Digest
 }
 
-// NewFile returns a new file
-func NewFile(repoRootPath, relPath string) *Inputfile {
+// NewInputFile returns a new input file
+func NewInputFile(repoRootPath, relPath string) *Inputfile {
 	return &Inputfile{
 		absPath:     filepath.Join(repoRootPath, relPath),
 		repoRelPath: relPath,
