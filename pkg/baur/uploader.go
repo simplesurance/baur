@@ -119,9 +119,9 @@ func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*U
 func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadResult, error) {
 	startTime := time.Now()
 
-	destFile := filepath.Join(dest.Path, filepath.Base(o.AbsPath))
+	destFile := filepath.Join(dest.Path, filepath.Base(o.absPath))
 
-	url, err := u.filecopyUploader.Upload(o.AbsPath, destFile)
+	url, err := u.filecopyUploader.Upload(o.absPath, destFile)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadRes
 func (u *Uploader) S3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
 	startTime := time.Now()
 
-	url, err := u.s3client.Upload(o.AbsPath, dest.Bucket, dest.Key)
+	url, err := u.s3client.Upload(o.AbsPath(), dest.Bucket, dest.Key)
 	if err != nil {
 		return nil, err
 	}
