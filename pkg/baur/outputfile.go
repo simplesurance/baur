@@ -46,12 +46,7 @@ func (f *OutputFile) Type() OutputType {
 func (f *OutputFile) CalcDigest() (*digest.Digest, error) {
 	sha := sha384.New()
 
-	err := sha.AddBytes([]byte(f.absPath))
-	if err != nil {
-		return nil, err
-	}
-
-	err = sha.AddFile(f.absPath)
+	err := sha.AddFile(f.absPath)
 	if err != nil {
 		return nil, err
 	}
