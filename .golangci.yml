@@ -10,6 +10,7 @@ linters:
     - misspell
     - prealloc
     - rowserrcheck
+    - sqlclosecheck
     - staticcheck
     - structcheck
     - typecheck
