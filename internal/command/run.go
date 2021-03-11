@@ -315,7 +315,6 @@ func maxTaskIDLen(tasks []*baur.Task) int {
 }
 
 func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTask, error) {
-	var result []*pendingTask
 	const sep = " => "
 
 	taskIDColLen := maxTaskIDLen(tasks) + len(sep)
@@ -323,6 +322,7 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTask, error) 
 
 	stdout.Printf("Evaluating status of tasks:\n\n")
 
+	result := make([]*pendingTask, 0, len(tasks))
 	for _, task := range tasks {
 		status, inputs, run, err := statusEvaluator.Status(ctx, task)
 		if err != nil {

@@ -8,9 +8,10 @@ linters:
     - gosimple
     - ineffassign
     - misspell
+    - prealloc
     - rowserrcheck
-    - structcheck
     - staticcheck
+    - structcheck
     - typecheck
     - unconvert
     - unused

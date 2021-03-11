@@ -177,7 +177,7 @@ func (a *Loader) allApps() ([]*App, error) {
 }
 
 func (a *Loader) allTasks(apps []*App) []*Task {
-	var result []*Task
+	result := make([]*Task, 0, len(apps)) // we have at least 1 task per app
 
 	for _, app := range apps {
 		result = append(result, app.Tasks()...)
@@ -343,7 +343,7 @@ func isAppDirectory(dir string) bool {
 }
 
 func findAppConfigs(searchDirs []string, searchDepth int) ([]string, error) {
-	var result []string
+	var result []string // nolint:prealloc
 
 	for _, searchDir := range searchDirs {
 		if err := fs.DirsExist(searchDir); err != nil {
