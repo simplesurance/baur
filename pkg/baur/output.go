@@ -43,7 +43,7 @@ func dockerOutputs(dockerClient DockerInfoClient, task *Task) ([]Output, error) 
 
 		for i := range dockerOutput.RegistryUpload {
 			ru := &dockerOutput.RegistryUpload[i]
-			uploadInfos = append(uploadInfos, &UploadInfoDocker{ru})
+			uploadInfos = append(uploadInfos, &UploadInfoDocker{DockerImageRegistryUpload: ru})
 		}
 
 		d, err := NewOutputDockerImageFromIIDFile(
@@ -75,12 +75,12 @@ func fileOutputs(task *Task) ([]Output, error) {
 
 		for i := range fileOutput.S3Upload {
 			s3 := &fileOutput.S3Upload[i]
-			s3Uploads = append(s3Uploads, &UploadInfoS3{s3})
+			s3Uploads = append(s3Uploads, &UploadInfoS3{S3Upload: s3})
 		}
 
 		for i := range fileOutput.FileCopy {
 			fc := &fileOutput.FileCopy[i]
-			fileCopyUploads = append(fileCopyUploads, &UploadInfoFileCopy{fc})
+			fileCopyUploads = append(fileCopyUploads, &UploadInfoFileCopy{FileCopy: fc})
 		}
 
 		result = append(result, NewOutputFile(
