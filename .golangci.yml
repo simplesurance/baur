@@ -3,6 +3,7 @@ linters:
   enable:
     - deadcode
     - errcheck
+    - exportloopref
     - goimports
     - golint
     - gosimple

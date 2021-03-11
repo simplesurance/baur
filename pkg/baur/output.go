@@ -41,8 +41,9 @@ func dockerOutputs(dockerClient DockerInfoClient, task *Task) ([]Output, error) 
 	for _, dockerOutput := range task.Outputs.DockerImage {
 		uploadInfos := make([]*UploadInfoDocker, 0, len(dockerOutput.RegistryUpload))
 
-		for _, ru := range dockerOutput.RegistryUpload {
-			uploadInfos = append(uploadInfos, &UploadInfoDocker{&ru})
+		for i := range dockerOutput.RegistryUpload {
+			ru := &dockerOutput.RegistryUpload[i]
+			uploadInfos = append(uploadInfos, &UploadInfoDocker{ru})
 		}
 
 		d, err := NewOutputDockerImageFromIIDFile(
@@ -72,12 +73,14 @@ func fileOutputs(task *Task) ([]Output, error) {
 			return nil, fmt.Errorf("no upload method for output %q is specified", fileOutput.Path)
 		}
 
-		for _, s3 := range fileOutput.S3Upload {
-			s3Uploads = append(s3Uploads, &UploadInfoS3{&s3})
+		for i := range fileOutput.S3Upload {
+			s3 := &fileOutput.S3Upload[i]
+			s3Uploads = append(s3Uploads, &UploadInfoS3{s3})
 		}
 
-		for _, fc := range fileOutput.FileCopy {
-			fileCopyUploads = append(fileCopyUploads, &UploadInfoFileCopy{&fc})
+		for i := range fileOutput.FileCopy {
+			fc := &fileOutput.FileCopy[i]
+			fileCopyUploads = append(fileCopyUploads, &UploadInfoFileCopy{fc})
 		}
 
 		result = append(result, NewOutputFile(
