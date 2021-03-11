@@ -77,7 +77,7 @@ func (f *Fields) Set(val string) error {
 		return errors.New("format must be " + f.Type())
 	}
 
-	var setFields []string
+	setFields := make([]string, 0, len(substr))
 
 	for _, str := range substr {
 		fieldStr := strings.TrimSpace(strings.ToLower(str))
