@@ -146,7 +146,7 @@ func (u *Uploader) S3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) 
 	return &UploadResult{
 		Start:  startTime,
 		Stop:   time.Now(),
-		Method: UploadMethodFilecopy,
+		Method: UploadMethodS3,
 		Output: o,
 		URL:    url,
 	}, nil
