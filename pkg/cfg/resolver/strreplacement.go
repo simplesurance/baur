@@ -2,7 +2,7 @@ package resolver
 
 import "strings"
 
-// StrReplacementResolver replaces the string Old with New.
+// StrReplacement replaces the string Old with New.
 type StrReplacement struct {
 	Old string
 	New string

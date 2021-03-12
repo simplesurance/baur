@@ -8,7 +8,7 @@ import (
 	"github.com/simplesurance/baur/fs"
 )
 
-// Fileglob resolves the pattern to absolute file paths.
+// FileGlob resolves the pattern to absolute file paths.
 // Files are resolved in the same way then filepath.Glob() does, with 2 Exceptions:
 // - it also supports '**' to match files and directories recursively,
 // - it only returns paths to files, no directory paths,

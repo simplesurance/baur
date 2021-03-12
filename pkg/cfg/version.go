@@ -6,7 +6,7 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
-// ReadReadVersion reads the config_version entry from a toml config file.
+// ReadVersion reads the config_version entry from a toml config file.
 // If the key does not exist or is not a positive integer, an error is returned.
 func ReadVersion(path string) (int, error) {
 	const key = "config_version"

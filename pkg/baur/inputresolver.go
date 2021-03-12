@@ -33,7 +33,7 @@ func NewCachingInputResolver() *InputResolver {
 	}
 }
 
-// Resolves the input definition of the task to concrete Files.
+// Resolve resolves the input definition of the task to concrete Files.
 // If an input definition does not resolve to >=1 paths, an error is returned.
 // The resolved Files are deduplicated.
 func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) ([]Input, error) {
