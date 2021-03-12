@@ -79,15 +79,25 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 		}
 
 		for _, f := range old.BuildOutput.File {
-			output.File = append(output.File, cfg.FileOutput{
-				Path:     replaceVariables(f.Path),
-				FileCopy: []cfg.FileCopy{{Path: replaceVariables(f.FileCopy.Path)}},
-				S3Upload: []cfg.S3Upload{
+			var fc []cfg.FileCopy
+			var s3 []cfg.S3Upload
+
+			if f.FileCopy.Path != "" {
+				fc = []cfg.FileCopy{{Path: replaceVariables(f.FileCopy.Path)}}
+			}
+
+			if f.S3Upload.Bucket != "" {
+				s3 = []cfg.S3Upload{
 					{
 						Bucket: replaceVariables(f.S3Upload.Bucket),
 						Key:    replaceVariables(f.S3Upload.DestFile),
 					},
-				},
+				}
+			}
+			output.File = append(output.File, cfg.FileOutput{
+				Path:     replaceVariables(f.Path),
+				FileCopy: fc,
+				S3Upload: s3,
 			})
 		}
 
