@@ -12,7 +12,7 @@ import (
 
 const defPSQLURL = "postgres://postgres@localhost:5434/baur?sslmode=disable&connect_timeout=5"
 
-// DDBURL returns the value of the environment variable BAUR_TEST_POSTGRESQL_URL.
+// PSQLURL returns the value of the environment variable BAUR_TEST_POSTGRESQL_URL.
 // If the environment variable is undefined or empty, defDBURL is returned.
 func PSQLURL() string {
 	if url := os.Getenv("BAUR_TEST_POSTGRESQL_URL"); url != "" {
@@ -50,7 +50,7 @@ func CreateDB(name string) (string, error) {
 	return u.String(), nil
 }
 
-// UniqueDbName returns a unique postgresql database name.
+// UniqueDBName returns a unique postgresql database name.
 func UniqueDBName() string {
 	return "baur_test" + strings.Replace(uuid.New().String(), "-", "", -1)
 }
