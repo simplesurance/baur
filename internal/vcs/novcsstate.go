@@ -13,7 +13,7 @@ func (*NoVCsState) CommitID() (string, error) {
 	return "", ErrVCSRepositoryNotExist
 }
 
-// WWorktreeIsDirty returns VCSRepositoryNotExistErr.
+// WorktreeIsDirty returns VCSRepositoryNotExistErr.
 func (*NoVCsState) WorktreeIsDirty() (bool, error) {
 	return false, ErrVCSRepositoryNotExist
 }

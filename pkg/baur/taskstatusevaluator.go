@@ -7,7 +7,7 @@ import (
 	"github.com/simplesurance/baur/v1/pkg/storage"
 )
 
-// TaskTaskStatusEvaluator evaluates the status of a task.
+// TaskStatusEvaluator evaluates the status of a task.
 type TaskStatusEvaluator struct {
 	repositoryDir string
 

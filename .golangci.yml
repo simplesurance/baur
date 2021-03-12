@@ -3,15 +3,17 @@ linters:
   enable:
     - deadcode
     - errcheck
+    - exportloopref
     - goimports
     - golint
     - gosimple
     - ineffassign
-    - interfacer
     - misspell
+    - prealloc
     - rowserrcheck
-    - structcheck
+    - sqlclosecheck
     - staticcheck
+    - structcheck
     - typecheck
     - unconvert
     - unused

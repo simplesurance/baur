@@ -33,7 +33,7 @@ func (f *Formatter) writeHeader(headers []string) error {
 
 // WriteRow writes a row to the csvwriter buffer
 func (f *Formatter) WriteRow(row ...interface{}) error {
-	var str []string
+	str := make([]string, 0, len(row))
 
 	for _, col := range row {
 		str = append(str, fmt.Sprintf("%v", col))

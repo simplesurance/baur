@@ -57,7 +57,7 @@ func TestUpgrade(t *testing.T) {
 	stdoutBuf.Truncate(0)
 	statusCmd := newStatusCmd()
 	statusCmd.csv = true
-	statusCmd.fields = &flag.Fields{Fields: []string{statusNameParam}}
+	statusCmd.fields = &flag.Fields{Fields: []string{statusTaskIDParam}}
 	statusCmd.Command.Run(&statusCmd.Command, nil)
 
 	taskIDs := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")

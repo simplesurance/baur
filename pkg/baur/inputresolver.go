@@ -33,7 +33,7 @@ func NewCachingInputResolver() *InputResolver {
 	}
 }
 
-// Resolves the input definition of the task to concrete Files.
+// Resolve resolves the input definition of the task to concrete Files.
 // If an input definition does not resolve to >=1 paths, an error is returned.
 // The resolved Files are deduplicated.
 func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) ([]Input, error) {
@@ -66,7 +66,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 }
 
 func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs) ([]string, error) {
-	var result []string
+	var result []string // nolint:prealloc
 
 	for _, in := range inputs {
 		if files := i.cache.GetFileInputs(appDir, &in); files != nil {
@@ -112,7 +112,7 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 }
 
 func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, inputs []cfg.GolangSources) ([]string, error) {
-	var result []string
+	var result []string // nolint:prealloc
 
 	for _, gs := range inputs {
 		if files := i.cache.GetGolangSources(appDir, &gs); files != nil {
@@ -156,7 +156,7 @@ func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, pathSlice ...[]
 				return nil, err
 			}
 
-			res = append(res, NewFile(repositoryRoot, relPath))
+			res = append(res, NewInputFile(repositoryRoot, relPath))
 		}
 	}
 

@@ -20,7 +20,7 @@ func NewRepositoryState(repositoryPath string) *RepositoryState {
 	}
 }
 
-// GitCommitID calls git.CommitID() for the repository.
+// CommitID calls git.CommitID() for the repository.
 // After the first successful call the commit ID is stored and the stored value
 // is returned on successive calls.
 func (g *RepositoryState) CommitID() (string, error) {

@@ -56,7 +56,7 @@ func (s *Sort) Set(sortStr string) error {
 
 // Type returns the format description
 func (s *Sort) Type() string {
-	return "<FIELD>-<ORDER>"
+	return "FIELD-ORDER"
 }
 
 // Usage returns a usage description, important parts are passed through
@@ -75,5 +75,5 @@ where %s is one of: %s,
 and %s one of: %s, %s`,
 		highlightFn(s.Type()),
 		highlightFn("FIELD"), strings.Join(fields, ", "),
-		highlightFn("<ORDER>"), highlightFn(storage.OrderAsc.String()), highlightFn(storage.OrderDesc.String())))
+		highlightFn("ORDER"), highlightFn(storage.OrderAsc.String()), highlightFn(storage.OrderDesc.String())))
 }

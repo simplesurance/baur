@@ -30,6 +30,18 @@ dist/darwin_amd64/baur:
 	$(info * creating $(@D)/baur-darwin_amd64-$(VERSION).tar.xz.sha256)
 	@(cd $(@D) && sha256sum baur-darwin_amd64-$(VERSION).tar.xz > baur-darwin_amd64-$(VERSION).tar.xz.sha256)
 
+.PHONY: dist/darwin_arm64/baur
+dist/darwin_arm64/baur:
+	$(info * building $@)
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build \
+		$(BUILDFLAGS) -o "$@" cmd/baur/main.go
+
+	$(info * creating $(@D)/baur-darwin_arm64-$(VERSION).tar.xz)
+	@tar $(TARFLAGS) -C $(@D) -cJf $(@D)/baur-darwin_arm64-$(VERSION).tar.xz $(@F)
+
+	$(info * creating $(@D)/baur-darwin_arm64-$(VERSION).tar.xz.sha256)
+	@(cd $(@D) && sha256sum baur-darwin_arm64-$(VERSION).tar.xz > baur-darwin_arm64-$(VERSION).tar.xz.sha256)
+
 .PHONY: dist/linux_amd64/baur
 dist/linux_amd64/baur:
 	$(info * building $@)
@@ -48,6 +60,12 @@ dist/windows_amd64/baur.exe:
 	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 		$(BUILDFLAGS) -o "$@" cmd/baur/main.go
 
+	$(info * creating $(@D)/baur-windows_amd64-$(VERSION).tar.xz)
+	@tar $(TARFLAGS) -C $(@D) -cJf $(@D)/baur-windows_amd64-$(VERSION).tar.xz $(@F)
+
+	$(info * creating $(@D)/baur-windows_amd64-$(VERSION).tar.xz.sha256)
+	@(cd $(@D) && sha256sum baur-windows_amd64-$(VERSION).tar.xz > baur-windows_amd64-$(VERSION).tar.xz.sha256)
+
 .PHONY: dirty_worktree_check
 dirty_worktree_check:
 	@if ! git diff-files --quiet || git ls-files --other --directory --exclude-standard | grep ".*" > /dev/null ; then \
@@ -56,7 +74,7 @@ dirty_worktree_check:
 		fi
 
 .PHONY: release
-release: clean dirty_worktree_check dist/linux_amd64/baur dist/darwin_amd64/baur dist/windows_amd64/baur.exe
+release: clean dirty_worktree_check dist/linux_amd64/baur dist/darwin_amd64/baur dist/darwin_arm64/baur dist/windows_amd64/baur.exe
 	@echo
 	@echo next steps:
 	@echo - git tag v$(VERSION)

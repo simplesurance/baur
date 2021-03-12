@@ -16,8 +16,10 @@ import (
 )
 
 const (
-	statusNameHeader      = "Task ID"
-	statusNameParam       = "task-id"
+	statusAppNameHeader   = "Application Name"
+	statusAppNameParam    = "app-name"
+	statusTaskIDHeader    = "Task ID"
+	statusTaskIDParam     = "task-id"
 	statusPathHeader      = "Path"
 	statusPathParam       = "path"
 	statusStatusHeader    = "Status"
@@ -60,13 +62,23 @@ func newStatusCmd() *statusCmd {
 			Args:  cobra.ArbitraryArgs,
 		},
 
-		fields: flag.NewFields([]string{
-			statusNameParam,
-			statusPathParam,
-			statusRunIDParam,
-			statusStatusParam,
-			statusGitCommitParam,
-		}),
+		fields: flag.MustNewFields(
+			[]string{
+				statusAppNameParam,
+				statusTaskIDParam,
+				statusPathParam,
+				statusRunIDParam,
+				statusStatusParam,
+				statusGitCommitParam,
+			},
+			[]string{
+				statusTaskIDParam,
+				statusPathParam,
+				statusRunIDParam,
+				statusStatusParam,
+				statusGitCommitParam,
+			},
+		),
 	}
 	cmd.Run = cmd.run
 
@@ -99,8 +111,10 @@ func (c *statusCmd) statusCreateHeader() []string {
 
 	for _, f := range c.fields.Fields {
 		switch f {
-		case statusNameParam:
-			headers = append(headers, statusNameHeader)
+		case statusAppNameParam:
+			headers = append(headers, statusAppNameHeader)
+		case statusTaskIDParam:
+			headers = append(headers, statusTaskIDHeader)
 		case statusPathParam:
 			headers = append(headers, statusPathHeader)
 		case statusStatusParam:
@@ -219,7 +233,10 @@ func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, tas
 
 	for _, f := range c.fields.Fields {
 		switch f {
-		case statusNameParam:
+		case statusAppNameParam:
+			row = append(row, task.AppName)
+
+		case statusTaskIDParam:
 			row = append(row, task.ID())
 
 		case statusPathParam:

@@ -12,9 +12,9 @@ import (
 	"github.com/simplesurance/baur/v1/pkg/storage"
 )
 
-// drop the local monotonic values from timestamps and rounding it is required
-// to prevent that comparsions of local and retrieved objects fail because of the monotonic clock value or
-// minor timestamp changes
+// dropping the local monotonic values from timestamps and rounding them is required
+// to prevent that comparisons of local and retrieved objects fail because of
+// the monotonic clock value or minor timestamp changes
 // See also: https://github.com/stretchr/testify/issues/502
 func taskRunDropMonotonicTimevals(tr *storage.TaskRun) *storage.TaskRun {
 	tr.StartTimestamp = tr.StartTimestamp.Round(time.Millisecond)
@@ -406,20 +406,20 @@ func TestTaskRuns(t *testing.T) {
 		{
 			name: "EqAppNameAndTaskName",
 			filters: []*storage.Filter{
-				&storage.Filter{
+				{
 					Field:    storage.FieldTaskName,
 					Operator: storage.OpEQ,
 					Value:    run1.TaskName,
 				},
 
-				&storage.Filter{
+				{
 					Field:    storage.FieldApplicationName,
 					Operator: storage.OpEQ,
 					Value:    run1.ApplicationName,
 				},
 			},
 			expectedTaskRuns: []*storage.TaskRunWithID{
-				&storage.TaskRunWithID{
+				{
 					ID:      id1,
 					TaskRun: run1.TaskRun,
 				},
@@ -429,19 +429,19 @@ func TestTaskRuns(t *testing.T) {
 		{
 			name: "INAppNames",
 			filters: []*storage.Filter{
-				&storage.Filter{
+				{
 					Field:    storage.FieldApplicationName,
 					Operator: storage.OpIN,
 					Value:    []string{run1.ApplicationName, "testApp"},
 				},
 			},
 			expectedTaskRuns: []*storage.TaskRunWithID{
-				&storage.TaskRunWithID{
+				{
 					ID:      id,
 					TaskRun: run.TaskRun,
 				},
 
-				&storage.TaskRunWithID{
+				{
 					ID:      id1,
 					TaskRun: run1.TaskRun,
 				},
@@ -451,24 +451,24 @@ func TestTaskRuns(t *testing.T) {
 		{
 			name: "appNameOrderByDurationAsc",
 			filters: []*storage.Filter{
-				&storage.Filter{
+				{
 					Field:    storage.FieldApplicationName,
 					Operator: storage.OpEQ,
 					Value:    run.ApplicationName,
 				},
 			},
 			sorters: []*storage.Sorter{
-				&storage.Sorter{
+				{
 					storage.FieldDuration,
 					storage.OrderAsc,
 				},
 			},
 			expectedTaskRuns: []*storage.TaskRunWithID{
-				&storage.TaskRunWithID{
+				{
 					ID:      id,
 					TaskRun: run.TaskRun,
 				},
-				&storage.TaskRunWithID{
+				{
 					ID:      id1,
 					TaskRun: run1.TaskRun,
 				},
@@ -478,25 +478,25 @@ func TestTaskRuns(t *testing.T) {
 		{
 			name: "appNameOrderByDurationDesc",
 			filters: []*storage.Filter{
-				&storage.Filter{
+				{
 					Field:    storage.FieldApplicationName,
 					Operator: storage.OpEQ,
 					Value:    run.ApplicationName,
 				},
 			},
 			sorters: []*storage.Sorter{
-				&storage.Sorter{
+				{
 					storage.FieldDuration,
 					storage.OrderDesc,
 				},
 			},
 			expectedTaskRuns: []*storage.TaskRunWithID{
-				&storage.TaskRunWithID{
+				{
 					ID:      id1,
 					TaskRun: run1.TaskRun,
 				},
 
-				&storage.TaskRunWithID{
+				{
 					ID:      id,
 					TaskRun: run.TaskRun,
 				},
@@ -506,7 +506,7 @@ func TestTaskRuns(t *testing.T) {
 		{
 			name: "NoMatch",
 			filters: []*storage.Filter{
-				&storage.Filter{
+				{
 					Field:    storage.FieldID,
 					Operator: storage.OpEQ,
 					Value:    -500,

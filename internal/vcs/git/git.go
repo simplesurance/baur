@@ -28,10 +28,8 @@ func CommandIsInstalled() bool {
 // - .git/ exists or
 // - the "git" command is in $PATH and "git rev-parse --git-dir" returns exit code 0
 // It returns false if:
-// - .git/ does not exist and
-// - the "git" command is not in $PATH or "git rev-parse --git-dir" exits with code 128
-
-// If '.git/' exist, if it does not
+// - .git/ does not exist and the "git" command is not in $PATH or "git
+//   rev-parse --git-dir" exits with code 128
 func IsGitDir(dir string) (bool, error) {
 	err := fs.DirsExist(filepath.Join(dir, ".git"))
 	if err == nil {
