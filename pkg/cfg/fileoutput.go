@@ -50,5 +50,12 @@ func (f *FileOutput) validate() error {
 		}
 	}
 
+	for _, fc := range f.FileCopy {
+		err := fc.validate()
+		if err != nil {
+			return fieldErrorWrap(err, "Filecopy")
+		}
+	}
+
 	return nil
 }

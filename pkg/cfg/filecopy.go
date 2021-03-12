@@ -16,3 +16,11 @@ func (f *FileCopy) resolve(resolvers resolver.Resolver) error {
 
 	return nil
 }
+
+func (f *FileCopy) validate() error {
+	if f.Path == "" {
+		return newFieldError("can not be empty", "path")
+	}
+
+	return nil
+}
