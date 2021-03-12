@@ -12,9 +12,9 @@ import (
 	"github.com/simplesurance/baur/v1/pkg/storage"
 )
 
-// drop the local monotonic values from timestamps and rounding it is required
-// to prevent that comparsions of local and retrieved objects fail because of the monotonic clock value or
-// minor timestamp changes
+// dropping the local monotonic values from timestamps and rounding them is required
+// to prevent that comparisons of local and retrieved objects fail because of
+// the monotonic clock value or minor timestamp changes
 // See also: https://github.com/stretchr/testify/issues/502
 func taskRunDropMonotonicTimevals(tr *storage.TaskRun) *storage.TaskRun {
 	tr.StartTimestamp = tr.StartTimestamp.Round(time.Millisecond)
