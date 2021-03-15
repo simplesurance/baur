@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	rootVarName      = "{{ .root }}"
-	appVarName       = "{{ .appname }}"
-	appDirPathVarName       = "{{ .appdir }}"
-	uuidVarname      = "{{ .uuid }}"
-	gitCommitVarname = "{{ .gitcommit }}"
+	rootVarName       = "{{ .root }}"
+	appVarName        = "{{ .appname }}"
+	appDirPathVarName = "{{ .appdir }}"
+	uuidVarname       = "{{ .uuid }}"
+	gitCommitVarname  = "{{ .gitcommit }}"
 )
 
 // defaultAppCfgResolvers returns the default set of resolvers that is applied on application configs.
