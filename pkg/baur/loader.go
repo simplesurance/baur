@@ -309,7 +309,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 }
 
 func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
-	resolvers := defaultAppCfgResolvers(a.repositoryRoot, appCfg.Name, a.gitCommitIDFunc)
+	resolvers := defaultAppCfgResolvers(a.repositoryRoot, appCfg.Name, appCfg.FilePath(), a.gitCommitIDFunc)
 
 	err := appCfg.Merge(a.includeDB, resolvers)
 	if err != nil {
