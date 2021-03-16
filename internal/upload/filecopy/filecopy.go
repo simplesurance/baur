@@ -60,7 +60,7 @@ func copyFile(src, dst string) error {
 // Upload copies the file with src path to the dst path.
 // If the destination directory does not exist, it is created.
 // If the destination path exist and is not a regular file an error is returned.
-// If it exist and is a file, the file is overwritten if it's not the same.
+// If it exists, is a file and it differs the file is overwritten.
 func (c *Client) Upload(src string, dst string) (string, error) {
 	destDir := filepath.Dir(dst)
 

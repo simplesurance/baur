@@ -84,9 +84,9 @@ func SameFile(a, b string) (bool, error) {
 	return os.SameFile(aFi, bFi), nil
 }
 
-// FindFileInParentDirs finds a file in startPath or it's parent directories.
+// FindFileInParentDirs finds a file in startPath or its parent directories.
 // The function starts looking for a file called filename in startPath and then
-// checks recursively it's parent directors.
+// checks recursively its parent directories.
 // It returns the absolute path of the first match.
 // If it reaches the root directory without finding the file it returns
 // os.ErrNotExist.

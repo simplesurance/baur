@@ -44,7 +44,7 @@ An argument can either reference a task or a task-run.
 If a task is specified the current inputs of the task in the filesystem are
 compared. A task is specified in the format APP_NAME.TASK_NAME.
 A past task-run that was recorded in the database can be specified by:
-- it's run-id,
+- its run-id,
 - or by the git-like syntax APP_NAME.TASK_NAME^, the number of ^ characters
   specify the run-id, ^ refers the last recorded run, '^^' the run before the
   last, and so on

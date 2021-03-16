@@ -12,7 +12,7 @@ type fmtSettings struct {
 }
 
 // FormatBaseWithoutUnitName when enabled the Format functions return the value
-// in it's base unit without unit-name suffix
+// in its base unit without unit-name suffix
 func FormatBaseWithoutUnitName(enable bool) FormatOption {
 	return func(o *fmtSettings) {
 		o.baseUnitWithoutUnitName = enable

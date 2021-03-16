@@ -172,7 +172,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		// copy the iteration variable, to prevent that it's value
+		// copy the iteration variable, to prevent that its value
 		// changes in the closure to 't' of the next iteration before
 		// the closure is executed
 		ptCopy := pt
