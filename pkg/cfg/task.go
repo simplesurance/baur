@@ -7,7 +7,7 @@ import (
 // Task is a task section
 type Task struct {
 	Name     string   `toml:"name" comment:"Task name"`
-	Command  []string `toml:"command" comment:"Command to execute.\n The first element is the command, the following it's arguments."`
+	Command  []string `toml:"command" comment:"Command to execute.\n The first element is the command, the following its arguments."`
 	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory."`
 	Input    Input    `toml:"Input" comment:"Inputs that are tracked to detect if a task needs to be run."`
 	Output   Output   `toml:"Output" comment:"Artifacts produced by the Task.command and their upload destinations."`

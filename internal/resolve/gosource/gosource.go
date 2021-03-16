@@ -24,7 +24,7 @@ type Resolver struct {
 }
 
 // NewResolver returns a resolver that resolves all go source files in the
-// GoDirs and it's imports to filepaths.
+// GoDirs and their imports to filepaths.
 // env specifies the environment variables to use during resolving.
 // If empty or nil the default Go environment is used.
 func NewResolver(debugLogFn func(string, ...interface{})) *Resolver {

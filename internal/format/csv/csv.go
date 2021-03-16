@@ -42,7 +42,7 @@ func (f *Formatter) WriteRow(row ...interface{}) error {
 	return f.csvWriter.Write(str)
 }
 
-// Flush flushes the csvwriter buffer to it's output
+// Flush flushes the csvwriter buffer to the output
 func (f *Formatter) Flush() error {
 	f.csvWriter.Flush()
 
