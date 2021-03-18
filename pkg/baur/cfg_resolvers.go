@@ -14,7 +14,8 @@ const (
 	gitCommitVarname = "{{ .gitcommit }}"
 )
 
-// defaultAppCfgResolvers returns the default set of resolvers that is applied on application configs.
+// defaultAppCfgResolvers returns the default set of config variable resolvers.
+// The resolvers replace special strings with values.
 func defaultAppCfgResolvers(rootPath, appName string, gitCommitFn func() (string, error)) resolver.Resolver {
 	return resolver.List{
 		&resolver.StrReplacement{Old: appVarName, New: appName},
