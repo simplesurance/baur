@@ -8,7 +8,7 @@ import (
 	"github.com/simplesurance/baur/v1/pkg/cfg"
 )
 
-// App represents an application
+// App represents an Application.
 type App struct {
 	RelPath string
 	Path    string
@@ -19,7 +19,7 @@ type App struct {
 	cfg *cfg.App
 }
 
-// NewApp reads the configuration file and returns a new App
+// NewApp instantiates an App object based on an app configuration.
 func NewApp(appCfg *cfg.App, repositoryRootPath string) (*App, error) {
 	appDir := filepath.Dir(appCfg.FilePath())
 
@@ -39,11 +39,13 @@ func NewApp(appCfg *cfg.App, repositoryRootPath string) (*App, error) {
 	return &app, nil
 }
 
-// String returns the string representation of an app
+// String returns the name of the app.
 func (a *App) String() string {
 	return a.Name
 }
 
+// Tasks instantiates Task objects for each defined task in the app's
+// configuration.
 func (a *App) Tasks() []*Task {
 	result := make([]*Task, 0, len(a.cfg.Tasks))
 
@@ -55,7 +57,7 @@ func (a *App) Tasks() []*Task {
 	return result
 }
 
-// SortAppsByName sorts the apps in the slice by Name
+// SortAppsByName sorts the slice application names.
 func SortAppsByName(apps []*App) {
 	sort.Slice(apps, func(i int, j int) bool {
 		return apps[i].Name < apps[j].Name

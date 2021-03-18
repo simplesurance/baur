@@ -13,11 +13,15 @@ import (
 	v4 "github.com/simplesurance/baur/v1/pkg/cfg/upgrade/v4"
 )
 
+// CfgUpgrader converts baur configurations files from a previous format to the
+// current one.
 type CfgUpgrader struct {
 	newIncludeID string
 	repoRootDir  string
 }
 
+// NewCfgUpgrader returns an new CfgUpgrader to upgrade configuration files in
+// repositoryRootDir.
 func NewCfgUpgrader(repositoryRootDir string) *CfgUpgrader {
 	return &CfgUpgrader{
 		repoRootDir:  repositoryRootDir,
@@ -70,6 +74,11 @@ func (u *CfgUpgrader) upgradeAppConfigs(
 	return nil
 }
 
+// Upgrade upgrades all baur configuration files.
+// Of all changed files a backup copy is created with the same filename and a
+// ".bak" suffix.
+// Each upgraded configuration file is validated by running the responsible
+// validate() method from the cfg package.
 func (u *CfgUpgrader) Upgrade() error {
 	const oldUpgradeVer = 4
 
