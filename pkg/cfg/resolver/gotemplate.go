@@ -39,7 +39,6 @@ func (s *GoTemplate) Resolve(in string) (string, error) {
 			}
 
 			return commit, err
-
 		},
 		"env": func(envVarName string) (string, error) {
 			envVal, exist := os.LookupEnv(envVarName)
