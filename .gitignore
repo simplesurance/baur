@@ -21,3 +21,4 @@ dist/**
 *.swo
 
 *.orig
+.idea
