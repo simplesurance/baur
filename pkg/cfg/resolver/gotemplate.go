@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+
 	"github.com/simplesurance/baur/v1/internal/vcs"
 )
 
