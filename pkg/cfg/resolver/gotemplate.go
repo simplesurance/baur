@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
+	"text/template"
 	"os"
 
 	"github.com/google/uuid"
