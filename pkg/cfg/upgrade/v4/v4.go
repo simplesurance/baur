@@ -110,8 +110,8 @@ func UpgradeIncludeConfig(old *cfgv0.Include) *cfg.Include {
 func replaceVariables(in string) string {
 	in = strings.ReplaceAll(in, "$ROOT", "{{ .root }}")
 	in = strings.ReplaceAll(in, "$APPNAME", "{{ .appname }}")
-	in = strings.ReplaceAll(in, "$UUID", "{{ .uuid }}")
-	in = strings.ReplaceAll(in, "$GITCOMMIT", "{{ .gitcommit }}")
+	in = strings.ReplaceAll(in, "$UUID", "{{ uuid }}")
+	in = strings.ReplaceAll(in, "$GITCOMMIT", "{{ gitcommit }}")
 
 	return in
 }
