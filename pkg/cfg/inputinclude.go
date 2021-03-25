@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	"github.com/simplesurance/baur/v1/internal/deepcopy"
+	"github.com/simplesurance/baur/v2/internal/deepcopy"
 )
 
 // InputInclude is a reusable Input definition.

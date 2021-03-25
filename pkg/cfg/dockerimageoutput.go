@@ -1,6 +1,6 @@
 package cfg
 
-import "github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+import "github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 
 // DockerImageOutput describes where a docker container is uploaded to.
 type DockerImageOutput struct {

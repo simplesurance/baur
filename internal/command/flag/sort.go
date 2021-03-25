@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/simplesurance/baur/v1/pkg/storage"
+	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
 // Sort is a commandline flag to specify via which field and in which order

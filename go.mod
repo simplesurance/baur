@@ -1,4 +1,4 @@
-module github.com/simplesurance/baur/v1
+module github.com/simplesurance/baur/v2
 
 go 1.15
 

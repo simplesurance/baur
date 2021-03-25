@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v1/pkg/storage"
+	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
 // dropping the local monotonic values from timestamps and rounding them is required

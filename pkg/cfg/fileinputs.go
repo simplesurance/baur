@@ -3,7 +3,7 @@ package cfg
 import (
 	"strings"
 
-	"github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 // FileInputs stores glob paths to inputs of a task.

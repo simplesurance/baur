@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/internal/resolve/gitpath"
-	"github.com/simplesurance/baur/v1/internal/resolve/glob"
-	"github.com/simplesurance/baur/v1/internal/resolve/gosource"
-	"github.com/simplesurance/baur/v1/pkg/cfg"
+	"github.com/simplesurance/baur/v2/internal/log"
+	"github.com/simplesurance/baur/v2/internal/resolve/gitpath"
+	"github.com/simplesurance/baur/v2/internal/resolve/glob"
+	"github.com/simplesurance/baur/v2/internal/resolve/gosource"
+	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
 type InputResolver struct {

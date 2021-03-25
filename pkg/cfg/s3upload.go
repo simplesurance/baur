@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	"github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 // S3Upload contains S3 upload information

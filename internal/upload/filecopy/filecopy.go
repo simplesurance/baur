@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/simplesurance/baur/v1/internal/fs"
+	"github.com/simplesurance/baur/v2/internal/fs"
 )
 
 var defLogFn = func(string, ...interface{}) {}

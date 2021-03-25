@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 
-	"github.com/simplesurance/baur/v1/pkg/storage"
+	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
 func strArgList(args ...interface{}) string {

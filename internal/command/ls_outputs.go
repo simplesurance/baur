@@ -6,12 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/format"
-	"github.com/simplesurance/baur/v1/internal/format/csv"
-	"github.com/simplesurance/baur/v1/internal/format/table"
-	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/pkg/storage"
+	"github.com/simplesurance/baur/v2/internal/command/term"
+	"github.com/simplesurance/baur/v2/internal/format"
+	"github.com/simplesurance/baur/v2/internal/format/csv"
+	"github.com/simplesurance/baur/v2/internal/format/table"
+	"github.com/simplesurance/baur/v2/internal/log"
+	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
 type lsOutputsCmd struct {

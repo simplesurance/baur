@@ -8,14 +8,14 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/format"
-	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/internal/vcs"
-	"github.com/simplesurance/baur/v1/pkg/baur"
-	"github.com/simplesurance/baur/v1/pkg/cfg"
-	"github.com/simplesurance/baur/v1/pkg/storage"
-	"github.com/simplesurance/baur/v1/pkg/storage/postgres"
+	"github.com/simplesurance/baur/v2/internal/command/term"
+	"github.com/simplesurance/baur/v2/internal/format"
+	"github.com/simplesurance/baur/v2/internal/log"
+	"github.com/simplesurance/baur/v2/internal/vcs"
+	"github.com/simplesurance/baur/v2/pkg/baur"
+	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v2/pkg/storage"
+	"github.com/simplesurance/baur/v2/pkg/storage/postgres"
 )
 
 var targetHelp = fmt.Sprintf(`%s is in the format %s

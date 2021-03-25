@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/fs"
+	"github.com/simplesurance/baur/v2/internal/command/term"
+	"github.com/simplesurance/baur/v2/internal/fs"
 )
 
 const bashCompLongHelp = `

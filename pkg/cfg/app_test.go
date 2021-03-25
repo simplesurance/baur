@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

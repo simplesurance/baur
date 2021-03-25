@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 // cfgToFile marshals a struct to a toml configuration file.
