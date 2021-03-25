@@ -24,15 +24,15 @@ func (in *Input) merge(other InputDef) {
 	in.GolangSources = append(in.GolangSources, other.GolangSourcesInputs()...)
 }
 
-func (in *Input) resolve(resolvers resolver.Resolver) error {
+func (in *Input) resolve(resolver Resolver) error {
 	for _, f := range in.Files {
-		if err := f.resolve(resolvers); err != nil {
+		if err := f.resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "Files")
 		}
 	}
 
 	for i, gs := range in.GolangSources {
-		if err := gs.resolve(resolvers); err != nil {
+		if err := gs.resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "GoLangSources")
 		}
 

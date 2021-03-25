@@ -18,7 +18,7 @@ func (tasks TaskIncludes) validate() error {
 	return nil
 }
 
-func (tasks TaskIncludes) merge(workingDir string, resolver resolver.Resolver, db *IncludeDB) error {
+func (tasks TaskIncludes) merge(workingDir string, resolver Resolver, db *IncludeDB) error {
 	for _, task := range tasks {
 		err := taskMerge(task, workingDir, resolver, db)
 		if err != nil {

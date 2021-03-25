@@ -18,9 +18,9 @@ func (out *Output) FileOutputs() []FileOutput {
 	return out.File
 }
 
-func (out *Output) Resolve(resolvers resolver.Resolver) error {
+func (out *Output) Resolve(resolver Resolver) error {
 	for i, dockerImage := range out.DockerImage {
-		if err := dockerImage.Resolve(resolvers); err != nil {
+		if err := dockerImage.Resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "DockerImage")
 		}
 
@@ -29,7 +29,7 @@ func (out *Output) Resolve(resolvers resolver.Resolver) error {
 	}
 
 	for i, file := range out.File {
-		if err := file.resolve(resolvers); err != nil {
+		if err := file.resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "FileOutput")
 		}
 

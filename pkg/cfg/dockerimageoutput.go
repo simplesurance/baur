@@ -8,15 +8,15 @@ type DockerImageOutput struct {
 	RegistryUpload []DockerImageRegistryUpload
 }
 
-func (d *DockerImageOutput) Resolve(resolvers resolver.Resolver) error {
+func (d *DockerImageOutput) Resolve(resolver Resolver) error {
 	var err error
 
-	if d.IDFile, err = resolvers.Resolve(d.IDFile); err != nil {
+	if d.IDFile, err = resolver.Resolve(d.IDFile); err != nil {
 		return fieldErrorWrap(err, "idfile")
 	}
 
 	for i, upload := range d.RegistryUpload {
-		if err = upload.Resolve(resolvers); err != nil {
+		if err = upload.Resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "RegistryUpload")
 		}
 

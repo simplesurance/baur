@@ -10,14 +10,14 @@ type S3Upload struct {
 	Key    string `toml:"key"`
 }
 
-func (s *S3Upload) resolve(resolvers resolver.Resolver) error {
+func (s *S3Upload) resolve(resolver Resolver) error {
 	var err error
 
-	if s.Bucket, err = resolvers.Resolve(s.Bucket); err != nil {
+	if s.Bucket, err = resolver.Resolve(s.Bucket); err != nil {
 		return fieldErrorWrap(err, "bucket")
 	}
 
-	if s.Key, err = resolvers.Resolve(s.Key); err != nil {
+	if s.Key, err = resolver.Resolve(s.Key); err != nil {
 		return fieldErrorWrap(err, "key")
 	}
 

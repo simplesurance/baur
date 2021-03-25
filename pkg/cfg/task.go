@@ -56,20 +56,20 @@ func (t *Task) GetOutput() *Output {
 	return &t.Output
 }
 
-func (t *Task) resolve(resolvers resolver.Resolver) error {
+func (t *Task) resolve(resolver Resolver) error {
 	var err error
 
 	for i, elem := range t.Command {
-		if t.Command[i], err = resolvers.Resolve(elem); err != nil {
+		if t.Command[i], err = resolver.Resolve(elem); err != nil {
 			return fieldErrorWrap(err, "Command")
 		}
 	}
 
-	if err := t.Input.resolve(resolvers); err != nil {
+	if err := t.Input.resolve(resolver); err != nil {
 		return fieldErrorWrap(err, "Input")
 	}
 
-	if err := t.Output.Resolve(resolvers); err != nil {
+	if err := t.Output.Resolve(resolver); err != nil {
 		return fieldErrorWrap(err, "Output")
 	}
 

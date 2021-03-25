@@ -13,11 +13,11 @@ type FileInputs struct {
 	GitTrackedOnly bool     `toml:"git_tracked_only" comment:"Only resolve to files that are part of the Git repository."`
 }
 
-func (f *FileInputs) resolve(resolvers resolver.Resolver) error {
+func (f *FileInputs) resolve(resolver Resolver) error {
 	for i, p := range f.Paths {
 		var err error
 
-		if f.Paths[i], err = resolvers.Resolve(p); err != nil {
+		if f.Paths[i], err = resolver.Resolve(p); err != nil {
 			return fieldErrorWrap(err, "Paths", p)
 		}
 	}

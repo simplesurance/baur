@@ -12,11 +12,11 @@ type GolangSources struct {
 	Tests       bool     `toml:"tests" comment:"If true queries are resolved to test files, otherwise testfiles are ignored."`
 }
 
-func (g *GolangSources) resolve(resolvers resolver.Resolver) error {
+func (g *GolangSources) resolve(resolver Resolver) error {
 	for i, env := range g.Environment {
 		var err error
 
-		if g.Environment[i], err = resolvers.Resolve(env); err != nil {
+		if g.Environment[i], err = resolver.Resolve(env); err != nil {
 			return fieldErrorWrap(err, "Environment", env)
 		}
 	}
@@ -24,7 +24,7 @@ func (g *GolangSources) resolve(resolvers resolver.Resolver) error {
 	for i, q := range g.Queries {
 		var err error
 
-		if g.Queries[i], err = resolvers.Resolve(q); err != nil {
+		if g.Queries[i], err = resolver.Resolve(q); err != nil {
 			return fieldErrorWrap(err, "Paths", q)
 		}
 	}
@@ -32,7 +32,7 @@ func (g *GolangSources) resolve(resolvers resolver.Resolver) error {
 	for i, f := range g.BuildFlags {
 		var err error
 
-		if g.BuildFlags[i], err = resolvers.Resolve(f); err != nil {
+		if g.BuildFlags[i], err = resolver.Resolve(f); err != nil {
 			return fieldErrorWrap(err, "build_flags", f)
 		}
 	}

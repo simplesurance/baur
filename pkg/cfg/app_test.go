@@ -86,7 +86,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 	require.NoError(t, err)
 
 	includeDB := NewIncludeDB(t.Logf)
-	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
+	err = loadedApp.Merge(includeDB, &mockResolver{})
 	require.NoError(t, err)
 
 	assert.Error(t, loadedApp.Validate())

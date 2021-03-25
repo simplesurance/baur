@@ -44,7 +44,7 @@ func NewIncludeDB(logf LogFn) *IncludeDB {
 // If it wasn't the include file is loaded and added to the db.
 // If the file exist but does not have an include with the specified ID,
 // IncludeIDNotFoundError is returned.
-func (db *IncludeDB) loadTaskInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*TaskInclude, error) {
+func (db *IncludeDB) loadTaskInclude(resolver Resolver, workingDir, includeSpec string) (*TaskInclude, error) {
 	absPath, id, err := db.parseIncludeSpec(resolver, workingDir, includeSpec)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", includeSpecifier(absPath, id), err)
@@ -75,7 +75,7 @@ func (db *IncludeDB) loadTaskInclude(resolver resolver.Resolver, workingDir, inc
 // If it wasn't the include file is loaded and added to the db.
 // If the file exist but does not have an include with the specified ID,
 // IncludeIDNotFoundError is returned.
-func (db *IncludeDB) loadInputInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*InputInclude, error) {
+func (db *IncludeDB) loadInputInclude(resolver Resolver, workingDir, includeSpec string) (*InputInclude, error) {
 	absPath, id, err := db.parseIncludeSpec(resolver, workingDir, includeSpec)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", includeSpecifier(absPath, id), err)
@@ -111,7 +111,7 @@ func (db *IncludeDB) loadInputInclude(resolver resolver.Resolver, workingDir, in
 // If it wasn't the include file is loaded and added to the db.
 // If the file exist but does not have an include with the specified ID,
 // IncludeIDNotFoundError is returned.
-func (db *IncludeDB) loadOutputInclude(resolver resolver.Resolver, workingDir, includeSpec string) (*OutputInclude, error) {
+func (db *IncludeDB) loadOutputInclude(resolver Resolver, workingDir, includeSpec string) (*OutputInclude, error) {
 	absPath, id, err := db.parseIncludeSpec(resolver, workingDir, includeSpec)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", includeSpecifier(absPath, id), err)
@@ -145,7 +145,7 @@ func (db *IncludeDB) loadOutputInclude(resolver resolver.Resolver, workingDir, i
 
 // parseIncludeSpec splits the includeSpecifier to an absolute path and an include ID.
 // If the path is not an absolute path after it was resolved, it is joined with the passed workingDir.
-func (db *IncludeDB) parseIncludeSpec(resolver resolver.Resolver, workingDir, include string) (absPath, id string, err error) {
+func (db *IncludeDB) parseIncludeSpec(resolver Resolver, workingDir, include string) (absPath, id string, err error) {
 	spl := strings.Split(include, includeIDSep)
 	if len(spl) != 2 {
 		return "", "", errors.New("not a valid include specifier, does not contain exactly one '#' character")
@@ -173,7 +173,7 @@ func (db *IncludeDB) parseIncludeSpec(resolver resolver.Resolver, workingDir, in
 
 // load loads the include file, resolves it's variables, validates it and adds it to the IncludeDB.
 // Includes referenced in TaskIncludes a recursively loaded and included.
-func (db *IncludeDB) load(path string, resolver resolver.Resolver) error {
+func (db *IncludeDB) load(path string, resolver Resolver) error {
 	db.logf("includedb: loading %q", path)
 
 	include, err := IncludeFromFile(path)
