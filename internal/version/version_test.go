@@ -95,7 +95,7 @@ func TestSemVerFromString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.arg, func(t *testing.T) {
-			got, err := FromString(tt.arg)
+			got, err := New(tt.arg)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SemVerFromString() error = %v, wantErr %v", err, tt.wantErr)
 				return
