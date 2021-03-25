@@ -1,8 +1,10 @@
 package version
 
 import (
+	_ "embed" // is required to initialize the rawVersion variable with content from the ver file
 	"fmt"
 	"io"
+	"strings"
 )
 
 var (
@@ -10,9 +12,9 @@ var (
 	// It's set by make.
 	GitCommit = ""
 
-	// Version contains a semantic version number, must follow // https://semver.org/.
-	// It's set by make.
-	Version = ""
+	// Version contains a semantic version number, must follow https://semver.org/.
+	//go:embed ver
+	Version string
 
 	// Appendix is appended after a hypen to the version number. It can be
 	// used to mark a build as a prerelease.
@@ -70,6 +72,7 @@ func FromString(ver string) (*SemVer, error) {
 	var appendix string
 	var major, minor, patch int
 
+	ver = strings.TrimSpace(ver)
 	matches, err := fmt.Sscanf(ver, "%d.%d.%d-%s", &major, &minor, &patch, &appendix)
 	if (err != nil && err != io.ErrUnexpectedEOF) || matches < 1 {
 		return nil, fmt.Errorf("invalid format, should be <Major>[.<Minor>[.<Patch>[-appendix]]]: %w", err)
