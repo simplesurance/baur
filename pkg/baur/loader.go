@@ -309,7 +309,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 }
 
 func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
-	resolver := resolvers.NewGoTemplate(a.repositoryRoot, appCfg.Name, a.gitCommitIDFunc)
+	resolver := resolvers.NewGoTemplate(appCfg.Name, a.repositoryRoot, a.gitCommitIDFunc)
 
 	err := appCfg.Merge(a.includeDB, resolver)
 	if err != nil {

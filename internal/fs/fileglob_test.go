@@ -9,7 +9,12 @@ import (
 )
 
 func Test_FindAllSubDirs(t *testing.T) {
-	tempdir := t.TempDir()
+	// on mac tempdir is a symlink
+	tempdir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal("failed to resolve symlink for tempdir:", err)
+	}
+
 
 	expectedResults := []string{
 		tempdir,
@@ -18,7 +23,7 @@ func Test_FindAllSubDirs(t *testing.T) {
 		filepath.Join(tempdir, "1/2/3/"),
 	}
 
-	err := os.MkdirAll(filepath.Join(tempdir, "1/2/3"), os.ModePerm)
+	err = os.MkdirAll(filepath.Join(tempdir, "1/2/3"), os.ModePerm)
 	if err != nil {
 		t.Fatal("creating subdirectories failed:", err)
 	}
@@ -170,7 +175,10 @@ func Test_Resolve(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tempdir := t.TempDir()
+		tempdir, err := filepath.EvalSymlinks(t.TempDir())
+		if err != nil {
+			t.Fatal("failed to resolve symlink for tempdir:", err)
+		}
 
 		// The path separators in the test cases are Unix style "/", they need to be converted to "\" when running on Windows
 		for i := range tc.expectedMatches {
