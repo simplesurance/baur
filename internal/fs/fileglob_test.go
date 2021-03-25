@@ -15,7 +15,6 @@ func Test_FindAllSubDirs(t *testing.T) {
 		t.Fatal("failed to resolve symlink for tempdir:", err)
 	}
 
-
 	expectedResults := []string{
 		tempdir,
 		filepath.Join(tempdir, "1"),
