@@ -3,8 +3,8 @@ package baur
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v1/internal/digest"
-	"github.com/simplesurance/baur/v1/internal/digest/sha384"
+	"github.com/simplesurance/baur/v2/internal/digest"
+	"github.com/simplesurance/baur/v2/internal/digest/sha384"
 )
 
 // InputString represents a string

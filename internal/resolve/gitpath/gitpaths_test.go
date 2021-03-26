@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v1/internal/exec"
-	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v1/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v2/internal/exec"
+	"github.com/simplesurance/baur/v2/internal/log"
+	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v2/internal/testutils/gittest"
 )
 
 func TestGitPathResolverIgnoresUntrackedFiles(t *testing.T) {

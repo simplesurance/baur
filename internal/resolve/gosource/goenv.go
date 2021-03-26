@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/simplesurance/baur/v1/internal/exec"
+	"github.com/simplesurance/baur/v2/internal/exec"
 )
 
 type goEnv struct {

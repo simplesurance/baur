@@ -8,9 +8,9 @@ import (
 	baur_old "github.com/simplesurance/baur"
 	cfg_old "github.com/simplesurance/baur/cfg"
 
-	"github.com/simplesurance/baur/v1/internal/fs"
-	"github.com/simplesurance/baur/v1/internal/log"
-	v4 "github.com/simplesurance/baur/v1/pkg/cfg/upgrade/v4"
+	"github.com/simplesurance/baur/v2/internal/fs"
+	"github.com/simplesurance/baur/v2/internal/log"
+	v4 "github.com/simplesurance/baur/v2/pkg/cfg/upgrade/v4"
 )
 
 // CfgUpgrader converts baur configurations files from a previous format to the

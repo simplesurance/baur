@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v1/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v1/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v1/pkg/cfg"
+	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v2/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
 func TestFilesOptional(t *testing.T) {

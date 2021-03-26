@@ -1,6 +1,6 @@
 package cfg
 
-import "github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+import "github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 
 // DockerImageRegistryUpload stores information about a Docker image upload.
 type DockerImageRegistryUpload struct {

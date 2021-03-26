@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	"github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 // Output is the tasks output section

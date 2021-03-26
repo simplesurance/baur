@@ -6,7 +6,7 @@ import (
 
 	cfgv0 "github.com/simplesurance/baur/cfg"
 
-	"github.com/simplesurance/baur/v1/pkg/cfg"
+	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
 const NewIncludeID = "main"

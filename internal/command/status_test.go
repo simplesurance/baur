@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v1/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v2/internal/testutils/repotest"
 )
 
 func TestStatusArgs(t *testing.T) {

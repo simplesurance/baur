@@ -3,7 +3,7 @@ package baur
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v1/pkg/cfg"
+	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
 type UploadMethod int

@@ -9,15 +9,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v1/internal/command/term"
-	"github.com/simplesurance/baur/v1/internal/log"
-	"github.com/simplesurance/baur/v1/internal/routines"
-	"github.com/simplesurance/baur/v1/internal/upload/docker"
-	"github.com/simplesurance/baur/v1/internal/upload/filecopy"
-	"github.com/simplesurance/baur/v1/internal/upload/s3"
-	"github.com/simplesurance/baur/v1/internal/vcs"
-	"github.com/simplesurance/baur/v1/pkg/baur"
-	"github.com/simplesurance/baur/v1/pkg/storage"
+	"github.com/simplesurance/baur/v2/internal/command/term"
+	"github.com/simplesurance/baur/v2/internal/log"
+	"github.com/simplesurance/baur/v2/internal/routines"
+	"github.com/simplesurance/baur/v2/internal/upload/docker"
+	"github.com/simplesurance/baur/v2/internal/upload/filecopy"
+	"github.com/simplesurance/baur/v2/internal/upload/s3"
+	"github.com/simplesurance/baur/v2/internal/vcs"
+	"github.com/simplesurance/baur/v2/pkg/baur"
+	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
 const runExample = `

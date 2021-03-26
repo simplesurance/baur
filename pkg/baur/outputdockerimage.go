@@ -3,8 +3,8 @@ package baur
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v1/internal/digest"
-	"github.com/simplesurance/baur/v1/internal/fs"
+	"github.com/simplesurance/baur/v2/internal/digest"
+	"github.com/simplesurance/baur/v2/internal/fs"
 )
 
 type DockerInfoClient interface {

@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/simplesurance/baur/v1/internal/fs"
-	"github.com/simplesurance/baur/v1/pkg/cfg"
+	"github.com/simplesurance/baur/v2/internal/fs"
+	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
 // Repository represents an repository containing applications

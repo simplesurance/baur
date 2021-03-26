@@ -3,8 +3,8 @@ package baur
 import (
 	"errors"
 
-	"github.com/simplesurance/baur/v1/internal/vcs"
-	"github.com/simplesurance/baur/v1/pkg/cfg/resolver"
+	"github.com/simplesurance/baur/v2/internal/vcs"
+	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 const (

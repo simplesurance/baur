@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/simplesurance/baur/v1/internal/fs"
+	"github.com/simplesurance/baur/v2/internal/fs"
 )
 
 const globQueryPrefix = "fileglob="
