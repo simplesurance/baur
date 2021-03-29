@@ -1,7 +1,5 @@
 package cfg
 
-import "github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-
 type TaskIncludes []*TaskInclude
 
 func (tasks TaskIncludes) validate() error {

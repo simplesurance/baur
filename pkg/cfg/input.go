@@ -1,9 +1,5 @@
 package cfg
 
-import (
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-)
-
 // Input contains information about task inputs
 type Input struct {
 	Files         []FileInputs

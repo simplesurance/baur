@@ -1,9 +1,5 @@
 package cfg
 
-import (
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-)
-
 // Task is a task section
 type Task struct {
 	Name     string   `toml:"name" comment:"Task name"`

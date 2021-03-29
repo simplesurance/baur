@@ -1,7 +1,5 @@
 package cfg
 
-import "github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-
 // DockerImageRegistryUpload stores information about a Docker image upload.
 type DockerImageRegistryUpload struct {
 	Registry   string `toml:"registry" comment:"Registry address in the format <HOST>:[<PORT>]. If it's empty the docker agent's default is used."`

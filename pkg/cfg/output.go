@@ -1,9 +1,5 @@
 package cfg
 
-import (
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-)
-
 // Output is the tasks output section
 type Output struct {
 	DockerImage []DockerImageOutput

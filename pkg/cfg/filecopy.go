@@ -1,7 +1,5 @@
 package cfg
 
-import "github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-
 // FileCopy describes a filesystem location where a task output is copied to.
 type FileCopy struct {
 	Path string `toml:"path" comment:"Destination directory"`

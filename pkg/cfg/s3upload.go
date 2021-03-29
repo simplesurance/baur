@@ -1,9 +1,5 @@
 package cfg
 
-import (
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-)
-
 // S3Upload contains S3 upload information
 type S3Upload struct {
 	Bucket string `toml:"bucket"`

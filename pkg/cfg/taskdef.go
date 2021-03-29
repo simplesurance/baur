@@ -3,8 +3,6 @@ package cfg
 import (
 	"fmt"
 	"strings"
-
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 type taskDef interface {
