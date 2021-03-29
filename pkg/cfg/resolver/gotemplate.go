@@ -32,7 +32,6 @@ func lookupEnv(envVarName string) (string, error) {
 }
 
 func NewGoTemplate(appName, root string, gitCommitFn func() (string, error)) *GoTemplate {
-
 	templateVars := map[string]string{
 		rootVar:    root,
 		appnameVar: appName,
@@ -53,12 +52,12 @@ func NewGoTemplate(appName, root string, gitCommitFn func() (string, error)) *Go
 func (s *GoTemplate) Resolve(in string) (string, error) {
 	t, err := s.template.Parse(in)
 	if err != nil {
-		return "", fmt.Errorf("failed parsing go template: %w", err)
+		return "", fmt.Errorf("parsing as go template failed: %w", err)
 	}
 
 	output := new(bytes.Buffer)
 	if err = t.Execute(output, s.templateVars); err != nil {
-		return "", fmt.Errorf("failed evaluating template: %w", err)
+		return "", fmt.Errorf("templating failed: %w", err)
 	}
 
 	return output.String(), nil
