@@ -1,5 +1,5 @@
 [[Task]]
   include_id = "build"
-  includes = ["{{ .root }}/inputs.toml#input"]
+  includes = ["{{ .Root }}/inputs.toml#input"]
   name = "build"
-  command = ["more", "{{ .appname }}.txt"]
+  command = ["more", "{{ .AppName }}.txt"]
