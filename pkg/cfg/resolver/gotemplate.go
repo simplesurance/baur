@@ -2,14 +2,11 @@ package resolver
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"text/template"
 
 	"github.com/google/uuid"
-
-	"github.com/simplesurance/baur/v1/internal/vcs"
 )
 
 const (
@@ -21,15 +18,8 @@ const (
 )
 
 type GoTemplate struct {
-	appName      string
-	root         string
-	gitCommitFn  func() (string, error)
+	template     *template.Template
 	templateVars map[string]string
-	funcMap      template.FuncMap
-}
-
-func newUUID() string {
-	return uuid.NewString()
 }
 
 func lookupEnv(envVarName string) (string, error) {
@@ -41,37 +31,27 @@ func lookupEnv(envVarName string) (string, error) {
 	return envVal, nil
 }
 
-func (s *GoTemplate) gitCommit() (string, error) {
-	commit, err := s.gitCommitFn()
-	if errors.Is(err, vcs.ErrVCSRepositoryNotExist) {
-		return "", errors.New("baur repository is not part of a git repository")
-	}
-
-	return commit, err
-}
-
 func NewGoTemplate(appName, root string, gitCommitFn func() (string, error)) *GoTemplate {
-	result := &GoTemplate{
-		appName:     appName,
-		root:        root,
-		gitCommitFn: gitCommitFn,
-		templateVars: map[string]string{
-			rootVar:    root,
-			appnameVar: appName,
-		},
+
+	templateVars := map[string]string{
+		rootVar:    root,
+		appnameVar: appName,
 	}
 
-	result.funcMap = template.FuncMap{
-		gitcommitFunc: result.gitCommit,
+	funcMap := template.FuncMap{
+		gitcommitFunc: gitCommitFn,
 		envFunc:       lookupEnv,
-		uuidFunc:      newUUID,
+		uuidFunc:      uuid.NewString,
 	}
 
-	return result
+	return &GoTemplate{
+		templateVars: templateVars,
+		template:     template.New("baur").Funcs(funcMap).Option("missingkey=error"),
+	}
 }
 
 func (s *GoTemplate) Resolve(in string) (string, error) {
-	t, err := template.New("baur").Funcs(s.funcMap).Parse(in)
+	t, err := s.template.Parse(in)
 	if err != nil {
 		return "", fmt.Errorf("failed parsing go template: %w", err)
 	}
