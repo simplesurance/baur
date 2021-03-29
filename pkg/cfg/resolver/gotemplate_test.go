@@ -37,34 +37,29 @@ func TestResolve(t *testing.T) {
 		validator      func(string) error
 	}{
 		{
-			"Test env",
-			fmt.Sprintf("test {{ env \"%s\" }} {{ env \"%s\" }}bye", envVar, envVar),
-			fmt.Sprintf("test %s %sbye", envVarVal, envVarVal),
-			nil,
+			name:           "Test env",
+			input:          fmt.Sprintf("test {{ env \"%s\" }} {{ env \"%s\" }}bye", envVar, envVar),
+			expectedResult: fmt.Sprintf("test %s %sbye", envVarVal, envVarVal),
 		},
 		{
-			"Test root",
-			"{{ .Root }}",
-			rootDir,
-			nil,
+			name:           "Test root",
+			input:          "{{ .Root }}",
+			expectedResult: rootDir,
 		},
 		{
-			"Test appname",
-			"{{ .AppName }}",
-			appName,
-			nil,
+			name:           "Test appname",
+			input:          "{{ .AppName }}",
+			expectedResult: appName,
 		},
 		{
-			"Test commit",
-			"{{ gitCommit }}",
-			commitID,
-			nil,
+			name:           "Test commit",
+			input:          "{{ gitCommit }}",
+			expectedResult: commitID,
 		},
 		{
-			"Test {{ uuid }}",
-			"{{ uuid }}",
-			"",
-			func(result string) error {
+			name:  "Test {{ uuid }}",
+			input: "{{ uuid }}",
+			validator: func(result string) error {
 				matched, err := regexp.MatchString(`(?i)^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$`, result)
 				if err != nil {
 					return err
