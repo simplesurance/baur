@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	gitcommitFunc = "gitCommit"
-	envFunc       = "env"
-	uuidFunc      = "uuid"
+	gitCommitFuncName = "gitCommit"
+	envFuncName       = "env"
+	uuidFuncName      = "uuid"
 )
 
 // GoTemplate parses a string as go-template and executes it.
@@ -21,6 +21,7 @@ type GoTemplate struct {
 	templateVars *vars
 }
 
+// vars defines the fields that are available in the template.
 type vars struct {
 	Root    string
 	AppName string
@@ -42,9 +43,9 @@ func NewGoTemplate(appName, root string, gitCommitFn func() (string, error)) *Go
 	}
 
 	funcMap := template.FuncMap{
-		gitcommitFunc: gitCommitFn,
-		envFunc:       lookupEnv,
-		uuidFunc:      uuid.NewString,
+		gitCommitFuncName: gitCommitFn,
+		envFuncName:       lookupEnv,
+		uuidFuncName:      uuid.NewString,
 	}
 
 	return &GoTemplate{
@@ -53,7 +54,8 @@ func NewGoTemplate(appName, root string, gitCommitFn func() (string, error)) *Go
 	}
 }
 
-// Resolve parses in as go template, executes it and returns the resulting text.
+// Resolve parses the parameter "in" as Go template, executes it and returns
+// the result.
 func (s *GoTemplate) Resolve(in string) (string, error) {
 	t, err := s.template.Parse(in)
 	if err != nil {
