@@ -10,16 +10,20 @@ import (
 )
 
 const (
-	rootVar       = "root"
-	appnameVar    = "appname"
-	gitcommitFunc = "gitcommit"
+	gitcommitFunc = "gitCommit"
 	envFunc       = "env"
 	uuidFunc      = "uuid"
 )
 
+// GoTemplate parses a string as go-template and executes it.
 type GoTemplate struct {
 	template     *template.Template
-	templateVars map[string]string
+	templateVars *vars
+}
+
+type vars struct {
+	Root    string
+	AppName string
 }
 
 func lookupEnv(envVarName string) (string, error) {
@@ -32,9 +36,9 @@ func lookupEnv(envVarName string) (string, error) {
 }
 
 func NewGoTemplate(appName, root string, gitCommitFn func() (string, error)) *GoTemplate {
-	templateVars := map[string]string{
-		rootVar:    root,
-		appnameVar: appName,
+	templateVars := vars{
+		Root:    root,
+		AppName: appName,
 	}
 
 	funcMap := template.FuncMap{
@@ -44,11 +48,12 @@ func NewGoTemplate(appName, root string, gitCommitFn func() (string, error)) *Go
 	}
 
 	return &GoTemplate{
-		templateVars: templateVars,
+		templateVars: &templateVars,
 		template:     template.New("baur").Funcs(funcMap).Option("missingkey=error"),
 	}
 }
 
+// Resolve parses in as go template, executes it and returns the resulting text.
 func (s *GoTemplate) Resolve(in string) (string, error) {
 	t, err := s.template.Parse(in)
 	if err != nil {

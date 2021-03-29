@@ -35,19 +35,19 @@ func TestResolve(t *testing.T) {
 		},
 		{
 			"Test root",
-			"{{ .root }}",
+			"{{ .Root }}",
 			rootDir,
 			nil,
 		},
 		{
 			"Test appname",
-			"{{ .appname }}",
+			"{{ .AppName }}",
 			appName,
 			nil,
 		},
 		{
 			"Test commit",
-			"{{ gitcommit }}",
+			"{{ gitCommit }}",
 			commitID,
 			nil,
 		},

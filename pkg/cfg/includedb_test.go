@@ -650,7 +650,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				IncludeID: inputInclID,
 				Files: []FileInputs{
 					{
-						Paths: []string{"{{ .appname }}"},
+						Paths: []string{"{{ .AppName }}"},
 					},
 				},
 			},
@@ -661,22 +661,22 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				IncludeID: outputInclID,
 				DockerImage: []DockerImageOutput{
 					{
-						IDFile: "{{ .appname }}",
+						IDFile: "{{ .AppName }}",
 						RegistryUpload: []DockerImageRegistryUpload{
 							{
 								Tag:        "test",
-								Repository: "{{ .appname }}",
+								Repository: "{{ .AppName }}",
 							},
 							{
 								Tag:        "latest",
-								Repository: "{{ .appname }}",
+								Repository: "{{ .AppName }}",
 							},
 						},
 					},
 				},
 				File: []FileOutput{
 					{
-						Path: "{{ .appname }}",
+						Path: "{{ .AppName }}",
 						FileCopy: []FileCopy{{
 							Path: "/tmp/f",
 						},
@@ -689,7 +689,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 			{
 				IncludeID: taskInclID,
 				Name:      "check",
-				Command:   []string{"{{ .appname }}"},
+				Command:   []string{"{{ .AppName }}"},
 			},
 		},
 	}
