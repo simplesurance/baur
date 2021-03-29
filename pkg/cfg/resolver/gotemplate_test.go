@@ -7,7 +7,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestTemplatingWithUndefinedVarFails(t *testing.T) {
+	templ := NewGoTemplate("myapp", "/", func() (string, error) { return "", nil })
+
+	res, err := templ.Resolve("{{ .myvar }}")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
 
 func TestResolve(t *testing.T) {
 	const envVar = "_baurTestEnvVar"
