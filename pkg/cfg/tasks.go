@@ -2,15 +2,13 @@ package cfg
 
 import (
 	"fmt"
-
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 type Tasks []*Task
 
-func (tasks Tasks) resolve(resolvers resolver.Resolver) error {
+func (tasks Tasks) resolve(resolver Resolver) error {
 	for _, t := range tasks {
-		if err := t.resolve(resolvers); err != nil {
+		if err := t.resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "Tasks", t.Name)
 		}
 	}

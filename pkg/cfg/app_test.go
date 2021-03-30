@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -86,7 +84,7 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 	require.NoError(t, err)
 
 	includeDB := NewIncludeDB(t.Logf)
-	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
+	err = loadedApp.Merge(includeDB, &mockResolver{})
 	require.NoError(t, err)
 
 	assert.Error(t, loadedApp.Validate())

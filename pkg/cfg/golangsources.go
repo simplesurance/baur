@@ -1,9 +1,5 @@
 package cfg
 
-import (
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
-)
-
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
 	Queries     []string `toml:"queries" comment:"Queries specify the source files or packages of which the dependencies are resolved.\n Format:\n \tfile=<RELATIVE-PATH>\n \tfileglob=<GLOB-PATTERN>\t -> Supports double-star\n \tEverything else is passed directly to underlying build tool (go list by default).\n \tSee also the patterns described at:\n \t<https://github.com/golang/tools/blob/bc8aaaa29e0665201b38fa5cb5d47826788fa249/go/packages/doc.go#L17>.\n Files from Golang's stdlib are ignored."`
@@ -12,11 +8,11 @@ type GolangSources struct {
 	Tests       bool     `toml:"tests" comment:"If true queries are resolved to test files, otherwise testfiles are ignored."`
 }
 
-func (g *GolangSources) resolve(resolvers resolver.Resolver) error {
+func (g *GolangSources) resolve(resolver Resolver) error {
 	for i, env := range g.Environment {
 		var err error
 
-		if g.Environment[i], err = resolvers.Resolve(env); err != nil {
+		if g.Environment[i], err = resolver.Resolve(env); err != nil {
 			return fieldErrorWrap(err, "Environment", env)
 		}
 	}
@@ -24,7 +20,7 @@ func (g *GolangSources) resolve(resolvers resolver.Resolver) error {
 	for i, q := range g.Queries {
 		var err error
 
-		if g.Queries[i], err = resolvers.Resolve(q); err != nil {
+		if g.Queries[i], err = resolver.Resolve(q); err != nil {
 			return fieldErrorWrap(err, "Paths", q)
 		}
 	}
@@ -32,7 +28,7 @@ func (g *GolangSources) resolve(resolvers resolver.Resolver) error {
 	for i, f := range g.BuildFlags {
 		var err error
 
-		if g.BuildFlags[i], err = resolvers.Resolve(f); err != nil {
+		if g.BuildFlags[i], err = resolver.Resolve(f); err != nil {
 			return fieldErrorWrap(err, "build_flags", f)
 		}
 	}

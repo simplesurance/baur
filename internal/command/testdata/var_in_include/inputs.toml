@@ -10,5 +10,5 @@
     # Relative path to source files.
     # Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)
     # and ** is supported to match files recursively.
-    paths = ["{{ .appname }}.txt"]
+    paths = ["{{ .AppName }}.txt"]
 

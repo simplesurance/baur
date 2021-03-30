@@ -19,7 +19,7 @@ func TestFilesAndGitFilesPatternBehaveTheSame(t *testing.T) {
 	log.StdLogger.SetOutput(log.NewTestLogOutput(t))
 	exec.DefaultDebugfFn = t.Logf
 
-	gitDir := t.TempDir()
+	gitDir := fstest.TempDir(t)
 
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(gitDir, "subdir", "file1.txt"))
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(gitDir, "subdir", "file2.txt"))

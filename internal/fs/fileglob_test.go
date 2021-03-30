@@ -5,11 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v2/internal/testutils/strtest"
 )
 
 func Test_FindAllSubDirs(t *testing.T) {
-	tempdir := t.TempDir()
+	tempdir := fstest.TempDir(t)
 
 	expectedResults := []string{
 		tempdir,
@@ -170,7 +171,7 @@ func Test_Resolve(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tempdir := t.TempDir()
+		tempdir := fstest.TempDir(t)
 
 		// The path separators in the test cases are Unix style "/", they need to be converted to "\" when running on Windows
 		for i := range tc.expectedMatches {

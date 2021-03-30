@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml"
-
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 // App stores an application configuration.
@@ -113,8 +111,8 @@ func (a *App) FilePath() string {
 
 // Resolve runs the resolvers on string fields that can contain special strings.
 // These special strings are replaced with concrete values by the resolvers.
-func (a *App) Resolve(resolvers resolver.Resolver) error {
-	if err := a.Tasks.resolve(resolvers); err != nil {
+func (a *App) Resolve(resolver Resolver) error {
+	if err := a.Tasks.resolve(resolver); err != nil {
 		return fieldErrorWrap(err, "Tasks")
 	}
 
@@ -124,9 +122,9 @@ func (a *App) Resolve(resolvers resolver.Resolver) error {
 // Merge merges the configuration with it's includes.
 // The task includes listed in App.Includes are loaded via the includedb and
 // then appeneded to the task list.
-func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver) error {
+func (a *App) Merge(includedb *IncludeDB, includeSpecResolver Resolver) error {
 	for _, includeID := range a.Includes {
-		taskInclude, err := includedb.loadTaskInclude(includeSpecResolvers, filepath.Dir(a.filepath), includeID)
+		taskInclude, err := includedb.loadTaskInclude(includeSpecResolver, filepath.Dir(a.filepath), includeID)
 		if err != nil {
 			return fmt.Errorf("%s: %w", includeID, err)
 		}
@@ -137,7 +135,7 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolvers resolver.Resolver
 	}
 
 	for _, task := range a.Tasks {
-		err := taskMerge(task, filepath.Dir(a.filepath), includeSpecResolvers, includedb)
+		err := taskMerge(task, filepath.Dir(a.filepath), includeSpecResolver, includedb)
 		if err != nil {
 			return fieldErrorWrap(err, "Tasks", task.Name)
 		}

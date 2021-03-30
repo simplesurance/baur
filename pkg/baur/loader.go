@@ -7,6 +7,7 @@ import (
 
 	"github.com/simplesurance/baur/v2/internal/fs"
 	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 type Logger interface {
@@ -309,7 +310,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 }
 
 func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
-	resolvers := defaultAppCfgResolvers(a.repositoryRoot, appCfg.Name, a.gitCommitIDFunc)
+	resolvers := resolver.NewGoTemplate(appCfg.Name, a.repositoryRoot, a.gitCommitIDFunc)
 
 	err := appCfg.Merge(a.includeDB, resolvers)
 	if err != nil {

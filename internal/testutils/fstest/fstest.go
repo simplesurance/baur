@@ -35,3 +35,18 @@ func Chmod(t *testing.T, name string, mode os.FileMode) {
 		t.Fatal(err)
 	}
 }
+
+// TempDir returns a path, with all symlinks in it resolved, to a unique
+// temporary directory.
+// The directory is removed via t.Cleanup() on termination of the test.
+// (On MacOS t.TempDir() returns a symlink.)
+func TempDir(t *testing.T) string {
+	t.Helper()
+
+	p, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal("failed to resolve symlinks in tempdir path:", err)
+	}
+
+	return p
+}

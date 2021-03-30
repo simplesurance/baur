@@ -3,8 +3,6 @@ package cfg
 import (
 	"fmt"
 	"strings"
-
-	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
 type taskDef interface {
@@ -17,7 +15,7 @@ type taskDef interface {
 }
 
 // taskMerge loads the includes of the task and merges them with the task itself.
-func taskMerge(task taskDef, workingDir string, resolver resolver.Resolver, includeDB *IncludeDB) error {
+func taskMerge(task taskDef, workingDir string, resolver Resolver, includeDB *IncludeDB) error {
 	for _, includeSpec := range *task.GetIncludes() {
 		inputInclude, err := includeDB.loadInputInclude(resolver, workingDir, includeSpec)
 		if err == nil {

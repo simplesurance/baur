@@ -14,6 +14,13 @@ import (
 	"github.com/simplesurance/baur/v2/pkg/cfg/resolver"
 )
 
+type mockResolver struct {
+}
+
+func (m *mockResolver) Resolve(in string) (string, error) {
+	return in, nil
+}
+
 // cfgToFile marshals a struct to a toml configuration file.
 // In opposite to toFile(), no fields are commented in the marshalled versions.
 func cfgToFile(t *testing.T, cfg interface{}, path string) {
@@ -132,7 +139,7 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 
 	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.loadTaskInclude(
-		&resolver.StrReplacement{Old: "$NOTHING"},
+		&mockResolver{},
 		tmpdir,
 		inclFilePath+"#"+include.Task[0].IncludeID,
 	)
@@ -198,7 +205,7 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 
 	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.loadTaskInclude(
-		&resolver.StrReplacement{Old: "$NOTHING"},
+		&mockResolver{},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
 	)
@@ -244,7 +251,7 @@ func TestIncludePathsAreRelativeToCfg(t *testing.T) {
 
 	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.loadTaskInclude(
-		&resolver.StrReplacement{Old: "$NOTHING"},
+		&mockResolver{},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
 	)
@@ -280,7 +287,7 @@ func TestAbsIncludePathsFail(t *testing.T) {
 
 	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.loadTaskInclude(
-		&resolver.StrReplacement{Old: "$NOTHING"},
+		&mockResolver{},
 		tmpdir,
 		taskInclFilename+"#"+taskIncl.Task[0].IncludeID,
 	)
@@ -308,7 +315,7 @@ func TestEnsureInputIncludeIDsMustBeUnique(t *testing.T) {
 
 	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.loadTaskInclude(
-		&resolver.StrReplacement{Old: "$NOTHING"},
+		&mockResolver{},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
 	)
@@ -337,7 +344,7 @@ func TestEnsureOutputIncludeIDsMustBeUnique(t *testing.T) {
 
 	includeDB := NewIncludeDB(t.Logf)
 	loadedIncl, err := includeDB.loadTaskInclude(
-		&resolver.StrReplacement{Old: "$NOTHING"},
+		&mockResolver{},
 		tmpdir,
 		filepath.Join(tmpdir, taskInclFilename)+"#"+taskIncl.Task[0].IncludeID,
 	)
@@ -491,7 +498,7 @@ func TestTaskInclude(t *testing.T) {
 			require.NoError(t, err)
 
 			includeDB := NewIncludeDB(t.Logf)
-			err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
+			err = loadedApp.Merge(includeDB, &mockResolver{})
 			require.NoError(t, err)
 
 			assert.Equal(t, tc.appConfig.Name, loadedApp.Name)
@@ -550,7 +557,7 @@ func TestTaskIncludeFailsForNonExistingIncludeFile(t *testing.T) {
 	require.NoError(t, err)
 
 	includeDB := NewIncludeDB(t.Logf)
-	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
+	err = loadedApp.Merge(includeDB, &mockResolver{})
 	require.True(
 		t,
 		os.IsNotExist(err) || os.IsNotExist(errors.Unwrap(err)),
@@ -607,7 +614,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 	require.NoError(t, err)
 
 	includeDB := NewIncludeDB(t.Logf)
-	err = loadedApp.Merge(includeDB, &resolver.StrReplacement{Old: "$NOTHING"})
+	err = loadedApp.Merge(includeDB, &mockResolver{})
 	require.True(t, errors.Is(err, ErrIncludeIDNotFound), "merge did not return ErrIncludeIDNotFound: %v", err)
 }
 
@@ -643,7 +650,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				IncludeID: inputInclID,
 				Files: []FileInputs{
 					{
-						Paths: []string{"{{ .appname }}"},
+						Paths: []string{"{{ .AppName }}"},
 					},
 				},
 			},
@@ -654,22 +661,22 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				IncludeID: outputInclID,
 				DockerImage: []DockerImageOutput{
 					{
-						IDFile: "{{ .appname }}",
+						IDFile: "{{ .AppName }}",
 						RegistryUpload: []DockerImageRegistryUpload{
 							{
 								Tag:        "test",
-								Repository: "{{ .appname }}",
+								Repository: "{{ .AppName }}",
 							},
 							{
 								Tag:        "latest",
-								Repository: "{{ .appname }}",
+								Repository: "{{ .AppName }}",
 							},
 						},
 					},
 				},
 				File: []FileOutput{
 					{
-						Path: "{{ .appname }}",
+						Path: "{{ .AppName }}",
 						FileCopy: []FileCopy{{
 							Path: "/tmp/f",
 						},
@@ -682,7 +689,7 @@ func TestVarsInIncludeFiles(t *testing.T) {
 			{
 				IncludeID: taskInclID,
 				Name:      "check",
-				Command:   []string{"{{ .appname }}"},
+				Command:   []string{"{{ .AppName }}"},
 			},
 		},
 	}
@@ -714,7 +721,9 @@ func TestVarsInIncludeFiles(t *testing.T) {
 	for i, loadedApp := range loadedApps {
 		variableVal := fmt.Sprintf("var%d", i)
 
-		err = loadedApp.Resolve(&resolver.StrReplacement{Old: "{{ .appname }}", New: variableVal})
+		err = loadedApp.Resolve(resolver.NewGoTemplate(variableVal, "/tmp", func() (string, error) {
+			return "", nil
+		}))
 		require.NoError(t, err)
 
 		require.Len(t, loadedApp.Tasks, 2)
