@@ -39,7 +39,7 @@ func Chmod(t *testing.T, name string, mode os.FileMode) {
 // TempDir returns a path, with all symlinks in it resolved, to a unique
 // temporary directory.
 // The directory is removed via t.Cleanup() on termination of the test.
-// (On MacOS a t.-TempDir() returns a symlink.)
+// (On MacOS t.TempDir() returns a symlink.)
 func TempDir(t *testing.T) string {
 	t.Helper()
 
