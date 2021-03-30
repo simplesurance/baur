@@ -5,15 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v2/internal/testutils/strtest"
 )
 
 func Test_FindAllSubDirs(t *testing.T) {
-	// on mac tempdir is a symlink
-	tempdir, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal("failed to resolve symlink for tempdir:", err)
-	}
+	tempdir := fstest.TempDir(t)
 
 	expectedResults := []string{
 		tempdir,
@@ -22,7 +19,7 @@ func Test_FindAllSubDirs(t *testing.T) {
 		filepath.Join(tempdir, "1/2/3/"),
 	}
 
-	err = os.MkdirAll(filepath.Join(tempdir, "1/2/3"), os.ModePerm)
+	err := os.MkdirAll(filepath.Join(tempdir, "1/2/3"), os.ModePerm)
 	if err != nil {
 		t.Fatal("creating subdirectories failed:", err)
 	}
