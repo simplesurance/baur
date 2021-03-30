@@ -171,10 +171,7 @@ func Test_Resolve(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tempdir, err := filepath.EvalSymlinks(t.TempDir())
-		if err != nil {
-			t.Fatal("failed to resolve symlink for tempdir:", err)
-		}
+		tempdir := fstest.TempDir(t)
 
 		// The path separators in the test cases are Unix style "/", they need to be converted to "\" when running on Windows
 		for i := range tc.expectedMatches {
