@@ -1,6 +1,7 @@
 GIT_COMMIT := $(shell git rev-parse HEAD)
 GIT_DIRTY := $(if $(shell git diff-files),wip)
 VERSION := $(shell cat ver)
+DOCKER_IMAGE := "baur/baur:$(VERSION)"
 LDFLAGS := "-X github.com/simplesurance/baur/v2/internal/version.GitCommit=$(GIT_COMMIT) \
 	    -X github.com/simplesurance/baur/v2/internal/version.Appendix=$(GIT_DIRTY)"
 TARFLAGS := --sort=name --mtime='2018-01-01 00:00:00' --owner=0 --group=0 --numeric-owner
@@ -41,12 +42,14 @@ dist/darwin_arm64/baur:
 	$(info * creating $(@D)/baur-darwin_arm64-$(VERSION).tar.xz.sha256)
 	@(cd $(@D) && sha256sum baur-darwin_arm64-$(VERSION).tar.xz > baur-darwin_arm64-$(VERSION).tar.xz.sha256)
 
-.PHONY: dist/linux_amd64/baur
-dist/linux_amd64/baur:
-	$(info * building $@)
+.PHONY: dist/linux_amd64/baur build_linux_amd64
+build_linux_amd64:
+	$(eval TARGET:=dist/linux_amd64/baur)
+	$(info * building $(TARGET))
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-		$(BUILDFLAGS) -o "$@" cmd/baur/main.go
+		$(BUILDFLAGS) -o "$(TARGET)" cmd/baur/main.go
 
+dist/linux_amd64/baur: build_linux_amd64
 	$(info * creating $(@D)/baur-linux_amd64-$(VERSION).tar.xz)
 	@tar $(TARFLAGS) -C $(@D) -cJf $(@D)/baur-linux_amd64-$(VERSION).tar.xz $(@F)
 
@@ -96,3 +99,7 @@ test:
 .PHONY: dbtest
 dbtest:
 	go test -race -tags=dbtest ./...
+
+.PHONY: docker
+docker:
+	docker build -t $(DOCKER_IMAGE) .
