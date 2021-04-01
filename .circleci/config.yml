@@ -102,6 +102,13 @@ jobs:
       - run:
           name: Building baur
           command: make baur
+      - setup_remote_docker
+      - run:
+          name: Building docker image
+          command: make docker
+      - run:
+          name: Push docker image to repository
+          command: echo "TBD"
 
   static_analysis_linux:
     docker:
