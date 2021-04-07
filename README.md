@@ -12,7 +12,7 @@
 
 ## About
 
-baur is a incremental task runner for for git based [monolithic
+baur is an incremental task runner for for git based [monolithic
 repositories](https://en.wikipedia.org/wiki/Monorepo).
 
 Per application tasks are defined in a [TOML](https://github.com/toml-lang/toml)
