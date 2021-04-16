@@ -34,7 +34,7 @@ type diffInputsCmd struct {
 
 	csv      bool
 	quiet    bool
-	inputStr string
+	inputStr []string
 }
 
 const diffInputslongHelp = `
@@ -90,8 +90,8 @@ func newDiffInputsCmd() *diffInputsCmd {
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"do not list the inputs that differ")
 
-	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as input")
+	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
+		"include a string as input, can be specified multiple times")
 
 	return &cmd
 }
@@ -211,7 +211,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 			os.Exit(1)
 		}
 
-		return baur.NewInputs(baur.InputAddStrIfNotEmpty(inputFiles, c.inputStr)), nil
+		return baur.NewInputs(append(baur.AsInputStrings(c.inputStr...), inputFiles...)), nil
 	}
 
 	taskRun := getTaskRun(repo, argDetails)
@@ -225,7 +225,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	// Convert the inputs from the DB into baur.Input interface implementation
 	baurInputs := toBaurInputs(storageInputs)
 
-	return baur.NewInputs(baur.InputAddStrIfNotEmpty(baurInputs, c.inputStr)), taskRun
+	return baur.NewInputs(append(baur.AsInputStrings(c.inputStr...), baurInputs...)), taskRun
 }
 
 func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage.TaskRunWithID {

@@ -14,7 +14,7 @@ type TaskStatusEvaluator struct {
 	inputResolver *InputResolver
 	store         storage.Storer
 
-	inputStr       string
+	inputStr       []string
 	lookupInputStr string
 }
 
@@ -23,7 +23,7 @@ func NewTaskStatusEvaluator(
 	repositoryDir string,
 	store storage.Storer,
 	inputResolver *InputResolver,
-	inputStr string,
+	inputStr []string,
 	lookupInputStr string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
@@ -48,8 +48,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	inputs := NewInputs(InputAddStrIfNotEmpty(inputFiles, t.inputStr))
-
+	inputs := NewInputs(append(AsInputStrings(t.inputStr...), inputFiles...))
 	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err
@@ -59,7 +58,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return taskStatus, inputs, run, err
 	}
 
-	inputsLookupStr := NewInputs(append(inputFiles, NewInputString(t.lookupInputStr)))
+	inputsLookupStr := NewInputs(append(AsInputStrings(t.lookupInputStr), inputFiles...))
 	taskStatus, run, err = t.getTaskStatus(ctx, inputsLookupStr, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err

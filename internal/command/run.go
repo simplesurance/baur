@@ -73,7 +73,7 @@ type runCmd struct {
 	// Cmdline parameters
 	skipUpload     bool
 	force          bool
-	inputStr       string
+	inputStr       []string
 	lookupInputStr string
 
 	// other fields
@@ -102,8 +102,8 @@ func newRunCmd() *runCmd {
 		"skip uploading task outputs and recording the run")
 	cmd.Flags().BoolVarP(&cmd.force, "force", "f", false,
 		"enforce running tasks independent of their status")
-	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as an input")
+	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
+		"include a string as input, can be specified multiple times")
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")
 

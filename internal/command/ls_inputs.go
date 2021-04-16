@@ -24,7 +24,7 @@ type lsInputsCmd struct {
 	csv        bool
 	quiet      bool
 	showDigest bool
-	inputStr   string
+	inputStr   []string
 }
 
 func newLsInputsCmd() *lsInputsCmd {
@@ -47,8 +47,8 @@ func newLsInputsCmd() *lsInputsCmd {
 	cmd.Flags().BoolVar(&cmd.showDigest, "digests", false,
 		"show digests")
 
-	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as input")
+	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
+		"include a string as input, can be specified multiple times")
 
 	return &cmd
 }
@@ -57,7 +57,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 	var inputs []baur.Input
 
 	if taskID, err := strconv.Atoi(args[0]); err == nil {
-		if c.inputStr != "" {
+		if len(c.inputStr) != 0 {
 			stderr.Printf("--input-str can only be specified for task-names")
 			os.Exit(1)
 		}
@@ -65,7 +65,7 @@ func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
 		inputs = c.mustGetTaskRunInputs(taskID)
 	} else {
 		inputs = c.mustGetTaskInputs(args[0])
-		inputs = baur.InputAddStrIfNotEmpty(inputs, c.inputStr)
+		inputs = append(inputs, baur.AsInputStrings(c.inputStr...)...)
 	}
 
 	sort.Slice(inputs, func(i, j int) bool {
