@@ -47,7 +47,7 @@ type statusCmd struct {
 	csv            bool
 	quiet          bool
 	absPaths       bool
-	inputStr       string
+	inputStr       []string
 	lookupInputStr string
 	buildStatus    flag.TaskStatus
 	fields         *flag.Fields
@@ -97,8 +97,8 @@ func newStatusCmd() *statusCmd {
 	cmd.Flags().VarP(cmd.fields, "fields", "f",
 		cmd.fields.Usage(term.Highlight))
 
-	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as input")
+	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
+		"include a string as input, can be specified multiple times")
 
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")

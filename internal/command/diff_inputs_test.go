@@ -298,7 +298,7 @@ func TestCurrentInputsAgainstPreviousRunThatHasDifferentInputsReturnsExitCode2(t
 			doInitDb(t)
 
 			runCmd := newRunCmd()
-			runCmd.inputStr = "an_input"
+			runCmd.inputStr = []string{"an_input"}
 			runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
 			diffInputsCmd := newDiffInputsCmd()
@@ -333,7 +333,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasDifferentInputsReturnsExitCo
 
 			runCmd := newRunCmd()
 			runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
-			runCmd.inputStr = "an_input"
+			runCmd.inputStr = []string{"an_input"}
 			runCmd.run(&runCmd.Command, []string{appOneWithTestTask})
 
 			diffInputsCmd := newDiffInputsCmd()
@@ -367,11 +367,11 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 
 	originalDigest := r.WriteAdditionalFileContents(t, appOneName, fileName, "original")
 	runCmd := newRunCmd()
-	runCmd.inputStr = "run_one"
+	runCmd.inputStr = []string{"run_one"}
 	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
 	newDigest := r.WriteAdditionalFileContents(t, appOneName, fileName, "new")
-	runCmd.inputStr = "run_two"
+	runCmd.inputStr = []string{"run_two"}
 	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
 	stdoutBuf, _ := interceptCmdOutput(t)

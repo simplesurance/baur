@@ -47,3 +47,14 @@ func (i *InputString) calcDigest() (*digest.Digest, error) {
 
 	return i.digest, nil
 }
+
+// AsInputStrings returns InputStrings for all elements in strs.
+func AsInputStrings(strs ...string) []Input {
+	result := make([]Input, 0, len(strs))
+
+	for _, s := range strs {
+		result = append(result, NewInputString(s))
+	}
+
+	return result
+}
