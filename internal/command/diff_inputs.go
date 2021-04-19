@@ -91,7 +91,8 @@ func newDiffInputsCmd() *diffInputsCmd {
 		"do not list the inputs that differ")
 
 	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
-		"include a string as input, can be specified multiple times")
+		"include a string as input of the task or run specified by the first argument,\n"+
+			"can be specified multiple times")
 
 	return &cmd
 }
@@ -105,10 +106,6 @@ func diffArgs() cobra.PositionalArgs {
 			return fmt.Errorf("accepts 2 args, received %d", len(args))
 		}
 
-		if args[0] == args[1] {
-			return fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1])
-		}
-
 		validArgRE := regexp.MustCompile(`^[\w-]+\.[\w-]+\^*$|^[0-9]+\d*$`)
 		for _, arg := range args {
 			if !validArgRE.MatchString(arg) {
@@ -120,16 +117,20 @@ func diffArgs() cobra.PositionalArgs {
 }
 
 func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
+	if len(c.inputStr) == 0 && args[0] == args[1] {
+		exitOnErr(fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1]))
+	}
+
 	repo := mustFindRepository()
 	argDetails := getDiffInputArgDetails(repo, args)
 
 	inputs1, run1 := c.getTaskRunInputs(repo, argDetails[0])
+	inputs1.Add(baur.AsInputStrings(c.inputStr...))
+
 	inputs2, run2 := c.getTaskRunInputs(repo, argDetails[1])
 
-	if run1 != nil && run2 != nil {
-		if run1.ID == run2.ID {
-			exitOnErr(fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1]))
-		}
+	if len(c.inputStr) == 0 && run1 != nil && run2 != nil && run1.ID == run2.ID {
+		exitOnErr(fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1]))
 	}
 
 	diffs, err := baur.DiffInputs(inputs1, inputs2)
@@ -211,7 +212,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 			os.Exit(1)
 		}
 
-		return baur.NewInputs(append(baur.AsInputStrings(c.inputStr...), inputFiles...)), nil
+		return baur.NewInputs(inputFiles), nil
 	}
 
 	taskRun := getTaskRun(repo, argDetails)
@@ -225,7 +226,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	// Convert the inputs from the DB into baur.Input interface implementation
 	baurInputs := toBaurInputs(storageInputs)
 
-	return baur.NewInputs(append(baur.AsInputStrings(c.inputStr...), baurInputs...)), taskRun
+	return baur.NewInputs(baurInputs), taskRun
 }
 
 func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage.TaskRunWithID {

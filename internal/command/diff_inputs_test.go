@@ -170,8 +170,9 @@ func TestCurrentInputsAgainstSameTaskCurrentInputsReturnsExitCode1(t *testing.T)
 
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appOneWithBuildTask})
-	err := diffInputsCmd.Execute()
-	assert.EqualError(t, err, fmt.Sprintf("%s and %s refer to the same task-run", appOneWithBuildTask, appOneWithBuildTask))
+	_, stderrBuf := interceptCmdOutput(t)
+	execCmd(t, diffInputsCmd, 1)
+	assert.Contains(t, stderrBuf.String(), fmt.Sprintf("%s and %s refer to the same task-run", appOneWithBuildTask, appOneWithBuildTask))
 }
 
 func TestNonExistentRunReturnsExitCode1(t *testing.T) {
@@ -375,7 +376,6 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
 
 	stdoutBuf, _ := interceptCmdOutput(t)
-
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.csv = true
 	diffInputsCmd.SetArgs([]string{fmt.Sprintf("%s^^", appOneWithBuildTask), fmt.Sprintf("%s^", appOneWithBuildTask)})
@@ -391,6 +391,39 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.ElementsMatch(t, expectedOutput, actualOutput)
+}
+
+func TestInputStringsAreAppliedToFirstArg(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	r.CreateAppWithNoOutputs(t, appOneName)
+	r.CreateAppWithNoOutputs(t, appTwoName)
+
+	doInitDb(t)
+
+	stdoutBuf, _ := interceptCmdOutput(t)
+	diffInputsCmd := newDiffInputsCmd()
+	diffInputsCmd.csv = true
+	diffInputsCmd.inputStr = []string{"hello"}
+	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appTwoWithBuildTask})
+	execCmd(t, diffInputsCmd, 2)
+	assert.Contains(t, stdoutBuf.String(), "-,string:hello,")
+
+	runCmd := newRunCmd()
+	runCmd.inputStr = []string{"hello"}
+	runCmd.run(&runCmd.Command, []string{appOneWithBuildTask})
+
+	// inputs are the same, diffInputsCmd.inputStr is set to hello and added to first target
+	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, "1"})
+	execCmd(t, diffInputsCmd, 0)
+
+	// inputs differ, diffInputsCmd.inputStr is set to hello and added to
+	// first target which is the stored run, app in repo is missing
+	// input-string
+	stdoutBuf, _ = interceptCmdOutput(t)
+	diffInputsCmd.SetArgs([]string{"1", appOneWithBuildTask})
+	execCmd(t, diffInputsCmd, 2)
+	assert.Contains(t, stdoutBuf.String(), "-,string:hello,")
 }
 
 func execCmd(t *testing.T, cmd *diffInputsCmd, expectedExitCode int) {
