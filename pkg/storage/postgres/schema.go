@@ -65,9 +65,10 @@ CREATE TABLE task_run (
 CREATE TABLE input (
 	id serial PRIMARY KEY,
 	uri text NOT NULL,
-	digest text NOT NULL,
-	CONSTRAINT input_uri_digest_uniq UNIQUE (uri, digest)
+	digest text NOT NULL
 );
+
+CREATE UNIQUE INDEX input_uri_digest_uniq ON input (MD5(uri), digest);
 
 CREATE TABLE task_run_input (
 	task_run_id integer NOT NULL REFERENCES task_run(id) ON DELETE CASCADE,

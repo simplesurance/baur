@@ -152,7 +152,7 @@ func insertInputIfNotExist(ctx context.Context, db dbConn, inputs []*storage.Inp
 	   VALUES
 `
 	const stmt2 = `
-	       ON CONFLICT ON CONSTRAINT input_uri_digest_uniq
+	       ON CONFLICT (MD5(uri), digest)
 	       DO UPDATE SET id=input.id
 	RETURNING id
 	`
