@@ -23,6 +23,18 @@ func (in *Inputs) Inputs() []Input {
 	return in.inputs
 }
 
+// Add adds elements in inputs to in and returns *in
+func (in *Inputs) Add(inputs []Input) *Inputs {
+	if len(inputs) == 0 {
+		return in
+	}
+
+	in.inputs = append(in.inputs, inputs...)
+	in.digest = nil
+
+	return in
+}
+
 // Digest returns a summarized digest over all Inputs.
 // On the first call the digest is calculated, on subsequent calls the stored digest is returned.
 func (in *Inputs) Digest() (*digest.Digest, error) {
