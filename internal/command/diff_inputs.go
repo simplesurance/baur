@@ -74,7 +74,7 @@ baur diff inputs calc.build calc.build^ - Compare current inputs and the one
 func newDiffInputsCmd() *diffInputsCmd {
 	cmd := diffInputsCmd{
 		Command: cobra.Command{
-			Use:     "inputs <APP_NAME.TASK_NAME[^]|RUN_ID>...",
+			Use:     "inputs <APP_NAME.TASK_NAME[^]|RUN_ID> <APP_NAME.TASK_NAME[^]|RUN_ID>",
 			Short:   "list inputs that differ between two task-runs",
 			Long:    strings.TrimSpace(diffInputslongHelp),
 			Example: strings.TrimSpace(diffInputsExample),
