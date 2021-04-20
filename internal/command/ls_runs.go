@@ -93,7 +93,7 @@ func newLsRunsCmd() *lsRunsCmd {
 	cmd.Flags().StringVar(&cmd.input, "has-input", "",
 		fmt.Sprintf(
 			`Only show runs that have the given input.
-File inputs are specified their path.
+File inputs are specified by their repository relative path.
 String inputs are specified with a '%s' prefix, e.g. string:my_input_str.`,
 			term.Highlight("string:")),
 	)
@@ -242,11 +242,21 @@ func (c *lsRunsCmd) getFilters() []*storage.Filter {
 	}
 
 	if c.input != "" {
-		filters = append(filters, &storage.Filter{
-			Field:    storage.FieldInput,
-			Operator: storage.OpEQ,
-			Value:    c.input,
-		})
+
+		if strings.HasPrefix(c.input, "string:") {
+			filters = append(filters, &storage.Filter{
+				Field:    storage.FieldInputString,
+				Operator: storage.OpEQ,
+				Value:    strings.TrimPrefix(c.input, "string:"),
+			})
+		} else {
+			filters = append(filters, &storage.Filter{
+				Field:    storage.FieldInputFilePath,
+				Operator: storage.OpEQ,
+				Value:    c.input,
+			})
+		}
+
 	}
 
 	return filters

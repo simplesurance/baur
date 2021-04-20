@@ -23,8 +23,13 @@ func NewInputFile(repoRootPath, relPath string) *Inputfile {
 	}
 }
 
-// String returns it's string representation
+// String returns RelPath()
 func (f *Inputfile) String() string {
+	return f.repoRelPath
+}
+
+// RelPath returns the path of the file relative to the baur repository root.
+func (f *Inputfile) RelPath() string {
 	return f.repoRelPath
 }
 
