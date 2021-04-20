@@ -146,14 +146,14 @@ func insertVCSIfNotExist(ctx context.Context, db dbConn, revision string, isDirt
 	return id, nil
 }
 
-func insertInputIfNotExist(ctx context.Context, db dbConn, inputs []*storage.Input) ([]int, error) {
+func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputFile) ([]int, error) {
 	const stmt1 = `
-           INSERT INTO input (uri, digest)
+           INSERT INTO input_file (path, digest)
 	   VALUES
 `
 	const stmt2 = `
-	       ON CONFLICT ON CONSTRAINT input_uri_digest_uniq
-	       DO UPDATE SET id=input.id
+	       ON CONFLICT ON CONSTRAINT input_file_path_digest_uniq
+	       DO UPDATE SET id=input_file.id
 	RETURNING id
 	`
 
@@ -161,7 +161,7 @@ func insertInputIfNotExist(ctx context.Context, db dbConn, inputs []*storage.Inp
 
 	queryArgs := make([]interface{}, 0, len(inputs)*2)
 	for _, in := range inputs {
-		queryArgs = append(queryArgs, in.URI, in.Digest)
+		queryArgs = append(queryArgs, in.Path, in.Digest)
 	}
 
 	query := stmt1 + stmtVals + " " + stmt2
@@ -179,21 +179,101 @@ func insertInputIfNotExist(ctx context.Context, db dbConn, inputs []*storage.Inp
 	return ids, nil
 }
 
-func insertTaskRunInputsIfNotExist(ctx context.Context, db dbConn, taskRunID int, taskRun *storage.TaskRunFull) error {
+func insertInputStringFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputString) ([]int, error) {
 	const stmt1 = `
-	INSERT INTO task_run_input (task_run_id, total_digest, input_id)
+           INSERT INTO input_string (string, digest)
+	   VALUES
+`
+	const stmt2 = `
+	       ON CONFLICT ON CONSTRAINT input_string_digest_uniq
+	       DO UPDATE SET id=input_string.id
+	RETURNING id
+	`
+
+	stmtVals := queryValueStr(len(inputs), 2)
+
+	queryArgs := make([]interface{}, 0, len(inputs)*2)
+	for _, in := range inputs {
+		queryArgs = append(queryArgs, in.String, in.Digest)
+	}
+
+	query := stmt1 + stmtVals + " " + stmt2
+
+	rows, err := db.Query(ctx, query, queryArgs...)
+	if err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	ids := make([]int, 0, len(inputs))
+	if err := scanIDs(rows, &ids); err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	return ids, nil
+}
+
+func insertTaskRunInputStringsIfNotExist(ctx context.Context, db dbConn, taskRunID int, inputStrings []*storage.InputString) error {
+	const stmt1 = `
+	INSERT INTO task_run_string_input (task_run_id, input_string_id)
 	VALUES
 	`
 
-	inputIDs, err := insertInputIfNotExist(ctx, db, taskRun.Inputs)
+	if len(inputStrings) == 0 {
+		return nil
+	}
+
+	inputStringIDs, err := insertInputStringFilesIfNotExist(ctx, db, inputStrings)
 	if err != nil {
 		return err
 	}
 
 	var stmtVals strings.Builder
-	argNr := 3
+	argNr := 2
+	for i := 0; i < len(inputStringIDs); i++ {
+		fmt.Fprintf(&stmtVals, "($1, $%d)", argNr)
+		argNr++
+
+		if i < len(inputStringIDs)-1 {
+			stmtVals.WriteString(", ")
+		}
+	}
+
+	queryArgs := make([]interface{}, 1, (len(inputStringIDs)*2)+2)
+	queryArgs[0] = taskRunID
+
+	for _, inputID := range inputStringIDs {
+		queryArgs = append(queryArgs, inputID)
+	}
+
+	query := stmt1 + stmtVals.String()
+
+	_, err = db.Exec(ctx, query, queryArgs...)
+	if err != nil {
+		return newQueryError(query, err, queryArgs...)
+	}
+
+	return nil
+}
+
+func insertTaskRunInputFilesIfNotExist(ctx context.Context, db dbConn, taskRunID int, inputFiles []*storage.InputFile) error {
+	const stmt1 = `
+	INSERT INTO task_run_file_input (task_run_id, input_file_id)
+	VALUES
+	`
+
+	if len(inputFiles) == 0 {
+		return nil
+	}
+
+	inputIDs, err := insertInputFilesIfNotExist(ctx, db, inputFiles)
+	if err != nil {
+		return err
+	}
+
+	var stmtVals strings.Builder
+	argNr := 2
 	for i := 0; i < len(inputIDs); i++ {
-		fmt.Fprintf(&stmtVals, "($1, $2, $%d)", argNr)
+		fmt.Fprintf(&stmtVals, "($1, $%d)", argNr)
 		argNr++
 
 		if i < len(inputIDs)-1 {
@@ -201,9 +281,8 @@ func insertTaskRunInputsIfNotExist(ctx context.Context, db dbConn, taskRunID int
 		}
 	}
 
-	queryArgs := make([]interface{}, 2, (len(inputIDs)*2)+2)
+	queryArgs := make([]interface{}, 1, (len(inputIDs)*2)+2)
 	queryArgs[0] = taskRunID
-	queryArgs[1] = taskRun.TotalInputDigest
 
 	for _, inputID := range inputIDs {
 		queryArgs = append(queryArgs, inputID)
@@ -332,8 +411,8 @@ func insertTaskOutputsIfNotExist(ctx context.Context, db dbConn, taskRunID int, 
 
 func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.TaskRunFull) (int, error) {
 	const query = `
-		   INSERT INTO task_run (vcs_id, task_id, start_timestamp, stop_timestamp, result)
-		   VALUES($1, $2, $3, $4, $5)
+		   INSERT INTO task_run (vcs_id, task_id, total_input_digest, start_timestamp, stop_timestamp, result)
+		   VALUES($1, $2, $3, $4, $5, $6)
 		RETURNING ID
 		`
 
@@ -352,6 +431,7 @@ func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.Ta
 	queryArgs := []interface{}{
 		vcsID,
 		taskID,
+		taskRun.TotalInputDigest,
 		taskRun.StartTimestamp,
 		taskRun.StopTimestamp,
 		taskRun.Result,
@@ -366,7 +446,12 @@ func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.Ta
 		return -1, newQueryError(query, err, queryArgs...)
 	}
 
-	err = insertTaskRunInputsIfNotExist(ctx, tx, taskRunID, taskRun)
+	err = insertTaskRunInputStringsIfNotExist(ctx, tx, taskRunID, taskRun.Inputs.Strings)
+	if err != nil {
+		return -1, err
+	}
+
+	err = insertTaskRunInputFilesIfNotExist(ctx, tx, taskRunID, taskRun.Inputs.Files)
 	if err != nil {
 		return -1, err
 	}

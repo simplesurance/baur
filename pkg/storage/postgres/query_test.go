@@ -51,10 +51,12 @@ func TestLatestTaskRunByDigest(t *testing.T) {
 			Result:           storage.ResultSuccess,
 			TotalInputDigest: "1234567890",
 		},
-		Inputs: []*storage.Input{
-			{
-				URI:    "main.go",
-				Digest: "45",
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
 			},
 		},
 		Outputs: []*storage.Output{
@@ -151,10 +153,12 @@ func TestOutputs(t *testing.T) {
 			Result:           storage.ResultSuccess,
 			TotalInputDigest: "1234567890",
 		},
-		Inputs: []*storage.Input{
-			{
-				URI:    "main.go",
-				Digest: "45",
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
 			},
 		},
 		Outputs: []*storage.Output{
@@ -221,19 +225,32 @@ func TestInputs(t *testing.T) {
 			Result:           storage.ResultSuccess,
 			TotalInputDigest: "1234567890",
 		},
-		Inputs: []*storage.Input{
-			{
-				URI:    "main.go",
-				Digest: "45",
-			},
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
 
-			{
-				URI:    "util.go",
-				Digest: "46",
+				{
+					Path:   "util.go",
+					Digest: "46",
+				},
+				{
+					Path:   "file://Makefile",
+					Digest: "47",
+				},
 			},
-			{
-				URI:    "file://Makefile",
-				Digest: "47",
+			Strings: []*storage.InputString{
+				{
+					String: "hello",
+					Digest: "45",
+				},
+
+				{
+					String: "bye",
+					Digest: "46",
+				},
 			},
 		},
 	}
@@ -245,7 +262,8 @@ func TestInputs(t *testing.T) {
 	inputs, err := client.Inputs(ctx, id)
 	require.NoError(t, err)
 
-	assert.Equal(t, run.Inputs, inputs)
+	assert.ElementsMatch(t, run.Inputs.Files, inputs.Files)
+	assert.ElementsMatch(t, run.Inputs.Strings, inputs.Strings)
 }
 
 func TestTaskRun(t *testing.T) {
@@ -265,10 +283,12 @@ func TestTaskRun(t *testing.T) {
 			Result:           storage.ResultSuccess,
 			TotalInputDigest: "1234567890",
 		},
-		Inputs: []*storage.Input{
-			{
-				URI:    "main.go",
-				Digest: "45",
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
 			},
 		},
 		Outputs: []*storage.Output{
@@ -336,10 +356,12 @@ func TestTaskRuns(t *testing.T) {
 			Result:           storage.ResultSuccess,
 			TotalInputDigest: "1234567890",
 		},
-		Inputs: []*storage.Input{
-			{
-				URI:    "main.go",
-				Digest: "45",
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
 			},
 		},
 		Outputs: []*storage.Output{
@@ -551,10 +573,12 @@ func TestTaskRunQueryRunWithoutOutputWithoutVCS(t *testing.T) {
 			Result:           storage.ResultSuccess,
 			TotalInputDigest: "1234567890",
 		},
-		Inputs: []*storage.Input{
-			{
-				URI:    "main.go",
-				Digest: "45",
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
 			},
 		},
 	}

@@ -56,28 +56,46 @@ CREATE TABLE task_run (
 	id serial PRIMARY KEY,
 	vcs_id integer REFERENCES vcs(id),
 	task_id integer NOT NULL REFERENCES task (id) ON DELETE CASCADE,
+	total_input_digest text NOT NULL,
 	start_timestamp timestamp with time zone NOT NULL,
 	stop_timestamp timestamp with time zone NOT NULL,
 	result text NOT NULL,
 	CONSTRAINT result_check CHECK (result in ('success', 'failure'))
 );
+CREATE INDEX idx_task_run_total_input_digest ON task_run(total_input_digest);
 
-CREATE TABLE input (
+CREATE TABLE input_file (
 	id serial PRIMARY KEY,
-	uri text NOT NULL,
+	path text NOT NULL,
 	digest text NOT NULL,
-	CONSTRAINT input_uri_digest_uniq UNIQUE (uri, digest)
+	CONSTRAINT input_file_path_digest_uniq UNIQUE (path, digest)
 );
+CREATE INDEX idx_input_file_path ON input_file(path);
 
-CREATE TABLE task_run_input (
+CREATE TABLE input_string (
+	id serial PRIMARY KEY,
+	string text NOT NULL,
+	digest text NOT NULL,
+	CONSTRAINT input_string_digest_uniq UNIQUE (digest)
+);
+/* An index on the input_string.string column would limit the size of the
+  values to the max. size of columns in indexes (8191B).
+*/
+
+CREATE TABLE task_run_file_input (
 	task_run_id integer NOT NULL REFERENCES task_run(id) ON DELETE CASCADE,
-	input_id integer NOT NULL REFERENCES input(id) ON DELETE CASCADE,
-	total_digest text NOT NULL,
-	CONSTRAINT inputs_task_run_id_input_id_uniq UNIQUE(task_run_id, input_id)
+	input_file_id integer NOT NULL REFERENCES input_file(id) ON DELETE CASCADE,
+	CONSTRAINT task_run_file_input_task_run_id_input_id_uniq UNIQUE (task_run_id, input_file_id)
+);
+CREATE INDEX task_run_file_input_task_run_id_idx ON task_run_file_input(task_run_id);
+
+CREATE TABLE task_run_string_input (
+	task_run_id integer NOT NULL REFERENCES task_run(id) ON DELETE CASCADE,
+	input_string_id integer NOT NULL REFERENCES input_string(id) ON DELETE CASCADE,
+	CONSTRAINT task_run_string_input_task_run_id_input_string_id_uniq UNIQUE (task_run_id, input_string_id)
 );
 
-CREATE INDEX idx_task_run_input_task_run_id ON task_run_input(task_run_id);
-CREATE INDEX idx_task_run_input_total_digest ON task_run_input(total_digest);
+CREATE INDEX idx_task_run_string_input ON task_run_string_input(task_run_id);
 
 CREATE TABLE task_run_output (
 	task_run_id integer NOT NULL REFERENCES task_run (id) ON DELETE CASCADE,

@@ -17,7 +17,8 @@ const (
 	FieldDuration
 	FieldStartTime
 	FieldID
-	FieldInput
+	FieldInputString
+	FieldInputFilePath
 )
 
 func (f Field) String() string {
@@ -32,8 +33,8 @@ func (f Field) String() string {
 		return "FieldStartTime"
 	case FieldID:
 		return "FieldID"
-	case FieldInput:
-		return "FieldURI"
+	case FieldInputString:
+		return "FieldInputString"
 	default:
 		return "FieldUndefined"
 	}

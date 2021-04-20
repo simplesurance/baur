@@ -9,9 +9,19 @@ import (
 // ErrNotExist indicates that a record does not exist
 var ErrNotExist = errors.New("does not exist")
 
-type Input struct {
-	URI    string
+type InputFile struct {
+	Path   string
 	Digest string
+}
+
+type InputString struct {
+	String string
+	Digest string
+}
+
+type Inputs struct {
+	Files   []*InputFile
+	Strings []*InputString
 }
 
 // UploadMethod is the method that was used to upload the object
@@ -23,7 +33,6 @@ const (
 	UploadMethodFileCopy       UploadMethod = "filecopy"
 )
 
-// Upload contains informations about an output upload
 type Upload struct {
 	URI                  string
 	UploadStartTimestamp time.Time
@@ -31,7 +40,6 @@ type Upload struct {
 	Method               UploadMethod
 }
 
-// ArtifactType describes the type of an artifact
 type ArtifactType string
 
 const (
@@ -39,7 +47,6 @@ const (
 	ArtifactTypeFile   ArtifactType = "file"
 )
 
-// Output represents a task output
 type Output struct {
 	Name      string
 	Type      ArtifactType
@@ -48,7 +55,6 @@ type Output struct {
 	Uploads   []*Upload
 }
 
-// Result is the result of a task run
 type Result string
 
 const (
@@ -69,7 +75,7 @@ type TaskRun struct {
 
 type TaskRunFull struct {
 	TaskRun
-	Inputs  []*Input
+	Inputs  Inputs
 	Outputs []*Output
 }
 
@@ -108,6 +114,8 @@ type Storer interface {
 		callback func(*TaskRunWithID) error,
 	) error
 
-	Inputs(ctx context.Context, taskRunID int) ([]*Input, error)
+	// Inputs returns the inputs of a task run. If no records were found,
+	// the method returns ErrNotExist.
+	Inputs(ctx context.Context, taskRunID int) (*Inputs, error)
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
 }

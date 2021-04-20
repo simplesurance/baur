@@ -33,10 +33,12 @@ func TestSaveTaskRun(t *testing.T) {
 						Result:           storage.ResultSuccess,
 						TotalInputDigest: "1234567890",
 					},
-					Inputs: []*storage.Input{
-						{
-							URI:    "main.go",
-							Digest: "45",
+					Inputs: storage.Inputs{
+						Files: []*storage.InputFile{
+							{
+								Path:   "main.go",
+								Digest: "45",
+							},
 						},
 					},
 					Outputs: []*storage.Output{
@@ -73,10 +75,12 @@ func TestSaveTaskRun(t *testing.T) {
 						TotalInputDigest: "1234567890",
 						Result:           storage.ResultSuccess,
 					},
-					Inputs: []*storage.Input{
-						{
-							URI:    "main.go",
-							Digest: "45",
+					Inputs: storage.Inputs{
+						Files: []*storage.InputFile{
+							{
+								Path:   "main.go",
+								Digest: "45",
+							},
 						},
 					},
 				},
