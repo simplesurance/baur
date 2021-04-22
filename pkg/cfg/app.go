@@ -147,8 +147,8 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolver Resolver) error {
 // Validate validates the configuration.
 // It should be called after Merge().
 func (a *App) Validate() error {
-	if len(a.Name) == 0 {
-		return newFieldError("can not be empty", "name")
+	if err := validateTaskOrAppName(a.Name); err != nil {
+		return fieldErrorWrap(err, "name")
 	}
 
 	if strings.Contains(a.Name, ".") {

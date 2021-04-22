@@ -57,8 +57,8 @@ func taskValidate(t taskDef) error {
 		return newFieldError("can not be empty", "command")
 	}
 
-	if t.GetName() == "" {
-		return newFieldError("name can not be empty", "name")
+	if err := validateTaskOrAppName(t.GetName()); err != nil {
+		return fieldErrorWrap(err, "name")
 	}
 
 	if strings.Contains(t.GetName(), ".") {
