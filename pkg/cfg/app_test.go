@@ -39,6 +39,34 @@ func Test_ExampleApp_WrittenAndReadCfgIsValid(t *testing.T) {
 	}
 }
 
+func TestAppNameValidation(t *testing.T) {
+	testcases := []struct {
+		AppName        string
+		ExpectedErrStr string
+	}{
+		{
+			AppName:        "sh.o.p",
+			ExpectedErrStr: "character not allowed",
+		},
+		{
+			AppName:        "sh##",
+			ExpectedErrStr: "character not allowed",
+		},
+		{
+			AppName:        "star***",
+			ExpectedErrStr: "character not allowed",
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.AppName, func(t *testing.T) {
+			a := ExampleApp(tc.AppName)
+			err := a.Validate()
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.ExpectedErrStr)
+		})
+	}
+}
+
 func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 	taskInclFilename := "tasks.toml"
 
