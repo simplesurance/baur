@@ -81,7 +81,7 @@ func inputsToStorageInputs(inputs *Inputs) (*storage.Inputs, error) {
 		}
 
 		switch v := in.(type) {
-		case *Inputfile:
+		case *InputFile:
 			result.Files = append(result.Files, &storage.InputFile{
 				Path:   v.RelPath(),
 				Digest: digest.String(),
