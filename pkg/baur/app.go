@@ -57,7 +57,7 @@ func (a *App) Tasks() []*Task {
 	return result
 }
 
-// SortAppsByName sorts the slice application names.
+// SortAppsByName sorts the slice by application names.
 func SortAppsByName(apps []*App) {
 	sort.Slice(apps, func(i int, j int) bool {
 		return apps[i].Name < apps[j].Name

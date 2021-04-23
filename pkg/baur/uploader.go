@@ -56,7 +56,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		for _, dest := range o.UploadDestinations {
 			uploadStartCb(o, dest)
 
-			result, err := u.DockerImage(o, dest)
+			result, err := u.dockerImage(o, dest)
 			if err != nil {
 				return fmt.Errorf("docker upload failed: %w", err)
 			}
@@ -68,7 +68,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		for _, dest := range o.UploadsFilecopy {
 			uploadStartCb(o, dest)
 
-			result, err := u.FileCopy(o, dest)
+			result, err := u.fileCopy(o, dest)
 			if err != nil {
 				return fmt.Errorf("filecopy failed: %w", err)
 			}
@@ -79,7 +79,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		for _, dest := range o.UploadsS3 {
 			uploadStartCb(o, dest)
 
-			result, err := u.S3(o, dest)
+			result, err := u.s3(o, dest)
 			if err != nil {
 				return fmt.Errorf("s3 upload failed: %w", err)
 			}
@@ -94,7 +94,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 	return nil
 }
 
-func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*UploadResult, error) {
+func (u *Uploader) dockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*UploadResult, error) {
 	startTime := time.Now()
 
 	url, err := u.dockerclient.Upload(
@@ -116,7 +116,7 @@ func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*U
 	}, nil
 }
 
-func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadResult, error) {
+func (u *Uploader) fileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadResult, error) {
 	startTime := time.Now()
 
 	destFile := filepath.Join(dest.Path, filepath.Base(o.absPath))
@@ -135,7 +135,7 @@ func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadRes
 	}, nil
 }
 
-func (u *Uploader) S3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
+func (u *Uploader) s3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
 	startTime := time.Now()
 
 	url, err := u.s3client.Upload(o.AbsPath(), dest.Bucket, dest.Key)

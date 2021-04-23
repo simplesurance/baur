@@ -108,8 +108,8 @@ func (a *Loader) LoadApps(specifier ...string) ([]*App, error) {
 	return a.apps(specs)
 }
 
-// AppNames discovers and loads the apps with the given names.
-func (a *Loader) AppNames(names ...string) ([]*App, error) {
+// appNames discovers and loads the apps with the given names.
+func (a *Loader) appNames(names ...string) ([]*App, error) {
 	namesMap := make(map[string]struct{}, len(names))
 	result := make([]*App, 0, len(names))
 
@@ -255,7 +255,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 	if _, exist := taskSpecMap["*"]; exist {
 		apps, err = a.allApps()
 	} else {
-		apps, err = a.AppNames(appNames...)
+		apps, err = a.appNames(appNames...)
 	}
 	if err != nil {
 		return nil, err
@@ -299,7 +299,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 		result = append(result, apps...)
 	}
 
-	apps, err := a.AppNames(specs.appNames...)
+	apps, err := a.appNames(specs.appNames...)
 	if err != nil {
 		return nil, err
 	}

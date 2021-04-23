@@ -1,3 +1,4 @@
+// Package storage provides an interface for baur data storage implementations.
 package storage
 
 import (

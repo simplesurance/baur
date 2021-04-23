@@ -1,3 +1,4 @@
+// Package resolver provides templating for baur configuration files.
 package resolver
 
 import (

@@ -1,3 +1,4 @@
+// Package postgres is a baur-storage implementation storing data in postgresql.
 package postgres
 
 import (

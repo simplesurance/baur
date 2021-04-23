@@ -512,8 +512,8 @@ func TestTaskInclude(t *testing.T) {
 			assert.Len(t, loadedTask.cfgFiles, 2)
 
 			for _, inputIncl := range tc.includeConfig.cfg.Input {
-				for _, f := range inputIncl.FileInputs() {
-					assert.Contains(t, loadedTask.Input.FileInputs(), f)
+				for _, f := range inputIncl.fileInputs() {
+					assert.Contains(t, loadedTask.Input.fileInputs(), f)
 				}
 
 				for _, gs := range inputIncl.GolangSources {
@@ -730,9 +730,9 @@ func TestVarsInIncludeFiles(t *testing.T) {
 
 		require.Equal(t, "build", loadedApp.Tasks[0].Name)
 
-		require.Len(t, loadedApp.Tasks[0].Input.FileInputs(), 1)
-		require.Len(t, loadedApp.Tasks[0].Input.FileInputs()[0].Paths, 1)
-		require.Equal(t, variableVal, loadedApp.Tasks[0].Input.FileInputs()[0].Paths[0])
+		require.Len(t, loadedApp.Tasks[0].Input.fileInputs(), 1)
+		require.Len(t, loadedApp.Tasks[0].Input.fileInputs()[0].Paths, 1)
+		require.Equal(t, variableVal, loadedApp.Tasks[0].Input.fileInputs()[0].Paths[0])
 
 		require.Len(t, loadedApp.Tasks[0].Output.DockerImage, 1)
 		require.Equal(t, variableVal, loadedApp.Tasks[0].Output.DockerImage[0].IDFile)

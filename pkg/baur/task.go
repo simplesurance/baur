@@ -49,7 +49,7 @@ func (t *Task) String() string {
 
 // HasInputs returns true if Inputs are defined for the task
 func (t *Task) HasInputs() bool {
-	return !cfg.InputsAreEmpty(t.UnresolvedInputs)
+	return !t.UnresolvedInputs.IsEmpty()
 }
 
 // HasOutputs returns true if outputs are defined for the task

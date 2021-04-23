@@ -33,22 +33,22 @@ func (t *Task) Filepaths() []string {
 	return result
 }
 
-func (t *Task) GetCommand() []string {
+func (t *Task) command() []string {
 	return t.Command
 }
-func (t *Task) GetName() string {
+func (t *Task) name() string {
 	return t.Name
 }
 
-func (t *Task) GetIncludes() *[]string {
+func (t *Task) includes() *[]string {
 	return &t.Includes
 }
 
-func (t *Task) GetInput() *Input {
+func (t *Task) input() *Input {
 	return &t.Input
 }
 
-func (t *Task) GetOutput() *Output {
+func (t *Task) output() *Output {
 	return &t.Output
 }
 

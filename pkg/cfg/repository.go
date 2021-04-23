@@ -73,7 +73,7 @@ func ExampleRepository() *Repository {
 }
 
 // ToFile writes an Repository configuration file to filepath.
-func (r *Repository) ToFile(filepath string, opts ...ToFileOpt) error {
+func (r *Repository) ToFile(filepath string, opts ...toFileOpt) error {
 	return toFile(r, filepath, opts...)
 }
 

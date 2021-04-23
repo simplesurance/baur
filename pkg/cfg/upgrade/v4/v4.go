@@ -1,3 +1,4 @@
+// Package v4 provides helpers to convert baur configs in v4 format (baur 0.20) to v5 (baur 2.0)
 package v4
 
 import (

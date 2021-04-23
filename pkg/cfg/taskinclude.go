@@ -21,23 +21,23 @@ func (t *TaskInclude) addCfgFilepath(path string) {
 	t.cfgFiles[path] = struct{}{}
 }
 
-func (t *TaskInclude) GetCommand() []string {
+func (t *TaskInclude) command() []string {
 	return t.Command
 }
 
-func (t *TaskInclude) GetName() string {
+func (t *TaskInclude) name() string {
 	return t.Name
 }
 
-func (t *TaskInclude) GetIncludes() *[]string {
+func (t *TaskInclude) includes() *[]string {
 	return &t.Includes
 }
 
-func (t *TaskInclude) GetInput() *Input {
+func (t *TaskInclude) input() *Input {
 	return &t.Input
 }
 
-func (t *TaskInclude) GetOutput() *Output {
+func (t *TaskInclude) output() *Output {
 	return &t.Output
 }
 

@@ -99,7 +99,7 @@ func AppFromFile(path string) (*App, error) {
 }
 
 // ToFile marshals the App into toml format and writes it to the given filepath.
-func (a *App) ToFile(filepath string, opts ...ToFileOpt) error {
+func (a *App) ToFile(filepath string, opts ...toFileOpt) error {
 	a.filepath = filepath
 	return toFile(a, filepath, opts...)
 }
