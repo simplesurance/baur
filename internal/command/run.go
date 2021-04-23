@@ -75,6 +75,7 @@ type runCmd struct {
 	force          bool
 	inputStr       []string
 	lookupInputStr string
+	taskRunners    uint
 
 	// other fields
 	storage      storage.Storer
@@ -83,7 +84,8 @@ type runCmd struct {
 	uploader     *baur.Uploader
 	vcsState     vcs.StateFetcher
 
-	uploadRoutinePool *routines.Pool
+	uploadRoutinePool     *routines.Pool
+	taskRunnerRoutinePool *routines.Pool
 }
 
 func newRunCmd() *runCmd {
@@ -106,12 +108,19 @@ func newRunCmd() *runCmd {
 		"include a string as input, can be specified multiple times")
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")
+	cmd.Flags().UintVarP(&cmd.taskRunners, "parallel-runs", "p", 1,
+		"specifies the max. number of tasks to run in parallel")
 
 	return &cmd
 }
 
 func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	var err error
+
+	if c.taskRunners == 0 {
+		stderr.Printf("--parallel-runs must be greater than 0\n")
+		exitFunc(1)
+	}
 
 	startTime := time.Now()
 
@@ -122,6 +131,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	defer c.storage.Close()
 
 	c.uploadRoutinePool = routines.NewPool(1) // run 1 upload in parallel with builds
+	c.taskRunnerRoutinePool = routines.NewPool(c.taskRunners)
 
 	c.dockerClient, err = docker.NewClient(log.StdLogger.Debugf)
 	exitOnErr(err)
@@ -158,32 +168,36 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	for _, pt := range pendingTasks {
-		task := pt.task
-		runResult := c.runTask(task)
-
-		outputs, err := baur.OutputsFromTask(c.dockerClient, task)
-		exitOnErrf(err, "%s", task.ID())
-
-		if !outputsExist(task, outputs) {
-			exitFunc(1)
-		}
-
-		if c.skipUpload {
-			continue
-		}
-
 		// copy the iteration variable, to prevent that its value
 		// changes in the closure to 't' of the next iteration before
 		// the closure is executed
 		ptCopy := pt
-		c.uploadRoutinePool.Queue(func() {
-			// all outputs and uploads of the task are done in the same goroutine, serialized,
-			// this is fine because we always only use a
-			// uploadRoutinePool with 1 worker to run uploads in
-			// parallel only with builds, uploads are not done in parallel
-			c.uploadAndRecord(ctx, ptCopy.task, ptCopy.inputs, outputs, runResult)
+		c.taskRunnerRoutinePool.Queue(func() {
+			task := ptCopy.task
+			runResult := c.runTask(task)
+
+			outputs, err := baur.OutputsFromTask(c.dockerClient, task)
+			exitOnErrf(err, "%s", task.ID())
+
+			if !outputsExist(task, outputs) {
+				exitFunc(1)
+			}
+
+			if c.skipUpload {
+				return
+			}
+
+			c.uploadRoutinePool.Queue(func() {
+				// all outputs and uploads of the task are done in the same goroutine, serialized,
+				// this is fine because we always only use a
+				// uploadRoutinePool with 1 worker to run uploads in
+				// parallel only with builds, uploads are not done in parallel
+				c.uploadAndRecord(ctx, ptCopy.task, ptCopy.inputs, outputs, runResult)
+			})
 		})
 	}
+
+	c.taskRunnerRoutinePool.Wait()
 
 	stdout.Println("all tasks executed, waiting for uploads to finish...")
 	c.uploadRoutinePool.Wait()
