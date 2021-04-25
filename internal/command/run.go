@@ -75,7 +75,7 @@ type runCmd struct {
 	force          bool
 	inputStr       string
 	lookupInputStr string
-	buildWorkers   uint
+	taskRunners    uint
 
 	// other fields
 	storage      storage.Storer
@@ -84,8 +84,8 @@ type runCmd struct {
 	uploader     *baur.Uploader
 	vcsState     vcs.StateFetcher
 
-	uploadRoutinePool *routines.Pool
-	buildRoutinePool  *routines.Pool
+	uploadRoutinePool     *routines.Pool
+	taskRunnerRoutinePool *routines.Pool
 }
 
 func newRunCmd() *runCmd {
@@ -108,14 +108,18 @@ func newRunCmd() *runCmd {
 		"include a string as an input")
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")
-	cmd.Flags().UintVarP(&cmd.buildWorkers, "tasks", "t", 1,
-		"specifies  the  number  of  tasks (builds) to run simultaneously")
+	cmd.Flags().UintVarP(&cmd.taskRunners, "tasks", "t", 1,
+		"specifies the number of tasks (builds) to run simultaneously")
 
 	return &cmd
 }
 
 func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	var err error
+
+	if c.taskRunners == 0 {
+		exitOnErr(fmt.Errorf("the number of tasks must be greater than 0"))
+	}
 
 	startTime := time.Now()
 
@@ -126,7 +130,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	defer c.storage.Close()
 
 	c.uploadRoutinePool = routines.NewPool(1) // run 1 upload in parallel with builds
-	c.buildRoutinePool = routines.NewPool(c.buildWorkers)
+	c.taskRunnerRoutinePool = routines.NewPool(c.taskRunners)
 
 	c.dockerClient, err = docker.NewClient(log.StdLogger.Debugf)
 	exitOnErr(err)
@@ -167,7 +171,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 		// changes in the closure to 't' of the next iteration before
 		// the closure is executed
 		ptCopy := pt
-		c.buildRoutinePool.Queue(func() {
+		c.taskRunnerRoutinePool.Queue(func() {
 			task := ptCopy.task
 			runResult := c.runTask(task)
 
@@ -192,7 +196,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 		})
 	}
 
-	c.buildRoutinePool.Wait()
+	c.taskRunnerRoutinePool.Wait()
 
 	stdout.Println("all tasks executed, waiting for uploads to finish...")
 	c.uploadRoutinePool.Wait()
