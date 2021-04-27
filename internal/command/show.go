@@ -367,9 +367,11 @@ func (*showCmd) showBuild(taskRunID int) {
 				"",
 				"",
 				"Upload Duration:",
-				term.FormatDuration(
-					upload.UploadStopTimestamp.Sub(
-						upload.UploadStartTimestamp),
+				term.Highlight(
+					term.FormatDuration(
+						upload.UploadStopTimestamp.Sub(
+							upload.UploadStartTimestamp),
+					),
 				),
 			)
 			mustWriteRow(
