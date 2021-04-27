@@ -105,7 +105,7 @@ func toStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) 
 	for _, uploadResult := range uploadResults {
 		output, exist := resultMap[uploadResult.Output]
 		if !exist {
-			size, err := uploadResult.Output.Size()
+			size, err := uploadResult.Output.SizeBytes()
 			if err != nil {
 				return nil, fmt.Errorf("getting size of %q failed: %w", uploadResult.Output, err)
 			}
