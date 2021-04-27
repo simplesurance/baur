@@ -9,6 +9,7 @@ import (
 	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
+// StoreRun stores the result of a task run in a baur storage.
 func StoreRun(
 	ctx context.Context,
 	storer storage.Storer,

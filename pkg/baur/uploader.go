@@ -8,18 +8,22 @@ import (
 	"time"
 )
 
+// S3Uploader is an interface for uploading files to AWS S3 buckets.
 type S3Uploader interface {
 	Upload(filepath, bucket, key string) (string, error)
 }
 
+// DockerImgUploader is an interface for uploading docker images to a docker registry.
 type DockerImgUploader interface {
 	Upload(image, registryAddr, repository, tag string) (string, error)
 }
 
+// FileCopyUploader is an interface for copying files from one directory to another.
 type FileCopyUploader interface {
 	Upload(src string, dst string) (string, error)
 }
 
+// Uploader uploads outputs, produced by task run, to remote locations.
 type Uploader struct {
 	dockerclient     DockerImgUploader
 	s3client         S3Uploader
@@ -34,7 +38,9 @@ func NewUploader(dockerClient DockerImgUploader, s3client S3Uploader, filecopyUp
 	}
 }
 
+// UploadResult is the result of an upload operation.
 type UploadResult struct {
+	// Output is the output that was uploaded.
 	Output Output
 	URL    string
 	Start  time.Time
@@ -42,10 +48,16 @@ type UploadResult struct {
 	Method UploadMethod
 }
 
+// UploadStartFn is a function that is called before the upload operation starts.
 type UploadStartFn func(Output, UploadInfo)
 
+// UploadResultFn is a function that is called after an upload finishes.
 type UploadResultFn func(Output, *UploadResult)
 
+// Upload uploads an output to remote locations.
+// Output must be a *OutputDockerImage or *OutputFile type storing or more upload locations.
+// Immediately before the upload starts uploadStartCb is called, when the
+// upload finished resultCb is called.
 func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb UploadResultFn) error {
 	switch o := output.(type) {
 	case *OutputDockerImage:

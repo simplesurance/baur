@@ -7,7 +7,8 @@ import (
 	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
-// TaskStatusEvaluator evaluates the status of a task.
+// TaskStatusEvaluator determines if a task already run with the same set of
+// inputs in the past.
 type TaskStatusEvaluator struct {
 	repositoryDir string
 
@@ -35,8 +36,8 @@ func NewTaskStatusEvaluator(
 	}
 }
 
-// Status resolves the inputs of the task, calculates the total input
-// digest and checks in the storage if a run record for the task and total input
+// Status resolves the inputs of the task, calculates the total input digest
+// and checks in the storage if a run record for the task and total input
 // digest already exist.
 // If TaskStatusExecutionPending is returned, the returned TaskRunWithID is nil.
 func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatus, *Inputs, *storage.TaskRunWithID, error) {
