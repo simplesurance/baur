@@ -12,7 +12,9 @@ that changed in a commit.
 Practical usage examples of baur can be found in the [example
 repository](https://github.com/simplesurance/baur-example).
 
-<a href="https://asciinema.org/a/410274?rows=30" target="_blank"><img src="https://asciinema.org/a/410274.svg" height="250"/></a>
+[![asciicast](https://asciinema.org/a/410274.svg)](https://asciinema.org/a/410274)
+
+<a href="https://asciinema.org/a/410274?rows=45" target="_blank"><img src="https://asciinema.org/a/410274.svg" height="250"/></a>
 
 ### How it works
 
