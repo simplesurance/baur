@@ -7,7 +7,7 @@ import (
 	"github.com/simplesurance/baur/v2/internal/digest/sha384"
 )
 
-// InputFile represent a file
+// InputFile represent a file.
 type InputFile struct {
 	absPath     string
 	repoRelPath string

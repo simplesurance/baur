@@ -26,6 +26,7 @@ func (o OutputType) String() string {
 	}
 }
 
+// Output is an interface for an output that is produced by a task run.
 type Output interface {
 	Name() string
 	String() string

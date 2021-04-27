@@ -14,6 +14,7 @@ import (
 	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
+// InputResolver resolves input definitions of a task to concrete files.
 type InputResolver struct {
 	gitGlobPathResolver *gitpath.Resolver
 	globPathResolver    *glob.Resolver
