@@ -18,7 +18,7 @@ Per application tasks are defined in a [TOML](https://github.com/toml-lang/toml)
 configuration file. Each task specifies:
 
 - a command to run,
-- which inputs (files) affect the result of the task run
+- which inputs (files) affect the result of the task run,
 - and optionally artifacts that are created by the task and their upload
   destinations.
 
