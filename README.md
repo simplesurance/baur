@@ -12,6 +12,8 @@ that changed in a commit.
 Practical usage examples of baur can be found in the [example
 repository](https://github.com/simplesurance/baur-example).
 
+<a href="https://asciinema.org/a/410274?rows=30" target="_blank"><img src="https://asciinema.org/a/410274.svg" height="250"/></a>
+
 ### How it works
 
 Per application tasks are defined in a [TOML](https://github.com/toml-lang/toml)
