@@ -29,19 +29,18 @@ On following runs, baur only runs tasks for which the inputs changed.
 ### Key Features
 
 * **Running Tasks only for Changed Applications** \
-  Tasks define which inputs change the result of the task execution. \
-  baur can only runs tasks that have not been run before for the set of inputs.
+  Tasks define which inputs affect the result of the task execution. \
+  baur can only runs tasks that have not been run before for the current set of
+  inputs.
   \
   Inputs can be defined as 
   [glob file patterns](https://en.wikipedia.org/wiki/Glob_(programming)),
-  as strings on the commandline and the source code files for Go-Applications
-  can be discovered automatically.
+  as strings on the commandline, or as Go package queries.
 
 * **Artifact Upload** \
   Artifacts can be uploaded to **S3** buckets, to **Docker** registries or
   simply copied to another directory in the **filesystem**.
 
-   
 * **Application Management** \
   baur can be used as management tool in monorepositories to query basic
   information about applications and upload destinations for specific builds.
