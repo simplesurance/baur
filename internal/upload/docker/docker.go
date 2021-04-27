@@ -177,8 +177,8 @@ func (c *Client) Upload(image, registryAddr, repository, tag string) (string, er
 	return destURI, nil
 }
 
-// Size returns the size of an image in Bytes.
-func (c *Client) Size(imageID string) (int64, error) {
+// SizeBytes returns the size of an image in Bytes.
+func (c *Client) SizeBytes(imageID string) (int64, error) {
 	img, err := c.clt.InspectImage(imageID)
 	if err != nil {
 		return -1, err

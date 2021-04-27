@@ -248,7 +248,7 @@ func (c *runCmd) uploadAndRecord(
 					task, output, info)
 			},
 			func(o baur.Output, result *baur.UploadResult) {
-				size, err := o.Size()
+				size, err := o.SizeBytes()
 				exitOnErrf(err, "%s: %s:", task.ID(), output)
 
 				bps := uint64(math.Round(float64(size) / result.Stop.Sub(result.Start).Seconds()))
@@ -284,7 +284,7 @@ func outputsExist(task *baur.Task, outputs []baur.Output) bool {
 		exitOnErrf(err, "%s:", task.ID())
 
 		if exists {
-			size, err := output.Size()
+			size, err := output.SizeBytes()
 			exitOnErrf(err, "%s:", task.ID())
 
 			stdout.TaskPrintf(task, "created %s (size: %s)\n",
