@@ -109,11 +109,16 @@ func (a *Loader) LoadApps(specifier ...string) ([]*App, error) {
 }
 
 // appNames discovers and loads the apps with the given names.
+// If no names are passed, a nil []*App slice is returned.
 func (a *Loader) appNames(names ...string) ([]*App, error) {
+	if len(names) == 0 {
+		return nil, nil
+	}
+
 	namesMap := make(map[string]struct{}, len(names))
 	result := make([]*App, 0, len(names))
 
-	a.logger.Debugf("loader: loading app %q", names)
+	a.logger.Debugf("loader: loading the following apps by name: %+v", names)
 
 	for _, name := range names {
 		namesMap[name] = struct{}{}
