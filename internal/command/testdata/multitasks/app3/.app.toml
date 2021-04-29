@@ -1,0 +1,26 @@
+name = "app3"
+
+[[Task]]
+  name = "build"
+  command = [ "./build.sh" ]
+
+  [Task.Input]
+    [[Task.Input.Files]]
+      paths = ["**"]
+
+
+[[Task]]
+  name = "check"
+  command = [ "./check.sh" ]
+
+  [Task.Input]
+    [[Task.Input.Files]]
+      paths = ["**"]
+
+[[Task]]
+  name = "test"
+  command = [ "sh", "-c", "echo test successful" ]
+
+  [Task.Input]
+    [[Task.Input.Files]]
+      paths = ["**"]

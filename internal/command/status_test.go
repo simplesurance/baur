@@ -3,7 +3,6 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,93 +12,208 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v2/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v2/internal/testutils/repotest"
 )
 
-func TestStatusArgs(t *testing.T) {
-	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
-	app := r.CreateSimpleApp(t)
-	taskSpec := fmt.Sprintf("%s.%s", app.Name, app.Tasks[0].Name)
+func TestStatusTaskSpecArgParsing(t *testing.T) {
+	initTest(t)
+
+	repoDir := filepath.Join(testdataDir, "multitasks")
+	err := os.Chdir(repoDir)
+	require.NoError(t, err)
+
+	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
+	require.NoError(t, err)
+
+	oldEnvVal := os.Getenv(envVarPSQLURL)
+	t.Cleanup(func() {
+		os.Setenv(envVarPSQLURL, oldEnvVal)
+	})
+
+	err = os.Setenv(envVarPSQLURL, dbURL)
+	require.NoError(t, err)
+
 	runInitDb(t)
-	statusCmd := newStatusCmd()
 
 	type testcase struct {
-		name       string
-		taskRunArg string
+		name            string
+		taskRunArg      []string
+		expectedTaskIDs []string
+		preRun          func(t *testing.T)
 	}
 
 	testcases := []*testcase{
 		{
-			name:       "appName",
-			taskRunArg: app.Name,
-		},
-		{
 			name:       "wildcard",
-			taskRunArg: "*",
+			taskRunArg: []string{"*"},
+			expectedTaskIDs: []string{
+				"app1.build",
+				"app1.check",
+				"app1.test",
+				"app2.build",
+				"app2.check",
+				"app2.test",
+				"app3.build",
+				"app3.check",
+				"app3.test",
+				"app4.compile",
+				"app4.lint",
+			},
 		},
 		{
-			name:       "taskSpec",
-			taskRunArg: fmt.Sprintf("%s.%s", app.Name, app.Tasks[0].Name),
+			name:       "appWildcard",
+			taskRunArg: []string{"app2.*"},
+			expectedTaskIDs: []string{
+				"app2.build",
+				"app2.check",
+				"app2.test",
+			},
 		},
 		{
-			name:       "taskSpecTaskWildcard",
-			taskRunArg: fmt.Sprintf("%s.%s", app.Name, "*"),
+			name:       "AppnameWildcardAndTaskName",
+			taskRunArg: []string{"*.build"},
+			expectedTaskIDs: []string{
+				"app1.build",
+				"app2.build",
+				"app3.build",
+			},
+		},
+
+		{
+			name:       "appAndTaskWildcard",
+			taskRunArg: []string{"*.*"},
+			expectedTaskIDs: []string{
+				"app1.build",
+				"app1.check",
+				"app1.test",
+				"app2.build",
+				"app2.check",
+				"app2.test",
+				"app3.build",
+				"app3.check",
+				"app3.test",
+				"app4.compile",
+				"app4.lint",
+			},
+		},
+
+		{
+			name:       "appName",
+			taskRunArg: []string{"app1"},
+			expectedTaskIDs: []string{
+				"app1.build",
+				"app1.check",
+				"app1.test",
+			},
 		},
 		{
-			name:       "taskSpecAppWildcard",
-			taskRunArg: fmt.Sprintf("%s.%s", "*", app.Tasks[0].Name),
+			name:       "specificTaskSpec",
+			taskRunArg: []string{"app4.lint"},
+			expectedTaskIDs: []string{
+				"app4.lint",
+			},
 		},
+
 		{
 			name:       "absPath",
-			taskRunArg: filepath.Dir(app.FilePath()),
+			taskRunArg: []string{filepath.Join(repoDir, "dir2", "app4")},
+			expectedTaskIDs: []string{
+				"app4.compile",
+				"app4.lint",
+			},
+		},
+		{
+			name:       "relPath",
+			taskRunArg: []string{filepath.Join("dir2", "app4")},
+			expectedTaskIDs: []string{
+				"app4.compile",
+				"app4.lint",
+			},
+		},
+		{
+			name:       "currentDirPath",
+			taskRunArg: []string{"."},
+			expectedTaskIDs: []string{
+				"app3.build",
+				"app3.check",
+				"app3.test",
+			},
+			preRun: func(t *testing.T) {
+				cwd, err := os.Getwd()
+				require.NoError(t, err)
+
+				require.NoError(t, os.Chdir("app3"))
+				t.Cleanup(func() {
+					require.NoError(t, os.Chdir(cwd))
+				})
+			},
+		},
+		{
+			name:       "parentDirPath",
+			taskRunArg: []string{".."},
+			expectedTaskIDs: []string{
+				"app3.build",
+				"app3.check",
+				"app3.test",
+			},
+			preRun: func(t *testing.T) {
+				childDir := filepath.Join(repoDir, "app3", uuid.New().String())
+				require.NoError(t, os.Mkdir(childDir, 0700))
+
+				t.Cleanup(func() {
+					require.NoError(t, os.RemoveAll(childDir))
+				})
+
+				cwd, err := os.Getwd()
+				require.NoError(t, err)
+
+				require.NoError(t, os.Chdir(childDir))
+				t.Cleanup(func() {
+					require.NoError(t, os.Chdir(cwd))
+				})
+			},
+		},
+
+		{
+			name: "multipleSpecs",
+			taskRunArg: []string{
+				"app1",
+				"app2.check",
+				"app3.*",
+				filepath.Join("dir2", "app4"),
+			},
+			expectedTaskIDs: []string{
+				"app1.build",
+				"app1.check",
+				"app1.test",
+				"app2.check",
+				"app3.build",
+				"app3.check",
+				"app3.test",
+				"app4.compile",
+				"app4.lint",
+			},
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			initTest(t)
-			stdoutBuf, _ := interceptCmdOutput(t)
 
-			statusCmd.Command.Run(&statusCmd.Command, []string{tc.taskRunArg})
-			assert.Contains(t, stdoutBuf.String(), taskSpec)
+			if tc.preRun != nil {
+				tc.preRun(t)
+			}
+
+			statusCmd := newStatusCmd()
+			statusCmd.SetArgs(tc.taskRunArg)
+			statusOut := baurCSVStatusCmd(t, statusCmd)
+			assert.Len(t, statusOut, len(tc.expectedTaskIDs))
+			for _, line := range statusOut {
+				assert.Contains(t, tc.expectedTaskIDs, line.taskID)
+			}
 		})
 	}
-
-	t.Run("relPath", func(t *testing.T) {
-		initTest(t)
-		stdoutBuf, _ := interceptCmdOutput(t)
-
-		appDir := filepath.Dir(app.FilePath())
-		appRelPath, err := filepath.Rel(r.Dir, appDir)
-		require.NoError(t, err)
-
-		statusCmd.Command.Run(&statusCmd.Command, []string{appRelPath})
-		assert.Contains(t, stdoutBuf.String(), taskSpec)
-	})
-
-	t.Run("currentDirPath", func(t *testing.T) {
-		initTest(t)
-		stdoutBuf, _ := interceptCmdOutput(t)
-
-		appDir := filepath.Dir(app.FilePath())
-		require.NoError(t, os.Chdir(appDir))
-		statusCmd.Command.Run(&statusCmd.Command, []string{"."})
-		assert.Contains(t, stdoutBuf.String(), taskSpec)
-	})
-
-	t.Run("parentDirPath", func(t *testing.T) {
-		initTest(t)
-		stdoutBuf, _ := interceptCmdOutput(t)
-
-		appDir := filepath.Dir(app.FilePath())
-		childDir := filepath.Join(appDir, uuid.New().String())
-
-		require.NoError(t, os.Mkdir(childDir, 0700))
-		require.NoError(t, os.Chdir(childDir))
-
-		statusCmd.Command.Run(&statusCmd.Command, []string{".."})
-		assert.Contains(t, stdoutBuf.String(), taskSpec)
-	})
 }
 
 func TestStatusCombininingFieldAndStatusParameters(t *testing.T) {
