@@ -289,7 +289,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 }
 
 func (a *Loader) apps(specs *specs) ([]*App, error) {
-	if specs.all || specs.allApps {
+	if specs.all {
 		return a.allApps()
 	}
 
