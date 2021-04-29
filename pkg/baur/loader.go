@@ -227,7 +227,7 @@ func (a *Loader) appPath(appConfigPath string) (*App, error) {
 	return a.fromCfg(appCfg)
 }
 
-func appTask(app *App, taskName string) *Task {
+func appTaskByName(app *App, taskName string) *Task {
 	for _, task := range app.Tasks() {
 		if task.Name == taskName {
 			return task
@@ -268,7 +268,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 
 	for _, app := range apps {
 		for _, spec := range taskSpecMap[app.Name] {
-			task := appTask(app, spec)
+			task := appTaskByName(app, spec)
 			if task == nil {
 				return nil, fmt.Errorf("app %q has no task %q", app, spec)
 			}
@@ -279,7 +279,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 		// taskSpecs that match all apps are optional,
 		// e.g. it's ok if **not** all apps have a task called "check"
 		for _, spec := range taskSpecMap["*"] {
-			if task := appTask(app, spec); task != nil {
+			if task := appTaskByName(app, spec); task != nil {
 				result = append(result, task)
 			}
 		}
