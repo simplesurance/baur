@@ -1,0 +1,17 @@
+
+# Internal field, version of baur configuration format
+config_version = 5
+
+[Database]
+
+  # PostgreSQL database Connection string (https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING)
+  # The setting is overwritten by the environment variable BAUR_POSTGRESQL_URL.
+  postgresql_url = "postgres://postgres@localhost:5434/baur?sslmode=disable"
+
+[Discover]
+
+  # Directories in which applications (.app.toml files) are discovered
+  application_dirs = ["."]
+
+  # Descend at most search_depth levels to find application configs
+  search_depth = 2

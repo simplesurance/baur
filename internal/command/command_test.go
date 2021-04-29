@@ -76,18 +76,16 @@ type csvStatus struct {
 	commit string
 }
 
-// baurCSVStatus runs "baur status --csv" and returns the result.
-func baurCSVStatus(t *testing.T, inputStr []string, lookupInputStr string) []*csvStatus {
+// baurCSVStatusCmd runs the statusCmd, parses the CSV result and returns it.
+// cmd.csv is set to true
+func baurCSVStatusCmd(t *testing.T, cmd *statusCmd) []*csvStatus {
 	t.Helper()
 
 	stdoutBuf, _ := interceptCmdOutput(t)
 
-	statusCmd := newStatusCmd()
-	statusCmd.csv = true
-	statusCmd.inputStr = inputStr
-	statusCmd.lookupInputStr = lookupInputStr
-
-	statusCmd.Command.Run(&statusCmd.Command, nil)
+	cmd.csv = true
+	err := cmd.Execute()
+	require.NoError(t, err)
 
 	statusOut, err := csv.NewReader(stdoutBuf).ReadAll()
 	require.NoError(t, err)
@@ -104,6 +102,18 @@ func baurCSVStatus(t *testing.T, inputStr []string, lookupInputStr string) []*cs
 	}
 
 	return result
+}
+
+// baurCSVStatus runs "baur status --csv" and returns the result.
+func baurCSVStatus(t *testing.T, inputStr []string, lookupInputStr string) []*csvStatus {
+	t.Helper()
+
+	statusCmd := newStatusCmd()
+	statusCmd.csv = true
+	statusCmd.inputStr = inputStr
+	statusCmd.lookupInputStr = lookupInputStr
+
+	return baurCSVStatusCmd(t, statusCmd)
 }
 
 func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, expectedStatus baur.TaskStatus, commit string) {
