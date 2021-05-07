@@ -87,8 +87,6 @@ sleep 5
 
 	doInitDb(t)
 
-	_, _ = interceptCmdOutput(t)
-
 	runCmdTest := newRunCmd()
 	runCmdTest.SetArgs([]string{"-p", fmt.Sprint(parallelTaskCnt)})
 	err = runCmdTest.Execute()
