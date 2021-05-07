@@ -118,7 +118,8 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	var err error
 
 	if c.taskRunners == 0 {
-		exitOnErr(fmt.Errorf("the number of tasks must be greater than 0"))
+		stderr.Printf("--parallel-runs must be greater than 0\n")
+		exitFunc(1)
 	}
 
 	startTime := time.Now()
