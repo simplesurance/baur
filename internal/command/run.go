@@ -188,10 +188,6 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			}
 
 			c.uploadRoutinePool.Queue(func() {
-				// all outputs and uploads of the task are done in the same goroutine, serialized,
-				// this is fine because we always only use a
-				// uploadRoutinePool with 1 worker to run uploads in
-				// parallel only with builds, uploads are not done in parallel
 				c.uploadAndRecord(ctx, ptCopy.task, ptCopy.inputs, outputs, runResult)
 			})
 		})
