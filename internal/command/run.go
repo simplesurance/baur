@@ -177,7 +177,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			runResult := c.runTask(task)
 
 			outputs, err := baur.OutputsFromTask(c.dockerClient, task)
-			exitOnErrf(err, "%s", task.ID())
+			exitOnErrf(err, task.ID())
 
 			if !outputsExist(task, outputs) {
 				exitFunc(1)
