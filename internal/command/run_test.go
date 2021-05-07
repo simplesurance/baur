@@ -47,7 +47,7 @@ for (( i=0; i< $parallel_tasks; i++ )); do
 done
 
 # sleep a bit to give all parallel running processes a chance to find each other
-sleep 3
+sleep 5
 `)
 
 	var tasks cfg.Tasks
