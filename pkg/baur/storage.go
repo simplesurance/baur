@@ -9,6 +9,7 @@ import (
 	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
+// StoreRun stores the result of a task run in a baur storage.
 func StoreRun(
 	ctx context.Context,
 	storer storage.Storer,
@@ -64,30 +65,38 @@ func StoreRun(
 			TotalInputDigest: totalDigest.String(),
 			Result:           result,
 		},
-		Inputs:  storageInputs,
+		Inputs:  *storageInputs,
 		Outputs: storageOutputs,
 	}
 
 	return storer.SaveTaskRun(ctx, &tr)
 }
 
-func inputsToStorageInputs(inputs *Inputs) ([]*storage.Input, error) {
-	result := make([]*storage.Input, 0, len(inputs.Inputs()))
+func inputsToStorageInputs(inputs *Inputs) (*storage.Inputs, error) {
+	var result storage.Inputs
 
 	for _, in := range inputs.Inputs() {
-		// TODO: rename storage.Input.URI to Name?
 		digest, err := in.Digest()
 		if err != nil {
 			return nil, fmt.Errorf("calculating digest of %q failed: %w", in, err)
 		}
 
-		result = append(result, &storage.Input{
-			URI:    in.String(),
-			Digest: digest.String(),
-		})
+		switch v := in.(type) {
+		case *InputFile:
+			result.Files = append(result.Files, &storage.InputFile{
+				Path:   v.RelPath(),
+				Digest: digest.String(),
+			})
+
+		case *InputString:
+			result.Strings = append(result.Strings, &storage.InputString{
+				String: v.Value(),
+				Digest: digest.String(),
+			})
+		}
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func toStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) {
@@ -96,7 +105,7 @@ func toStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) 
 	for _, uploadResult := range uploadResults {
 		output, exist := resultMap[uploadResult.Output]
 		if !exist {
-			size, err := uploadResult.Output.Size()
+			size, err := uploadResult.Output.SizeBytes()
 			if err != nil {
 				return nil, fmt.Errorf("getting size of %q failed: %w", uploadResult.Output, err)
 			}

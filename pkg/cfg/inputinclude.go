@@ -6,7 +6,7 @@ import (
 
 // InputInclude is a reusable Input definition.
 type InputInclude struct {
-	IncludeID string `toml:"include_id" comment:"Identifier"`
+	IncludeID string `toml:"include_id" comment:"identifier of the include"`
 
 	Files         []FileInputs
 	GolangSources []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
@@ -14,12 +14,16 @@ type InputInclude struct {
 	filepath string
 }
 
-func (in *InputInclude) FileInputs() []FileInputs {
+func (in *InputInclude) fileInputs() []FileInputs {
 	return in.Files
 }
 
-func (in *InputInclude) GolangSourcesInputs() []GolangSources {
+func (in *InputInclude) golangSourcesInputs() []GolangSources {
 	return in.GolangSources
+}
+
+func (in *InputInclude) IsEmpty() bool {
+	return len(in.Files) == 0 && len(in.GolangSources) == 0
 }
 
 // validate checks if the stored information is valid.
@@ -31,7 +35,7 @@ func (in *InputInclude) validate() error {
 		return err
 	}
 
-	if InputsAreEmpty(in) {
+	if in.IsEmpty() {
 		return nil
 	}
 

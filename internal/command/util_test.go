@@ -19,8 +19,15 @@ func interceptCmdOutput(t *testing.T) (stdoutBuf, stderrBuf *bytes.Buffer) {
 	var bufStdout bytes.Buffer
 	var bufStderr bytes.Buffer
 
+	oldStdout := stdout
 	stdout = term.NewStream(logwriter.New(t, &bufStdout))
+	oldStderr := stderr
 	stderr = term.NewStream(logwriter.New(t, &bufStderr))
+
+	t.Cleanup(func() {
+		stdout = oldStdout
+		stderr = oldStderr
+	})
 
 	return &bufStdout, &bufStderr
 }
@@ -48,8 +55,25 @@ func initTest(t *testing.T) {
 }
 
 func redirectOutputToLogger(t *testing.T) {
+	// FIXME: when tests are run in parallel this will cause unexpected
+	// results, global package vars are modified that would affect all
+	// parallel running tests
+	oldLogOut := log.StdLogger.GetOutput()
 	log.StdLogger.SetOutput(log.NewTestLogOutput(t))
+	log.StdLogger.EnableDebug(true)
+
+	oldExecDebugFfN := exec.DefaultDebugfFn
 	exec.DefaultDebugfFn = t.Logf
+
+	oldStdout := stdout
 	stdout = term.NewStream(logwriter.New(t, ioutil.Discard))
+	oldStderr := stderr
 	stderr = term.NewStream(logwriter.New(t, ioutil.Discard))
+
+	t.Cleanup(func() {
+		log.StdLogger.SetOutput(oldLogOut)
+		exec.DefaultDebugfFn = oldExecDebugFfN
+		stdout = oldStdout
+		stderr = oldStderr
+	})
 }

@@ -70,7 +70,7 @@ func (f *OutputFile) Exists() (bool, error) {
 	return fs.FileExists(f.absPath), nil
 }
 
-func (f *OutputFile) Size() (uint64, error) {
+func (f *OutputFile) SizeBytes() (uint64, error) {
 	size, err := fs.FileSize(f.absPath)
 	if err != nil {
 		return 0, err

@@ -7,8 +7,11 @@ import (
 	"github.com/simplesurance/baur/v2/internal/fs"
 )
 
+// DockerInfoClient is an interface fo retrieving information about a docker image.
 type DockerInfoClient interface {
-	Size(imageID string) (int64, error)
+	// Size returns the size of an image in bytes
+	SizeBytes(imageID string) (int64, error)
+	// Exists returns true and no error if an image with the image ID imageID exists locally.
 	Exists(imageID string) (bool, error)
 }
 
@@ -21,6 +24,10 @@ type OutputDockerImage struct {
 	digest             *digest.Digest
 }
 
+// NewOutputDockerImageFromIIDFile instantiates a new OutputDockerImage.
+// name only acts as an identifier for the image.
+// iidfile is the path to a file containing the ID of the docker image.
+// uploadDest describes where the image should be uploaded to.
 func NewOutputDockerImageFromIIDFile(
 	dockerClient DockerInfoClient,
 	name,
@@ -67,8 +74,8 @@ func (d *OutputDockerImage) Digest() (*digest.Digest, error) {
 	return d.digest, nil
 }
 
-func (d *OutputDockerImage) Size() (uint64, error) {
-	size, err := d.dockerClient.Size(d.ImageID)
+func (d *OutputDockerImage) SizeBytes() (uint64, error) {
+	size, err := d.dockerClient.SizeBytes(d.ImageID)
 	if err != nil {
 		return 0, nil
 	}

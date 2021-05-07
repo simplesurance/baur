@@ -1,3 +1,4 @@
+// Package cfg implements the baur configuration file parser.
 package cfg
 
 import (
@@ -15,25 +16,25 @@ type toFileOpts struct {
 	commented bool
 }
 
-// ToFileOpt is an option that can be passed to the ToFile functions
-type ToFileOpt func(*toFileOpts)
+// toFileOpt is an option that can be passed to the ToFile functions
+type toFileOpt func(*toFileOpts)
 
 // ToFileOptOverwrite overwrite an existing file instead of returning an error
-func ToFileOptOverwrite() ToFileOpt {
+func ToFileOptOverwrite() toFileOpt { // nolint: golint
 	return func(o *toFileOpts) {
 		o.overwrite = true
 	}
 }
 
 // ToFileOptCommented comment every line in the config
-func ToFileOptCommented() ToFileOpt {
+func ToFileOptCommented() toFileOpt { // nolint: golint
 	return func(o *toFileOpts) {
 		o.commented = true
 	}
 }
 
 // toFile marshals a struct to TOML format and writes it to a file.
-func toFile(data interface{}, filepath string, opts ...ToFileOpt) error {
+func toFile(data interface{}, filepath string, opts ...toFileOpt) error {
 	var buf bytes.Buffer
 	var settings toFileOpts
 

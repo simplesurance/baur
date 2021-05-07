@@ -73,7 +73,7 @@ type runCmd struct {
 	// Cmdline parameters
 	skipUpload     bool
 	force          bool
-	inputStr       string
+	inputStr       []string
 	lookupInputStr string
 	taskRunners    uint
 
@@ -104,8 +104,8 @@ func newRunCmd() *runCmd {
 		"skip uploading task outputs and recording the run")
 	cmd.Flags().BoolVarP(&cmd.force, "force", "f", false,
 		"enforce running tasks independent of their status")
-	cmd.Flags().StringVar(&cmd.inputStr, "input-str", "",
-		"include a string as an input")
+	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
+		"include a string as input, can be specified multiple times")
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")
 	cmd.Flags().UintVarP(&cmd.taskRunners, "tasks", "t", 1,
@@ -261,7 +261,7 @@ func (c *runCmd) uploadAndRecord(
 					task, output, info)
 			},
 			func(o baur.Output, result *baur.UploadResult) {
-				size, err := o.Size()
+				size, err := o.SizeBytes()
 				exitOnErrf(err, "%s: %s:", task.ID(), output)
 
 				bps := uint64(math.Round(float64(size) / result.Stop.Sub(result.Start).Seconds()))
@@ -297,7 +297,7 @@ func outputsExist(task *baur.Task, outputs []baur.Output) bool {
 		exitOnErrf(err, "%s:", task.ID())
 
 		if exists {
-			size, err := output.Size()
+			size, err := output.SizeBytes()
 			exitOnErrf(err, "%s:", task.ID())
 
 			stdout.TaskPrintf(task, "created %s (size: %s)\n",

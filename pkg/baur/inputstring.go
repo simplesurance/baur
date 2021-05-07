@@ -9,13 +9,13 @@ import (
 
 // InputString represents a string
 type InputString struct {
-	Value  string
+	value  string
 	digest *digest.Digest
 }
 
 // NewInputString returns a new InputString
-func NewInputString(value string) *InputString {
-	return &InputString{Value: value}
+func NewInputString(val string) *InputString {
+	return &InputString{value: val}
 }
 
 // Digest returns the previous calculated digest.
@@ -29,16 +29,21 @@ func (i *InputString) Digest() (*digest.Digest, error) {
 	return i.calcDigest()
 }
 
-// String returns it's string representation
+// String returns it's string representation (string:VAL)
 func (i *InputString) String() string {
-	return fmt.Sprintf("string:%s", i.Value)
+	return fmt.Sprintf("string:%s", i.value)
+}
+
+// Value returns the string that the input represents.
+func (i *InputString) Value() string {
+	return i.value
 }
 
 // CalcDigest calculates the digest of the string, saves it and returns it.
 func (i *InputString) calcDigest() (*digest.Digest, error) {
 	sha := sha384.New()
 
-	err := sha.AddBytes([]byte(i.Value))
+	err := sha.AddBytes([]byte(i.value))
 	if err != nil {
 		return nil, err
 	}
@@ -46,4 +51,15 @@ func (i *InputString) calcDigest() (*digest.Digest, error) {
 	i.digest = sha.Digest()
 
 	return i.digest, nil
+}
+
+// AsInputStrings returns InputStrings for all elements in strs.
+func AsInputStrings(strs ...string) []Input {
+	result := make([]Input, 0, len(strs))
+
+	for _, s := range strs {
+		result = append(result, NewInputString(s))
+	}
+
+	return result
 }

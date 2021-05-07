@@ -6,18 +6,22 @@ type Input struct {
 	GolangSources []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
 }
 
-func (in *Input) FileInputs() []FileInputs {
+func (in *Input) IsEmpty() bool {
+	return len(in.Files) == 0 && len(in.GolangSources) == 0
+}
+
+func (in *Input) fileInputs() []FileInputs {
 	return in.Files
 }
 
-func (in *Input) GolangSourcesInputs() []GolangSources {
+func (in *Input) golangSourcesInputs() []GolangSources {
 	return in.GolangSources
 }
 
 // merge appends the information in other to in.
-func (in *Input) merge(other InputDef) {
-	in.Files = append(in.Files, other.FileInputs()...)
-	in.GolangSources = append(in.GolangSources, other.GolangSourcesInputs()...)
+func (in *Input) merge(other inputDef) {
+	in.Files = append(in.Files, other.fileInputs()...)
+	in.GolangSources = append(in.GolangSources, other.golangSourcesInputs()...)
 }
 
 func (in *Input) resolve(resolver Resolver) error {
@@ -39,14 +43,14 @@ func (in *Input) resolve(resolver Resolver) error {
 }
 
 // inputValidate validates the Input section
-func inputValidate(i InputDef) error {
-	for _, f := range i.FileInputs() {
+func inputValidate(i inputDef) error {
+	for _, f := range i.fileInputs() {
 		if err := f.validate(); err != nil {
 			return fieldErrorWrap(err, "Files")
 		}
 	}
 
-	for _, gs := range i.GolangSourcesInputs() {
+	for _, gs := range i.golangSourcesInputs() {
 		if err := gs.validate(); err != nil {
 			return fieldErrorWrap(err, "GolangSources")
 		}

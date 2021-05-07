@@ -26,8 +26,10 @@ func columnName(f storage.Field) (string, error) {
 		return "start_timestamp", nil
 	case storage.FieldID:
 		return "task_run_id", nil
-	case storage.FieldInput:
-		return "uri", nil
+	case storage.FieldInputString:
+		return "input_string_val", nil
+	case storage.FieldInputFilePath:
+		return "input_file_path", nil
 
 	default:
 		return "", fmt.Errorf("no postgresql mapping for storage field %s exists", f)

@@ -50,7 +50,7 @@ func (l *Logger) Debugln(v ...interface{}) {
 		return
 	}
 
-	l.getOutput().Println(v...)
+	l.GetOutput().Println(v...)
 }
 
 // Debugf logs a debug message to stdout.
@@ -60,10 +60,11 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 		return
 	}
 
-	l.getOutput().Printf(format, v...)
+	l.GetOutput().Printf(format, v...)
 }
 
-func (l *Logger) getOutput() Output {
+// GetOutput returns the output to which log messages are written.
+func (l *Logger) GetOutput() Output {
 	l.outputLock.Lock()
 	defer l.outputLock.Unlock()
 

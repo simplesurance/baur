@@ -6,7 +6,7 @@ type DockerImageOutput struct {
 	RegistryUpload []DockerImageRegistryUpload
 }
 
-func (d *DockerImageOutput) Resolve(resolver Resolver) error {
+func (d *DockerImageOutput) resolve(resolver Resolver) error {
 	var err error
 
 	if d.IDFile, err = resolver.Resolve(d.IDFile); err != nil {

@@ -26,11 +26,12 @@ func (o OutputType) String() string {
 	}
 }
 
+// Output is an interface for an output that is produced by a task run.
 type Output interface {
 	Name() string
 	String() string
 	Exists() (bool, error)
-	Size() (uint64, error)
+	SizeBytes() (uint64, error)
 	Digest() (*digest.Digest, error)
 	Type() OutputType
 }

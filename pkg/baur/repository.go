@@ -2,14 +2,13 @@ package baur
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/simplesurance/baur/v2/internal/fs"
 	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
-// Repository represents an repository containing applications
+// Repository represents a baur repository.
 type Repository struct {
 	Path        string
 	CfgPath     string
@@ -17,26 +16,15 @@ type Repository struct {
 	SearchDepth int
 }
 
-// FindRepositoryCfg searches for a repository config file. The search starts in
-// the passed directory and traverses the parent directory down to '/'.
+// FindRepositoryCfg searches for a repository config file. The search starts
+// in dir and traverses the parent directory down to the root.
 // It returns the path to the first found repository configuration file.
 func FindRepositoryCfg(dir string) (string, error) {
 	return fs.FindFileInParentDirs(dir, RepositoryCfgFile)
 }
 
-// FindRepositoryCfgCwd searches for a repository config file in the current directory
-// and all it's parents.
-// It returns the path to the first found repository configuration file.
-func FindRepositoryCfgCwd() (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	return FindRepositoryCfg(cwd)
-}
-
-// NewRepository reads the configuration file and returns a Repository
+// NewRepository parses the repository configuration file cfgPath and returns a
+// Repository.
 func NewRepository(cfgPath string) (*Repository, error) {
 	repoCfg, err := cfg.RepositoryFromFile(cfgPath)
 	if err != nil {

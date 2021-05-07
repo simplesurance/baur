@@ -4,8 +4,8 @@ package cfg
 type Task struct {
 	Name     string   `toml:"name" comment:"Task name"`
 	Command  []string `toml:"command" comment:"Command to execute.\n The first element is the command, the following its arguments."`
-	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the application directory."`
-	Input    Input    `toml:"Input" comment:"Inputs that are tracked to detect if a task needs to be run."`
+	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format FILEPATH#INCLUDE_ID>.\n Paths are relative to the application directory."`
+	Input    Input    `toml:"Input" comment:"Inputs are tracked, when they change the task is rerun."`
 	Output   Output   `toml:"Output" comment:"Artifacts produced by the Task.command and their upload destinations."`
 
 	// multiple include sections of the same file can be included, use a map
@@ -33,22 +33,22 @@ func (t *Task) Filepaths() []string {
 	return result
 }
 
-func (t *Task) GetCommand() []string {
+func (t *Task) command() []string {
 	return t.Command
 }
-func (t *Task) GetName() string {
+func (t *Task) name() string {
 	return t.Name
 }
 
-func (t *Task) GetIncludes() *[]string {
+func (t *Task) includes() *[]string {
 	return &t.Includes
 }
 
-func (t *Task) GetInput() *Input {
+func (t *Task) input() *Input {
 	return &t.Input
 }
 
-func (t *Task) GetOutput() *Output {
+func (t *Task) output() *Output {
 	return &t.Output
 }
 

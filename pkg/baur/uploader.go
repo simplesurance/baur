@@ -8,18 +8,22 @@ import (
 	"time"
 )
 
+// S3Uploader is an interface for uploading files to AWS S3 buckets.
 type S3Uploader interface {
 	Upload(filepath, bucket, key string) (string, error)
 }
 
+// DockerImgUploader is an interface for uploading docker images to a docker registry.
 type DockerImgUploader interface {
 	Upload(image, registryAddr, repository, tag string) (string, error)
 }
 
+// FileCopyUploader is an interface for copying files from one directory to another.
 type FileCopyUploader interface {
 	Upload(src string, dst string) (string, error)
 }
 
+// Uploader uploads outputs, produced by task run, to remote locations.
 type Uploader struct {
 	dockerclient     DockerImgUploader
 	s3client         S3Uploader
@@ -34,7 +38,9 @@ func NewUploader(dockerClient DockerImgUploader, s3client S3Uploader, filecopyUp
 	}
 }
 
+// UploadResult is the result of an upload operation.
 type UploadResult struct {
+	// Output is the output that was uploaded.
 	Output Output
 	URL    string
 	Start  time.Time
@@ -42,10 +48,16 @@ type UploadResult struct {
 	Method UploadMethod
 }
 
+// UploadStartFn is a function that is called before the upload operation starts.
 type UploadStartFn func(Output, UploadInfo)
 
+// UploadResultFn is a function that is called after an upload finishes.
 type UploadResultFn func(Output, *UploadResult)
 
+// Upload uploads an output to remote locations.
+// Output must be a *OutputDockerImage or *OutputFile type storing or more upload locations.
+// Immediately before the upload starts uploadStartCb is called, when the
+// upload finished resultCb is called.
 func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb UploadResultFn) error {
 	switch o := output.(type) {
 	case *OutputDockerImage:
@@ -56,7 +68,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		for _, dest := range o.UploadDestinations {
 			uploadStartCb(o, dest)
 
-			result, err := u.DockerImage(o, dest)
+			result, err := u.dockerImage(o, dest)
 			if err != nil {
 				return fmt.Errorf("docker upload failed: %w", err)
 			}
@@ -68,7 +80,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		for _, dest := range o.UploadsFilecopy {
 			uploadStartCb(o, dest)
 
-			result, err := u.FileCopy(o, dest)
+			result, err := u.fileCopy(o, dest)
 			if err != nil {
 				return fmt.Errorf("filecopy failed: %w", err)
 			}
@@ -79,7 +91,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		for _, dest := range o.UploadsS3 {
 			uploadStartCb(o, dest)
 
-			result, err := u.S3(o, dest)
+			result, err := u.s3(o, dest)
 			if err != nil {
 				return fmt.Errorf("s3 upload failed: %w", err)
 			}
@@ -94,7 +106,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 	return nil
 }
 
-func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*UploadResult, error) {
+func (u *Uploader) dockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*UploadResult, error) {
 	startTime := time.Now()
 
 	url, err := u.dockerclient.Upload(
@@ -116,7 +128,7 @@ func (u *Uploader) DockerImage(o *OutputDockerImage, dest *UploadInfoDocker) (*U
 	}, nil
 }
 
-func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadResult, error) {
+func (u *Uploader) fileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadResult, error) {
 	startTime := time.Now()
 
 	destFile := filepath.Join(dest.Path, filepath.Base(o.absPath))
@@ -135,7 +147,7 @@ func (u *Uploader) FileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadRes
 	}, nil
 }
 
-func (u *Uploader) S3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
+func (u *Uploader) s3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
 	startTime := time.Now()
 
 	url, err := u.s3client.Upload(o.AbsPath(), dest.Bucket, dest.Key)

@@ -47,18 +47,17 @@ func (c *Client) LatestTaskRunByDigest(ctx context.Context, appName, taskName, t
 	       task.name,
 	       vcs.revision,
 	       vcs.dirty,
-	       task_run_input.total_digest,
+	       task_run.total_input_digest,
 	       task_run.start_timestamp,
 	       task_run.stop_timestamp,
 	       task_run.result
 	  FROM application
 	  JOIN task ON application.id = task.application_id
 	  JOIN task_run ON task.id = task_run.task_id
-	  JOIN task_run_input ON task_run_input.task_run_id = task_run.id
 	  LEFT OUTER JOIN vcs ON vcs.id = task_run.vcs_id
 	 WHERE application.name = $1
 	   AND task.name = $2
-	   AND task_run_input.total_digest = $3
+	   AND task_run.total_input_digest = $3
 	 ORDER BY task_run.stop_timestamp DESC
 	 LIMIT 1
 	 `
@@ -89,16 +88,16 @@ func (c *Client) LatestTaskRunByDigest(ctx context.Context, appName, taskName, t
 	return &result, nil
 }
 
-func (c *Client) Inputs(ctx context.Context, taskRunID int) ([]*storage.Input, error) {
+func (c *Client) inputStrings(ctx context.Context, taskRunID int) ([]*storage.InputString, error) {
 	const query = `
-	SELECT input.uri,
-	       input.digest
-	  FROM input
-	  JOIN task_run_input ON input.id = task_run_input.input_id
-	  WHERE task_run_input.task_run_id = $1
-	  `
+	SELECT input_string.string,
+	       input_string.digest
+	  FROM input_string
+	  JOIN task_run_string_input ON input_string.id = task_run_string_input.input_string_id
+	 WHERE task_run_string_input.task_run_id = $1
+	 `
 
-	var result []*storage.Input
+	var result []*storage.InputString
 
 	rows, err := c.db.Query(ctx, query, taskRunID)
 	if err != nil {
@@ -110,9 +109,9 @@ func (c *Client) Inputs(ctx context.Context, taskRunID int) ([]*storage.Input, e
 	}
 
 	for rows.Next() {
-		var input storage.Input
+		var input storage.InputString
 
-		if err := rows.Scan(&input.URI, &input.Digest); err != nil {
+		if err := rows.Scan(&input.String, &input.Digest); err != nil {
 			rows.Close()
 			return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
 		}
@@ -124,11 +123,67 @@ func (c *Client) Inputs(ctx context.Context, taskRunID int) ([]*storage.Input, e
 		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
 	}
 
-	if len(result) == 0 {
-		return nil, storage.ErrNotExist
+	return result, nil
+
+}
+
+func (c *Client) inputFiles(ctx context.Context, taskRunID int) ([]*storage.InputFile, error) {
+	const query = `
+	SELECT input_file.path,
+	       input_file.digest
+	  FROM input_file
+	  JOIN task_run_file_input ON input_file.id = task_run_file_input.input_file_id
+	  WHERE task_run_file_input.task_run_id = $1
+	  `
+
+	var result []*storage.InputFile
+
+	rows, err := c.db.Query(ctx, query, taskRunID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	for rows.Next() {
+		var input storage.InputFile
+
+		if err := rows.Scan(&input.Path, &input.Digest); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+		}
+
+		result = append(result, &input)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
 	}
 
 	return result, nil
+}
+
+func (c *Client) Inputs(ctx context.Context, taskRunID int) (*storage.Inputs, error) {
+	var result storage.Inputs
+	var err error
+
+	result.Files, err = c.inputFiles(ctx, taskRunID)
+	if err != nil {
+		return nil, err
+	}
+
+	result.Strings, err = c.inputStrings(ctx, taskRunID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Files) == 0 && len(result.Strings) == 0 {
+		return nil, storage.ErrNotExist
+	}
+
+	return &result, nil
 }
 
 func (c *Client) Outputs(ctx context.Context, taskRunID int) ([]*storage.Output, error) {
@@ -209,7 +264,7 @@ func (c *Client) TaskRuns(
 	cb func(*storage.TaskRunWithID) error,
 ) error {
 	const queryTemplate = `
-	SELECT task_run_id, application_name, task_name, revision, dirty, total_digest, start_timestamp, stop_timestamp, result
+	SELECT task_run_id, application_name, task_name, revision, dirty, total_input_digest, start_timestamp, stop_timestamp, result
 	  FROM (
 	       SELECT DISTINCT ON ({distinct_on})
 		      task_run.id AS task_run_id,
@@ -217,7 +272,7 @@ func (c *Client) TaskRuns(
 	              task.name AS task_name,
 	              vcs.revision,
 	              vcs.dirty,
-	              task_run_input.total_digest,
+	              task_run.total_input_digest,
 	              task_run.start_timestamp AS start_timestamp,
 	              task_run.stop_timestamp,
 	              task_run.result,
@@ -226,26 +281,40 @@ func (c *Client) TaskRuns(
 	         FROM application
 	         JOIN task ON application.id = task.application_id
 	         JOIN task_run ON task.id = task_run.task_id
-		 JOIN task_run_input ON task_run_input.task_run_id = task_run.id
 		 {joins}
 	         LEFT OUTER JOIN vcs ON vcs.id = task_run.vcs_id
 	       ) tr
 	  `
 
-	containsURIFilter := false
+	containsInputStringFilter := false
+	containsInputFileFilter := false
 	for _, filter := range filters {
-		if filter.Field == storage.FieldInput {
-			containsURIFilter = true
-			break
+		if filter.Field == storage.FieldInputString {
+			containsInputStringFilter = true
+		} else if filter.Field == storage.FieldInputFilePath {
+			containsInputFileFilter = true
 		}
 	}
 
+	if containsInputFileFilter && containsInputStringFilter {
+		return errors.New("either a FieldInputString or FieldInputFilePath filter can be specified, not both")
+	}
+
 	var replacer *strings.Replacer
-	if containsURIFilter {
+	if containsInputStringFilter {
 		replacer = strings.NewReplacer(
-			"{distinct_on}", "task_run.id, input.uri",
-			"{fields}", "input.uri AS uri,",
-			"{joins}", "JOIN input ON task_run_input.input_id = input.id")
+			"{distinct_on}", "task_run.id, input_string.string",
+			"{fields}", "input_string.string AS input_string_val,",
+			"{joins}", "JOIN task_run_string_input ON task_run_string_input.task_run_id = task_run.id\n"+
+				"JOIN input_string ON input_string.id = task_run_string_input.input_string_id",
+		)
+	} else if containsInputFileFilter {
+		replacer = strings.NewReplacer(
+			"{distinct_on}", "task_run.id, input_file.path",
+			"{fields}", "input_file.path AS input_file_path,",
+			"{joins}", "JOIN task_run_file_input ON task_run_file_input.task_run_id = task_run.id\n"+
+				"JOIN input_file ON input_file.id = task_run_file_input.input_file_id",
+		)
 	} else {
 		replacer = strings.NewReplacer(
 			"{distinct_on}", "task_run.id",

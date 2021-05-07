@@ -7,14 +7,15 @@ import (
 	"github.com/simplesurance/baur/v2/pkg/storage"
 )
 
-// TaskStatusEvaluator evaluates the status of a task.
+// TaskStatusEvaluator determines if a task already run with the same set of
+// inputs in the past.
 type TaskStatusEvaluator struct {
 	repositoryDir string
 
 	inputResolver *InputResolver
 	store         storage.Storer
 
-	inputStr       string
+	inputStr       []string
 	lookupInputStr string
 }
 
@@ -23,7 +24,7 @@ func NewTaskStatusEvaluator(
 	repositoryDir string,
 	store storage.Storer,
 	inputResolver *InputResolver,
-	inputStr string,
+	inputStr []string,
 	lookupInputStr string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
@@ -35,8 +36,8 @@ func NewTaskStatusEvaluator(
 	}
 }
 
-// Status resolves the inputs of the task, calculates the total input
-// digest and checks in the storage if a run record for the task and total input
+// Status resolves the inputs of the task, calculates the total input digest
+// and checks in the storage if a run record for the task and total input
 // digest already exist.
 // If TaskStatusExecutionPending is returned, the returned TaskRunWithID is nil.
 func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatus, *Inputs, *storage.TaskRunWithID, error) {
@@ -48,8 +49,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	inputs := NewInputs(InputAddStrIfNotEmpty(inputFiles, t.inputStr))
-
+	inputs := NewInputs(append(AsInputStrings(t.inputStr...), inputFiles...))
 	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err
@@ -59,7 +59,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 		return taskStatus, inputs, run, err
 	}
 
-	inputsLookupStr := NewInputs(append(inputFiles, NewInputString(t.lookupInputStr)))
+	inputsLookupStr := NewInputs(append(AsInputStrings(t.lookupInputStr), inputFiles...))
 	taskStatus, run, err = t.getTaskStatus(ctx, inputsLookupStr, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err

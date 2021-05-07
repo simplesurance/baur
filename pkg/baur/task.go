@@ -37,7 +37,7 @@ func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string) *Task
 	}
 }
 
-// ID returns <APP-NAME>.<TASK-NAME>
+// ID returns APP-NAME.TASK-NAME.
 func (t *Task) ID() string {
 	return fmt.Sprintf("%s.%s", t.AppName, t.Name)
 }
@@ -49,7 +49,7 @@ func (t *Task) String() string {
 
 // HasInputs returns true if Inputs are defined for the task
 func (t *Task) HasInputs() bool {
-	return !cfg.InputsAreEmpty(t.UnresolvedInputs)
+	return !t.UnresolvedInputs.IsEmpty()
 }
 
 // HasOutputs returns true if outputs are defined for the task
@@ -57,6 +57,7 @@ func (t *Task) HasOutputs() bool {
 	return len(t.Outputs.DockerImage) > 0 || len(t.Outputs.File) > 0
 }
 
+// SortTasksByID sorts the tasks slice by task IDs.
 func SortTasksByID(tasks []*Task) {
 	sort.Slice(tasks, func(i int, j int) bool {
 		return tasks[i].ID() < tasks[j].ID()

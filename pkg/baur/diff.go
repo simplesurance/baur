@@ -5,6 +5,7 @@ import (
 	"sort"
 )
 
+// DiffType represents the difference betweeen two baur Inputs.
 type DiffType int
 
 const (
@@ -19,6 +20,7 @@ func (d DiffType) String() string {
 	return diffTypeStrings[d]
 }
 
+// InputDiff represents the result of a DiffInputs operation.
 type InputDiff struct {
 	State   DiffType
 	Path    string

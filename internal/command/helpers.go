@@ -34,7 +34,13 @@ const envVarPSQLURL = "BAUR_POSTGRESQL_URL"
 
 func findRepository() (*baur.Repository, error) {
 	log.Debugln("searching for repository config...")
-	path, err := baur.FindRepositoryCfgCwd()
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := baur.FindRepositoryCfg(cwd)
 	if err != nil {
 		return nil, err
 	}

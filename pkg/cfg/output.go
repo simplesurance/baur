@@ -16,7 +16,7 @@ func (out *Output) FileOutputs() []FileOutput {
 
 func (out *Output) Resolve(resolver Resolver) error {
 	for i, dockerImage := range out.DockerImage {
-		if err := dockerImage.Resolve(resolver); err != nil {
+		if err := dockerImage.resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "DockerImage")
 		}
 

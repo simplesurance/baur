@@ -108,12 +108,17 @@ func (a *Loader) LoadApps(specifier ...string) ([]*App, error) {
 	return a.apps(specs)
 }
 
-// AppNames discovers and loads the apps with the given names.
-func (a *Loader) AppNames(names ...string) ([]*App, error) {
+// appNames discovers and loads the apps with the given names.
+// If no names are passed, a nil []*App slice is returned.
+func (a *Loader) appNames(names ...string) ([]*App, error) {
+	if len(names) == 0 {
+		return nil, nil
+	}
+
 	namesMap := make(map[string]struct{}, len(names))
 	result := make([]*App, 0, len(names))
 
-	a.logger.Debugf("loader: loading app %q", names)
+	a.logger.Debugf("loader: loading the following apps by name: %+v", names)
 
 	for _, name := range names {
 		namesMap[name] = struct{}{}
@@ -222,7 +227,7 @@ func (a *Loader) appPath(appConfigPath string) (*App, error) {
 	return a.fromCfg(appCfg)
 }
 
-func appTask(app *App, taskName string) *Task {
+func appTaskByName(app *App, taskName string) *Task {
 	for _, task := range app.Tasks() {
 		if task.Name == taskName {
 			return task
@@ -255,7 +260,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 	if _, exist := taskSpecMap["*"]; exist {
 		apps, err = a.allApps()
 	} else {
-		apps, err = a.AppNames(appNames...)
+		apps, err = a.appNames(appNames...)
 	}
 	if err != nil {
 		return nil, err
@@ -263,7 +268,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 
 	for _, app := range apps {
 		for _, spec := range taskSpecMap[app.Name] {
-			task := appTask(app, spec)
+			task := appTaskByName(app, spec)
 			if task == nil {
 				return nil, fmt.Errorf("app %q has no task %q", app, spec)
 			}
@@ -274,7 +279,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 		// taskSpecs that match all apps are optional,
 		// e.g. it's ok if **not** all apps have a task called "check"
 		for _, spec := range taskSpecMap["*"] {
-			if task := appTask(app, spec); task != nil {
+			if task := appTaskByName(app, spec); task != nil {
 				result = append(result, task)
 			}
 		}
@@ -284,7 +289,7 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 }
 
 func (a *Loader) apps(specs *specs) ([]*App, error) {
-	if specs.all || specs.allApps {
+	if specs.all {
 		return a.allApps()
 	}
 
@@ -299,7 +304,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 		result = append(result, apps...)
 	}
 
-	apps, err := a.AppNames(specs.appNames...)
+	apps, err := a.appNames(specs.appNames...)
 	if err != nil {
 		return nil, err
 	}

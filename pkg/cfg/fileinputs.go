@@ -6,8 +6,8 @@ import (
 
 // FileInputs stores glob paths to inputs of a task.
 type FileInputs struct {
-	Paths          []string `toml:"paths" comment:"Relative path to source files.\n Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)\n and ** is supported to match files recursively."`
-	Optional       bool     `toml:"optional" comment:"Do not fail if a Path resolves to 0 files."`
+	Paths          []string `toml:"paths" comment:"Glob patterns that match files.\n All Paths are relative to the application directory.\n Golang's Glob syntax (https://golang.org/pkg/path/filepath/#Match)\n and ** is supported to match files recursively."`
+	Optional       bool     `toml:"optional" comment:"When optional is true a path pattern that matches 0 files will not cause an error."`
 	GitTrackedOnly bool     `toml:"git_tracked_only" comment:"Only resolve to files that are part of the Git repository."`
 }
 

@@ -99,7 +99,7 @@ func AppFromFile(path string) (*App, error) {
 }
 
 // ToFile marshals the App into toml format and writes it to the given filepath.
-func (a *App) ToFile(filepath string, opts ...ToFileOpt) error {
+func (a *App) ToFile(filepath string, opts ...toFileOpt) error {
 	a.filepath = filepath
 	return toFile(a, filepath, opts...)
 }
@@ -147,8 +147,8 @@ func (a *App) Merge(includedb *IncludeDB, includeSpecResolver Resolver) error {
 // Validate validates the configuration.
 // It should be called after Merge().
 func (a *App) Validate() error {
-	if len(a.Name) == 0 {
-		return newFieldError("can not be empty", "name")
+	if err := validateTaskOrAppName(a.Name); err != nil {
+		return fieldErrorWrap(err, "name")
 	}
 
 	if strings.Contains(a.Name, ".") {

@@ -6,21 +6,21 @@ import (
 )
 
 type taskDef interface {
-	GetCommand() []string
-	GetIncludes() *[]string
-	GetInput() *Input
-	GetName() string
-	GetOutput() *Output
+	command() []string
+	includes() *[]string
+	input() *Input
+	name() string
+	output() *Output
 	addCfgFilepath(path string)
 }
 
 // taskMerge loads the includes of the task and merges them with the task itself.
 func taskMerge(task taskDef, workingDir string, resolver Resolver, includeDB *IncludeDB) error {
-	for _, includeSpec := range *task.GetIncludes() {
+	for _, includeSpec := range *task.includes() {
 		inputInclude, err := includeDB.loadInputInclude(resolver, workingDir, includeSpec)
 		if err == nil {
 			inputInclude = inputInclude.clone()
-			task.GetInput().merge(inputInclude)
+			task.input().merge(inputInclude)
 			task.addCfgFilepath(inputInclude.filepath)
 
 			continue
@@ -43,7 +43,7 @@ func taskMerge(task taskDef, workingDir string, resolver Resolver, includeDB *In
 		}
 
 		outputInclude = outputInclude.clone()
-		task.GetOutput().Merge(outputInclude)
+		task.output().Merge(outputInclude)
 
 		task.addCfgFilepath(outputInclude.filepath)
 	}
@@ -53,35 +53,35 @@ func taskMerge(task taskDef, workingDir string, resolver Resolver, includeDB *In
 
 // taskValidate validates the task section
 func taskValidate(t taskDef) error {
-	if len(t.GetCommand()) == 0 {
+	if len(t.command()) == 0 {
 		return newFieldError("can not be empty", "command")
 	}
 
-	if t.GetName() == "" {
-		return newFieldError("name can not be empty", "name")
+	if err := validateTaskOrAppName(t.name()); err != nil {
+		return fieldErrorWrap(err, "name")
 	}
 
-	if strings.Contains(t.GetName(), ".") {
+	if strings.Contains(t.name(), ".") {
 		return newFieldError("dots are not allowed in task names", "name")
 	}
 
-	if err := validateIncludes(*t.GetIncludes()); err != nil {
+	if err := validateIncludes(*t.includes()); err != nil {
 		return fieldErrorWrap(err, "includes")
 	}
 
-	if t.GetInput() == nil {
+	if t.input() == nil {
 		return newFieldError("section is empty", "Input")
 	}
 
-	if err := inputValidate(t.GetInput()); err != nil {
+	if err := inputValidate(t.input()); err != nil {
 		return fieldErrorWrap(err, "Input")
 	}
 
-	if t.GetOutput() == nil {
+	if t.output() == nil {
 		return nil
 	}
 
-	if err := outputValidate(t.GetOutput()); err != nil {
+	if err := outputValidate(t.output()); err != nil {
 		return fieldErrorWrap(err, "Output")
 	}
 
