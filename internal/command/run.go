@@ -108,8 +108,8 @@ func newRunCmd() *runCmd {
 		"include a string as input, can be specified multiple times")
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")
-	cmd.Flags().UintVarP(&cmd.taskRunners, "tasks", "t", 1,
-		"specifies the number of tasks (builds) to run simultaneously")
+	cmd.Flags().UintVarP(&cmd.taskRunners, "parallel-runs", "p", 1,
+		"specifies the max. number of tasks to run in parallel")
 
 	return &cmd
 }

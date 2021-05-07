@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/simplesurance/baur/v2/internal/testutils/repotest"
 	"github.com/simplesurance/baur/v2/pkg/cfg"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRunSimultaneously(t *testing.T) {
@@ -17,7 +18,7 @@ func TestRunSimultaneously(t *testing.T) {
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 
 	testApps := 6
-	apps := make([]*cfg.App,testApps)
+	apps := make([]*cfg.App, testApps)
 
 	for i := 0; i < testApps; i++ {
 		apps[i] = r.CreateAppWithNoOutputs(t, fmt.Sprintf("myapp-%d", i))
@@ -28,7 +29,7 @@ func TestRunSimultaneously(t *testing.T) {
 	_, _ = interceptCmdOutput(t)
 
 	runCmdTest := newRunCmd()
-	runCmdTest.SetArgs([]string{"-t", "3"})
+	runCmdTest.SetArgs([]string{"-p", "3"})
 	err := runCmdTest.Execute()
 	require.NoError(t, err)
 }
