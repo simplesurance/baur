@@ -65,6 +65,7 @@ sleep 3
 		tasks = append(tasks, &cfg.Task{
 			Name: fmt.Sprintf("check%d", i),
 			Command: []string{
+				"bash",
 				filepath.Join(r.Dir, fmt.Sprintf("checkscript%d.sh", i)),
 				fmt.Sprint(parallelTaskCnt),
 			},
