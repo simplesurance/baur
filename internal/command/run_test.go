@@ -32,7 +32,7 @@ process_found=0
 for (( i=0; i< $parallel_tasks; i++ )); do
 	for (( j=0; ; j++ )); do
 		# [c] is needed to exclude the grep process itself from the result
-		ps -x | grep -q "[c]heckscript${i}.sh" && {
+		ps -s | grep -q "[c]heckscript${i}.sh" && {
 			echo "task $i is running"
 			break
 		}
