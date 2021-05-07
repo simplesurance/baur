@@ -23,7 +23,7 @@ func TestRunSimultaneously(t *testing.T) {
 	apps := make([]*cfg.App, parallelTaskCnt)
 
 	var checkScript = []byte(`#!/usr/bin/env bash
-set -eu -o pipefail
+set -veu -o pipefail
 
 parallel_tasks="$1"
 max_iter=20
@@ -32,6 +32,7 @@ process_found=0
 for (( i=0; i< $parallel_tasks; i++ )); do
 	for (( j=0; ; j++ )); do
 		# [c] is needed to exclude the grep process itself from the result
+		ps -s
 		ps -s | grep "[c]heckscript${i}.sh" && {
 			echo "task $i is running"
 			break
