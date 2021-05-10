@@ -64,11 +64,12 @@ On following runs, baur only runs tasks for which the inputs changed.
 
 ### Installation
 
-The recommended way is to download the latest release version from the [release
-page](https://github.com/simplesurance/baur/releases). 
+The recommended way is to download the latest released version from the [release
+page](https://github.com/simplesurance/baur/releases). \
+Official releases are provided for Linux, macOS and Windows.
 
 After downloading the release archive, extract the `baur` binary
-(`tar xJf baur-OS_ARCH-VERSION.tar.xz`) and execute it.
+(`tar xJf baur-OS_ARCH-VERSION.tar.xz`) and move it to your preferred location.
 
 ### Setup
 
