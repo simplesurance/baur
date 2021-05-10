@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,36 +24,22 @@ func TestRunSimultaneously(t *testing.T) {
 	parallelTaskCnt := 6
 	apps := make([]*cfg.App, parallelTaskCnt)
 
+	// checkScript is exected by the tasks, it logs the start and end
+	// timestamp of the script to file.
+	// The test checks if all task start/endtimestamps are in the same period.
 	var checkScript = []byte(`#!/usr/bin/env bash
 set -veu -o pipefail
 
-parallel_tasks="$1"
-max_iter=20
-process_found=0
+runtime_logfile="$1"
 
-for (( i=0; i< $parallel_tasks; i++ )); do
-	for (( j=0; ; j++ )); do
-		# [c] is needed to exclude the grep process itself from the result
-		ps -s
-		ps -s | grep "[c]heckscript${i}.sh" && {
-			echo "task $i is running"
-			break
-		}
-
-		if [ $j -eq $max_iter ]; then
-			echo "task $i not running"
-			exit 1
-		fi
-
-		sleep 0.5
-	done
-done
-
-# sleep a bit to give all parallel running processes a chance to find each other
-sleep 5
+date +%s > "$runtime_logfile"
+sleep 3
+date +%s >> "$runtime_logfile"
 `)
 
 	var tasks cfg.Tasks
+
+	var runtimeLogfiles []string
 
 	for i := 0; i < parallelTaskCnt; i++ {
 		err := ioutil.WriteFile(
@@ -63,12 +51,15 @@ sleep 5
 
 		apps[i] = r.CreateAppWithNoOutputs(t, fmt.Sprintf("myapp-%d", i))
 
+		logfile := filepath.Join(r.Dir, fmt.Sprintf("runtimelog-task-%d", i))
+		runtimeLogfiles = append(runtimeLogfiles, logfile)
+
 		tasks = append(tasks, &cfg.Task{
 			Name: fmt.Sprintf("check%d", i),
 			Command: []string{
 				"bash",
 				filepath.Join(r.Dir, fmt.Sprintf("checkscript%d.sh", i)),
-				fmt.Sprint(parallelTaskCnt),
+				logfile,
 			},
 			Input: cfg.Input{
 				Files: []cfg.FileInputs{
@@ -92,4 +83,36 @@ sleep 5
 	runCmdTest.SetArgs([]string{"-p", fmt.Sprint(parallelTaskCnt)})
 	err = runCmdTest.Execute()
 	require.NoError(t, err)
+
+	// check if all tasks were running during same timeperiod,
+	// we can not use ps because it's not possible on Windows to get the
+	// cmdline of a running process via ps/tasklist, all parallel running
+	// tasks only show up as "bash".
+
+	type runtime struct {
+		startTime int64
+		endTime   int64
+	}
+	var taskruntimes []runtime
+	for _, logfile := range runtimeLogfiles {
+		content, err := ioutil.ReadFile(logfile)
+		require.NoError(t, err)
+		lines := strings.Fields(string(content))
+		require.Len(t, lines, 2, "%s file content: %q, expected to find 2 lines", logfile, string(content))
+		startTime, err := strconv.ParseInt(lines[0], 10, 64)
+		require.NoError(t, err)
+
+		endTime, err := strconv.ParseInt(lines[1], 10, 64)
+		require.NoError(t, err)
+		taskruntimes = append(taskruntimes, runtime{startTime: startTime, endTime: endTime})
+	}
+
+	for i := 1; i < len(taskruntimes); i++ {
+		require.GreaterOrEqual(t, taskruntimes[0].startTime, taskruntimes[i].startTime)
+		require.LessOrEqual(t, taskruntimes[0].endTime, taskruntimes[i].endTime)
+		t.Logf("task %d run in parallel with task 0: starttime %d >= %d, endtime %d <= %d",
+			i,
+			taskruntimes[i].startTime, taskruntimes[0].startTime, taskruntimes[i].endTime, taskruntimes[0].endTime,
+		)
+	}
 }
