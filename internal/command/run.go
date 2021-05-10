@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v2/internal/command/term"
+	"github.com/simplesurance/baur/v2/internal/exec"
 	"github.com/simplesurance/baur/v2/internal/log"
 	"github.com/simplesurance/baur/v2/internal/routines"
 	"github.com/simplesurance/baur/v2/internal/upload/docker"
@@ -76,6 +77,7 @@ type runCmd struct {
 	inputStr       []string
 	lookupInputStr string
 	taskRunners    uint
+	showOutput     bool
 
 	// other fields
 	storage      storage.Storer
@@ -110,6 +112,10 @@ func newRunCmd() *runCmd {
 		"if a run can not be found, try to find a run with this value as input-string")
 	cmd.Flags().UintVarP(&cmd.taskRunners, "parallel-runs", "p", 1,
 		"specifies the max. number of tasks to run in parallel")
+	cmd.Flags().BoolVarP(&cmd.showOutput, "show-task-output", "o", false,
+		"show the output of tasks, if disabled the output is only shown "+
+			"when task execution failed",
+	)
 
 	return &cmd
 }
@@ -165,6 +171,10 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	} else {
 		stdout.Printf("Running %d/%d task(s) with status %s\n\n",
 			len(pendingTasks), len(tasks), term.ColoredTaskStatus(baur.TaskStatusExecutionPending))
+	}
+
+	if c.showOutput {
+		exec.DefaultDebugfFn = stdout.Printf
 	}
 
 	for _, pt := range pendingTasks {

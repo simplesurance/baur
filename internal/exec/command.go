@@ -149,7 +149,7 @@ func (c *Cmd) Run() (*Result, error) {
 	}
 	cmd.Stderr = cmd.Stdout
 
-	c.debugfFn(c.debugfPrefix+"running '%s' in directory '%s'", cmdString(cmd), cmd.Dir)
+	c.debugfFn(c.debugfPrefix+"running '%s' in directory '%s'\n", cmdString(cmd), cmd.Dir)
 	err = cmd.Start()
 	if err != nil {
 		return nil, err
@@ -159,13 +159,12 @@ func (c *Cmd) Run() (*Result, error) {
 	firstline := true
 	in := bufio.NewScanner(outReader)
 	for in.Scan() {
+		c.debugfFn(c.debugfPrefix + in.Text() + "\n")
 		if firstline {
 			firstline = false
 		} else {
 			outBuf.WriteRune('\n')
 		}
-
-		c.debugfFn(c.debugfPrefix + in.Text())
 
 		outBuf.Write(in.Bytes())
 	}
@@ -182,7 +181,7 @@ func (c *Cmd) Run() (*Result, error) {
 		return nil, err
 	}
 
-	c.debugfFn(c.debugfPrefix+"command terminated with exitCode: %d", exitCode)
+	c.debugfFn(c.debugfPrefix+"command terminated with exitCode: %d\n", exitCode)
 
 	result := Result{
 		Command:  cmdString(cmd),

@@ -116,3 +116,44 @@ date +%s >> "$runtime_logfile"
 		)
 	}
 }
+
+func TestRunShowOutput(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+
+	scriptPath := filepath.Join(r.Dir, "script.sh")
+
+	err := ioutil.WriteFile(
+		scriptPath, []byte(`#/usr/bin/env bash
+echo "greetings from script.sh"
+	`),
+		0755)
+	require.NoError(t, err)
+
+	appCfg := cfg.App{
+		Name: "testapp",
+		Tasks: cfg.Tasks{{
+
+			Name:    "build",
+			Command: []string{"bash", scriptPath},
+			Input: cfg.Input{
+				Files: []cfg.FileInputs{
+					{Paths: []string{".app.toml"}},
+				},
+			},
+		}},
+	}
+
+	err = appCfg.ToFile(filepath.Join(r.Dir, ".app.toml"))
+
+	doInitDb(t)
+
+	runCmdTest := newRunCmd()
+	runCmdTest.SetArgs([]string{"-o"})
+	stdout, _ := interceptCmdOutput(t)
+
+	err = runCmdTest.Execute()
+	require.NoError(t, err)
+
+	require.Contains(t, stdout.String(), "greetings from script.sh")
+}
