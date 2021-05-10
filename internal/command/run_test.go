@@ -22,7 +22,6 @@ func TestRunSimultaneously(t *testing.T) {
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 
 	parallelTaskCnt := 6
-	apps := make([]*cfg.App, parallelTaskCnt)
 
 	// checkScript is exected by the tasks, it logs the start and end
 	// timestamp of the script to file.
@@ -48,8 +47,6 @@ date +%s >> "$runtime_logfile"
 			0755,
 		)
 		require.NoError(t, err)
-
-		apps[i] = r.CreateAppWithNoOutputs(t, fmt.Sprintf("myapp-%d", i))
 
 		logfile := filepath.Join(r.Dir, fmt.Sprintf("runtimelog-task-%d", i))
 		runtimeLogfiles = append(runtimeLogfiles, logfile)
