@@ -152,5 +152,57 @@ echo "greetings from script.sh"
 	err = runCmdTest.Execute()
 	require.NoError(t, err)
 
-	require.Contains(t, stdout.String(), "greetings from script.sh")
+	require.Equal(t, 1, strings.Count(stdout.String(), "greetings from script.sh"))
+}
+
+func TestRunShowOutputOnErrorOutputIsPrintedOnce(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+
+	scriptPath := filepath.Join(r.Dir, "script.sh")
+
+	err := ioutil.WriteFile(
+		scriptPath, []byte(`#/usr/bin/env bash
+echo "I will fail!"
+exit 1
+	`),
+		0755)
+	require.NoError(t, err)
+
+	appCfg := cfg.App{
+		Name: "testapp",
+		Tasks: cfg.Tasks{{
+
+			Name:    "build",
+			Command: []string{"bash", scriptPath},
+			Input: cfg.Input{
+				Files: []cfg.FileInputs{
+					{Paths: []string{".app.toml"}},
+				},
+			},
+		}},
+	}
+
+	err = appCfg.ToFile(filepath.Join(r.Dir, ".app.toml"))
+
+	doInitDb(t)
+
+	runCmdTest := newRunCmd()
+	runCmdTest.SetArgs([]string{"-o"})
+	stdout, _ := interceptCmdOutput(t)
+
+	oldExitFunc := exitFunc
+	var exitCode int
+	exitFunc = func(code int) {
+		exitCode = code
+	}
+	t.Cleanup(func() {
+		exitFunc = oldExitFunc
+	})
+
+	err = runCmdTest.Execute()
+	require.NoError(t, err)
+	require.Equal(t, 1, exitCode)
+
+	require.Equal(t, 1, strings.Count(stdout.String(), "I will fail!"))
 }
