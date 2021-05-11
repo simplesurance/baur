@@ -222,14 +222,25 @@ func (c *runCmd) runTask(task *baur.Task) *baur.RunResult {
 	if result.Result.ExitCode != 0 {
 		statusStr := term.RedHighlight("failed")
 
-		stderr.Printf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
-			task,
-			statusStr,
-			term.FormatDuration(
-				result.StopTime.Sub(result.StartTime),
-			),
-			result.ExitCode,
-			result.StrOutput())
+		if c.showOutput {
+			stderr.Printf("%s: execution %s (%s), command exited with code %d\n",
+				task,
+				statusStr,
+				term.FormatDuration(
+					result.StopTime.Sub(result.StartTime),
+				),
+				result.ExitCode,
+			)
+		} else {
+			stderr.Printf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
+				task,
+				statusStr,
+				term.FormatDuration(
+					result.StopTime.Sub(result.StartTime),
+				),
+				result.ExitCode,
+				result.StrOutput())
+		}
 
 		exitFunc(1)
 	}
