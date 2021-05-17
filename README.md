@@ -77,7 +77,7 @@ baur uses a PostgreSQL database to record information about past task runs. The
 quickest way to setup a PostgreSQL for local testing is with docker:
 
 ```sh
-docker run -p 5432:5432 -e POSTGRES_DB=baur postgres:latest
+docker run -p 127.0.0.1:5432:5432 -e POSTGRES_DB=baur -e POSTGRES_HOST_AUTH_METHOD=trust postgres:latest
 ```
 
 Afterwards you create your baur repository configuration file.
