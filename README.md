@@ -64,12 +64,23 @@ On following runs, baur only runs tasks for which the inputs changed.
 
 ### Installation
 
+#### From a Release
+
 The recommended way is to download the latest released version from the [release
 page](https://github.com/simplesurance/baur/releases). \
 Official releases are provided for Linux, macOS and Windows.
 
 After downloading the release archive, extract the `baur` binary
 (`tar xJf baur-OS_ARCH-VERSION.tar.xz`) and move it to your preferred location.
+
+#### From Source
+
+With Go >= 1.16.0 installed you can build and install the latest version from
+the master branch by running:
+
+```sh
+go install github.com/simplesurance/baur/v2/...@master
+```
 
 ### Setup
 
