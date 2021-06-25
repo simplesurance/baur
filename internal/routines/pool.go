@@ -4,7 +4,9 @@ import (
 	"sync"
 )
 
-// Pool is a FIFO go-routine pool.
+// Pool is a FIFO go-routine work pool.
+// Work can be scheduled and is executed by the first free worker in the pool.
+// Scheduled work is executed in queueing order.
 type Pool struct {
 	wq        []WorkFn
 	terminate bool
@@ -73,8 +75,8 @@ func (p *Pool) popWork() WorkFn {
 		return nil
 	}
 
-	w := p.wq[len(p.wq)-1]
-	p.wq = p.wq[:len(p.wq)-1]
+	w := p.wq[0]
+	p.wq = p.wq[1:]
 
 	return w
 }

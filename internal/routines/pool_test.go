@@ -1,8 +1,10 @@
 package routines
 
 import (
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -34,4 +36,30 @@ func TestQueuePanicsAfterWait(t *testing.T) {
 	assert.Panics(t, func() {
 		pool.Queue(func() {})
 	})
+}
+
+func TestExecutionOrder(t *testing.T) {
+	var executedorder []int
+	var mu sync.Mutex
+
+	pool := NewPool(1)
+	workCnt := 10
+
+	for i := 0; i < workCnt; i++ {
+		iCopy := i
+		pool.Queue(func() {
+			// sleep a bit to make it very likely that all work was
+			// queued before it started to execute
+			time.Sleep(10 * time.Millisecond)
+			mu.Lock()
+			defer mu.Unlock()
+			executedorder = append(executedorder, iCopy)
+		})
+	}
+
+	pool.Wait()
+
+	for i := range executedorder {
+		assert.Equal(t, i, executedorder[i])
+	}
 }
