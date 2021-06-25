@@ -20,14 +20,14 @@ type toFileOpts struct {
 type toFileOpt func(*toFileOpts)
 
 // ToFileOptOverwrite overwrite an existing file instead of returning an error
-func ToFileOptOverwrite() toFileOpt { // nolint: golint
+func ToFileOptOverwrite() toFileOpt { // nolint: revive // returns unexported type
 	return func(o *toFileOpts) {
 		o.overwrite = true
 	}
 }
 
 // ToFileOptCommented comment every line in the config
-func ToFileOptCommented() toFileOpt { // nolint: golint
+func ToFileOptCommented() toFileOpt { // nolint: revive // returns unexported type
 	return func(o *toFileOpts) {
 		o.commented = true
 	}

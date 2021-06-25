@@ -5,7 +5,7 @@ linters:
     - errcheck
     - exportloopref
     - goimports
-    - golint
+    - revive
     - gosimple
     - ineffassign
     - misspell
