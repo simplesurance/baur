@@ -39,11 +39,7 @@ func (in *InputInclude) validate() error {
 		return nil
 	}
 
-	if err := inputValidate(in); err != nil {
-		return err
-	}
-
-	return nil
+	return inputValidate(in)
 }
 
 func (in *InputInclude) clone() *InputInclude {
