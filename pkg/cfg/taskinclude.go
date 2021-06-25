@@ -49,11 +49,7 @@ func (t *TaskInclude) validate() error {
 		return err
 	}
 
-	if err := taskValidate(t); err != nil {
-		return err
-	}
-
-	return nil
+	return taskValidate(t)
 }
 
 // toTask converts the TaskInclude to a Task.

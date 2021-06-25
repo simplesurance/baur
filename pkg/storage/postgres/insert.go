@@ -80,11 +80,7 @@ func scanIDs(rows pgx.Rows, res *[]int) error {
 		*res = append(*res, id)
 	}
 
-	if err := rows.Err(); err != nil {
-		return err
-	}
-
-	return nil
+	return rows.Err()
 }
 
 func insertAppIfNotExist(ctx context.Context, db dbConn, appName string) (int, error) {

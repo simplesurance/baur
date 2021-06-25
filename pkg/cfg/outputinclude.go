@@ -37,11 +37,7 @@ func (out *OutputInclude) validate() error {
 		return errors.New("no output is defined")
 	}
 
-	if err := outputValidate(out); err != nil {
-		return err
-	}
-
-	return nil
+	return outputValidate(out)
 }
 
 func (out *OutputInclude) clone() *OutputInclude {
