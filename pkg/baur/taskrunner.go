@@ -1,7 +1,9 @@
 package baur
 
 import (
+	"errors"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/fatih/color"
@@ -9,8 +11,13 @@ import (
 	"github.com/simplesurance/baur/v2/internal/exec"
 )
 
+// ErrTaskRunSkipped is returned when a task run was skipped instead of executed.
+var ErrTaskRunSkipped = errors.New("task run skipped")
+
 // TaskRunner executes the command of a task.
-type TaskRunner struct{}
+type TaskRunner struct {
+	skipEnabled uint32 // must be accessed via atomic operations
+}
 
 func NewTaskRunner() *TaskRunner {
 	return &TaskRunner{}
@@ -28,6 +35,10 @@ type RunResult struct {
 func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
 	startTime := time.Now()
 
+	if t.SkipRunsIsEnabled() {
+		return nil, ErrTaskRunSkipped
+	}
+
 	// TODO: rework exec, stream the output instead of storing all in memory
 	execResult, err := exec.Command(task.Command[0], task.Command[1:]...).
 		Directory(task.Directory).
@@ -42,4 +53,22 @@ func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
 		StartTime: startTime,
 		StopTime:  time.Now(),
 	}, nil
+}
+
+func (t *TaskRunner) setSkipRuns(val uint32) {
+	atomic.StoreUint32(&t.skipEnabled, val)
+}
+
+// SkipRuns can be enabled to skip all further executions of tasks by Run().
+func (t *TaskRunner) SkipRuns(enabled bool) {
+	if enabled {
+		t.setSkipRuns(1)
+	} else {
+		t.setSkipRuns(0)
+	}
+}
+
+// SkipRunsIsEnabled returns true if SkipRuns is enabled.
+func (t *TaskRunner) SkipRunsIsEnabled() bool {
+	return atomic.LoadUint32(&t.skipEnabled) == 1
 }
