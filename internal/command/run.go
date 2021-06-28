@@ -339,6 +339,7 @@ func (c *runCmd) uploadAndRecord(
 				if err != nil {
 					stderr.ErrPrintf(err, "%s: %s", task, output)
 					c.skipAllScheduledTaskRuns()
+					return
 				}
 
 				bps := uint64(math.Round(float64(size) / result.Stop.Sub(result.Start).Seconds()))
