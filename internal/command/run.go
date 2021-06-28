@@ -395,7 +395,10 @@ func outputsExist(task *baur.Task, outputs []baur.Output) bool {
 
 		if exists {
 			size, err := output.SizeBytes()
-			exitOnErrf(err, "%s:", task.ID())
+			if err != nil {
+				stderr.ErrPrintln(err, task.ID())
+				return false
+			}
 
 			stdout.TaskPrintf(task, "created %s (size: %s)\n",
 				output, term.FormatSize(size))
