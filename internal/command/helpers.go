@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/fatih/color"
-
 	"github.com/simplesurance/baur/v2/internal/command/term"
 	"github.com/simplesurance/baur/v2/internal/format"
 	"github.com/simplesurance/baur/v2/internal/log"
@@ -217,10 +215,13 @@ func mustWriteRow(fmt format.Formatter, row ...interface{}) {
 	exitOnErr(err)
 }
 
-var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
-
 func exitOnErrf(err error, format string, v ...interface{}) {
-	exitOnErr(err, fmt.Sprintf(format, v...))
+	if err == nil {
+		return
+	}
+
+	stderr.ErrPrintf(err, format, v...)
+	exitFunc(1)
 }
 
 func exitOnErr(err error, msg ...interface{}) {
@@ -228,14 +229,7 @@ func exitOnErr(err error, msg ...interface{}) {
 		return
 	}
 
-	if len(msg) == 0 {
-		stderr.Println(errorPrefix, err)
-		exitFunc(1)
-	}
-
-	wholeMsg := fmt.Sprint(msg...)
-	stderr.Printf("%s %s: %s\n", errorPrefix, wholeMsg, err)
-
+	stderr.ErrPrintln(err, msg...)
 	exitFunc(1)
 }
 

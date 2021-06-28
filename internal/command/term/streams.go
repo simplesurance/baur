@@ -5,10 +5,14 @@ import (
 	"io"
 	"sync"
 
+	"github.com/fatih/color"
+
 	"github.com/simplesurance/baur/v2/pkg/baur"
 )
 
 const separator = "------------------------------------------------------------------------------"
+
+var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
 
 // Stream is a concurrency-safe output for term.messages.
 type Stream struct {
@@ -39,6 +43,24 @@ func (s *Stream) TaskPrintf(task *baur.Task, format string, a ...interface{}) {
 	prefix := Highlight(fmt.Sprintf("%s: ", task))
 
 	s.Printf(prefix+format, a...)
+}
+
+// ErrPrintln prints an error with an optional message.
+// The method prints the error in the format: errorPrefix msg: err
+func (s *Stream) ErrPrintln(err error, msg ...interface{}) {
+	if len(msg) == 0 {
+		s.Println(errorPrefix, err)
+		return
+	}
+
+	wholeMsg := fmt.Sprint(msg...)
+	s.Printf("%s %s: %s\n", errorPrefix, wholeMsg, err)
+}
+
+// ErrPrintf prints an error with an optional printf-style message.
+// The method prints the error in the format: errorPrefix msg: err
+func (s *Stream) ErrPrintf(err error, format string, a ...interface{}) {
+	s.ErrPrintln(err, fmt.Sprintf(format, a...))
 }
 
 // PrintSep prints a separator line
