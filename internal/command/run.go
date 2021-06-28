@@ -211,7 +211,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 				return
 			}
 
-			if !outputsExist(task, outputs) {
+			if !declaredOutputsExist(task, outputs) {
 				// error is printed in runTask()
 				c.skipAllScheduledTaskRuns()
 				return
@@ -378,7 +378,7 @@ func (c *runCmd) uploadAndRecord(
 	return nil
 }
 
-func outputsExist(task *baur.Task, outputs []baur.Output) bool {
+func declaredOutputsExist(task *baur.Task, outputs []baur.Output) bool {
 	allExist := true
 
 	if len(outputs) == 0 {
