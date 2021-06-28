@@ -212,7 +212,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			}
 
 			if !declaredOutputsExist(task, outputs) {
-				// error is printed in runTask()
+				// error is printed in declaredOutputsExist()
 				c.skipAllScheduledTaskRuns()
 				return
 			}
@@ -224,7 +224,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			c.uploadRoutinePool.Queue(func() {
 				err := c.uploadAndRecord(ctx, ptCopy.task, ptCopy.inputs, outputs, runResult)
 				if err != nil {
-					// error is printed in runTask()
+					// error is printed in uploadAndRecord()
 					c.skipAllScheduledTaskRuns()
 				}
 			})
