@@ -98,8 +98,8 @@ type runCmd struct {
 	taskRunnerRoutinePool *routines.Pool
 	taskRunner            *baur.TaskRunner
 
-	terminateGracefullyOnce sync.Once
-	errorHappened           bool
+	skipAllScheduledTaskRunsOnce sync.Once
+	errorHappened                bool
 }
 
 func newRunCmd() *runCmd {
@@ -200,20 +200,20 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 			runResult, err := c.runTask(task)
 			if err != nil {
 				// error is printed in runTask()
-				c.terminateGracefully()
+				c.skipAllScheduledTaskRuns()
 				return
 			}
 
 			outputs, err := baur.OutputsFromTask(c.dockerClient, task)
 			if err != nil {
 				stderr.ErrPrintln(err, task.ID())
-				c.terminateGracefully()
+				c.skipAllScheduledTaskRuns()
 				return
 			}
 
 			if !outputsExist(task, outputs) {
 				// error is printed in runTask()
-				c.terminateGracefully()
+				c.skipAllScheduledTaskRuns()
 				return
 			}
 
@@ -225,7 +225,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 				err := c.uploadAndRecord(ctx, ptCopy.task, ptCopy.inputs, outputs, runResult)
 				if err != nil {
 					// error is printed in runTask()
-					c.terminateGracefully()
+					c.skipAllScheduledTaskRuns()
 				}
 			})
 		})
@@ -247,8 +247,8 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (c *runCmd) terminateGracefully() {
-	c.terminateGracefullyOnce.Do(func() {
+func (c *runCmd) skipAllScheduledTaskRuns() {
+	c.skipAllScheduledTaskRunsOnce.Do(func() {
 		c.taskRunner.SkipRuns(true)
 
 		c.errorHappened = true
@@ -338,7 +338,7 @@ func (c *runCmd) uploadAndRecord(
 				size, err := o.SizeBytes()
 				if err != nil {
 					stderr.ErrPrintf(err, "%s: %s", task, output)
-					c.terminateGracefully()
+					c.skipAllScheduledTaskRuns()
 				}
 
 				bps := uint64(math.Round(float64(size) / result.Stop.Sub(result.Start).Seconds()))
