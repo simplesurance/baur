@@ -148,7 +148,10 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	c.storage = mustNewCompatibleStorage(repo)
 	defer c.storage.Close()
 
-	c.uploadRoutinePool = routines.NewPool(1) // run 1 upload in parallel with builds
+	if !c.skipUpload {
+		c.uploadRoutinePool = routines.NewPool(1) // run 1 upload in parallel with builds
+	}
+
 	c.taskRunnerRoutinePool = routines.NewPool(c.taskRunnerGoRoutines)
 	c.taskRunner = baur.NewTaskRunner()
 
@@ -233,8 +236,11 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 
 	c.taskRunnerRoutinePool.Wait()
 
-	stdout.Println("task execution finished, waiting for uploads to finish...")
-	c.uploadRoutinePool.Wait()
+	if !c.skipUpload {
+		stdout.Println("task execution finished, waiting for uploads to finish...")
+		c.uploadRoutinePool.Wait()
+	}
+
 	stdout.PrintSep()
 	stdout.Printf("finished in: %s\n",
 		term.FormatDuration(
