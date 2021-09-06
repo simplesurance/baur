@@ -2,13 +2,18 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2.1
 
+parameters:
+  go-version:
+    type: string
+    default: "1.17"
+
 orbs:
   win: circleci/windows@2.2.0
 
 jobs:
   test_linux:
     docker:
-      - image: cimg/go:1.16.5
+      - image: cimg/go:<< pipeline.parameters.go-version >>
         environment:
           GOFLAGS: -mod=vendor
           TEST_RESULTS: /tmp/test-results
@@ -68,7 +73,7 @@ jobs:
       - run:
           name: Preparing Test Environment
           command: |
-            choco install golang --version=1.16.5 -y
+            choco install -y golang --version=<< pipeline.parameters.go-version >>
             choco install postgresql12 --params '/Password:postgres' -y
             New-Item -ItemType Directory -Force -Path $Env:TEST_RESULTS
 
@@ -93,7 +98,7 @@ jobs:
 
   build_linux:
     docker:
-      - image: cimg/go:1.16.4
+      - image: cimg/go:<< pipeline.parameters.go-version >>
 
     working_directory: ~/baur
     steps:
