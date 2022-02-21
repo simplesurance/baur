@@ -53,6 +53,18 @@ dist/linux_amd64/baur:
 	$(info * creating $(@D)/baur-linux_amd64-$(VERSION).tar.xz.sha256)
 	@(cd $(@D) && sha256sum baur-linux_amd64-$(VERSION).tar.xz > baur-linux_amd64-$(VERSION).tar.xz.sha256)
 
+.PHONY: dist/linux_arm64/baur
+dist/linux_arm64/baur:
+	$(info * building $@)
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build \
+		$(BUILDFLAGS) -o "$@" cmd/baur/main.go
+
+	$(info * creating $(@D)/baur-linux_arm64-$(VERSION).tar.xz)
+	@tar $(TARFLAGS) -C $(@D) -cJf $(@D)/baur-linux_arm64-$(VERSION).tar.xz $(@F)
+
+	$(info * creating $(@D)/baur-linux_arm64-$(VERSION).tar.xz.sha256)
+	@(cd $(@D) && sha256sum baur-linux_arm64-$(VERSION).tar.xz > baur-linux_arm64-$(VERSION).tar.xz.sha256)
+
 .PHONY: dist/windows_amd64/baur.exe
 dist/windows_amd64/baur.exe:
 	$(info * building $@)
@@ -73,7 +85,7 @@ dirty_worktree_check:
 		fi
 
 .PHONY: release
-release: clean dirty_worktree_check dist/linux_amd64/baur dist/darwin_amd64/baur dist/darwin_arm64/baur dist/windows_amd64/baur.exe
+release: clean dirty_worktree_check dist/linux_amd64/baur dist/darwin_amd64/baur dist/darwin_arm64/baur dist/windows_amd64/baur.exe dist/linux_arm64/baur
 	@echo
 	@echo next steps:
 	@echo - git tag v$(VERSION)
