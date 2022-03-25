@@ -218,17 +218,17 @@ func (r *Resolver) resolve(
 // sourceFiles returns GoFiles and OtherFiles of the package that are not part
 // of the stdlib
 func sourceFiles(result *[]string, env *goEnv, pkg *packages.Package) error {
-	err := withoutStdblibPackages(result, env, pkg.GoFiles)
+	err := withoutStdblibAndCacheFiles(result, env, pkg.GoFiles)
 	if err != nil {
 		return err
 	}
 
-	err = withoutStdblibPackages(result, env, pkg.OtherFiles)
+	err = withoutStdblibAndCacheFiles(result, env, pkg.OtherFiles)
 	if err != nil {
 		return err
 	}
 
-	err = withoutStdblibPackages(result, env, pkg.EmbedFiles)
+	err = withoutStdblibAndCacheFiles(result, env, pkg.EmbedFiles)
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func sourceFiles(result *[]string, env *goEnv, pkg *packages.Package) error {
 	return nil
 }
 
-func withoutStdblibPackages(result *[]string, env *goEnv, paths []string) error {
+func withoutStdblibAndCacheFiles(result *[]string, env *goEnv, paths []string) error {
 	for _, path := range paths {
 		abs, err := filepath.Abs(path)
 		if err != nil {
