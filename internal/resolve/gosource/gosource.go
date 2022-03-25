@@ -161,7 +161,7 @@ func (r *Resolver) resolve(
 
 	cfg := &packages.Config{
 		Context:    ctx,
-		Mode:       packages.NeedName | packages.NeedFiles | packages.NeedImports,
+		Mode:       packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedEmbedFiles,
 		Dir:        workdir,
 		Env:        env,
 		Logf:       r.logFn,
@@ -224,6 +224,11 @@ func sourceFiles(result *[]string, env *goEnv, pkg *packages.Package) error {
 	}
 
 	err = withoutStdblibPackages(result, env, pkg.OtherFiles)
+	if err != nil {
+		return err
+	}
+
+	err = withoutStdblibPackages(result, env, pkg.EmbedFiles)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,11 @@
+{
+	"Cfg": {
+		"Queries": ["./..."]
+	},
+	"ExpectedResults": [
+		"$WORKDIR/main.go",
+		"$WORKDIR/hello.txt",
+		"$WORKDIR/data/a.txt",
+		"$WORKDIR/data/b.txt"
+	]
+}
