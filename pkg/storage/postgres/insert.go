@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/jackc/pgx/v4"
@@ -142,6 +143,42 @@ func insertVCSIfNotExist(ctx context.Context, db dbConn, revision string, isDirt
 	return id, nil
 }
 
+// clonedSortedInputfiles returns a shallow-copied sorted variant of inputs.
+func clonedSortedInputfiles(inputs []*storage.InputFile) []*storage.InputFile {
+	inputs = append([]*storage.InputFile{}, inputs...)
+
+	sort.Slice(inputs, func(i, j int) bool {
+		switch strings.Compare(inputs[i].Path, inputs[j].Path) {
+		case -1:
+			return true
+		case 1:
+			return false
+		}
+
+		return strings.Compare(inputs[i].Digest, inputs[j].Digest) == -1
+	})
+
+	return inputs
+}
+
+// clonedSortedInputStrings returns a shallow-copied sorted variant of inputs.
+func clonedSortedInputStrings(inputs []*storage.InputString) []*storage.InputString {
+	inputs = append([]*storage.InputString{}, inputs...)
+
+	sort.Slice(inputs, func(i, j int) bool {
+		switch strings.Compare(inputs[i].String, inputs[j].String) {
+		case -1:
+			return true
+		case 1:
+			return false
+		}
+
+		return strings.Compare(inputs[i].Digest, inputs[j].Digest) == -1
+	})
+
+	return inputs
+}
+
 func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputFile) ([]int, error) {
 	const stmt1 = `
            INSERT INTO input_file (path, digest)
@@ -152,6 +189,11 @@ func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storag
 	       DO UPDATE SET id=input_file.id
 	RETURNING id
 	`
+
+	// inputs are sorted to prevent an deadlock when running multiple
+	// transaction in parallel doing inserts, see
+	// https://github.com/simplesurance/baur/issues/343
+	inputs = clonedSortedInputfiles(inputs)
 
 	stmtVals := queryValueStr(len(inputs), 2)
 
@@ -185,6 +227,11 @@ func insertInputStringFilesIfNotExist(ctx context.Context, db dbConn, inputs []*
 	       DO UPDATE SET id=input_string.id
 	RETURNING id
 	`
+
+	// inputs are sorted to prevent an deadlock when running multiple
+	// transaction in parallel doing inserts, see
+	// https://github.com/simplesurance/baur/issues/343
+	inputs = clonedSortedInputStrings(inputs)
 
 	stmtVals := queryValueStr(len(inputs), 2)
 
