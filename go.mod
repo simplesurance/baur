@@ -21,7 +21,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.9.0 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
-	github.com/pelletier/go-toml v1.8.0
+	github.com/pelletier/go-toml v1.9.4
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/simplesurance/baur v0.20.0
 	github.com/spf13/cobra v1.1.1

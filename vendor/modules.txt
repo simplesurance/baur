@@ -30,8 +30,6 @@ github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
 github.com/Microsoft/hcsshim/internal/winapi
 github.com/Microsoft/hcsshim/osversion
-# github.com/aws/aws-sdk-go v1.37.1
-## explicit; go 1.11
 # github.com/aws/aws-sdk-go-v2 v1.16.1
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2
@@ -270,7 +268,7 @@ github.com/opencontainers/image-spec/specs-go/v1
 # github.com/opencontainers/runc v0.1.1
 ## explicit
 github.com/opencontainers/runc/libcontainer/user
-# github.com/pelletier/go-toml v1.8.0
+# github.com/pelletier/go-toml v1.9.4
 ## explicit; go 1.12
 github.com/pelletier/go-toml
 # github.com/pkg/errors v0.9.1
