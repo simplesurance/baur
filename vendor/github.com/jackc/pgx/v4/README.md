@@ -29,6 +29,7 @@ import (
 )
 
 func main() {
+	// urlExample := "postgres://username:password@localhost:5432/database_name"
 	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
@@ -72,7 +73,7 @@ pgx supports many features beyond what is available through `database/sql`:
 * Single-round trip query mode
 * Full TLS connection control
 * Binary format support for custom types (allows for much quicker encoding/decoding)
-* Copy protocol support for faster bulk data loads
+* COPY protocol support for faster bulk data loads
 * Extendable logging support including built-in support for `log15adapter`, [`logrus`](https://github.com/sirupsen/logrus), [`zap`](https://github.com/uber-go/zap), and [`zerolog`](https://github.com/rs/zerolog)
 * Connection pool with after-connect hook for arbitrary connection setup
 * Listen / notify
@@ -148,7 +149,7 @@ In addition, there are tests specific for PgBouncer that will be executed if `PG
 
 ## Supported Go and PostgreSQL Versions
 
-pgx supports the same versions of Go and PostgreSQL that are supported by their respective teams. For [Go](https://golang.org/doc/devel/release.html#policy) that is the two most recent major releases and for [PostgreSQL](https://www.postgresql.org/support/versioning/) the major releases in the last 5 years. This means pgx supports Go 1.13 and higher and PostgreSQL 9.5 and higher.
+pgx supports the same versions of Go and PostgreSQL that are supported by their respective teams. For [Go](https://golang.org/doc/devel/release.html#policy) that is the two most recent major releases and for [PostgreSQL](https://www.postgresql.org/support/versioning/) the major releases in the last 5 years. This means pgx supports Go 1.16 and higher and PostgreSQL 10 and higher. pgx also is tested against the latest version of [CockroachDB](https://www.cockroachlabs.com/product/).
 
 ## Version Policy
 

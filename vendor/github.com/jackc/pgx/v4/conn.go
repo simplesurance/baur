@@ -2,11 +2,11 @@ package pgx
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
-
-	errors "golang.org/x/xerrors"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgconn/stmtcache"
@@ -50,6 +50,7 @@ func (cc *ConnConfig) Copy() *ConnConfig {
 	return newConfig
 }
 
+// ConnString returns the connection string as parsed by pgx.ParseConfig into pgx.ConnConfig.
 func (cc *ConnConfig) ConnString() string { return cc.connString }
 
 // BuildStatementCacheFunc is a function that can be used to create a stmtcache.Cache implementation for connection.
@@ -107,8 +108,8 @@ func Connect(ctx context.Context, connString string) (*Conn, error) {
 	return connect(ctx, connConfig)
 }
 
-// Connect establishes a connection with a PostgreSQL server with a configuration struct. connConfig must have been
-// created by ParseConfig.
+// ConnectConfig establishes a connection with a PostgreSQL server with a configuration struct.
+// connConfig must have been created by ParseConfig.
 func ConnectConfig(ctx context.Context, connConfig *ConnConfig) (*Conn, error) {
 	return connect(ctx, connConfig)
 }
@@ -124,6 +125,9 @@ func ConnectConfig(ctx context.Context, connConfig *ConnConfig) (*Conn, error) {
 // 		"describe" will use the anonymous prepared statement to describe a statement without creating a statement on the
 // 		server. "describe" is primarily useful when the environment does not allow prepared statements such as when
 // 		running a connection pooler like PgBouncer. Default: "prepare"
+//
+//	prefer_simple_protocol
+//		Possible values: "true" and "false". Use the simple protocol instead of extended protocol. Default: false
 func ParseConfig(connString string) (*ConnConfig, error) {
 	config, err := pgconn.ParseConfig(connString)
 	if err != nil {
@@ -137,7 +141,7 @@ func ParseConfig(connString string) (*ConnConfig, error) {
 		delete(config.RuntimeParams, "statement_cache_capacity")
 		n, err := strconv.ParseInt(s, 10, 32)
 		if err != nil {
-			return nil, errors.Errorf("cannot parse statement_cache_capacity: %w", err)
+			return nil, fmt.Errorf("cannot parse statement_cache_capacity: %w", err)
 		}
 		statementCacheCapacity = int(n)
 	}
@@ -150,7 +154,7 @@ func ParseConfig(connString string) (*ConnConfig, error) {
 		case "describe":
 			statementCacheMode = stmtcache.ModeDescribe
 		default:
-			return nil, errors.Errorf("invalid statement_cache_mod: %s", s)
+			return nil, fmt.Errorf("invalid statement_cache_mod: %s", s)
 		}
 	}
 
@@ -160,11 +164,22 @@ func ParseConfig(connString string) (*ConnConfig, error) {
 		}
 	}
 
+	preferSimpleProtocol := false
+	if s, ok := config.RuntimeParams["prefer_simple_protocol"]; ok {
+		delete(config.RuntimeParams, "prefer_simple_protocol")
+		if b, err := strconv.ParseBool(s); err == nil {
+			preferSimpleProtocol = b
+		} else {
+			return nil, fmt.Errorf("invalid prefer_simple_protocol: %v", err)
+		}
+	}
+
 	connConfig := &ConnConfig{
 		Config:               *config,
 		createdByParseConfig: true,
 		LogLevel:             LogLevelInfo,
 		BuildStatementCache:  buildStatementCache,
+		PreferSimpleProtocol: preferSimpleProtocol,
 		connString:           connString,
 	}
 
@@ -310,6 +325,7 @@ func (c *Conn) WaitForNotification(ctx context.Context) (*pgconn.Notification, e
 	return n, err
 }
 
+// IsClosed reports if the connection has been closed.
 func (c *Conn) IsClosed() bool {
 	return c.pgConn.IsClosed()
 }
@@ -343,6 +359,8 @@ func quoteIdentifier(s string) string {
 	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
 }
 
+// Ping executes an empty sql statement against the *Conn
+// If the sql returns without error, the database Ping is considered successful, otherwise, the error is returned.
 func (c *Conn) Ping(ctx context.Context) error {
 	_, err := c.Exec(ctx, ";")
 	return err
@@ -472,7 +490,7 @@ func (c *Conn) execSimpleProtocol(ctx context.Context, sql string, arguments []i
 
 func (c *Conn) execParamsAndPreparedPrefix(sd *pgconn.StatementDescription, arguments []interface{}) error {
 	if len(sd.ParamOIDs) != len(arguments) {
-		return errors.Errorf("expected %d arguments, got %d", len(sd.ParamOIDs), len(arguments))
+		return fmt.Errorf("expected %d arguments, got %d", len(sd.ParamOIDs), len(arguments))
 	}
 
 	c.eqb.Reset()
@@ -503,6 +521,7 @@ func (c *Conn) execParams(ctx context.Context, sd *pgconn.StatementDescription, 
 	}
 
 	result := c.pgConn.ExecParams(ctx, sd.SQL, c.eqb.paramValues, sd.ParamOIDs, c.eqb.paramFormats, c.eqb.resultFormats).Read()
+	c.eqb.Reset() // Allow c.eqb internal memory to be GC'ed as soon as possible.
 	return result.CommandTag, result.Err
 }
 
@@ -513,6 +532,7 @@ func (c *Conn) execPrepared(ctx context.Context, sd *pgconn.StatementDescription
 	}
 
 	result := c.pgConn.ExecPrepared(ctx, sd.Name, c.eqb.paramValues, c.eqb.paramFormats, c.eqb.resultFormats).Read()
+	c.eqb.Reset() // Allow c.eqb internal memory to be GC'ed as soon as possible.
 	return result.CommandTag, result.Err
 }
 
@@ -544,8 +564,12 @@ type QueryResultFormats []int16
 // QueryResultFormatsByOID controls the result format (text=0, binary=1) of a query by the result column OID.
 type QueryResultFormatsByOID map[uint32]int16
 
-// Query executes sql with args. If there is an error the returned Rows will be returned in an error state. So it is
-// allowed to ignore the error returned from Query and handle it in Rows.
+// Query executes sql with args. It is safe to attempt to read from the returned Rows even if an error is returned. The
+// error will be the available in rows.Err() after rows are closed. So it is allowed to ignore the error returned from
+// Query and handle it in Rows.
+//
+// Err() on the returned Rows must be checked after the Rows is closed to determine if the query executed successfully
+// as some errors can only be detected by reading the entire response. e.g. A divide by zero error on the last row.
 //
 // For extra control over how the query is executed, the types QuerySimpleProtocol, QueryResultFormats, and
 // QueryResultFormatsByOID may be used as the first args to control exactly how the query is executed. This is rarely
@@ -615,7 +639,7 @@ optionLoop:
 		}
 	}
 	if len(sd.ParamOIDs) != len(args) {
-		rows.fatal(errors.Errorf("expected %d arguments, got %d", len(sd.ParamOIDs), len(args)))
+		rows.fatal(fmt.Errorf("expected %d arguments, got %d", len(sd.ParamOIDs), len(args)))
 		return rows, rows.err
 	}
 
@@ -655,6 +679,8 @@ optionLoop:
 	} else {
 		rows.resultReader = c.pgConn.ExecPrepared(ctx, sd.Name, c.eqb.paramValues, c.eqb.paramFormats, resultFormats)
 	}
+
+	c.eqb.Reset() // Allow c.eqb internal memory to be GC'ed as soon as possible.
 
 	return rows, rows.err
 }
@@ -777,7 +803,7 @@ func (c *Conn) SendBatch(ctx context.Context, b *Batch) BatchResults {
 		}
 
 		if len(sd.ParamOIDs) != len(bi.arguments) {
-			return &batchResults{ctx: ctx, conn: c, err: errors.Errorf("mismatched param and argument count")}
+			return &batchResults{ctx: ctx, conn: c, err: fmt.Errorf("mismatched param and argument count")}
 		}
 
 		args, err := convertDriverValuers(bi.arguments)
@@ -802,6 +828,8 @@ func (c *Conn) SendBatch(ctx context.Context, b *Batch) BatchResults {
 			batch.ExecPrepared(sd.Name, c.eqb.paramValues, c.eqb.paramFormats, c.eqb.resultFormats)
 		}
 	}
+
+	c.eqb.Reset() // Allow c.eqb internal memory to be GC'ed as soon as possible.
 
 	mrr := c.pgConn.ExecBatch(ctx, batch)
 

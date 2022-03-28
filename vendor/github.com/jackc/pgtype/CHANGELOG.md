@@ -1,3 +1,48 @@
+# 1.10.0 (February 7, 2022)
+
+* Normalize UTC timestamps to comply with stdlib (Torkel Rogstad)
+* Assign Numeric to *big.Rat (Oleg Lomaka)
+* Fix typo in float8 error message (Pinank Solanki)
+* Scan type aliases for floating point types (Collin Forsyth)
+
+# 1.9.1 (November 28, 2021)
+
+* Fix: binary timestamp is assumed to be in UTC (restored behavior changed in v1.9.0)
+
+# 1.9.0 (November 20, 2021)
+
+* Fix binary hstore null decoding
+* Add shopspring/decimal.NullDecimal support to integration (Eli Treuherz)
+* Inet.Set supports bare IP address (Carl Dunham)
+* Add zeronull.Float8
+* Fix NULL being lost when scanning unknown OID into sql.Scanner
+* Fix BPChar.AssignTo **rune
+* Add support for fmt.Stringer and driver.Valuer in String fields encoding (Jan Dubsky)
+* Fix really big timestamp(tz)s binary format parsing (e.g. year 294276) (Jim Tsao)
+* Support `map[string]*string` as hstore (Adrian Sieger)
+* Fix parsing text array with negative bounds
+* Add infinity support for numeric (Jim Tsao)
+
+# 1.8.1 (July 24, 2021)
+
+* Cleaned up Go module dependency chain
+
+# 1.8.0 (July 10, 2021)
+
+* Maintain host bits for inet types (Cameron Daniel)
+* Support pointers of wrapping structs (Ivan Daunis)
+* Register JSONBArray at NewConnInfo() (Rueian)
+* CompositeTextScanner handles backslash escapes
+
+# 1.7.0 (March 25, 2021)
+
+* Fix scanning int into **sql.Scanner implementor
+* Add tsrange array type (Vasilii Novikov)
+* Fix: escaped strings when they start or end with a newline char (Stephane Martin)
+* Accept nil *time.Time in Time.Set
+* Fix numeric NaN support
+* Use Go 1.13 errors instead of xerrors
+
 # 1.6.2 (December 3, 2020)
 
 * Fix panic on assigning empty array to non-slice or array

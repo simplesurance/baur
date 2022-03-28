@@ -70,12 +70,26 @@ func (c *Conn) CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNam
 	return c.Conn().CopyFrom(ctx, tableName, columnNames, rowSrc)
 }
 
+// Begin starts a transaction block from the *Conn without explicitly setting a transaction mode (see BeginTx with TxOptions if transaction mode is required).
 func (c *Conn) Begin(ctx context.Context) (pgx.Tx, error) {
 	return c.Conn().Begin(ctx)
 }
 
+// BeginTx starts a transaction block from the *Conn with txOptions determining the transaction mode.
 func (c *Conn) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error) {
 	return c.Conn().BeginTx(ctx, txOptions)
+}
+
+func (c *Conn) BeginFunc(ctx context.Context, f func(pgx.Tx) error) error {
+	return c.Conn().BeginFunc(ctx, f)
+}
+
+func (c *Conn) BeginTxFunc(ctx context.Context, txOptions pgx.TxOptions, f func(pgx.Tx) error) error {
+	return c.Conn().BeginTxFunc(ctx, txOptions, f)
+}
+
+func (c *Conn) Ping(ctx context.Context) error {
+	return c.Conn().Ping(ctx)
 }
 
 func (c *Conn) Conn() *pgx.Conn {

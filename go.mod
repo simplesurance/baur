@@ -9,23 +9,19 @@ require (
 	github.com/docker/docker v20.10.14+incompatible // indirect
 	github.com/fatih/color v1.13.0
 	github.com/fsouza/go-dockerclient v1.7.10
-	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/google/uuid v1.2.0
-	github.com/jackc/pgconn v1.8.0
-	github.com/jackc/pgmock v0.0.0-20201204152224-4fe30f7445fd // indirect
-	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
-	github.com/jackc/pgx/v4 v4.10.1
-	github.com/lib/pq v1.9.0 // indirect
+	github.com/jackc/pgconn v1.11.0
+	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
+	github.com/jackc/pgx/v4 v4.15.0
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/pelletier/go-toml v1.9.4
-	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/simplesurance/baur v0.20.0
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.0
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/sys v0.0.0-20220328115105-d36c6a25d886 // indirect
 	golang.org/x/text v0.3.7 // indirect
@@ -64,8 +60,8 @@ require (
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
-	github.com/jackc/pgtype v1.6.2 // indirect
-	github.com/jackc/puddle v1.1.3 // indirect
+	github.com/jackc/pgtype v1.10.0 // indirect
+	github.com/jackc/puddle v1.2.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
