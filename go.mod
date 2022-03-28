@@ -19,7 +19,7 @@ require (
 	github.com/pelletier/go-toml v1.9.4
 	github.com/simplesurance/baur v0.20.0
 	github.com/spf13/cobra v1.4.0
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
