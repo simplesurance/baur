@@ -2,14 +2,15 @@ package pgxpool
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/puddle"
-	errors "golang.org/x/xerrors"
 )
 
 var defaultMaxConns = int32(4)
@@ -67,9 +68,11 @@ func (cr *connResource) getPoolRows(c *Conn, r pgx.Rows) *poolRows {
 	return pr
 }
 
+// Pool allows for connection reuse.
 type Pool struct {
 	p                 *puddle.Pool
 	config            *Config
+	beforeConnect     func(context.Context, *pgx.ConnConfig) error
 	afterConnect      func(context.Context, *pgx.Conn) error
 	beforeAcquire     func(context.Context, *pgx.Conn) bool
 	afterRelease      func(*pgx.Conn) bool
@@ -77,7 +80,9 @@ type Pool struct {
 	maxConnLifetime   time.Duration
 	maxConnIdleTime   time.Duration
 	healthCheckPeriod time.Duration
-	closeChan         chan struct{}
+
+	closeOnce sync.Once
+	closeChan chan struct{}
 }
 
 // Config is the configuration struct for creating a pool. It must be created by ParseConfig and then it can be
@@ -85,10 +90,14 @@ type Pool struct {
 type Config struct {
 	ConnConfig *pgx.ConnConfig
 
+	// BeforeConnect is called before a new connection is made. It is passed a copy of the underlying pgx.ConnConfig and
+	// will not impact any existing open connections.
+	BeforeConnect func(context.Context, *pgx.ConnConfig) error
+
 	// AfterConnect is called after a connection is established, but before it is added to the pool.
 	AfterConnect func(context.Context, *pgx.Conn) error
 
-	// BeforeAcquire is called before before a connection is acquired from the pool. It must return true to allow the
+	// BeforeAcquire is called before a connection is acquired from the pool. It must return true to allow the
 	// acquision or false to indicate that the connection should be destroyed and a different connection should be
 	// acquired.
 	BeforeAcquire func(context.Context, *pgx.Conn) bool
@@ -131,6 +140,7 @@ func (c *Config) Copy() *Config {
 	return newConfig
 }
 
+// ConnString returns the connection string as parsed by pgxpool.ParseConfig into pgxpool.Config.
 func (c *Config) ConnString() string { return c.ConnConfig.ConnString() }
 
 // Connect creates a new Pool and immediately establishes one connection. ctx can be used to cancel this initial
@@ -155,6 +165,7 @@ func ConnectConfig(ctx context.Context, config *Config) (*Pool, error) {
 
 	p := &Pool{
 		config:            config,
+		beforeConnect:     config.BeforeConnect,
 		afterConnect:      config.AfterConnect,
 		beforeAcquire:     config.BeforeAcquire,
 		afterRelease:      config.AfterRelease,
@@ -167,7 +178,16 @@ func ConnectConfig(ctx context.Context, config *Config) (*Pool, error) {
 
 	p.p = puddle.NewPool(
 		func(ctx context.Context) (interface{}, error) {
-			conn, err := pgx.ConnectConfig(ctx, config.ConnConfig)
+			connConfig := p.config.ConnConfig
+
+			if p.beforeConnect != nil {
+				connConfig = p.config.ConnConfig.Copy()
+				if err := p.beforeConnect(ctx, connConfig); err != nil {
+					return nil, err
+				}
+			}
+
+			conn, err := pgx.ConnectConfig(ctx, connConfig)
 			if err != nil {
 				return nil, err
 			}
@@ -202,9 +222,13 @@ func ConnectConfig(ctx context.Context, config *Config) (*Pool, error) {
 		config.MaxConns,
 	)
 
-	go p.backgroundHealthCheck()
-
 	if !config.LazyConnect {
+		if err := p.createIdleResources(ctx, int(p.minConns)); err != nil {
+			// Couldn't create resources for minpool size. Close unhealthy pool.
+			p.Close()
+			return nil, err
+		}
+
 		// Initially establish one connection
 		res, err := p.p.Acquire(ctx)
 		if err != nil {
@@ -213,6 +237,8 @@ func ConnectConfig(ctx context.Context, config *Config) (*Pool, error) {
 		}
 		res.Release()
 	}
+
+	go p.backgroundHealthCheck()
 
 	return p, nil
 }
@@ -248,10 +274,10 @@ func ParseConfig(connString string) (*Config, error) {
 		delete(connConfig.Config.RuntimeParams, "pool_max_conns")
 		n, err := strconv.ParseInt(s, 10, 32)
 		if err != nil {
-			return nil, errors.Errorf("cannot parse pool_max_conns: %w", err)
+			return nil, fmt.Errorf("cannot parse pool_max_conns: %w", err)
 		}
 		if n < 1 {
-			return nil, errors.Errorf("pool_max_conns too small: %d", n)
+			return nil, fmt.Errorf("pool_max_conns too small: %d", n)
 		}
 		config.MaxConns = int32(n)
 	} else {
@@ -265,7 +291,7 @@ func ParseConfig(connString string) (*Config, error) {
 		delete(connConfig.Config.RuntimeParams, "pool_min_conns")
 		n, err := strconv.ParseInt(s, 10, 32)
 		if err != nil {
-			return nil, errors.Errorf("cannot parse pool_min_conns: %w", err)
+			return nil, fmt.Errorf("cannot parse pool_min_conns: %w", err)
 		}
 		config.MinConns = int32(n)
 	} else {
@@ -276,7 +302,7 @@ func ParseConfig(connString string) (*Config, error) {
 		delete(connConfig.Config.RuntimeParams, "pool_max_conn_lifetime")
 		d, err := time.ParseDuration(s)
 		if err != nil {
-			return nil, errors.Errorf("invalid pool_max_conn_lifetime: %w", err)
+			return nil, fmt.Errorf("invalid pool_max_conn_lifetime: %w", err)
 		}
 		config.MaxConnLifetime = d
 	} else {
@@ -287,7 +313,7 @@ func ParseConfig(connString string) (*Config, error) {
 		delete(connConfig.Config.RuntimeParams, "pool_max_conn_idle_time")
 		d, err := time.ParseDuration(s)
 		if err != nil {
-			return nil, errors.Errorf("invalid pool_max_conn_idle_time: %w", err)
+			return nil, fmt.Errorf("invalid pool_max_conn_idle_time: %w", err)
 		}
 		config.MaxConnIdleTime = d
 	} else {
@@ -298,7 +324,7 @@ func ParseConfig(connString string) (*Config, error) {
 		delete(connConfig.Config.RuntimeParams, "pool_health_check_period")
 		d, err := time.ParseDuration(s)
 		if err != nil {
-			return nil, errors.Errorf("invalid pool_health_check_period: %w", err)
+			return nil, fmt.Errorf("invalid pool_health_check_period: %w", err)
 		}
 		config.HealthCheckPeriod = d
 	} else {
@@ -311,8 +337,10 @@ func ParseConfig(connString string) (*Config, error) {
 // Close closes all connections in the pool and rejects future Acquire calls. Blocks until all connections are returned
 // to pool and closed.
 func (p *Pool) Close() {
-	close(p.closeChan)
-	p.p.Close()
+	p.closeOnce.Do(func() {
+		close(p.closeChan)
+		p.p.Close()
+	})
 }
 
 func (p *Pool) backgroundHealthCheck() {
@@ -355,6 +383,32 @@ func (p *Pool) checkMinConns() {
 	}
 }
 
+func (p *Pool) createIdleResources(parentCtx context.Context, targetResources int) error {
+	ctx, cancel := context.WithCancel(parentCtx)
+	defer cancel()
+
+	errs := make(chan error, targetResources)
+
+	for i := 0; i < targetResources; i++ {
+		go func() {
+			err := p.p.CreateResource(ctx)
+			errs <- err
+		}()
+	}
+
+	var firstError error
+	for i := 0; i < targetResources; i++ {
+		err := <-errs
+		if err != nil && firstError == nil {
+			cancel()
+			firstError = err
+		}
+	}
+
+	return firstError
+}
+
+// Acquire returns a connection (*Conn) from the Pool
 func (p *Pool) Acquire(ctx context.Context) (*Conn, error) {
 	for {
 		res, err := p.p.Acquire(ctx)
@@ -369,6 +423,19 @@ func (p *Pool) Acquire(ctx context.Context) (*Conn, error) {
 
 		res.Destroy()
 	}
+}
+
+// AcquireFunc acquires a *Conn and calls f with that *Conn. ctx will only affect the Acquire. It has no effect on the
+// call of f. The return value is either an error acquiring the *Conn or the return value of f. The *Conn is
+// automatically released after the call of f.
+func (p *Pool) AcquireFunc(ctx context.Context, f func(*Conn) error) error {
+	conn, err := p.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	return f(conn)
 }
 
 // AcquireAllIdle atomically acquires all currently idle connections. Its intended use is for health check and
@@ -391,10 +458,15 @@ func (p *Pool) AcquireAllIdle(ctx context.Context) []*Conn {
 // Config returns a copy of config that was used to initialize this pool.
 func (p *Pool) Config() *Config { return p.config.Copy() }
 
+// Stat returns a pgxpool.Stat struct with a snapshot of Pool statistics.
 func (p *Pool) Stat() *Stat {
 	return &Stat{s: p.p.Stat()}
 }
 
+// Exec acquires a connection from the Pool and executes the given SQL.
+// SQL can be either a prepared statement name or an SQL string.
+// Arguments should be referenced positionally from the SQL string as $1, $2, etc.
+// The acquired connection is returned to the pool when the Exec function returns.
 func (p *Pool) Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) {
 	c, err := p.Acquire(ctx)
 	if err != nil {
@@ -405,6 +477,16 @@ func (p *Pool) Exec(ctx context.Context, sql string, arguments ...interface{}) (
 	return c.Exec(ctx, sql, arguments...)
 }
 
+// Query acquires a connection and executes a query that returns pgx.Rows.
+// Arguments should be referenced positionally from the SQL string as $1, $2, etc.
+// See pgx.Rows documentation to close the returned Rows and return the acquired connection to the Pool.
+//
+// If there is an error, the returned pgx.Rows will be returned in an error state.
+// If preferred, ignore the error returned from Query and handle errors using the returned pgx.Rows.
+//
+// For extra control over how the query is executed, the types QuerySimpleProtocol, QueryResultFormats, and
+// QueryResultFormatsByOID may be used as the first args to control exactly how the query is executed. This is rarely
+// needed. See the documentation for those types for details.
 func (p *Pool) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
 	c, err := p.Acquire(ctx)
 	if err != nil {
@@ -420,6 +502,18 @@ func (p *Pool) Query(ctx context.Context, sql string, args ...interface{}) (pgx.
 	return c.getPoolRows(rows), nil
 }
 
+// QueryRow acquires a connection and executes a query that is expected
+// to return at most one row (pgx.Row). Errors are deferred until pgx.Row's
+// Scan method is called. If the query selects no rows, pgx.Row's Scan will
+// return ErrNoRows. Otherwise, pgx.Row's Scan scans the first selected row
+// and discards the rest. The acquired connection is returned to the Pool when
+// pgx.Row's Scan method is called.
+//
+// Arguments should be referenced positionally from the SQL string as $1, $2, etc.
+//
+// For extra control over how the query is executed, the types QuerySimpleProtocol, QueryResultFormats, and
+// QueryResultFormatsByOID may be used as the first args to control exactly how the query is executed. This is rarely
+// needed. See the documentation for those types for details.
 func (p *Pool) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
 	c, err := p.Acquire(ctx)
 	if err != nil {
@@ -450,9 +544,18 @@ func (p *Pool) SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults {
 	return &poolBatchResults{br: br, c: c}
 }
 
+// Begin acquires a connection from the Pool and starts a transaction. Unlike database/sql, the context only affects the begin command. i.e. there is no
+// auto-rollback on context cancellation. Begin initiates a transaction block without explicitly setting a transaction mode for the block (see BeginTx with TxOptions if transaction mode is required).
+// *pgxpool.Tx is returned, which implements the pgx.Tx interface.
+// Commit or Rollback must be called on the returned transaction to finalize the transaction block.
 func (p *Pool) Begin(ctx context.Context) (pgx.Tx, error) {
 	return p.BeginTx(ctx, pgx.TxOptions{})
 }
+
+// BeginTx acquires a connection from the Pool and starts a transaction with pgx.TxOptions determining the transaction mode.
+// Unlike database/sql, the context only affects the begin command. i.e. there is no auto-rollback on context cancellation.
+// *pgxpool.Tx is returned, which implements the pgx.Tx interface.
+// Commit or Rollback must be called on the returned transaction to finalize the transaction block.
 func (p *Pool) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error) {
 	c, err := p.Acquire(ctx)
 	if err != nil {
@@ -468,6 +571,20 @@ func (p *Pool) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, er
 	return &Tx{t: t, c: c}, err
 }
 
+func (p *Pool) BeginFunc(ctx context.Context, f func(pgx.Tx) error) error {
+	return p.BeginTxFunc(ctx, pgx.TxOptions{}, f)
+}
+
+func (p *Pool) BeginTxFunc(ctx context.Context, txOptions pgx.TxOptions, f func(pgx.Tx) error) error {
+	c, err := p.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Release()
+
+	return c.BeginTxFunc(ctx, txOptions, f)
+}
+
 func (p *Pool) CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource) (int64, error) {
 	c, err := p.Acquire(ctx)
 	if err != nil {
@@ -476,4 +593,15 @@ func (p *Pool) CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNam
 	defer c.Release()
 
 	return c.Conn().CopyFrom(ctx, tableName, columnNames, rowSrc)
+}
+
+// Ping acquires a connection from the Pool and executes an empty sql statement against it.
+// If the sql returns without error, the database Ping is considered successful, otherwise, the error is returned.
+func (p *Pool) Ping(ctx context.Context) error {
+	c, err := p.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Release()
+	return c.Ping(ctx)
 }

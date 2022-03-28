@@ -1,3 +1,59 @@
+# 4.15.0 (February 7, 2022)
+
+* Upgrade to pgconn v1.11.0
+* Upgrade to pgtype v1.10.0
+* Upgrade puddle to v1.2.1
+* Make BatchResults.Close safe to be called multiple times
+
+# 4.14.1 (November 28, 2021)
+
+* Upgrade pgtype to v1.9.1 (fixes unintentional change to timestamp binary decoding)
+* Start pgxpool background health check after initial connections
+
+# 4.14.0 (November 20, 2021)
+
+* Upgrade pgconn to v1.10.1
+* Upgrade pgproto3 to v2.2.0
+* Upgrade pgtype to v1.9.0
+* Upgrade puddle to v1.2.0
+* Add QueryFunc to BatchResults
+* Add context options to zerologadapter (Thomas Frössman)
+* Add zerologadapter.NewContextLogger (urso)
+* Eager initialize minpoolsize on connect (Daniel)
+* Unpin memory used by large queries immediately after use
+
+# 4.13.0 (July 24, 2021)
+
+* Trimmed pseudo-dependencies in Go modules from other packages tests
+* Upgrade pgconn -- context cancellation no longer will return a net.Error
+* Support time durations for simple protocol (Michael Darr)
+
+# 4.12.0 (July 10, 2021)
+
+* ResetSession hook is called before a connection is reused from pool for another query (Dmytro Haranzha)
+* stdlib: Add RandomizeHostOrderFunc (dkinder)
+* stdlib: add OptionBeforeConnect (dkinder)
+* stdlib: Do not reuse ConnConfig strings (Andrew Kimball)
+* stdlib: implement Conn.ResetSession (Jonathan Amsterdam)
+* Upgrade pgconn to v1.9.0
+* Upgrade pgtype to v1.8.0
+
+# 4.11.0 (March 25, 2021)
+
+* Add BeforeConnect callback to pgxpool.Config (Robert Froehlich)
+* Add Ping method to pgxpool.Conn (davidsbond)
+* Added a kitlog level log adapter (Fabrice Aneche)
+* Make ScanArgError public to allow identification of offending column (Pau Sanchez)
+* Add *pgxpool.AcquireFunc
+* Add BeginFunc and BeginTxFunc
+* Add prefer_simple_protocol to connection string
+* Add logging on CopyFrom (Patrick Hemmer)
+* Add comment support when sanitizing SQL queries (Rusakow Andrew)
+* Do not panic on double close of pgxpool.Pool (Matt Schultz)
+* Avoid panic on SendBatch on closed Tx (Matt Schultz)
+* Update pgconn to v1.8.1
+* Update pgtype to v1.7.0
+
 # 4.10.1 (December 19, 2020)
 
 * Fix panic on Query error with nil stmtcache.

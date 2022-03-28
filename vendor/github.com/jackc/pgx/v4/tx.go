@@ -3,46 +3,55 @@ package pgx
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/jackc/pgconn"
-	errors "golang.org/x/xerrors"
 )
 
+// TxIsoLevel is the transaction isolation level (serializable, repeatable read, read committed or read uncommitted)
 type TxIsoLevel string
 
 // Transaction isolation levels
 const (
-	Serializable    = TxIsoLevel("serializable")
-	RepeatableRead  = TxIsoLevel("repeatable read")
-	ReadCommitted   = TxIsoLevel("read committed")
-	ReadUncommitted = TxIsoLevel("read uncommitted")
+	Serializable    TxIsoLevel = "serializable"
+	RepeatableRead  TxIsoLevel = "repeatable read"
+	ReadCommitted   TxIsoLevel = "read committed"
+	ReadUncommitted TxIsoLevel = "read uncommitted"
 )
 
+// TxAccessMode is the transaction access mode (read write or read only)
 type TxAccessMode string
 
 // Transaction access modes
 const (
-	ReadWrite = TxAccessMode("read write")
-	ReadOnly  = TxAccessMode("read only")
+	ReadWrite TxAccessMode = "read write"
+	ReadOnly  TxAccessMode = "read only"
 )
 
+// TxDeferrableMode is the transaction deferrable mode (deferrable or not deferrable)
 type TxDeferrableMode string
 
 // Transaction deferrable modes
 const (
-	Deferrable    = TxDeferrableMode("deferrable")
-	NotDeferrable = TxDeferrableMode("not deferrable")
+	Deferrable    TxDeferrableMode = "deferrable"
+	NotDeferrable TxDeferrableMode = "not deferrable"
 )
 
+// TxOptions are transaction modes within a transaction block
 type TxOptions struct {
 	IsoLevel       TxIsoLevel
 	AccessMode     TxAccessMode
 	DeferrableMode TxDeferrableMode
 }
 
+var emptyTxOptions TxOptions
+
 func (txOptions TxOptions) beginSQL() string {
+	if txOptions == emptyTxOptions {
+		return "begin"
+	}
 	buf := &bytes.Buffer{}
 	buf.WriteString("begin")
 	if txOptions.IsoLevel != "" {
@@ -85,6 +94,39 @@ func (c *Conn) BeginTx(ctx context.Context, txOptions TxOptions) (Tx, error) {
 	return &dbTx{conn: c}, nil
 }
 
+// BeginFunc starts a transaction and calls f. If f does not return an error the transaction is committed. If f returns
+// an error the transaction is rolled back. The context will be used when executing the transaction control statements
+// (BEGIN, ROLLBACK, and COMMIT) but does not otherwise affect the execution of f.
+func (c *Conn) BeginFunc(ctx context.Context, f func(Tx) error) (err error) {
+	return c.BeginTxFunc(ctx, TxOptions{}, f)
+}
+
+// BeginTxFunc starts a transaction with txOptions determining the transaction mode and calls f. If f does not return
+// an error the transaction is committed. If f returns an error the transaction is rolled back. The context will be
+// used when executing the transaction control statements (BEGIN, ROLLBACK, and COMMIT) but does not otherwise affect
+// the execution of f.
+func (c *Conn) BeginTxFunc(ctx context.Context, txOptions TxOptions, f func(Tx) error) (err error) {
+	var tx Tx
+	tx, err = c.BeginTx(ctx, txOptions)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		rollbackErr := tx.Rollback(ctx)
+		if rollbackErr != nil && !errors.Is(rollbackErr, ErrTxClosed) {
+			err = rollbackErr
+		}
+	}()
+
+	fErr := f(tx)
+	if fErr != nil {
+		_ = tx.Rollback(ctx) // ignore rollback error as there is already an error to return
+		return fErr
+	}
+
+	return tx.Commit(ctx)
+}
+
 // Tx represents a database transaction.
 //
 // Tx is an interface instead of a struct to enable connection pools to be implemented without relying on internal pgx
@@ -95,6 +137,10 @@ func (c *Conn) BeginTx(ctx context.Context, txOptions TxOptions) (Tx, error) {
 type Tx interface {
 	// Begin starts a pseudo nested transaction.
 	Begin(ctx context.Context) (Tx, error)
+
+	// BeginFunc starts a pseudo nested transaction and executes f. If f does not return an err the pseudo nested
+	// transaction will be committed. If it does then it will be rolled back.
+	BeginFunc(ctx context.Context, f func(Tx) error) (err error)
 
 	// Commit commits the transaction if this is a real transaction or releases the savepoint if this is a pseudo nested
 	// transaction. Commit will return ErrTxClosed if the Tx is already closed, but is otherwise safe to call multiple
@@ -149,6 +195,32 @@ func (tx *dbTx) Begin(ctx context.Context) (Tx, error) {
 	return &dbSavepoint{tx: tx, savepointNum: tx.savepointNum}, nil
 }
 
+func (tx *dbTx) BeginFunc(ctx context.Context, f func(Tx) error) (err error) {
+	if tx.closed {
+		return ErrTxClosed
+	}
+
+	var savepoint Tx
+	savepoint, err = tx.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		rollbackErr := savepoint.Rollback(ctx)
+		if rollbackErr != nil && !errors.Is(rollbackErr, ErrTxClosed) {
+			err = rollbackErr
+		}
+	}()
+
+	fErr := f(savepoint)
+	if fErr != nil {
+		_ = savepoint.Rollback(ctx) // ignore rollback error as there is already an error to return
+		return fErr
+	}
+
+	return savepoint.Commit(ctx)
+}
+
 // Commit commits the transaction.
 func (tx *dbTx) Commit(ctx context.Context) error {
 	if tx.closed {
@@ -183,7 +255,7 @@ func (tx *dbTx) Rollback(ctx context.Context) error {
 	tx.closed = true
 	if err != nil {
 		// A rollback failure leaves the connection in an undefined state
-		tx.conn.die(errors.Errorf("rollback failed: %w", err))
+		tx.conn.die(fmt.Errorf("rollback failed: %w", err))
 		return err
 	}
 
@@ -271,6 +343,14 @@ func (sp *dbSavepoint) Begin(ctx context.Context) (Tx, error) {
 	}
 
 	return sp.tx.Begin(ctx)
+}
+
+func (sp *dbSavepoint) BeginFunc(ctx context.Context, f func(Tx) error) (err error) {
+	if sp.closed {
+		return ErrTxClosed
+	}
+
+	return sp.tx.BeginFunc(ctx, f)
 }
 
 // Commit releases the savepoint essentially committing the pseudo nested transaction.

@@ -11,16 +11,16 @@ import (
 	"github.com/jackc/pgio"
 )
 
-type UUIDArray struct {
-	Elements   []UUID
+type TsrangeArray struct {
+	Elements   []Tsrange
 	Dimensions []ArrayDimension
 	Status     Status
 }
 
-func (dst *UUIDArray) Set(src interface{}) error {
+func (dst *TsrangeArray) Set(src interface{}) error {
 	// untyped nil and typed nil interfaces are different
 	if src == nil {
-		*dst = UUIDArray{Status: Null}
+		*dst = TsrangeArray{Status: Null}
 		return nil
 	}
 
@@ -34,89 +34,13 @@ func (dst *UUIDArray) Set(src interface{}) error {
 	// Attempt to match to select common types:
 	switch value := src.(type) {
 
-	case [][16]byte:
+	case []Tsrange:
 		if value == nil {
-			*dst = UUIDArray{Status: Null}
+			*dst = TsrangeArray{Status: Null}
 		} else if len(value) == 0 {
-			*dst = UUIDArray{Status: Present}
+			*dst = TsrangeArray{Status: Present}
 		} else {
-			elements := make([]UUID, len(value))
-			for i := range value {
-				if err := elements[i].Set(value[i]); err != nil {
-					return err
-				}
-			}
-			*dst = UUIDArray{
-				Elements:   elements,
-				Dimensions: []ArrayDimension{{Length: int32(len(elements)), LowerBound: 1}},
-				Status:     Present,
-			}
-		}
-
-	case [][]byte:
-		if value == nil {
-			*dst = UUIDArray{Status: Null}
-		} else if len(value) == 0 {
-			*dst = UUIDArray{Status: Present}
-		} else {
-			elements := make([]UUID, len(value))
-			for i := range value {
-				if err := elements[i].Set(value[i]); err != nil {
-					return err
-				}
-			}
-			*dst = UUIDArray{
-				Elements:   elements,
-				Dimensions: []ArrayDimension{{Length: int32(len(elements)), LowerBound: 1}},
-				Status:     Present,
-			}
-		}
-
-	case []string:
-		if value == nil {
-			*dst = UUIDArray{Status: Null}
-		} else if len(value) == 0 {
-			*dst = UUIDArray{Status: Present}
-		} else {
-			elements := make([]UUID, len(value))
-			for i := range value {
-				if err := elements[i].Set(value[i]); err != nil {
-					return err
-				}
-			}
-			*dst = UUIDArray{
-				Elements:   elements,
-				Dimensions: []ArrayDimension{{Length: int32(len(elements)), LowerBound: 1}},
-				Status:     Present,
-			}
-		}
-
-	case []*string:
-		if value == nil {
-			*dst = UUIDArray{Status: Null}
-		} else if len(value) == 0 {
-			*dst = UUIDArray{Status: Present}
-		} else {
-			elements := make([]UUID, len(value))
-			for i := range value {
-				if err := elements[i].Set(value[i]); err != nil {
-					return err
-				}
-			}
-			*dst = UUIDArray{
-				Elements:   elements,
-				Dimensions: []ArrayDimension{{Length: int32(len(elements)), LowerBound: 1}},
-				Status:     Present,
-			}
-		}
-
-	case []UUID:
-		if value == nil {
-			*dst = UUIDArray{Status: Null}
-		} else if len(value) == 0 {
-			*dst = UUIDArray{Status: Present}
-		} else {
-			*dst = UUIDArray{
+			*dst = TsrangeArray{
 				Elements:   value,
 				Dimensions: []ArrayDimension{{Length: int32(len(value)), LowerBound: 1}},
 				Status:     Present,
@@ -128,27 +52,27 @@ func (dst *UUIDArray) Set(src interface{}) error {
 		// but it comes with a 20-50% performance penalty for large arrays/slices
 		reflectedValue := reflect.ValueOf(src)
 		if !reflectedValue.IsValid() || reflectedValue.IsZero() {
-			*dst = UUIDArray{Status: Null}
+			*dst = TsrangeArray{Status: Null}
 			return nil
 		}
 
 		dimensions, elementsLength, ok := findDimensionsFromValue(reflectedValue, nil, 0)
 		if !ok {
-			return fmt.Errorf("cannot find dimensions of %v for UUIDArray", src)
+			return fmt.Errorf("cannot find dimensions of %v for TsrangeArray", src)
 		}
 		if elementsLength == 0 {
-			*dst = UUIDArray{Status: Present}
+			*dst = TsrangeArray{Status: Present}
 			return nil
 		}
 		if len(dimensions) == 0 {
 			if originalSrc, ok := underlyingSliceType(src); ok {
 				return dst.Set(originalSrc)
 			}
-			return fmt.Errorf("cannot convert %v to UUIDArray", src)
+			return fmt.Errorf("cannot convert %v to TsrangeArray", src)
 		}
 
-		*dst = UUIDArray{
-			Elements:   make([]UUID, elementsLength),
+		*dst = TsrangeArray{
+			Elements:   make([]Tsrange, elementsLength),
 			Dimensions: dimensions,
 			Status:     Present,
 		}
@@ -165,7 +89,7 @@ func (dst *UUIDArray) Set(src interface{}) error {
 						elementsLength *= int(dim.Length)
 					}
 				}
-				dst.Elements = make([]UUID, elementsLength)
+				dst.Elements = make([]Tsrange, elementsLength)
 				elementCount, err = dst.setRecursive(reflectedValue, 0, 0)
 				if err != nil {
 					return err
@@ -175,14 +99,14 @@ func (dst *UUIDArray) Set(src interface{}) error {
 			}
 		}
 		if elementCount != len(dst.Elements) {
-			return fmt.Errorf("cannot convert %v to UUIDArray, expected %d dst.Elements, but got %d instead", src, len(dst.Elements), elementCount)
+			return fmt.Errorf("cannot convert %v to TsrangeArray, expected %d dst.Elements, but got %d instead", src, len(dst.Elements), elementCount)
 		}
 	}
 
 	return nil
 }
 
-func (dst *UUIDArray) setRecursive(value reflect.Value, index, dimension int) (int, error) {
+func (dst *TsrangeArray) setRecursive(value reflect.Value, index, dimension int) (int, error) {
 	switch value.Kind() {
 	case reflect.Array:
 		fallthrough
@@ -206,17 +130,17 @@ func (dst *UUIDArray) setRecursive(value reflect.Value, index, dimension int) (i
 		return index, nil
 	}
 	if !value.CanInterface() {
-		return 0, fmt.Errorf("cannot convert all values to UUIDArray")
+		return 0, fmt.Errorf("cannot convert all values to TsrangeArray")
 	}
 	if err := dst.Elements[index].Set(value.Interface()); err != nil {
-		return 0, fmt.Errorf("%v in UUIDArray", err)
+		return 0, fmt.Errorf("%v in TsrangeArray", err)
 	}
 	index++
 
 	return index, nil
 }
 
-func (dst UUIDArray) Get() interface{} {
+func (dst TsrangeArray) Get() interface{} {
 	switch dst.Status {
 	case Present:
 		return dst
@@ -227,42 +151,15 @@ func (dst UUIDArray) Get() interface{} {
 	}
 }
 
-func (src *UUIDArray) AssignTo(dst interface{}) error {
+func (src *TsrangeArray) AssignTo(dst interface{}) error {
 	switch src.Status {
 	case Present:
 		if len(src.Dimensions) <= 1 {
 			// Attempt to match to select common types:
 			switch v := dst.(type) {
 
-			case *[][16]byte:
-				*v = make([][16]byte, len(src.Elements))
-				for i := range src.Elements {
-					if err := src.Elements[i].AssignTo(&((*v)[i])); err != nil {
-						return err
-					}
-				}
-				return nil
-
-			case *[][]byte:
-				*v = make([][]byte, len(src.Elements))
-				for i := range src.Elements {
-					if err := src.Elements[i].AssignTo(&((*v)[i])); err != nil {
-						return err
-					}
-				}
-				return nil
-
-			case *[]string:
-				*v = make([]string, len(src.Elements))
-				for i := range src.Elements {
-					if err := src.Elements[i].AssignTo(&((*v)[i])); err != nil {
-						return err
-					}
-				}
-				return nil
-
-			case *[]*string:
-				*v = make([]*string, len(src.Elements))
+			case *[]Tsrange:
+				*v = make([]Tsrange, len(src.Elements))
 				for i := range src.Elements {
 					if err := src.Elements[i].AssignTo(&((*v)[i])); err != nil {
 						return err
@@ -315,7 +212,7 @@ func (src *UUIDArray) AssignTo(dst interface{}) error {
 	return fmt.Errorf("cannot decode %#v into %T", src, dst)
 }
 
-func (src *UUIDArray) assignToRecursive(value reflect.Value, index, dimension int) (int, error) {
+func (src *TsrangeArray) assignToRecursive(value reflect.Value, index, dimension int) (int, error) {
 	switch kind := value.Kind(); kind {
 	case reflect.Array:
 		fallthrough
@@ -349,11 +246,11 @@ func (src *UUIDArray) assignToRecursive(value reflect.Value, index, dimension in
 		return 0, fmt.Errorf("incorrect dimensions, expected %d, found %d", len(src.Dimensions), dimension)
 	}
 	if !value.CanAddr() {
-		return 0, fmt.Errorf("cannot assign all values from UUIDArray")
+		return 0, fmt.Errorf("cannot assign all values from TsrangeArray")
 	}
 	addr := value.Addr()
 	if !addr.CanInterface() {
-		return 0, fmt.Errorf("cannot assign all values from UUIDArray")
+		return 0, fmt.Errorf("cannot assign all values from TsrangeArray")
 	}
 	if err := src.Elements[index].AssignTo(addr.Interface()); err != nil {
 		return 0, err
@@ -362,9 +259,9 @@ func (src *UUIDArray) assignToRecursive(value reflect.Value, index, dimension in
 	return index, nil
 }
 
-func (dst *UUIDArray) DecodeText(ci *ConnInfo, src []byte) error {
+func (dst *TsrangeArray) DecodeText(ci *ConnInfo, src []byte) error {
 	if src == nil {
-		*dst = UUIDArray{Status: Null}
+		*dst = TsrangeArray{Status: Null}
 		return nil
 	}
 
@@ -373,13 +270,13 @@ func (dst *UUIDArray) DecodeText(ci *ConnInfo, src []byte) error {
 		return err
 	}
 
-	var elements []UUID
+	var elements []Tsrange
 
 	if len(uta.Elements) > 0 {
-		elements = make([]UUID, len(uta.Elements))
+		elements = make([]Tsrange, len(uta.Elements))
 
 		for i, s := range uta.Elements {
-			var elem UUID
+			var elem Tsrange
 			var elemSrc []byte
 			if s != "NULL" || uta.Quoted[i] {
 				elemSrc = []byte(s)
@@ -393,14 +290,14 @@ func (dst *UUIDArray) DecodeText(ci *ConnInfo, src []byte) error {
 		}
 	}
 
-	*dst = UUIDArray{Elements: elements, Dimensions: uta.Dimensions, Status: Present}
+	*dst = TsrangeArray{Elements: elements, Dimensions: uta.Dimensions, Status: Present}
 
 	return nil
 }
 
-func (dst *UUIDArray) DecodeBinary(ci *ConnInfo, src []byte) error {
+func (dst *TsrangeArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 	if src == nil {
-		*dst = UUIDArray{Status: Null}
+		*dst = TsrangeArray{Status: Null}
 		return nil
 	}
 
@@ -411,7 +308,7 @@ func (dst *UUIDArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 	}
 
 	if len(arrayHeader.Dimensions) == 0 {
-		*dst = UUIDArray{Dimensions: arrayHeader.Dimensions, Status: Present}
+		*dst = TsrangeArray{Dimensions: arrayHeader.Dimensions, Status: Present}
 		return nil
 	}
 
@@ -420,7 +317,7 @@ func (dst *UUIDArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 		elementCount *= d.Length
 	}
 
-	elements := make([]UUID, elementCount)
+	elements := make([]Tsrange, elementCount)
 
 	for i := range elements {
 		elemLen := int(int32(binary.BigEndian.Uint32(src[rp:])))
@@ -436,11 +333,11 @@ func (dst *UUIDArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 		}
 	}
 
-	*dst = UUIDArray{Elements: elements, Dimensions: arrayHeader.Dimensions, Status: Present}
+	*dst = TsrangeArray{Elements: elements, Dimensions: arrayHeader.Dimensions, Status: Present}
 	return nil
 }
 
-func (src UUIDArray) EncodeText(ci *ConnInfo, buf []byte) ([]byte, error) {
+func (src TsrangeArray) EncodeText(ci *ConnInfo, buf []byte) ([]byte, error) {
 	switch src.Status {
 	case Null:
 		return nil, nil
@@ -497,7 +394,7 @@ func (src UUIDArray) EncodeText(ci *ConnInfo, buf []byte) ([]byte, error) {
 	return buf, nil
 }
 
-func (src UUIDArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
+func (src TsrangeArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
 	switch src.Status {
 	case Null:
 		return nil, nil
@@ -509,10 +406,10 @@ func (src UUIDArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
 		Dimensions: src.Dimensions,
 	}
 
-	if dt, ok := ci.DataTypeForName("uuid"); ok {
+	if dt, ok := ci.DataTypeForName("tsrange"); ok {
 		arrayHeader.ElementOID = int32(dt.OID)
 	} else {
-		return nil, fmt.Errorf("unable to find oid for type name %v", "uuid")
+		return nil, fmt.Errorf("unable to find oid for type name %v", "tsrange")
 	}
 
 	for i := range src.Elements {
@@ -542,7 +439,7 @@ func (src UUIDArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
 }
 
 // Scan implements the database/sql Scanner interface.
-func (dst *UUIDArray) Scan(src interface{}) error {
+func (dst *TsrangeArray) Scan(src interface{}) error {
 	if src == nil {
 		return dst.DecodeText(nil, nil)
 	}
@@ -560,7 +457,7 @@ func (dst *UUIDArray) Scan(src interface{}) error {
 }
 
 // Value implements the database/sql/driver Valuer interface.
-func (src UUIDArray) Value() (driver.Value, error) {
+func (src TsrangeArray) Value() (driver.Value, error) {
 	buf, err := src.EncodeText(nil, nil)
 	if err != nil {
 		return nil, err

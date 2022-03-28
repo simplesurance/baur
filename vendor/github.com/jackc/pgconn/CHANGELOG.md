@@ -1,3 +1,37 @@
+# 1.11.0 (February 7, 2022)
+
+* Support port in ip from LookupFunc to override config (James Hartig)
+* Fix TLS connection timeout (Blake Embrey)
+* Add support for read-only, primary, standby, prefer-standby target_session_attributes (Oscar)
+* Fix connect when receiving NoticeResponse
+
+# 1.10.1 (November 20, 2021)
+
+* Close without waiting for response (Kei Kamikawa)
+* Save waiting for network round-trip in CopyFrom (Rueian)
+* Fix concurrency issue with ContextWatcher
+* LRU.Get always checks context for cancellation / expiration (Georges Varouchas)
+
+# 1.10.0 (July 24, 2021)
+
+* net.Timeout errors are no longer returned when a query is canceled via context. A wrapped context error is returned.
+
+# 1.9.0 (July 10, 2021)
+
+* pgconn.Timeout only is true for errors originating in pgconn (Michael Darr)
+* Add defaults for sslcert, sslkey, and sslrootcert (Joshua Brindle)
+* Solve issue with 'sslmode=verify-full' when there are multiple hosts (mgoddard)
+* Fix default host when parsing URL without host but with port
+* Allow dbname query parameter in URL conn string
+* Update underlying dependencies
+
+# 1.8.1 (March 25, 2021)
+
+* Better connection string sanitization (ip.novikov)
+* Use proper pgpass location on Windows (Moshe Katz)
+* Use errors instead of golang.org/x/xerrors
+* Resume fallback on server error in Connect (Andrey Borodin)
+
 # 1.8.0 (December 3, 2020)
 
 * Add StatementErrored method to stmtcache.Cache. This allows the cache to purge invalidated prepared statements. (Ethan Pailes)
