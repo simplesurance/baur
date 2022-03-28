@@ -64,7 +64,7 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVar(&cpuProfilingFlag, "cpu-prof", false,
 		fmt.Sprintf("enable cpu profiling, result is written to %q", defCPUProfFile))
-	rootCmd.PersistentFlags().BoolVar(&noColorFlag, "no-color", false, "disable color output")
+	rootCmd.PersistentFlags().BoolVar(&noColorFlag, "no-color", false, "disable color output (env. variable NO_COLOR is also supported)")
 
 	err := rootCmd.Execute()
 	exitOnErr(err)
