@@ -1,19 +1,21 @@
-# github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
-## explicit
+# github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1
+## explicit; go 1.16
 github.com/Azure/go-ansiterm
 github.com/Azure/go-ansiterm/winterm
-# github.com/Microsoft/go-winio v0.4.16
-## explicit; go 1.12
+# github.com/Microsoft/go-winio v0.5.2
+## explicit; go 1.13
 github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
 github.com/Microsoft/go-winio/pkg/security
 github.com/Microsoft/go-winio/vhd
-# github.com/Microsoft/hcsshim v0.8.14
+# github.com/Microsoft/hcsshim v0.9.2
 ## explicit; go 1.13
 github.com/Microsoft/hcsshim
 github.com/Microsoft/hcsshim/computestorage
 github.com/Microsoft/hcsshim/internal/cow
 github.com/Microsoft/hcsshim/internal/hcs
+github.com/Microsoft/hcsshim/internal/hcs/schema1
+github.com/Microsoft/hcsshim/internal/hcs/schema2
 github.com/Microsoft/hcsshim/internal/hcserror
 github.com/Microsoft/hcsshim/internal/hns
 github.com/Microsoft/hcsshim/internal/interop
@@ -23,8 +25,6 @@ github.com/Microsoft/hcsshim/internal/longpath
 github.com/Microsoft/hcsshim/internal/mergemaps
 github.com/Microsoft/hcsshim/internal/oc
 github.com/Microsoft/hcsshim/internal/safefile
-github.com/Microsoft/hcsshim/internal/schema1
-github.com/Microsoft/hcsshim/internal/schema2
 github.com/Microsoft/hcsshim/internal/timeout
 github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
@@ -135,21 +135,17 @@ github.com/aws/smithy-go/time
 github.com/aws/smithy-go/transport/http
 github.com/aws/smithy-go/transport/http/internal/io
 github.com/aws/smithy-go/waiter
-# github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68
-## explicit; go 1.13
+# github.com/containerd/cgroups v1.0.3
+## explicit; go 1.16
 github.com/containerd/cgroups/stats/v1
-# github.com/containerd/containerd v1.4.3
-## explicit
-github.com/containerd/containerd/log
+# github.com/containerd/containerd v1.6.2
+## explicit; go 1.17
+github.com/containerd/containerd/pkg/userns
 github.com/containerd/containerd/sys
-# github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7
-## explicit; go 1.13
-github.com/containerd/continuity/fs
-github.com/containerd/continuity/sysx
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/docker/docker v20.10.2+incompatible
+# github.com/docker/docker v20.10.14+incompatible
 ## explicit
 github.com/docker/docker/api/types/blkiodev
 github.com/docker/docker/api/types/container
@@ -180,8 +176,8 @@ github.com/docker/go-units
 # github.com/fatih/color v1.13.0
 ## explicit; go 1.13
 github.com/fatih/color
-# github.com/fsouza/go-dockerclient v1.7.0
-## explicit; go 1.14
+# github.com/fsouza/go-dockerclient v1.7.10
+## explicit; go 1.16
 github.com/fsouza/go-dockerclient
 # github.com/gofrs/uuid v4.0.0+incompatible
 ## explicit
@@ -190,7 +186,7 @@ github.com/fsouza/go-dockerclient
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
-# github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
+# github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 ## explicit
 github.com/golang/groupcache/lru
 # github.com/google/uuid v1.2.0
@@ -235,8 +231,6 @@ github.com/jackc/puddle
 # github.com/jmespath/go-jmespath v0.4.0
 ## explicit; go 1.14
 github.com/jmespath/go-jmespath
-# github.com/kr/text v0.2.0
-## explicit
 # github.com/lib/pq v1.9.0
 ## explicit; go 1.13
 # github.com/mattn/go-colorable v0.1.12
@@ -245,13 +239,13 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.14
 ## explicit; go 1.12
 github.com/mattn/go-isatty
-# github.com/moby/sys/mount v0.2.0
-## explicit; go 1.14
+# github.com/moby/sys/mount v0.3.1
+## explicit; go 1.16
 github.com/moby/sys/mount
-# github.com/moby/sys/mountinfo v0.4.0
-## explicit; go 1.14
+# github.com/moby/sys/mountinfo v0.6.0
+## explicit; go 1.16
 github.com/moby/sys/mountinfo
-# github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
+# github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6
 ## explicit; go 1.13
 github.com/moby/term
 github.com/moby/term/windows
@@ -261,12 +255,12 @@ github.com/morikuni/aec
 # github.com/opencontainers/go-digest v1.0.0
 ## explicit; go 1.13
 github.com/opencontainers/go-digest
-# github.com/opencontainers/image-spec v1.0.1
+# github.com/opencontainers/image-spec v1.0.2
 ## explicit
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v0.1.1
-## explicit
+# github.com/opencontainers/runc v1.1.0
+## explicit; go 1.16
 github.com/opencontainers/runc/libcontainer/user
 # github.com/pelletier/go-toml v1.9.4
 ## explicit; go 1.12
@@ -298,7 +292,7 @@ github.com/simplesurance/baur/resolve/gosource
 github.com/simplesurance/baur/storage
 github.com/simplesurance/baur/upload/docker
 github.com/simplesurance/baur/upload/scheduler
-# github.com/sirupsen/logrus v1.7.0
+# github.com/sirupsen/logrus v1.8.1
 ## explicit; go 1.13
 github.com/sirupsen/logrus
 # github.com/spf13/cobra v1.4.0
@@ -311,7 +305,7 @@ github.com/spf13/pflag
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# go.opencensus.io v0.22.6
+# go.opencensus.io v0.23.0
 ## explicit; go 1.13
 go.opencensus.io
 go.opencensus.io/internal
@@ -324,17 +318,12 @@ golang.org/x/crypto/pbkdf2
 # golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 ## explicit; go 1.17
 golang.org/x/mod/semver
-# golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-## explicit
-golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20220328115105-d36c6a25d886
 ## explicit; go 1.17
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
-## explicit; go 1.11
 # golang.org/x/text v0.3.7
 ## explicit; go 1.17
 golang.org/x/text/cases
@@ -368,10 +357,6 @@ golang.org/x/tools/internal/typesinternal
 ## explicit; go 1.11
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
-## explicit; go 1.11
-# gopkg.in/yaml.v2 v2.4.0
-## explicit; go 1.15
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 ## explicit
 gopkg.in/yaml.v3
