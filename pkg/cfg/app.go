@@ -47,12 +47,12 @@ func ExampleApp(name string) *App {
 							S3Upload: []S3Upload{
 								{
 									Bucket: "go-artifacts/",
-									Key:    "{{ .appname }}-{{ .gitcommit }}.tar.xz",
+									Key:    "{{ .AppName }}-{{ gitCommit }}.tar.xz",
 								},
 							},
 							FileCopy: []FileCopy{
 								{
-									Path: "/mnt/fileserver/build_artifacts/{{ .appname }}-{{ .gitcommit }}.tar.xz",
+									Path: "/mnt/fileserver/build_artifacts/{{ .AppName }}-{{ gitCommit }}.tar.xz",
 								},
 							},
 						},
@@ -62,8 +62,8 @@ func ExampleApp(name string) *App {
 							IDFile: "{{ .appname }}-container.id",
 							RegistryUpload: []DockerImageRegistryUpload{
 								{
-									Repository: "my-company/{{ .appname }}",
-									Tag:        "{{ ENV BRANCH_NAME }}-{{ .gitcommit }}",
+									Repository: "my-company/{{ .AppName }}",
+									Tag:        "{{ ENV BRANCH_NAME }}-{{ gitCommit }}",
 								},
 							},
 						},
