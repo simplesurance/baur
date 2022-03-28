@@ -1,23 +1,23 @@
 package s3
 
 import (
+	"context"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 // Client is a S3 uploader client
 type Client struct {
-	sess     *session.Session
-	uploader *s3manager.Uploader
+	uploader *manager.Uploader
 }
 
 // Logger defines the interface for an S3 logger
 type Logger interface {
-	Debugln(v ...interface{})
-	DebugEnabled() bool
+	Debugf(format string, v ...interface{})
 }
 
 // DefaultRetries is the number of retries for a S3 upload until an error is
@@ -26,27 +26,30 @@ const DefaultRetries = 3
 
 // NewClient returns a new S3 Client, configuration is read from env variables
 // or configuration files,
-// see https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-func NewClient(logger Logger) (*Client, error) {
-	loglvl := aws.LogLevel(aws.LogOff)
-	if logger.DebugEnabled() {
-		loglvl = aws.LogLevel(aws.LogDebug)
-	}
+// see https://docs.aws.amazon.com/sdkref/latest/guide/creds-config-files.html
+func NewClient(ctx context.Context, logger Logger) (*Client, error) {
+	s3Logger := &s3Logger{logger: logger}
 
-	cfg := aws.Config{
-		Logger:           aws.LoggerFunc(logger.Debugln),
-		LogLevel:         loglvl,
-		MaxRetries:       aws.Int(DefaultRetries),
-		S3ForcePathStyle: aws.Bool(true),
-	}
-
-	sess, err := session.NewSession(&cfg)
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRetryMaxAttempts(DefaultRetries),
+		config.WithLogger(s3Logger),
+		config.WithLogConfigurationWarnings(true),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{sess: sess,
-		uploader: s3manager.NewUploader(sess),
+	clt := s3.NewFromConfig(
+		cfg,
+		func(o *s3.Options) {
+			o.UsePathStyle = true
+			o.Logger = s3Logger
+			o.ClientLogMode = aws.LogRetries | aws.LogRequest | aws.LogResponse
+		},
+	)
+
+	return &Client{
+		uploader: manager.NewUploader(clt),
 	}, nil
 }
 
@@ -59,11 +62,13 @@ func (c *Client) Upload(filepath, bucket, key string) (string, error) {
 	}
 	defer f.Close()
 
-	res, err := c.uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		Body:   f,
-	})
+	res, err := c.uploader.Upload(context.TODO(),
+		&s3.PutObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+			Body:   f,
+		},
+	)
 	if err != nil {
 		return "", err
 	}

@@ -158,7 +158,7 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	c.dockerClient, err = docker.NewClient(log.StdLogger.Debugf)
 	exitOnErr(err)
 
-	s3Client, err := s3.NewClient(log.StdLogger)
+	s3Client, err := s3.NewClient(ctx, log.StdLogger)
 	exitOnErr(err)
 	c.uploader = baur.NewUploader(c.dockerClient, s3Client, filecopy.New(log.Debugf))
 
