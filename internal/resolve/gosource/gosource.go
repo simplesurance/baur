@@ -156,8 +156,9 @@ func (r *Resolver) resolve(
 		"workdir: %s\n"+
 		"env: %+v\n"+
 		"goenv: %+v\n"+
+		"withTests: %t\n"+
 		"buildFlags: %+v\n",
-		queries, workdir, env, goEnv, buildFlags)
+		queries, workdir, env, goEnv, withTests, buildFlags)
 
 	cfg := &packages.Config{
 		Context:    ctx,
