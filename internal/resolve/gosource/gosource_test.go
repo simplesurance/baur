@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v2/internal/log"
 	"github.com/simplesurance/baur/v2/internal/prettyprint"
 	"github.com/simplesurance/baur/v2/internal/testutils/strtest"
 )
@@ -39,6 +40,8 @@ func TestResolve(t *testing.T) {
 	for _, dir := range testdataDirs {
 		t.Run(dir, func(t *testing.T) {
 			var testCfg testCfg
+
+			log.StdLogger.SetOutput(log.NewTestLogOutput(t))
 
 			require.NoError(t, os.Chdir(dir))
 
