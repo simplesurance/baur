@@ -58,9 +58,7 @@ func redirectOutputToLogger(t *testing.T) {
 	// FIXME: when tests are run in parallel this will cause unexpected
 	// results, global package vars are modified that would affect all
 	// parallel running tests
-	oldLogOut := log.StdLogger.GetOutput()
-	log.StdLogger.SetOutput(log.NewTestLogOutput(t))
-	log.StdLogger.EnableDebug(true)
+	log.RedirectToTestingLog(t)
 
 	oldExecDebugFfN := exec.DefaultDebugfFn
 	exec.DefaultDebugfFn = t.Logf
@@ -71,7 +69,6 @@ func redirectOutputToLogger(t *testing.T) {
 	stderr = term.NewStream(logwriter.New(t, ioutil.Discard))
 
 	t.Cleanup(func() {
-		log.StdLogger.SetOutput(oldLogOut)
 		exec.DefaultDebugfFn = oldExecDebugFfN
 		stdout = oldStdout
 		stderr = oldStderr
