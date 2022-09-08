@@ -3,18 +3,22 @@ linters:
   enable:
     - errcheck
     - exportloopref
+    - gocritic
     - goimports
-    - revive
+    - goprintffuncname
     - gosimple
     - ineffassign
     - misspell
     - prealloc
+    - revive
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
+    - tenv
     - typecheck
     - unconvert
     - unused
+    - usestdlibvars
     - vet
 
 linters-settings:
