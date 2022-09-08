@@ -2,7 +2,7 @@ package cfg
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/pelletier/go-toml"
 )
@@ -41,7 +41,7 @@ type Discover struct {
 func RepositoryFromFile(cfgPath string) (*Repository, error) {
 	config := Repository{}
 
-	content, err := ioutil.ReadFile(cfgPath)
+	content, err := os.ReadFile(cfgPath)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,6 @@ package gosource
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +44,7 @@ func TestResolve(t *testing.T) {
 
 			require.NoError(t, os.Chdir(dir))
 
-			fileContent, err := ioutil.ReadFile(testCfgFilename)
+			fileContent, err := os.ReadFile(testCfgFilename)
 			require.NoError(t, err)
 
 			require.NoError(t, err, json.Unmarshal(fileContent, &testCfg))

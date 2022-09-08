@@ -3,7 +3,7 @@ package command
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/simplesurance/baur/v2/internal/command/term"
@@ -64,9 +64,9 @@ func redirectOutputToLogger(t *testing.T) {
 	exec.DefaultDebugfFn = t.Logf
 
 	oldStdout := stdout
-	stdout = term.NewStream(logwriter.New(t, ioutil.Discard))
+	stdout = term.NewStream(logwriter.New(t, io.Discard))
 	oldStderr := stderr
-	stderr = term.NewStream(logwriter.New(t, ioutil.Discard))
+	stderr = term.NewStream(logwriter.New(t, io.Discard))
 
 	t.Cleanup(func() {
 		exec.DefaultDebugfFn = oldExecDebugFfN

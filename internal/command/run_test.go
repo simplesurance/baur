@@ -1,10 +1,11 @@
+//go:build dbtest
 // +build dbtest
 
 package command
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -41,7 +42,7 @@ date +%s >> "$runtime_logfile"
 	var runtimeLogfiles []string
 
 	for i := 0; i < parallelTaskCnt; i++ {
-		err := ioutil.WriteFile(
+		err := os.WriteFile(
 			filepath.Join(r.Dir, fmt.Sprintf("checkscript%d.sh", i)),
 			checkScript,
 			0755,
@@ -92,7 +93,7 @@ date +%s >> "$runtime_logfile"
 	}
 	var taskruntimes []runtime
 	for _, logfile := range runtimeLogfiles {
-		content, err := ioutil.ReadFile(logfile)
+		content, err := os.ReadFile(logfile)
 		require.NoError(t, err)
 		lines := strings.Fields(string(content))
 		require.Len(t, lines, 2, "%s file content: %q, expected to find 2 lines", logfile, string(content))
@@ -120,7 +121,7 @@ func TestRunShowOutput(t *testing.T) {
 
 	scriptPath := filepath.Join(r.Dir, "script.sh")
 
-	err := ioutil.WriteFile(
+	err := os.WriteFile(
 		scriptPath, []byte(`#/usr/bin/env bash
 echo "greetings from script.sh"
 	`),
@@ -161,7 +162,7 @@ func TestRunShowOutputOnErrorOutputIsPrintedOnce(t *testing.T) {
 
 	scriptPath := filepath.Join(r.Dir, "script.sh")
 
-	err := ioutil.WriteFile(
+	err := os.WriteFile(
 		scriptPath, []byte(`#/usr/bin/env bash
 echo "I will fail!"
 exit 1

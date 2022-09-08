@@ -2,7 +2,7 @@ package cfg
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -79,7 +79,7 @@ func ExampleApp(name string) *App {
 func AppFromFile(path string) (*App, error) {
 	config := App{}
 
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
