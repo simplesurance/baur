@@ -96,7 +96,7 @@ func (s Order) String() string {
 	}
 }
 
-//OrderFromStr converts a string to an Order
+// OrderFromStr converts a string to an Order
 func OrderFromStr(s string) (Order, error) {
 	switch strings.ToLower(s) {
 	case "asc":

@@ -17,19 +17,15 @@
 // inputs of a task, baur evaluates if a task has been run with the same inputs
 // in the past already. If it has not, it's executions is pending.
 //
-// Basic Workflow
+// # Basic Workflow
 //
-// - Loader: Locate and load a repository configuration file, discover
-// applications and load and parse their configuration files.
-//
-// - TaskStatusEvaluator: Query the storage and determine which applications
-// have not been run before with their current inputs.
-//
-// - TaskRunner: Execute the commands for the tasks that should be run.
-//
-// - Uploader: Uploads the outputs that the tasks produced.
-//
-// - StoreRun: Record the task executions the uploaded outputs in the database.
+//   - Loader: Locate and load a repository configuration file, discover
+//     applications and load and parse their configuration files.
+//   - TaskStatusEvaluator: Query the storage and determine which applications
+//     have not been run before with their current inputs.
+//   - TaskRunner: Execute the commands for the tasks that should be run.
+//   - Uploader: Uploads the outputs that the tasks produced.
+//   - StoreRun: Record the task executions the uploaded outputs in the database.
 package baur
 
 // AppCfgFile is the name of application configuration files.

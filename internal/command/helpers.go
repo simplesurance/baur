@@ -113,9 +113,9 @@ func newStorageClient(psqlURI string) (storage.Storer, error) {
 	return client, nil
 }
 
-//mustGetPSQLURI returns if it's set the URI from the environment variable
-//envVarPSQLURL, otherwise if it's set the psql uri from the repository config,
-//if it's also not empty prints an error and exits.
+// mustGetPSQLURI returns if it's set the URI from the environment variable
+// envVarPSQLURL, otherwise if it's set the psql uri from the repository config,
+// if it's also not empty prints an error and exits.
 func mustGetPSQLURI(cfg *cfg.Repository) string {
 	uri := getPSQLURI(cfg)
 	if uri == "" {

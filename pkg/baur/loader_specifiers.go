@@ -29,12 +29,13 @@ type specs struct {
 // - '*' to match all apps and tasks,
 // - <APP-DIR-PATH> path to an application directory containing an .app.toml file,
 // <APP-SPEC>[.<TASK-SPEC>] where:
-//     <APP-SPEC> is:
-//       - <APP-NAME> or
-//       - '*'
-//     <TASK-SPEC> is:
-//       - Task Name or
-//       - '*'
+//
+//	<APP-SPEC> is:
+//	  - <APP-NAME> or
+//	  - '*'
+//	<TASK-SPEC> is:
+//	  - Task Name or
+//	  - '*'
 func parseSpecs(specifiers []string) (*specs, error) {
 	var result specs
 
