@@ -1,3 +1,4 @@
+//go:build dbtest
 // +build dbtest
 
 package postgres
@@ -481,8 +482,8 @@ func TestTaskRuns(t *testing.T) {
 			},
 			sorters: []*storage.Sorter{
 				{
-					storage.FieldDuration,
-					storage.OrderAsc,
+					Field: storage.FieldDuration,
+					Order: storage.OrderAsc,
 				},
 			},
 			expectedTaskRuns: []*storage.TaskRunWithID{
@@ -508,8 +509,8 @@ func TestTaskRuns(t *testing.T) {
 			},
 			sorters: []*storage.Sorter{
 				{
-					storage.FieldDuration,
-					storage.OrderDesc,
+					Field: storage.FieldDuration,
+					Order: storage.OrderDesc,
 				},
 			},
 			expectedTaskRuns: []*storage.TaskRunWithID{

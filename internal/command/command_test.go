@@ -118,8 +118,7 @@ func baurCSVStatus(t *testing.T, inputStr []string, lookupInputStr string) []*cs
 }
 
 func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, expectedStatus baur.TaskStatus, commit string) {
-	var taskIds []string
-
+	taskIds := make([]string, 0, len(statusOut))
 	for _, task := range statusOut {
 		taskIds = append(taskIds, task.taskID)
 
@@ -206,7 +205,6 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 	commit := strings.TrimSpace(res.StrOutput())
 
 	// run 1, without input-strings
-	runID := "1"
 	runCmd := newRunCmd()
 	runCmd.Command.Run(&runCmd.Command, nil)
 
@@ -219,7 +217,7 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusExecutionPending, "")
 
 	// run 2, with "feature-x", "feature-y" input strings
-	runID = "3" // 3 instead of 2 becoes the app has 2 task, we build both
+	runID := "3" // 3 instead of 2 becoes the app has 2 task, we build both
 	runCmd = newRunCmd()
 	runCmd.inputStr = inputStr
 	runCmd.Command.Run(&runCmd.Command, nil)

@@ -1,3 +1,4 @@
+//go:build dbtest
 // +build dbtest
 
 package command
