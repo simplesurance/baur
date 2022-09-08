@@ -62,7 +62,7 @@ func (u *CfgUpgrader) upgradeAppConfigs(
 		log.Debugf("%s: updated", cfgPath)
 
 		for _, includePath := range appCfg.Build.Includes {
-			path := strings.Replace(includePath, "$ROOT", repoRootDir, -1)
+			path := strings.ReplaceAll(includePath, "$ROOT", repoRootDir)
 			if !filepath.IsAbs(path) {
 				path = filepath.Join(app.Path, path)
 			}

@@ -53,11 +53,11 @@ func TestResolve(t *testing.T) {
 			require.NoError(t, err)
 
 			for i := range testCfg.Cfg.Environment {
-				testCfg.Cfg.Environment[i] = strings.Replace(testCfg.Cfg.Environment[i], "$WORKDIR", cwd, -1)
+				testCfg.Cfg.Environment[i] = strings.ReplaceAll(testCfg.Cfg.Environment[i], "$WORKDIR", cwd)
 			}
 
 			for i := range testCfg.ExpectedResults {
-				testCfg.ExpectedResults[i] = strings.Replace(testCfg.ExpectedResults[i], "$WORKDIR", cwd, -1)
+				testCfg.ExpectedResults[i] = strings.ReplaceAll(testCfg.ExpectedResults[i], "$WORKDIR", cwd)
 				// The path separators in the test config are Unix style "/", they need to be converted to "\" when running on Windows
 				testCfg.ExpectedResults[i] = filepath.FromSlash(testCfg.ExpectedResults[i])
 			}

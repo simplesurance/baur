@@ -34,7 +34,7 @@ func initInclude(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		filename = args[0]
 		if !strings.HasSuffix(filename, ".toml") {
-			filename = filename + ".toml"
+			filename += ".toml"
 		}
 	} else {
 		filename = defIncludeFilename

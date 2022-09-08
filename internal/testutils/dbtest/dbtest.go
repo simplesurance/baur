@@ -52,5 +52,5 @@ func CreateDB(name string) (string, error) {
 
 // UniqueDBName returns a unique postgresql database name.
 func UniqueDBName() string {
-	return "baur_test" + strings.Replace(uuid.New().String(), "-", "", -1)
+	return "baur_test" + strings.ReplaceAll(uuid.New().String(), "-", "")
 }
