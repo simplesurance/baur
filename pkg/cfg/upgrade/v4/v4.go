@@ -131,7 +131,7 @@ func golangSourcesPathsToQuery(paths []string) []string {
 	result := make([]string, 0, len(paths))
 
 	for _, p := range paths {
-		p = p + "/..."
+		p += "/..."
 		result = append(result, replaceVariables(p))
 	}
 

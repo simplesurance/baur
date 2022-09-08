@@ -75,10 +75,8 @@ func (c *Client) Upload(src string, dst string) (string, error) {
 			return "", fmt.Errorf("creating directory %s failed: %w", destDir, err)
 		}
 		c.debugLogFn("filecopy: created directory '%s'", destDir)
-	} else {
-		if !isDir {
-			return "", fmt.Errorf("%s is not a directory", destDir)
-		}
+	} else if !isDir {
+		return "", fmt.Errorf("%s is not a directory", destDir)
 	}
 
 	regFile, err := fs.IsRegularFile(dst)

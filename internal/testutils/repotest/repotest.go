@@ -113,8 +113,8 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 
 	r.AppCfgs = append(r.AppCfgs, &app)
 
-	buildFilePath := filepath.Join(filepath.Join(appDir, buildFile))
-	checkFilePath := filepath.Join(filepath.Join(appDir, checkFile))
+	buildFilePath := filepath.Join(appDir, buildFile)
+	checkFilePath := filepath.Join(appDir, checkFile)
 
 	fstest.WriteToFile(t, []byte(`
 #!/bin/sh
@@ -145,13 +145,16 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 
 	inputFileName := fmt.Sprintf("%s.txt", appName)
 
-	shell := []string{}
-	if runtime.GOOS == "windows" {
-		shell = []string{"cmd", "/C"}
+	newCommandSlice := func() []string {
+		if runtime.GOOS == "windows" {
+			return []string{"cmd", "/C"}
+		}
+
+		return []string{}
 	}
 
-	buildCommand := append(shell, "echo", "build", appName)
-	testCommand := append(shell, "echo", "test", appName)
+	buildCommand := append(newCommandSlice(), "echo", "build", appName)
+	testCommand := append(newCommandSlice(), "echo", "test", appName)
 
 	app := cfg.App{
 		Name: appName,
@@ -193,7 +196,7 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 
 	r.AppCfgs = append(r.AppCfgs, &app)
 
-	inputFilePath := filepath.Join(filepath.Join(appDir, inputFileName))
+	inputFilePath := filepath.Join(appDir, inputFileName)
 	fstest.WriteToFile(t, []byte(appName), inputFilePath)
 
 	return &app

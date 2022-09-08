@@ -80,19 +80,18 @@ func (c *showCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int, sl []string) {
-	defRowArgs := make([]interface{}, 0, indentlvl+1+1)
+	rowArgs := make([]interface{}, 0, indentlvl+1+1)
 
 	for i := 0; i < indentlvl; i++ {
-		defRowArgs = append(defRowArgs, "")
+		rowArgs = append(rowArgs, "")
 	}
 
 	for i, val := range sl {
-		var rowArgs []interface{}
 
 		if i == 0 {
-			rowArgs = append(defRowArgs, header)
+			rowArgs = append(rowArgs, header)
 		} else {
-			rowArgs = append(defRowArgs, "")
+			rowArgs = append(rowArgs, "")
 		}
 
 		if i+1 < len(sl) {
