@@ -91,7 +91,8 @@ date +%s >> "$runtime_logfile"
 		startTime int64
 		endTime   int64
 	}
-	var taskruntimes []runtime
+
+	taskruntimes := make([]runtime, 0, len(runtimeLogfiles))
 	for _, logfile := range runtimeLogfiles {
 		content, err := os.ReadFile(logfile)
 		require.NoError(t, err)
@@ -143,6 +144,7 @@ echo "greetings from script.sh"
 	}
 
 	err = appCfg.ToFile(filepath.Join(r.Dir, ".app.toml"))
+	require.NoError(t, err)
 
 	doInitDb(t)
 
@@ -185,6 +187,7 @@ exit 1
 	}
 
 	err = appCfg.ToFile(filepath.Join(r.Dir, ".app.toml"))
+	require.NoError(t, err)
 
 	doInitDb(t)
 

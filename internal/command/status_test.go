@@ -221,7 +221,8 @@ func TestStatusCombininingFieldAndStatusParameters(t *testing.T) {
 	stdoutBuf, _ := interceptCmdOutput(t)
 	statusCmd := newStatusCmd()
 	statusCmd.SetArgs([]string{"-f", "task-id", "-s", "pending"})
-	statusCmd.Execute()
+	err := statusCmd.Execute()
+	require.NoError(t, err)
 
 	require.Contains(t, stdoutBuf.String(), app.Name)
 }
