@@ -1,7 +1,6 @@
 linters:
   disable-all: true
   enable:
-    - deadcode
     - errcheck
     - exportloopref
     - goimports
@@ -13,11 +12,9 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - typecheck
     - unconvert
     - unused
-    - varcheck
     - vet
 
 linters-settings:
