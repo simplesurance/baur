@@ -1,3 +1,7 @@
+run:
+  build-tags:
+    - dbtest
+
 linters:
   disable-all: true
   enable:
