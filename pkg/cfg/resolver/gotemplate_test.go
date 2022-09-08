@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -25,10 +24,7 @@ func TestResolve(t *testing.T) {
 	const commitID = "commit1231231231"
 	const appName = "my-app-name"
 
-	os.Setenv(envVar, envVarVal)
-	t.Cleanup(func() {
-		os.Unsetenv(envVar)
-	})
+	t.Setenv(envVar, envVarVal)
 
 	testCases := []struct {
 		name           string
