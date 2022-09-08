@@ -1,7 +1,6 @@
 package cfg
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,7 +10,7 @@ import (
 )
 
 func Test_ExampleApp_WrittenAndReadCfgIsValid(t *testing.T) {
-	tmpfileFD, err := ioutil.TempFile("", "baur")
+	tmpfileFD, err := os.CreateTemp("", "baur")
 	if err != nil {
 		t.Fatal("opening tmpfile failed: ", err)
 	}

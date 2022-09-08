@@ -3,7 +3,7 @@ package cfg
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -38,7 +38,7 @@ func (incl *Include) ToFile(filepath string, opts ...toFileOpt) error {
 func IncludeFromFile(path string) (*Include, error) {
 	config := Include{}
 
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

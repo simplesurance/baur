@@ -2,7 +2,6 @@ package repotest
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -282,7 +281,7 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 
 	t.Logf("database url: %q", dbURL)
 
-	tempDir, err := ioutil.TempDir("", "baur-filesrc-test")
+	tempDir, err := os.MkdirTemp("", "baur-filesrc-test")
 	if err != nil {
 		t.Fatal(err)
 	}

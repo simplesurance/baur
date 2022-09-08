@@ -2,7 +2,6 @@
 package fstest
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,7 +20,7 @@ func WriteToFile(t *testing.T, data []byte, path string) {
 		t.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(path, data, 0644)
+	err = os.WriteFile(path, data, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
