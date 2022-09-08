@@ -51,9 +51,11 @@ func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), 
 // <APP-SPEC> is:
 //   - <APP-NAME> or
 //   - '*'
+//
 // <TASK-SPEC> is:
 //   - Task Name or
 //   - '*'
+//
 // If no specifier is passed all tasks of all apps are returned.
 // If multiple specifiers match the same task, it's only returned 1x in the returned slice.
 func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {

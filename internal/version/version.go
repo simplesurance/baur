@@ -18,6 +18,7 @@ var (
 
 // rawVersion contains a semantic version string (in https://semver.org
 // format). It is initialized with the content of the ver file.
+//
 //go:embed ver
 var rawVersion string
 
