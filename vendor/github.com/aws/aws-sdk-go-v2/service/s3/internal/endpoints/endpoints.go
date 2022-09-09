@@ -364,6 +364,15 @@ var defaultPartitions = endpoints.Partitions{
 				Deprecated: aws.TrueTernary,
 			},
 			endpoints.EndpointKey{
+				Region: "me-central-1",
+			}: endpoints.Endpoint{},
+			endpoints.EndpointKey{
+				Region:  "me-central-1",
+				Variant: endpoints.DualStackVariant,
+			}: {
+				Hostname: "s3.dualstack.me-central-1.amazonaws.com",
+			},
+			endpoints.EndpointKey{
 				Region: "me-south-1",
 			}: endpoints.Endpoint{},
 			endpoints.EndpointKey{
@@ -797,6 +806,31 @@ func GetDNSSuffix(id string, options Options) (string, error) {
 
 	default:
 		return "", fmt.Errorf("unknown partition")
+
+	}
+}
+
+// GetDNSSuffixFromRegion returns the DNS suffix for the provided region and
+// options.
+func GetDNSSuffixFromRegion(region string, options Options) (string, error) {
+	switch {
+	case partitionRegexp.Aws.MatchString(region):
+		return GetDNSSuffix("aws", options)
+
+	case partitionRegexp.AwsCn.MatchString(region):
+		return GetDNSSuffix("aws-cn", options)
+
+	case partitionRegexp.AwsIso.MatchString(region):
+		return GetDNSSuffix("aws-iso", options)
+
+	case partitionRegexp.AwsIsoB.MatchString(region):
+		return GetDNSSuffix("aws-iso-b", options)
+
+	case partitionRegexp.AwsUsGov.MatchString(region):
+		return GetDNSSuffix("aws-us-gov", options)
+
+	default:
+		return GetDNSSuffix("aws", options)
 
 	}
 }

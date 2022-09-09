@@ -1,3 +1,119 @@
+# v1.11.31 (2022-09-02)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.30 (2022-08-31)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.29 (2022-08-30)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.28 (2022-08-29)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.27 (2022-08-15)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.26 (2022-08-14)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.25 (2022-08-11)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.24 (2022-08-10)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.23 (2022-08-09)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.22 (2022-08-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.21 (2022-08-01)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.20 (2022-07-11)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.19 (2022-07-05)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.18 (2022-07-01)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.17 (2022-06-29)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.16 (2022-06-16)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.15 (2022-06-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.14 (2022-05-26)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.13 (2022-05-25)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.12 (2022-05-17)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.11 (2022-05-16)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.10 (2022-05-09)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.9 (2022-05-06)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.8 (2022-05-03)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.7 (2022-04-27)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.6 (2022-04-25)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.5 (2022-04-12)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.4 (2022-04-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.11.3 (2022-03-30)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.11.2 (2022-03-24)
 
 * **Dependency Update**: Updated to the latest SDK module versions
