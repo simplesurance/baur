@@ -32,7 +32,6 @@ func copyFile(src, dst string) error {
 		return fmt.Errorf("opening %s failed: %w", src, err)
 	}
 
-	// nolint: errcheck
 	defer srcFd.Close()
 
 	srcFi, err := os.Stat(src)

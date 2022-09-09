@@ -351,7 +351,7 @@ func isAppDirectory(dir string) bool {
 }
 
 func findAppConfigs(searchDirs []string, searchDepth int) ([]string, error) {
-	var result []string // nolint:prealloc
+	var result []string
 
 	for _, searchDir := range searchDirs {
 		if err := fs.DirsExist(searchDir); err != nil {
