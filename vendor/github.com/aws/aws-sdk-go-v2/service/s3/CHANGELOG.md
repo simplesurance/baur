@@ -1,3 +1,83 @@
+# v1.27.9 (2022-09-02)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.8 (2022-08-31)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.7 (2022-08-30)
+
+* No change notes available for this release.
+
+# v1.27.6 (2022-08-29)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.5 (2022-08-11)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.4 (2022-08-09)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.3 (2022-08-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.2 (2022-08-01)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.1 (2022-07-05)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.0 (2022-07-01)
+
+* **Feature**: Add presign support for HeadBucket, DeleteObject, and DeleteBucket. Fixes [#1076](https://github.com/aws/aws-sdk-go-v2/issues/1076).
+
+# v1.26.12 (2022-06-29)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.26.11 (2022-06-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.26.10 (2022-05-17)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.26.9 (2022-05-06)
+
+* No change notes available for this release.
+
+# v1.26.8 (2022-05-03)
+
+* **Documentation**: Documentation only update for doc bug fixes for the S3 API docs.
+
+# v1.26.7 (2022-04-27)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.26.6 (2022-04-25)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.26.5 (2022-04-12)
+
+* **Bug Fix**: Fixes an issue that caused the unexported constructor function names for EventStream types to be swapped for the event reader and writer respectivly.
+
+# v1.26.4 (2022-04-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.26.3 (2022-03-30)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.26.2 (2022-03-24)
 
 * **Dependency Update**: Updated to the latest SDK module versions

@@ -114,9 +114,10 @@ type AnalyticsExportDestination struct {
 // filter is provided, all objects will be considered in any analysis.
 //
 // The following types satisfy this interface:
-//  AnalyticsFilterMemberAnd
-//  AnalyticsFilterMemberPrefix
-//  AnalyticsFilterMemberTag
+//
+//	AnalyticsFilterMemberAnd
+//	AnalyticsFilterMemberPrefix
+//	AnalyticsFilterMemberTag
 type AnalyticsFilter interface {
 	isAnalyticsFilter()
 }
@@ -349,7 +350,6 @@ type Condition struct {
 	noSmithyDocumentSerde
 }
 
-//
 type ContinuationEvent struct {
 	noSmithyDocumentSerde
 }
@@ -2283,11 +2283,12 @@ type LifecycleRuleAndOperator struct {
 // Filter must have exactly one of Prefix, Tag, or And specified.
 //
 // The following types satisfy this interface:
-//  LifecycleRuleFilterMemberAnd
-//  LifecycleRuleFilterMemberObjectSizeGreaterThan
-//  LifecycleRuleFilterMemberObjectSizeLessThan
-//  LifecycleRuleFilterMemberPrefix
-//  LifecycleRuleFilterMemberTag
+//
+//	LifecycleRuleFilterMemberAnd
+//	LifecycleRuleFilterMemberObjectSizeGreaterThan
+//	LifecycleRuleFilterMemberObjectSizeLessThan
+//	LifecycleRuleFilterMemberPrefix
+//	LifecycleRuleFilterMemberTag
 type LifecycleRuleFilter interface {
 	isLifecycleRuleFilter()
 }
@@ -2449,10 +2450,11 @@ type MetricsConfiguration struct {
 // (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketMetricsConfiguration.html).
 //
 // The following types satisfy this interface:
-//  MetricsFilterMemberAccessPointArn
-//  MetricsFilterMemberAnd
-//  MetricsFilterMemberPrefix
-//  MetricsFilterMemberTag
+//
+//	MetricsFilterMemberAccessPointArn
+//	MetricsFilterMemberAnd
+//	MetricsFilterMemberPrefix
+//	MetricsFilterMemberTag
 type MetricsFilter interface {
 	isMetricsFilter()
 }
@@ -2538,8 +2540,9 @@ type NoncurrentVersionExpiration struct {
 	NewerNoncurrentVersions int32
 
 	// Specifies the number of days an object is noncurrent before Amazon S3 can
-	// perform the associated action. For information about the noncurrent days
-	// calculations, see How Amazon S3 Calculates When an Object Became Noncurrent
+	// perform the associated action. The value must be a non-zero positive integer.
+	// For information about the noncurrent days calculations, see How Amazon S3
+	// Calculates When an Object Became Noncurrent
 	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#non-current-days-calculations)
 	// in the Amazon S3 User Guide.
 	NoncurrentDays int32
@@ -2635,7 +2638,9 @@ type Object struct {
 	//
 	// * If an object is created by either the Multipart
 	// Upload or Part Copy operation, the ETag is not an MD5 digest, regardless of the
-	// method of encryption.
+	// method of encryption. If an object is larger than 16 MB, the Amazon Web Services
+	// Management Console will upload or copy that object as a Multipart Upload, and
+	// therefore the ETag will not be an MD5 digest.
 	ETag *string
 
 	// The name that you assign to an object. You use the object key to retrieve the
@@ -3231,9 +3236,10 @@ type ReplicationRuleAndOperator struct {
 // applies. A Filter must specify exactly one Prefix, Tag, or an And child element.
 //
 // The following types satisfy this interface:
-//  ReplicationRuleFilterMemberAnd
-//  ReplicationRuleFilterMemberPrefix
-//  ReplicationRuleFilterMemberTag
+//
+//	ReplicationRuleFilterMemberAnd
+//	ReplicationRuleFilterMemberPrefix
+//	ReplicationRuleFilterMemberTag
 type ReplicationRuleFilter interface {
 	isReplicationRuleFilter()
 }
@@ -3449,11 +3455,12 @@ type ScanRange struct {
 // The container for selecting objects from a content event stream.
 //
 // The following types satisfy this interface:
-//  SelectObjectContentEventStreamMemberCont
-//  SelectObjectContentEventStreamMemberEnd
-//  SelectObjectContentEventStreamMemberProgress
-//  SelectObjectContentEventStreamMemberRecords
-//  SelectObjectContentEventStreamMemberStats
+//
+//	SelectObjectContentEventStreamMemberCont
+//	SelectObjectContentEventStreamMemberEnd
+//	SelectObjectContentEventStreamMemberProgress
+//	SelectObjectContentEventStreamMemberRecords
+//	SelectObjectContentEventStreamMemberStats
 type SelectObjectContentEventStream interface {
 	isSelectObjectContentEventStream()
 }
