@@ -67,7 +67,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 }
 
 func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs) ([]string, error) {
-	var result []string // nolint:prealloc
+	var result []string
 
 	for _, in := range inputs {
 		if files := i.cache.GetFileInputs(appDir, &in); files != nil {
@@ -113,7 +113,7 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 }
 
 func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, inputs []cfg.GolangSources) ([]string, error) {
-	var result []string // nolint:prealloc
+	var result []string
 
 	for _, gs := range inputs {
 		if files := i.cache.GetGolangSources(appDir, &gs); files != nil {

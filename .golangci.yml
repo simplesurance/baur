@@ -13,6 +13,7 @@ linters:
     - gosimple
     - ineffassign
     - misspell
+    - nolintlint
     - prealloc
     - revive
     - rowserrcheck

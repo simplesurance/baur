@@ -301,7 +301,7 @@ func (c *Client) TaskRuns(
 	}
 
 	var replacer *strings.Replacer
-	if containsInputStringFilter { // nolint: gocritic // ifElseChain: rewrite if-else to switch statement
+	if containsInputStringFilter { //nolint: gocritic // ifElseChain: rewrite if-else to switch statement
 		replacer = strings.NewReplacer(
 			"{distinct_on}", "task_run.id, input_string.string",
 			"{fields}", "input_string.string AS input_string_val,",
