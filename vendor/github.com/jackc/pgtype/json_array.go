@@ -12,16 +12,16 @@ import (
 	"github.com/jackc/pgio"
 )
 
-type JSONBArray struct {
-	Elements   []JSONB
+type JSONArray struct {
+	Elements   []JSON
 	Dimensions []ArrayDimension
 	Status     Status
 }
 
-func (dst *JSONBArray) Set(src interface{}) error {
+func (dst *JSONArray) Set(src interface{}) error {
 	// untyped nil and typed nil interfaces are different
 	if src == nil {
-		*dst = JSONBArray{Status: Null}
+		*dst = JSONArray{Status: Null}
 		return nil
 	}
 
@@ -37,17 +37,17 @@ func (dst *JSONBArray) Set(src interface{}) error {
 
 	case []string:
 		if value == nil {
-			*dst = JSONBArray{Status: Null}
+			*dst = JSONArray{Status: Null}
 		} else if len(value) == 0 {
-			*dst = JSONBArray{Status: Present}
+			*dst = JSONArray{Status: Present}
 		} else {
-			elements := make([]JSONB, len(value))
+			elements := make([]JSON, len(value))
 			for i := range value {
 				if err := elements[i].Set(value[i]); err != nil {
 					return err
 				}
 			}
-			*dst = JSONBArray{
+			*dst = JSONArray{
 				Elements:   elements,
 				Dimensions: []ArrayDimension{{Length: int32(len(elements)), LowerBound: 1}},
 				Status:     Present,
@@ -56,17 +56,17 @@ func (dst *JSONBArray) Set(src interface{}) error {
 
 	case [][]byte:
 		if value == nil {
-			*dst = JSONBArray{Status: Null}
+			*dst = JSONArray{Status: Null}
 		} else if len(value) == 0 {
-			*dst = JSONBArray{Status: Present}
+			*dst = JSONArray{Status: Present}
 		} else {
-			elements := make([]JSONB, len(value))
+			elements := make([]JSON, len(value))
 			for i := range value {
 				if err := elements[i].Set(value[i]); err != nil {
 					return err
 				}
 			}
-			*dst = JSONBArray{
+			*dst = JSONArray{
 				Elements:   elements,
 				Dimensions: []ArrayDimension{{Length: int32(len(elements)), LowerBound: 1}},
 				Status:     Present,
@@ -75,30 +75,30 @@ func (dst *JSONBArray) Set(src interface{}) error {
 
 	case []json.RawMessage:
 		if value == nil {
-			*dst = JSONBArray{Status: Null}
+			*dst = JSONArray{Status: Null}
 		} else if len(value) == 0 {
-			*dst = JSONBArray{Status: Present}
+			*dst = JSONArray{Status: Present}
 		} else {
-			elements := make([]JSONB, len(value))
+			elements := make([]JSON, len(value))
 			for i := range value {
 				if err := elements[i].Set(value[i]); err != nil {
 					return err
 				}
 			}
-			*dst = JSONBArray{
+			*dst = JSONArray{
 				Elements:   elements,
 				Dimensions: []ArrayDimension{{Length: int32(len(elements)), LowerBound: 1}},
 				Status:     Present,
 			}
 		}
 
-	case []JSONB:
+	case []JSON:
 		if value == nil {
-			*dst = JSONBArray{Status: Null}
+			*dst = JSONArray{Status: Null}
 		} else if len(value) == 0 {
-			*dst = JSONBArray{Status: Present}
+			*dst = JSONArray{Status: Present}
 		} else {
-			*dst = JSONBArray{
+			*dst = JSONArray{
 				Elements:   value,
 				Dimensions: []ArrayDimension{{Length: int32(len(value)), LowerBound: 1}},
 				Status:     Present,
@@ -110,27 +110,27 @@ func (dst *JSONBArray) Set(src interface{}) error {
 		// but it comes with a 20-50% performance penalty for large arrays/slices
 		reflectedValue := reflect.ValueOf(src)
 		if !reflectedValue.IsValid() || reflectedValue.IsZero() {
-			*dst = JSONBArray{Status: Null}
+			*dst = JSONArray{Status: Null}
 			return nil
 		}
 
 		dimensions, elementsLength, ok := findDimensionsFromValue(reflectedValue, nil, 0)
 		if !ok {
-			return fmt.Errorf("cannot find dimensions of %v for JSONBArray", src)
+			return fmt.Errorf("cannot find dimensions of %v for JSONArray", src)
 		}
 		if elementsLength == 0 {
-			*dst = JSONBArray{Status: Present}
+			*dst = JSONArray{Status: Present}
 			return nil
 		}
 		if len(dimensions) == 0 {
 			if originalSrc, ok := underlyingSliceType(src); ok {
 				return dst.Set(originalSrc)
 			}
-			return fmt.Errorf("cannot convert %v to JSONBArray", src)
+			return fmt.Errorf("cannot convert %v to JSONArray", src)
 		}
 
-		*dst = JSONBArray{
-			Elements:   make([]JSONB, elementsLength),
+		*dst = JSONArray{
+			Elements:   make([]JSON, elementsLength),
 			Dimensions: dimensions,
 			Status:     Present,
 		}
@@ -147,7 +147,7 @@ func (dst *JSONBArray) Set(src interface{}) error {
 						elementsLength *= int(dim.Length)
 					}
 				}
-				dst.Elements = make([]JSONB, elementsLength)
+				dst.Elements = make([]JSON, elementsLength)
 				elementCount, err = dst.setRecursive(reflectedValue, 0, 0)
 				if err != nil {
 					return err
@@ -157,14 +157,14 @@ func (dst *JSONBArray) Set(src interface{}) error {
 			}
 		}
 		if elementCount != len(dst.Elements) {
-			return fmt.Errorf("cannot convert %v to JSONBArray, expected %d dst.Elements, but got %d instead", src, len(dst.Elements), elementCount)
+			return fmt.Errorf("cannot convert %v to JSONArray, expected %d dst.Elements, but got %d instead", src, len(dst.Elements), elementCount)
 		}
 	}
 
 	return nil
 }
 
-func (dst *JSONBArray) setRecursive(value reflect.Value, index, dimension int) (int, error) {
+func (dst *JSONArray) setRecursive(value reflect.Value, index, dimension int) (int, error) {
 	switch value.Kind() {
 	case reflect.Array:
 		fallthrough
@@ -188,17 +188,17 @@ func (dst *JSONBArray) setRecursive(value reflect.Value, index, dimension int) (
 		return index, nil
 	}
 	if !value.CanInterface() {
-		return 0, fmt.Errorf("cannot convert all values to JSONBArray")
+		return 0, fmt.Errorf("cannot convert all values to JSONArray")
 	}
 	if err := dst.Elements[index].Set(value.Interface()); err != nil {
-		return 0, fmt.Errorf("%v in JSONBArray", err)
+		return 0, fmt.Errorf("%v in JSONArray", err)
 	}
 	index++
 
 	return index, nil
 }
 
-func (dst JSONBArray) Get() interface{} {
+func (dst JSONArray) Get() interface{} {
 	switch dst.Status {
 	case Present:
 		return dst
@@ -209,7 +209,7 @@ func (dst JSONBArray) Get() interface{} {
 	}
 }
 
-func (src *JSONBArray) AssignTo(dst interface{}) error {
+func (src *JSONArray) AssignTo(dst interface{}) error {
 	switch src.Status {
 	case Present:
 		if len(src.Dimensions) <= 1 {
@@ -288,7 +288,7 @@ func (src *JSONBArray) AssignTo(dst interface{}) error {
 	return fmt.Errorf("cannot decode %#v into %T", src, dst)
 }
 
-func (src *JSONBArray) assignToRecursive(value reflect.Value, index, dimension int) (int, error) {
+func (src *JSONArray) assignToRecursive(value reflect.Value, index, dimension int) (int, error) {
 	switch kind := value.Kind(); kind {
 	case reflect.Array:
 		fallthrough
@@ -322,11 +322,11 @@ func (src *JSONBArray) assignToRecursive(value reflect.Value, index, dimension i
 		return 0, fmt.Errorf("incorrect dimensions, expected %d, found %d", len(src.Dimensions), dimension)
 	}
 	if !value.CanAddr() {
-		return 0, fmt.Errorf("cannot assign all values from JSONBArray")
+		return 0, fmt.Errorf("cannot assign all values from JSONArray")
 	}
 	addr := value.Addr()
 	if !addr.CanInterface() {
-		return 0, fmt.Errorf("cannot assign all values from JSONBArray")
+		return 0, fmt.Errorf("cannot assign all values from JSONArray")
 	}
 	if err := src.Elements[index].AssignTo(addr.Interface()); err != nil {
 		return 0, err
@@ -335,9 +335,9 @@ func (src *JSONBArray) assignToRecursive(value reflect.Value, index, dimension i
 	return index, nil
 }
 
-func (dst *JSONBArray) DecodeText(ci *ConnInfo, src []byte) error {
+func (dst *JSONArray) DecodeText(ci *ConnInfo, src []byte) error {
 	if src == nil {
-		*dst = JSONBArray{Status: Null}
+		*dst = JSONArray{Status: Null}
 		return nil
 	}
 
@@ -346,13 +346,13 @@ func (dst *JSONBArray) DecodeText(ci *ConnInfo, src []byte) error {
 		return err
 	}
 
-	var elements []JSONB
+	var elements []JSON
 
 	if len(uta.Elements) > 0 {
-		elements = make([]JSONB, len(uta.Elements))
+		elements = make([]JSON, len(uta.Elements))
 
 		for i, s := range uta.Elements {
-			var elem JSONB
+			var elem JSON
 			var elemSrc []byte
 			if s != "NULL" || uta.Quoted[i] {
 				elemSrc = []byte(s)
@@ -366,14 +366,14 @@ func (dst *JSONBArray) DecodeText(ci *ConnInfo, src []byte) error {
 		}
 	}
 
-	*dst = JSONBArray{Elements: elements, Dimensions: uta.Dimensions, Status: Present}
+	*dst = JSONArray{Elements: elements, Dimensions: uta.Dimensions, Status: Present}
 
 	return nil
 }
 
-func (dst *JSONBArray) DecodeBinary(ci *ConnInfo, src []byte) error {
+func (dst *JSONArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 	if src == nil {
-		*dst = JSONBArray{Status: Null}
+		*dst = JSONArray{Status: Null}
 		return nil
 	}
 
@@ -384,7 +384,7 @@ func (dst *JSONBArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 	}
 
 	if len(arrayHeader.Dimensions) == 0 {
-		*dst = JSONBArray{Dimensions: arrayHeader.Dimensions, Status: Present}
+		*dst = JSONArray{Dimensions: arrayHeader.Dimensions, Status: Present}
 		return nil
 	}
 
@@ -393,7 +393,7 @@ func (dst *JSONBArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 		elementCount *= d.Length
 	}
 
-	elements := make([]JSONB, elementCount)
+	elements := make([]JSON, elementCount)
 
 	for i := range elements {
 		elemLen := int(int32(binary.BigEndian.Uint32(src[rp:])))
@@ -409,11 +409,11 @@ func (dst *JSONBArray) DecodeBinary(ci *ConnInfo, src []byte) error {
 		}
 	}
 
-	*dst = JSONBArray{Elements: elements, Dimensions: arrayHeader.Dimensions, Status: Present}
+	*dst = JSONArray{Elements: elements, Dimensions: arrayHeader.Dimensions, Status: Present}
 	return nil
 }
 
-func (src JSONBArray) EncodeText(ci *ConnInfo, buf []byte) ([]byte, error) {
+func (src JSONArray) EncodeText(ci *ConnInfo, buf []byte) ([]byte, error) {
 	switch src.Status {
 	case Null:
 		return nil, nil
@@ -470,7 +470,7 @@ func (src JSONBArray) EncodeText(ci *ConnInfo, buf []byte) ([]byte, error) {
 	return buf, nil
 }
 
-func (src JSONBArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
+func (src JSONArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
 	switch src.Status {
 	case Null:
 		return nil, nil
@@ -482,10 +482,10 @@ func (src JSONBArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
 		Dimensions: src.Dimensions,
 	}
 
-	if dt, ok := ci.DataTypeForName("jsonb"); ok {
+	if dt, ok := ci.DataTypeForName("json"); ok {
 		arrayHeader.ElementOID = int32(dt.OID)
 	} else {
-		return nil, fmt.Errorf("unable to find oid for type name %v", "jsonb")
+		return nil, fmt.Errorf("unable to find oid for type name %v", "json")
 	}
 
 	for i := range src.Elements {
@@ -515,7 +515,7 @@ func (src JSONBArray) EncodeBinary(ci *ConnInfo, buf []byte) ([]byte, error) {
 }
 
 // Scan implements the database/sql Scanner interface.
-func (dst *JSONBArray) Scan(src interface{}) error {
+func (dst *JSONArray) Scan(src interface{}) error {
 	if src == nil {
 		return dst.DecodeText(nil, nil)
 	}
@@ -533,7 +533,7 @@ func (dst *JSONBArray) Scan(src interface{}) error {
 }
 
 // Value implements the database/sql/driver Valuer interface.
-func (src JSONBArray) Value() (driver.Value, error) {
+func (src JSONArray) Value() (driver.Value, error) {
 	buf, err := src.EncodeText(nil, nil)
 	if err != nil {
 		return nil, err
