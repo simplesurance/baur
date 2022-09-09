@@ -16,7 +16,7 @@ require (
 	github.com/jackc/pgproto3/v2 v2.3.1 // indirect
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
-	github.com/pelletier/go-toml v1.9.4
+	github.com/pelletier/go-toml v1.9.5
 	github.com/simplesurance/baur v0.20.0
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.8.0
