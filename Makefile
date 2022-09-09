@@ -77,6 +77,9 @@ dist/windows_amd64/baur.exe:
 	$(info * creating $(@D)/baur-windows_amd64-$(VERSION).tar.xz.sha256)
 	@(cd $(@D) && sha256sum baur-windows_amd64-$(VERSION).tar.xz > baur-windows_amd64-$(VERSION).tar.xz.sha256)
 
+.PHONY: dist/windows_amd64/baur
+dist/windows_amd64/baur: dist/windows_amd64/baur.exe
+
 .PHONY: dirty_worktree_check
 dirty_worktree_check:
 	@if ! git diff-files --quiet || git ls-files --other --directory --exclude-standard | grep ".*" > /dev/null ; then \
