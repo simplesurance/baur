@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v2/internal/fs"
 	"github.com/simplesurance/baur/v2/internal/log"
 	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
@@ -17,13 +18,15 @@ func TestNewRepositoryUsesRealPaths(t *testing.T) {
 	log.RedirectToTestingLog(t)
 
 	repoDir := t.TempDir()
+	repoDir, err := fs.RealPath(repoDir)
+	require.NoError(t, err, "calcuting realpath of temp dir failed")
 
 	symlinkPath := filepath.Join(os.TempDir(), "baur_test-"+uuid.New().String())
 	t.Cleanup(func() {
 		_ = os.Remove(symlinkPath)
 	})
 
-	err := os.Symlink(repoDir, symlinkPath)
+	err = os.Symlink(repoDir, symlinkPath)
 	require.NoError(t, err, "creating symlink failed %s -> %s", symlinkPath, repoDir)
 
 	cfgR := cfg.Repository{
