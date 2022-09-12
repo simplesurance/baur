@@ -93,7 +93,7 @@ func findAllDirsNoDups(result map[string]struct{}, path string) error {
 	return nil
 }
 
-// findAllDirs returns recursively all diretories in path, including the
+// findAllDirs returns recursively all directories in path, including the
 // passed path dir
 func findAllDirs(path string) ([]string, error) {
 	resultMap := map[string]struct{}{}
