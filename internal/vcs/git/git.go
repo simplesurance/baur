@@ -201,3 +201,36 @@ func WorktreeIsDirty(dir string) (bool, error) {
 
 	return true, nil
 }
+
+// UntrackedFiles returns a list of untracked files in the repository found at dir.
+// The returned paths are relative to dir.
+func UntrackedFiles(dir string) ([]string, error) {
+	const untrackedFilePrefix = "?? "
+
+	var res []string
+
+	cmdResult, err := exec.Command("git", "status", "--porcelain").Directory(dir).ExpectSuccess().Run()
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(bytes.NewReader(cmdResult.Output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.HasPrefix(line, untrackedFilePrefix) {
+			continue
+		}
+
+		relPath := strings.TrimPrefix(line, untrackedFilePrefix)
+		// on Windows git prints paths with forward slashes as
+		// separator, convert them to windows backslash seperators via
+		// filepath.FromSlash()
+		res = append(res, filepath.FromSlash(relPath))
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("scanning git status output failed: %w", err)
+	}
+
+	return res, nil
+}
