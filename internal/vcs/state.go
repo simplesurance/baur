@@ -12,6 +12,7 @@ import (
 type StateFetcher interface {
 	CommitID() (string, error)
 	WorktreeIsDirty() (bool, error)
+	WithoutUntracked(paths ...string) ([]string, error)
 }
 
 var state = struct {

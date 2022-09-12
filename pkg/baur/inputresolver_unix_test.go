@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v2/internal/log"
+	"github.com/simplesurance/baur/v2/internal/vcs"
 	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
@@ -91,26 +92,25 @@ func TestResolveSymlink(t *testing.T) {
 		},
 	}
 
-	for _, gitTrackedOnly := range []bool{false, true} {
-		for _, tc := range testcases {
-			t.Run(fmt.Sprintf("%s_gittracked:%v", tc.testdir, gitTrackedOnly), func(t *testing.T) {
-				log.RedirectToTestingLog(t)
+	for _, tc := range testcases {
+		t.Run(tc.testdir, func(t *testing.T) {
+			log.RedirectToTestingLog(t)
 
-				r := NewCachingInputResolver()
+			testDir := filepath.Join(testdataDir, "symlinks", tc.testdir)
 
-				testDir := filepath.Join(testdataDir, "symlinks", tc.testdir)
+			vcsState, err := vcs.GetState(testDir, log.Debugf)
+			require.NoError(t, err)
+			r := NewInputResolver(vcsState)
 
-				result, err := r.Resolve(context.Background(), testDir, &Task{
-					Directory: testDir,
-					UnresolvedInputs: &cfg.Input{Files: []cfg.FileInputs{{
-						Paths:          []string{tc.inputPath},
-						Optional:       false,
-						GitTrackedOnly: gitTrackedOnly,
-					}}},
-				})
-
-				tc.validateFn(t, err, result)
+			result, err := r.Resolve(context.Background(), testDir, &Task{
+				Directory: testDir,
+				UnresolvedInputs: &cfg.Input{Files: []cfg.FileInputs{{
+					Paths:    []string{tc.inputPath},
+					Optional: false,
+				}}},
 			})
-		}
+
+			tc.validateFn(t, err, result)
+		})
 	}
 }

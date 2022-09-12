@@ -146,7 +146,7 @@ func (c *showCmd) showTask(taskName string) {
 
 	repo := mustFindRepository()
 
-	task := mustArgToTask(repo, taskName)
+	task := mustArgToTask(repo, mustGetRepoState(repo.Path), taskName)
 
 	c.printTask(formatter, task)
 

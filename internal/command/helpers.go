@@ -64,8 +64,8 @@ func mustFindRepository() *baur.Repository {
 	return repo
 }
 
-func mustArgToTask(repo *baur.Repository, arg string) *baur.Task {
-	tasks := mustArgToTasks(repo, []string{arg})
+func mustArgToTask(repo *baur.Repository, vcs vcs.StateFetcher, arg string) *baur.Task {
+	tasks := mustArgToTasks(repo, vcs, []string{arg})
 	if len(tasks) > 1 {
 		stderr.Printf("argument %q matches multiple tasks, must match only 1 task\n", arg)
 		exitFunc(1)
@@ -157,10 +157,8 @@ func mustGetRepoState(dir string) vcs.StateFetcher {
 	return s
 }
 
-func mustArgToTasks(repo *baur.Repository, args []string) []*baur.Task {
-	repoState := mustGetRepoState(repo.Path)
-
-	appLoader, err := baur.NewLoader(repo.Cfg, repoState.CommitID, log.StdLogger)
+func mustArgToTasks(repo *baur.Repository, vcs vcs.StateFetcher, args []string) []*baur.Task {
+	appLoader, err := baur.NewLoader(repo.Cfg, vcs.CommitID, log.StdLogger)
 	exitOnErr(err)
 
 	tasks, err := appLoader.LoadTasks(args...)

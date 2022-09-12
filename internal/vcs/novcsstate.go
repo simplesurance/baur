@@ -17,3 +17,8 @@ func (*NoVCsState) CommitID() (string, error) {
 func (*NoVCsState) WorktreeIsDirty() (bool, error) {
 	return false, ErrVCSRepositoryNotExist
 }
+
+// WithoutUntracked returns VCSRepositoryNotExistErr.
+func (NoVCsState) WithoutUntracked(_ ...string) ([]string, error) {
+	return nil, ErrVCSRepositoryNotExist
+}
