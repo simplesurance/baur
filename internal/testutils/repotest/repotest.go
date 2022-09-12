@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/simplesurance/baur/v2/internal/digest"
+	"github.com/simplesurance/baur/v2/internal/fs"
 	"github.com/simplesurance/baur/v2/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v2/pkg/baur"
@@ -287,6 +288,11 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 	tempDir, err := os.MkdirTemp("", "baur-filesrc-test")
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	tempDir, err = fs.RealPath(tempDir)
+	if err != nil {
+		t.Fatalf("canonicalizing temp dir path %q failed: %s", tempDir, err)
 	}
 
 	if !options.keepTmpDir {
