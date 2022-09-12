@@ -214,3 +214,18 @@ func BackupFile(filepath string) error {
 
 	return os.Rename(filepath, bakFilePath)
 }
+
+// RealPath resolves all symlinks and returns the absolute path.
+func RealPath(path string) (string, error) {
+	path, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", fmt.Errorf("resolving symlinks in path failed: %w", err)
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("computing absolute path of %q failed: %w", path, err)
+	}
+
+	return absPath, nil
+}

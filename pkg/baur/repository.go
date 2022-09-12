@@ -26,22 +26,27 @@ func FindRepositoryCfg(dir string) (string, error) {
 // NewRepository parses the repository configuration file cfgPath and returns a
 // Repository.
 func NewRepository(cfgPath string) (*Repository, error) {
-	repoCfg, err := cfg.RepositoryFromFile(cfgPath)
+	realCfgPath, err := fs.RealPath(cfgPath)
+	if err != nil {
+		return nil, fmt.Errorf("canonicalizing repository config path %q failed: %w", cfgPath, err)
+	}
+
+	repoCfg, err := cfg.RepositoryFromFile(realCfgPath)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"reading repository config %s failed: %w", cfgPath, err)
+			"reading repository config %s failed: %w", realCfgPath, err)
 	}
 
 	err = repoCfg.Validate()
 	if err != nil {
 		return nil, fmt.Errorf(
-			"validating repository config %q failed: %w", cfgPath, err)
+			"validating repository config %q failed: %w", realCfgPath, err)
 	}
-	repoPath := filepath.Dir(cfgPath)
+	repoPath := filepath.Dir(realCfgPath)
 
 	r := Repository{
 		Cfg:         repoCfg,
-		CfgPath:     cfgPath,
+		CfgPath:     realCfgPath,
 		Path:        repoPath,
 		SearchDepth: repoCfg.Discover.SearchDepth,
 	}
