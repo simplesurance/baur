@@ -1,3 +1,4 @@
+// Package git provides functionality to interact with a Git repository.
 package git
 
 import (
@@ -17,6 +18,8 @@ import (
 
 var gitLsPathSpecErrRe = regexp.MustCompile(`pathspec ('.+') did not match any file\(s\) known to git`)
 
+// CommandIsInstalled returns true if an executable called "git" is found in
+// the directories listed in the PATH environment variable.
 func CommandIsInstalled() bool {
 	_, err := stdexec.LookPath("git")
 
