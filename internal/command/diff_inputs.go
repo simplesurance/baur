@@ -13,6 +13,7 @@ import (
 	"github.com/simplesurance/baur/v2/internal/format"
 	"github.com/simplesurance/baur/v2/internal/format/csv"
 	"github.com/simplesurance/baur/v2/internal/format/table"
+	"github.com/simplesurance/baur/v2/internal/vcs"
 	"github.com/simplesurance/baur/v2/pkg/baur"
 	"github.com/simplesurance/baur/v2/pkg/storage"
 )
@@ -35,6 +36,8 @@ type diffInputsCmd struct {
 	csv      bool
 	quiet    bool
 	inputStr []string
+
+	vcsState vcs.StateFetcher
 }
 
 const diffInputslongHelp = `
@@ -122,7 +125,8 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	repo := mustFindRepository()
-	argDetails := getDiffInputArgDetails(repo, args)
+	c.vcsState = mustGetRepoState(repo.Path)
+	argDetails := c.getDiffInputArgDetails(repo, args)
 
 	inputs1, run1 := c.getTaskRunInputs(repo, argDetails[0])
 	inputs1.Add(baur.AsInputStrings(c.inputStr...))
@@ -145,7 +149,7 @@ func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
 	exitFunc(0)
 }
 
-func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputArgDetails {
+func (c *diffInputsCmd) getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputArgDetails {
 	results := make([]*diffInputArgDetails, 0, len(args))
 
 	for _, arg := range args {
@@ -161,7 +165,7 @@ func getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputAr
 	}
 
 	if len(mustHaveTasks) > 0 {
-		tasks := mustArgToTasks(repo, mustHaveTasks)
+		tasks := mustArgToTasks(repo, c.vcsState, mustHaveTasks)
 
 		for _, task := range tasks {
 			for _, argDetails := range results {
@@ -204,7 +208,7 @@ func parseDiffSpec(s string) (app, task, runID string) {
 
 func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID) {
 	if argDetails.task != nil {
-		inputResolver := baur.NewCachingInputResolver()
+		inputResolver := baur.NewInputResolver(c.vcsState)
 
 		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
 		if err != nil {

@@ -8,29 +8,29 @@ import (
 	"path/filepath"
 
 	"github.com/simplesurance/baur/v2/internal/log"
-	"github.com/simplesurance/baur/v2/internal/resolve/gitpath"
 	"github.com/simplesurance/baur/v2/internal/resolve/glob"
 	"github.com/simplesurance/baur/v2/internal/resolve/gosource"
+	"github.com/simplesurance/baur/v2/internal/vcs"
 	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
 // InputResolver resolves input definitions of a task to concrete files.
 type InputResolver struct {
-	gitGlobPathResolver *gitpath.Resolver
-	globPathResolver    *glob.Resolver
-	goSourceResolver    *gosource.Resolver
+	globPathResolver *glob.Resolver
+	goSourceResolver *gosource.Resolver
 
-	cache *inputResolverCache
+	vcsState vcs.StateFetcher
+	cache    *inputResolverCache
 }
 
-// NewCachingInputResolver returns an InputResolver that caches resolver
+// NewInputResolver returns an InputResolver that caches resolver
 // results.
-func NewCachingInputResolver() *InputResolver {
+func NewInputResolver(vcsState vcs.StateFetcher) *InputResolver {
 	return &InputResolver{
-		gitGlobPathResolver: &gitpath.Resolver{},
-		globPathResolver:    &glob.Resolver{},
-		goSourceResolver:    gosource.NewResolver(log.Debugf),
-		cache:               newInputResolverCache(),
+		globPathResolver: &glob.Resolver{},
+		goSourceResolver: gosource.NewResolver(log.Debugf),
+		cache:            newInputResolverCache(),
+		vcsState:         vcsState,
 	}
 }
 
@@ -43,7 +43,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
 
-	globPaths, err := i.resolveFileInputs(task.Directory, task.UnresolvedInputs.Files)
+	globPaths, err := i.resolveFileInputs(repositoryDir, task.Directory, task.UnresolvedInputs.Files)
 	if err != nil {
 		return nil, fmt.Errorf("resolving file inputs failed: %w", err)
 	}
@@ -66,7 +66,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	return uniqInputs, nil
 }
 
-func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs) ([]string, error) {
+func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs []cfg.FileInputs) ([]string, error) {
 	var result []string
 
 	for _, in := range inputs {
@@ -84,18 +84,21 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 				path = filepath.Join(appDir, path)
 			}
 
-			if in.GitTrackedOnly {
-				resolvedPaths, err = i.gitGlobPathResolver.Resolve(appDir, path)
-			} else {
-				resolvedPaths, err = i.globPathResolver.Resolve(path)
-			}
-
+			resolvedPaths, err = i.globPathResolver.Resolve(path)
 			if err != nil {
 				if in.Optional && errors.Is(err, os.ErrNotExist) {
 					continue
 				}
 
 				return nil, err
+			}
+
+			if in.GitTrackedOnly {
+				trackedOnlyPaths, err := i.vcsState.WithoutUntracked(resolvedPaths...)
+				if err != nil {
+					return nil, fmt.Errorf("removing untracked git files for input %q failed: %w", path, err)
+				}
+				resolvedPaths = trackedOnlyPaths
 			}
 
 			if !in.Optional && len(resolvedPaths) == 0 {

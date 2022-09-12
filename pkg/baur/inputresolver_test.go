@@ -9,8 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v2/internal/exec"
+	"github.com/simplesurance/baur/v2/internal/fs"
+	"github.com/simplesurance/baur/v2/internal/log"
 	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v2/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v2/internal/vcs"
 	"github.com/simplesurance/baur/v2/pkg/cfg"
 )
 
@@ -250,8 +254,6 @@ func TestFilesOptional(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 
-			r := NewCachingInputResolver()
-
 			for _, f := range tc.filesToCreate {
 				fstest.WriteToFile(t, []byte(f), filepath.Join(tempDir, f))
 			}
@@ -262,6 +264,10 @@ func TestFilesOptional(t *testing.T) {
 					gittest.CommitFilesToGit(t, tempDir)
 				}
 			}
+
+			vcsState, err := vcs.GetState(tempDir, log.Debugf)
+			require.NoError(t, err)
+			r := NewInputResolver(vcsState)
 
 			tc.task.Directory = tempDir
 
@@ -298,7 +304,11 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 	const fname = "hello"
 
 	tempDir := t.TempDir()
-	r := NewCachingInputResolver()
+
+	vcsState, err := vcs.GetState(tempDir, log.Debugf)
+	require.NoError(t, err)
+	r := NewInputResolver(vcsState)
+
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
 
 	result, err := r.Resolve(context.Background(), tempDir, &Task{
@@ -316,4 +326,45 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	assert.Equal(t, fname, result[0].String())
+}
+
+func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
+	log.RedirectToTestingLog(t)
+
+	oldExecDebugFfN := exec.DefaultDebugfFn
+	exec.DefaultDebugfFn = t.Logf
+	t.Cleanup(func() {
+		exec.DefaultDebugfFn = oldExecDebugFfN
+	})
+
+	gitDir := t.TempDir()
+	gitDir, err := fs.RealPath(gitDir)
+	require.NoError(t, err)
+
+	appDir := filepath.Join(gitDir, "subdir")
+	gittest.CreateRepository(t, gitDir)
+
+	const trackedFilename = "file1.txt"
+	fstest.WriteToFile(t, []byte("123"), filepath.Join(appDir, trackedFilename))
+	gittest.CommitFilesToGit(t, gitDir)
+
+	// file2.txt is untracked
+	const untrackedFilename = "file2.txt"
+	fstest.WriteToFile(t, []byte("123"), filepath.Join(appDir, untrackedFilename))
+
+	vcsState, err := vcs.GetState(gitDir, log.Debugf)
+	require.NoError(t, err)
+	r := NewInputResolver(vcsState)
+
+	resolvedFiles, err := r.resolveFileInputs(gitDir, appDir, []cfg.FileInputs{
+		{
+			Paths:          []string{"**"},
+			GitTrackedOnly: true,
+			Optional:       false,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotEmpty(t, resolvedFiles)
+	assert.ElementsMatch(t, []string{filepath.Join(appDir, trackedFilename)}, resolvedFiles)
 }
