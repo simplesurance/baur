@@ -28,6 +28,29 @@ type inputResolverCacheStats struct {
 	Miss    int
 }
 
+type inputResolverFileCacheKey struct {
+	Path           string
+	GitTrackedOnly bool
+	Optional       bool
+
+	createKeyOnce sync.Once
+	key           string
+}
+
+func (k *inputResolverFileCacheKey) cacheKey() string {
+	k.createKeyOnce.Do(func() {
+		var key strings.Builder
+
+		key.WriteString(k.Path)
+		key.WriteString(strconv.FormatBool(k.GitTrackedOnly))
+		key.WriteString(strconv.FormatBool(k.Optional))
+
+		k.key = key.String()
+	})
+
+	return k.key
+}
+
 func newInputResolverCache() *inputResolverCache {
 	return &inputResolverCache{
 		cache: lru.New(inputResolverCacheMaxEntries),
@@ -90,25 +113,12 @@ func (i *inputResolverCache) GetGolangSources(appdir string, gs *cfg.GolangSourc
 	return i.get(key)
 }
 
-func (i *inputResolverCache) fileInputsKey(appdir string, fi *cfg.FileInputs) string {
-	var key strings.Builder
-
-	key.WriteString(appdir)
-	key.WriteString(strSliceStr(fi.Paths))
-	key.WriteString(strconv.FormatBool(fi.Optional))
-	key.WriteString(strconv.FormatBool(fi.GitTrackedOnly))
-
-	return key.String()
+func (i *inputResolverCache) AddFileInputs(key *inputResolverFileCacheKey, result []string) {
+	i.set(key.cacheKey(), result)
 }
 
-func (i *inputResolverCache) AddFileInputs(appdir string, fi *cfg.FileInputs, result []string) {
-	i.set(i.fileInputsKey(appdir, fi), result)
-}
-
-func (i *inputResolverCache) GetFileInputs(appdir string, fi *cfg.FileInputs) []string {
-	key := i.fileInputsKey(appdir, fi)
-
-	return i.get(key)
+func (i *inputResolverCache) GetFileInputs(key *inputResolverFileCacheKey) []string {
+	return i.get(key.cacheKey())
 }
 
 func (i *inputResolverCacheStats) HitRatio() float64 {
