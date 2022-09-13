@@ -2,6 +2,9 @@ package cfg
 
 // GolangSources specifies inputs for Golang Applications
 type GolangSources struct {
+	// if attributes are added/removed or modified, the input resolver
+	// cache *must* be adapted to ensure that the caching logic respects
+	// the attribute change.
 	Queries     []string `toml:"queries" comment:"Go package queries, the source files of matching packages and\n their imported packages are resolved to files.\n Format:\n \tfile=<RELATIVE-PATH>\n \tfileglob=<GLOB-PATTERN>\t -> Supports double-star\n \tEverything else is passed to the Go query tool (go list by default).\n \tSee also the patterns described at:\n \t<https://github.com/golang/tools/blob/bc8aaaa29e0665201b38fa5cb5d47826788fa249/go/packages/doc.go#L17>.\n Files from Golang's stdlib are ignored."`
 	Environment []string `toml:"environment" comment:"Environment when running the go query tool."`
 	BuildFlags  []string `toml:"build_flags" comment:"List of command-line flags to be passed through to the Go query tool."`
