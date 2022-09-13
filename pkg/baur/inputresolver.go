@@ -72,12 +72,6 @@ func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs [
 	var result []string
 
 	for _, in := range inputs {
-		if files := i.cache.GetFileInputs(appDir, &in); files != nil {
-			result = append(result, files...)
-			continue
-		}
-
-		var files []string
 		for _, path := range in.Paths {
 			var resolvedPaths []string
 			var err error
@@ -86,9 +80,21 @@ func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs [
 				path = filepath.Join(appDir, path)
 			}
 
+			cacheKey := inputResolverFileCacheKey{
+				Path:           path,
+				GitTrackedOnly: in.GitTrackedOnly,
+				Optional:       in.Optional,
+			}
+
+			if files := i.cache.GetFileInputs(&cacheKey); files != nil {
+				result = append(result, files...)
+				continue
+			}
+
 			resolvedPaths, err = i.globPathResolver.Resolve(path)
 			if err != nil {
 				if in.Optional && errors.Is(err, os.ErrNotExist) {
+					i.cache.AddFileInputs(&cacheKey, []string{})
 					continue
 				}
 
@@ -107,11 +113,9 @@ func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs [
 				return nil, fmt.Errorf("'%s' matched 0 files", path)
 			}
 
-			files = append(files, resolvedPaths...)
+			i.cache.AddFileInputs(&cacheKey, resolvedPaths)
+			result = append(result, resolvedPaths...)
 		}
-
-		i.cache.AddFileInputs(appDir, &in, files)
-		result = append(result, files...)
 	}
 
 	return result, nil
