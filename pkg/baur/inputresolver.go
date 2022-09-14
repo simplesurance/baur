@@ -19,18 +19,20 @@ type InputResolver struct {
 	globPathResolver *glob.Resolver
 	goSourceResolver *gosource.Resolver
 
-	vcsState vcs.StateFetcher
-	cache    *inputResolverCache
+	vcsState                vcs.StateFetcher
+	cache                   *inputResolverCache
+	inputFileSingletonCache *InputFileSingletonCache
 }
 
 // NewInputResolver returns an InputResolver that caches resolver
 // results.
 func NewInputResolver(vcsState vcs.StateFetcher) *InputResolver {
 	return &InputResolver{
-		globPathResolver: &glob.Resolver{},
-		goSourceResolver: gosource.NewResolver(log.Debugf),
-		cache:            newInputResolverCache(),
-		vcsState:         vcsState,
+		globPathResolver:        &glob.Resolver{},
+		goSourceResolver:        gosource.NewResolver(log.Debugf),
+		vcsState:                vcsState,
+		cache:                   newInputResolverCache(),
+		inputFileSingletonCache: NewInputFileSingletonCache(),
 	}
 }
 
@@ -160,7 +162,7 @@ func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, pathSlice ...[]
 				return nil, err
 			}
 
-			res = append(res, NewInputFile(repositoryRoot, relPath))
+			res = append(res, i.inputFileSingletonCache.CreateOrGetInputFile(repositoryRoot, relPath))
 		}
 	}
 
