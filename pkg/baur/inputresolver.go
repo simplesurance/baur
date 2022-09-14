@@ -162,7 +162,7 @@ func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, pathSlice ...[]
 				return nil, err
 			}
 
-			res = append(res, i.inputFileSingletonCache.CreateOrGetInputFile(repositoryRoot, relPath))
+			res = append(res, i.inputFileSingletonCache.CreateOrGetInputFile(path, relPath))
 		}
 	}
 

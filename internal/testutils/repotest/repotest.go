@@ -206,8 +206,9 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 func (r *Repo) WriteAdditionalFileContents(t *testing.T, appName, fileName, contents string) *digest.Digest {
 	t.Helper()
 
-	file := baur.NewInputFile(r.Dir, filepath.Join(appName, fileName))
-	fstest.WriteToFile(t, []byte(contents), file.AbsPath())
+	absPath := filepath.Join(r.Dir, appName, fileName)
+	file := baur.NewInputFile(absPath, filepath.Join(appName, fileName))
+	fstest.WriteToFile(t, []byte(contents), absPath)
 
 	digest, err := file.CalcDigest()
 	if err != nil {

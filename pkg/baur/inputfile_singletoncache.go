@@ -1,7 +1,5 @@
 package baur
 
-import "path/filepath"
-
 const inputFileSingletonCacheInitialSize = 250
 
 // InputFileSingletonCache stores previously created InputFiles and returns
@@ -20,14 +18,12 @@ func NewInputFileSingletonCache() *InputFileSingletonCache {
 // CreateOrGetInputFile returns a new InputFile if none with the same
 // repoRootPath and relPath has been created before with this method.
 // Otherwise it returns a reference to the previously created InputFile.
-func (c *InputFileSingletonCache) CreateOrGetInputFile(repoRootPath, relPath string) *InputFile {
-	absPath := filepath.Join(repoRootPath, relPath)
-
+func (c *InputFileSingletonCache) CreateOrGetInputFile(absPath, relPath string) *InputFile {
 	if f, exists := c.cache[absPath]; exists {
 		return f
 	}
 
-	f := NewInputFile(repoRootPath, relPath)
+	f := NewInputFile(absPath, relPath)
 	c.cache[absPath] = f
 
 	return f
