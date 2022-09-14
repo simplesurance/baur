@@ -91,7 +91,10 @@ func SameFile(a, b string) (bool, error) {
 // If it reaches the root directory without finding the file it returns
 // os.ErrNotExist.
 func FindFileInParentDirs(startPath, filename string) (string, error) {
-	searchDir := startPath
+	// filepath.Clean() is called to remove excessive PathSeperators from the end.
+	// If this does not happen, the search might be aborted too early because a path
+	// ending in a Separator is interpreted as the root directory.
+	searchDir := filepath.Clean(startPath)
 
 	for {
 		p := filepath.Join(searchDir, filename)
@@ -110,12 +113,11 @@ func FindFileInParentDirs(startPath, filename string) (string, error) {
 			return "", err
 		}
 
-		// TODO: how to detect OS independent if reached the root dir
-		if searchDir == "/" {
+		if searchDir[len(searchDir)-1] == os.PathSeparator {
 			return "", os.ErrNotExist
 		}
 
-		searchDir = filepath.Join(searchDir, "..")
+		searchDir = filepath.Dir(searchDir)
 	}
 }
 
