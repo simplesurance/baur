@@ -1,8 +1,6 @@
 package baur
 
 import (
-	"path/filepath"
-
 	"github.com/simplesurance/baur/v2/internal/digest"
 	"github.com/simplesurance/baur/v2/internal/digest/sha384"
 )
@@ -15,10 +13,13 @@ type InputFile struct {
 	digest *digest.Digest
 }
 
-// NewInputFile returns a new input file
-func NewInputFile(repoRootPath, relPath string) *InputFile {
+// NewInputFile creates an InputFile.
+// absPath is the absolute path to the file. It is used to create the digest.
+// relPath is a relative path to the file. It is used as part of the digest. To
+// which base path relPath is relative is arbitrary.
+func NewInputFile(absPath, relPath string) *InputFile {
 	return &InputFile{
-		absPath:     filepath.Join(repoRootPath, relPath),
+		absPath:     absPath,
 		repoRelPath: relPath,
 	}
 }
@@ -33,6 +34,7 @@ func (f *InputFile) RelPath() string {
 	return f.repoRelPath
 }
 
+// AbsPath returns the absolute path of the file.
 func (f *InputFile) AbsPath() string {
 	return f.absPath
 }
