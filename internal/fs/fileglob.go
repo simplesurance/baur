@@ -69,6 +69,11 @@ func findAllDirsNoDups(result map[string]struct{}, path string) error {
 		return nil
 	}
 
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("calculating absolute path of %q failed: %w", path, err)
+	}
+
 	if _, exist := result[path]; exist {
 		return nil
 	}
