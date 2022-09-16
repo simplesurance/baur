@@ -2,148 +2,40 @@ package fs
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/simplesurance/baur/fs"
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 // FileGlob resolves the pattern to absolute file paths.
-// Files are resolved in the same way then filepath.Glob() does, with 2 Exceptions:
+// Files are resolved in the same way then filepath.Glob() does, with  Exceptions:
 // - it also supports '**' to match files and directories recursively,
 // - it only returns paths to files, no directory paths,
 // If a globPath doesn't match any files an empty []string is returned and
 // error is nil
 func FileGlob(pattern string) ([]string, error) {
-	var globPaths []string
-
-	if strings.Contains(pattern, "**") {
-		expandedPaths, err := expandDoubleStarGlob(pattern)
-		if err != nil {
-			return nil, fmt.Errorf("expanding '**' failed: %w", err)
-		}
-
-		globPaths = expandedPaths
-	} else {
-		globPaths = []string{pattern}
+	globRes, err := doublestar.FilepathGlob(pattern, doublestar.WithFailOnIOErrors())
+	if err != nil {
+		return nil, err
 	}
 
-	paths := make([]string, 0, len(globPaths))
-	for _, globPath := range globPaths {
-		path, err := filepath.Glob(globPath)
+	res := make([]string, 0, len(globRes))
+	for _, r := range globRes {
+		absPath, err := filepath.Abs(r)
+		if err != nil {
+			return nil, fmt.Errorf("evaluating absolute path of %q failed: %w", absPath, err)
+		}
+
+		isFile, err := IsFile(absPath)
 		if err != nil {
 			return nil, err
 		}
 
-		if path == nil {
+		if !isFile {
 			continue
 		}
-
-		paths = append(paths, path...)
+		res = append(res, absPath)
 	}
 
-	res := make([]string, 0, len(paths))
-	for _, p := range paths {
-		isFile, err := fs.IsFile(p)
-		if err != nil {
-			return nil, fmt.Errorf("resolved path %q does not exist: %w", p, err)
-		}
-
-		if isFile {
-			res = append(res, p)
-		}
-	}
-
-	return res, nil
-}
-
-func findAllDirsNoDups(result map[string]struct{}, path string) error {
-	// IsDir call stats which resolves sysmlinks and does not return information about a symlink
-	isDir, err := fs.IsDir(path)
-	if err != nil {
-		return fmt.Errorf("IsDir(%s) failed: %w", path, err)
-	}
-
-	if !isDir {
-		return nil
-	}
-
-	path, err = filepath.Abs(path)
-	if err != nil {
-		return fmt.Errorf("calculating absolute path of %q failed: %w", path, err)
-	}
-
-	if _, exist := result[path]; exist {
-		return nil
-	}
-	result[path] = struct{}{}
-
-	fdDir, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("opening directory %q failed: %w", path, err)
-	}
-
-	dirEntries, err := fdDir.Readdirnames(-1)
-	if err != nil {
-		_ = fdDir.Close()
-		return fmt.Errorf("reading directory entries of %q failed: %w", path, err)
-	}
-	_ = fdDir.Close()
-
-	for _, name := range dirEntries {
-		err = findAllDirsNoDups(result, filepath.Join(path, name))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// findAllDirs returns recursively all directories in path, including the
-// passed path dir
-func findAllDirs(path string) ([]string, error) {
-	resultMap := map[string]struct{}{}
-
-	err := findAllDirsNoDups(resultMap, path)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make([]string, 0, len(resultMap))
-	for p := range resultMap {
-		res = append(res, p)
-	}
-
-	return res, nil
-}
-
-// expandDoubleStarGlob takes a glob path containing  '**' and returns a list of
-// paths were ** is expanded recursively to all matching directories.  If '**'
-// is the last part in the path, the returned paths will end in '/*' to glob
-// match all files in those directories
-func expandDoubleStarGlob(absGlobPath string) ([]string, error) {
-	spl := strings.Split(absGlobPath, "**")
-	if len(spl) < 2 {
-		return nil, fmt.Errorf("%q does not contain '**'", absGlobPath)
-	}
-
-	basePath := spl[0]
-	glob := spl[1]
-
-	if len(glob) == 0 {
-		glob = "*"
-	}
-
-	dirs, err := findAllDirs(basePath)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range dirs {
-		dirs[i] = filepath.Join(dirs[i], glob)
-	}
-
-	return dirs, nil
+	return res, err
 }
