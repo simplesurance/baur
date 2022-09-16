@@ -2,6 +2,7 @@ package fs
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -58,6 +59,7 @@ func FileGlob(pattern string) ([]string, error) {
 }
 
 func findAllDirsNoDups(result map[string]struct{}, path string) error {
+	// IsDir call stats which resolves sysmlinks and does not return information about a symlink
 	isDir, err := fs.IsDir(path)
 	if err != nil {
 		return fmt.Errorf("IsDir(%s) failed: %w", path, err)
@@ -77,14 +79,20 @@ func findAllDirsNoDups(result map[string]struct{}, path string) error {
 	}
 	result[path] = struct{}{}
 
-	globPath := filepath.Join(path, "*")
-	rootGlob, err := filepath.Glob(globPath) // is filepath.Walk() faster?
+	fdDir, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("glob of %q failed: %w", globPath, err)
+		return fmt.Errorf("opening directory %q failed: %w", path, err)
 	}
 
-	for _, path := range rootGlob {
-		err = findAllDirsNoDups(result, path)
+	dirEntries, err := fdDir.Readdirnames(-1)
+	if err != nil {
+		_ = fdDir.Close()
+		return fmt.Errorf("reading directory entries of %q failed: %w", path, err)
+	}
+	_ = fdDir.Close()
+
+	for _, name := range dirEntries {
+		err = findAllDirsNoDups(result, filepath.Join(path, name))
 		if err != nil {
 			return err
 		}
