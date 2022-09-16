@@ -69,11 +69,6 @@ func findAllDirsNoDups(result map[string]struct{}, path string) error {
 		return nil
 	}
 
-	path, err = filepath.EvalSymlinks(path)
-	if err != nil {
-		return fmt.Errorf("resolving symlinks in %q failed: %w", path, err)
-	}
-
 	if _, exist := result[path]; exist {
 		return nil
 	}
