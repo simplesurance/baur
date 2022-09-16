@@ -31,9 +31,21 @@ func init() {
 			" could not get absolute path of testfile (%s): %s",
 			testfile, err))
 	}
-	fmt.Println(absPath)
-
 	testdataDir = filepath.Join(filepath.Dir(absPath), "testdata")
+}
+
+func relPathsFromInputs(t *testing.T, in []Input) []string {
+	res := make([]string, len(in))
+
+	for i, r := range in {
+		fi, ok := r.(*InputFile)
+		if !ok {
+			t.Fatalf("result[%d] has type %t, expected *Inputfile", i, r)
+		}
+		res[i] = fi.RelPath()
+	}
+
+	return res
 }
 
 func TestResolveSymlink(t *testing.T) {
@@ -65,14 +77,21 @@ func TestResolveSymlink(t *testing.T) {
 			inputPath: "symlink",
 			validateFn: func(t *testing.T, err error, result []Input) {
 				require.NoError(t, err)
-				require.Len(t, result, 1)
-
-				fileInput, ok := result[0].(*InputFile)
-				if !ok {
-					t.Fatalf("result[0] has type %t, expected *Inputfile", result[0])
-				}
-
-				assert.Equal(t, "symlink", fileInput.RelPath())
+				assert.ElementsMatch(t,
+					[]string{"symlink"},
+					relPathsFromInputs(t, result),
+				)
+			},
+		},
+		{
+			testdir:   "file",
+			inputPath: "**",
+			validateFn: func(t *testing.T, err error, result []Input) {
+				require.NoError(t, err)
+				assert.ElementsMatch(t,
+					[]string{"thefile", "symlink"},
+					relPathsFromInputs(t, result),
+				)
 			},
 		},
 		{
@@ -80,20 +99,19 @@ func TestResolveSymlink(t *testing.T) {
 			inputPath: "**",
 			validateFn: func(t *testing.T, err error, result []Input) {
 				require.NoError(t, err)
-				require.Len(t, result, 1)
-
-				fileInput, ok := result[0].(*InputFile)
-				if !ok {
-					t.Fatalf("result[0] has type %t, expected *Inputfile", result[0])
-				}
-
-				assert.Equal(t, filepath.Join("thedirectory", "arealfile"), fileInput.RelPath())
+				assert.ElementsMatch(t,
+					[]string{
+						filepath.Join("symlink", "arealfile"),
+						filepath.Join("thedirectory", "arealfile"),
+					},
+					relPathsFromInputs(t, result),
+				)
 			},
 		},
 	}
 
 	for _, tc := range testcases {
-		t.Run(tc.testdir, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s/%s", tc.testdir, tc.inputPath), func(t *testing.T) {
 			log.RedirectToTestingLog(t)
 
 			testDir := filepath.Join(testdataDir, "symlinks", tc.testdir)
