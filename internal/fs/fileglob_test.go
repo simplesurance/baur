@@ -9,38 +9,6 @@ import (
 	"github.com/simplesurance/baur/v2/internal/testutils/strtest"
 )
 
-func Test_FindAllSubDirs(t *testing.T) {
-	tempdir := fstest.TempDir(t)
-
-	expectedResults := []string{
-		tempdir,
-		filepath.Join(tempdir, "1"),
-		filepath.Join(tempdir, "1/2"),
-		filepath.Join(tempdir, "1/2/3/"),
-	}
-
-	err := os.MkdirAll(filepath.Join(tempdir, "1/2/3"), os.ModePerm)
-	if err != nil {
-		t.Fatal("creating subdirectories failed:", err)
-	}
-
-	res, err := findAllDirs(tempdir)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(res) != len(expectedResults) {
-		t.Errorf("unexpected number of elements returned, expected: %q, got: %q",
-			expectedResults, res)
-	}
-
-	for _, er := range expectedResults {
-		if !strtest.InSlice(res, er) {
-			t.Errorf("%q is missing in result %q", er, res)
-		}
-	}
-}
-
 func createFiles(t *testing.T, basedir string, paths []string) {
 	for _, p := range paths {
 		fullpath := filepath.Join(basedir, p)

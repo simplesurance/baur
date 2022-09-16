@@ -131,6 +131,14 @@ func TestResolveSymlink(t *testing.T) {
 				require.ErrorContains(t, err, "no such file or directory")
 			},
 		},
+		{
+			testdir:   "symlinks",
+			inputPath: "directory_containing_broken_symlin**/**",
+			validateFn: func(t *testing.T, err error, result []Input) {
+				t.Log(err)
+				require.ErrorContains(t, err, "no such file or directory")
+			},
+		},
 	}
 
 	for _, tc := range testcases {
