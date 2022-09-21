@@ -165,6 +165,44 @@ func (c *Client) inputFiles(ctx context.Context, taskRunID int) ([]*storage.Inpu
 	return result, nil
 }
 
+func (c *Client) inputEnvVars(ctx context.Context, taskRunID int) ([]*storage.InputEnvVar, error) {
+	const query = `
+	SELECT input_env_var.name,
+	       input_env_var.digest
+	  FROM input_env_var
+	  JOIN task_run_env_var_input ON input_env_var.id = task_run_env_var_input.input_env_var_id
+	  WHERE task_run_env_var_input.task_run_id = $1
+	  `
+
+	var result []*storage.InputEnvVar
+
+	rows, err := c.db.Query(ctx, query, taskRunID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	for rows.Next() {
+		var input storage.InputEnvVar
+
+		if err := rows.Scan(&input.Name, &input.Digest); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+		}
+
+		result = append(result, &input)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	return result, nil
+}
+
 func (c *Client) Inputs(ctx context.Context, taskRunID int) (*storage.Inputs, error) {
 	var result storage.Inputs
 	var err error
@@ -179,7 +217,12 @@ func (c *Client) Inputs(ctx context.Context, taskRunID int) (*storage.Inputs, er
 		return nil, err
 	}
 
-	if len(result.Files) == 0 && len(result.Strings) == 0 {
+	result.EnvironmentVariables, err = c.inputEnvVars(ctx, taskRunID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Files) == 0 && len(result.Strings) == 0 && len(result.EnvironmentVariables) == 0 {
 		return nil, storage.ErrNotExist
 	}
 

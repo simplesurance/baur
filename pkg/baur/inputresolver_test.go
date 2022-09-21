@@ -368,3 +368,107 @@ func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
 	require.NotEmpty(t, resolvedFiles)
 	assert.ElementsMatch(t, []string{filepath.Join(appDir, trackedFilename)}, resolvedFiles)
 }
+
+func TestResolveEnvVarInputs(t *testing.T) {
+	testcases := []struct {
+		Name                    string
+		EnvVars                 map[string]string
+		Inputs                  []cfg.EnvVarsInputs
+		ExpectedErrStr          string
+		ExpectedResolvedEnvVars map[string]string
+	}{
+		{
+			Name: "prefix_glob",
+			EnvVars: map[string]string{
+				"VarA":            "testval",
+				"VarB":            "blubb",
+				"Var_XYYZ":        "XYZ",
+				"BLUBB":           "3",
+				"ANOTHER_ONEXY":   "",
+				"VAR_NOT_MATCHED": "9",
+			},
+			Inputs: []cfg.EnvVarsInputs{
+				{
+					Names: []string{
+						"Var*",
+						"B?UB?",
+						"*ONEXY",
+					},
+				},
+			},
+			ExpectedResolvedEnvVars: map[string]string{
+				"VarA":          "testval",
+				"VarB":          "blubb",
+				"Var_XYYZ":      "XYZ",
+				"BLUBB":         "3",
+				"ANOTHER_ONEXY": "",
+			},
+		},
+		{
+			Name: "noglobs",
+			EnvVars: map[string]string{
+				"VarA":  "testval",
+				"VAR_B": "blubb",
+			},
+			Inputs: []cfg.EnvVarsInputs{
+				{
+					Names: []string{"VarA", "VAR_B"},
+				},
+			},
+			ExpectedResolvedEnvVars: map[string]string{
+				"VarA":  "testval",
+				"VAR_B": "blubb",
+			},
+		},
+
+		{
+			Name: "missing_optional_succeeds",
+			EnvVars: map[string]string{
+				"VarA": "testval",
+			},
+			Inputs: []cfg.EnvVarsInputs{
+				{
+					Names: []string{"VarA"},
+				},
+				{
+					Names:    []string{"VarB"},
+					Optional: true,
+				},
+			},
+			ExpectedResolvedEnvVars: map[string]string{
+				"VarA": "testval",
+			},
+		},
+
+		{
+			Name: "missing_var_fails",
+			EnvVars: map[string]string{
+				"VarA": "testval",
+			},
+			Inputs: []cfg.EnvVarsInputs{
+				{
+					Names: []string{"VarA", "VAR_B"},
+				},
+			},
+			ExpectedErrStr: "environment variable \"VAR_B\" is undefined",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.Name, func(t *testing.T) {
+			for k, v := range tc.EnvVars {
+				t.Setenv(k, v)
+			}
+
+			resolver := NewInputResolver(&vcs.NoVCsState{})
+			resolver.setEnvVars()
+			resolvedEnvVars, err := resolver.resolveEnvVarInputs(tc.Inputs)
+			if tc.ExpectedErrStr != "" {
+				require.ErrorContains(t, err, tc.ExpectedErrStr)
+			}
+
+			require.EqualValues(t, tc.ExpectedResolvedEnvVars, resolvedEnvVars)
+		})
+	}
+
+}

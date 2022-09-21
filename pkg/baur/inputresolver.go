@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/simplesurance/baur/v2/internal/log"
 	"github.com/simplesurance/baur/v2/internal/resolve/glob"
@@ -16,8 +18,9 @@ import (
 
 // InputResolver resolves input definitions of a task to concrete files.
 type InputResolver struct {
-	globPathResolver *glob.Resolver
-	goSourceResolver *gosource.Resolver
+	globPathResolver     *glob.Resolver
+	goSourceResolver     *gosource.Resolver
+	environmentVariables map[string]string
 
 	vcsState                vcs.StateFetcher
 	cache                   *inputResolverCache
@@ -61,11 +64,16 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, err
 	}
 
+	envVars, err := i.resolveEnvVarInputs(task.UnresolvedInputs.EnvironmentVariables)
+	if err != nil {
+		return nil, fmt.Errorf("resolving environment variable inputs failed: %w", err)
+	}
+
 	stats := i.cache.Statistics()
 	log.Debugf("inputresolver: cache statistic: %d entries, %d hits, %d miss, ratio %.2f%%\n",
 		stats.Entries, stats.Hits, stats.Miss, stats.HitRatio())
 
-	return uniqInputs, nil
+	return append(uniqInputs, envVarMapToInputslice(envVars)...), nil
 }
 
 func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs []cfg.FileInputs) ([]string, error) {
@@ -171,4 +179,89 @@ func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, pathSlice ...[]
 	}
 
 	return res, nil
+}
+
+func (i *InputResolver) setEnvVars() {
+	if i.environmentVariables != nil {
+		return
+	}
+
+	// os.Environ() does not return env variables that are declared but undefined.
+	// environment variables that have an empty string assigned are returned.
+	environ := os.Environ()
+	i.environmentVariables = make(map[string]string, len(environ))
+
+	for _, env := range environ {
+		k, v, found := strings.Cut(env, "=")
+		if !found {
+			// impossible scenario
+			panic(fmt.Sprintf("element %q returned by os.Environ() does not contain a '=' character", env))
+		}
+
+		i.environmentVariables[k] = v
+	}
+}
+
+func (i *InputResolver) getEnvVar(namePattern string) (map[string]string, error) {
+	const globPatternChars = `*?[]\`
+
+	if !strings.ContainsAny(namePattern, globPatternChars) {
+		val, exist := i.environmentVariables[namePattern]
+		if !exist {
+			return nil, nil
+		}
+
+		return map[string]string{namePattern: val}, nil
+	}
+
+	res := map[string]string{}
+	for k, v := range i.environmentVariables {
+		matched, err := path.Match(namePattern, k)
+		if err != nil {
+			return nil, err
+		}
+		if matched {
+			res[k] = v
+		}
+	}
+
+	return res, nil
+}
+
+func (i *InputResolver) resolveEnvVarInputs(inputs []cfg.EnvVarsInputs) (map[string]string, error) {
+	if len(inputs) == 0 {
+		return nil, nil
+	}
+
+	i.setEnvVars()
+	resolvedEnvVars := map[string]string{}
+
+	for _, e := range inputs {
+		for _, pattern := range e.Names {
+			envVars, err := i.getEnvVar(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("environment variable name: %q: %w", pattern, err)
+			}
+
+			if len(envVars) == 0 && !e.Optional {
+				return nil, fmt.Errorf("environment variable %q is undefined", pattern)
+			}
+
+			for k, v := range envVars {
+				resolvedEnvVars[k] = v
+			}
+		}
+	}
+
+	return resolvedEnvVars, nil
+}
+
+func envVarMapToInputslice(envVars map[string]string) []Input {
+	res := make([]Input, 0, len(envVars))
+
+	for k, v := range envVars {
+		res = append(res, NewInputEnvVar(k, v))
+	}
+
+	return res
 }

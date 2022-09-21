@@ -93,6 +93,12 @@ func inputsToStorageInputs(inputs *Inputs) (*storage.Inputs, error) {
 				String: v.Value(),
 				Digest: digest.String(),
 			})
+
+		case *InputEnvVar:
+			result.EnvironmentVariables = append(result.EnvironmentVariables, &storage.InputEnvVar{
+				Name:   v.Name(),
+				Digest: digest.String(),
+			})
 		}
 	}
 

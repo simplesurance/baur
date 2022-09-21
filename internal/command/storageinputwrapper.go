@@ -32,6 +32,18 @@ func (i *storageInputString) String() string {
 	return fmt.Sprintf("string:%s", i.InputString.String)
 }
 
+type storageInputEnvVar struct {
+	*storage.InputEnvVar
+}
+
+func (i *storageInputEnvVar) String() string {
+	return "$" + i.InputEnvVar.Name
+}
+
+func (i *storageInputEnvVar) Digest() (*digest.Digest, error) {
+	return digest.FromString(i.InputEnvVar.Digest)
+}
+
 func toBaurInputs(inputs *storage.Inputs) []baur.Input {
 	result := make([]baur.Input, 0, len(inputs.Files)+len(inputs.Strings))
 
@@ -41,6 +53,10 @@ func toBaurInputs(inputs *storage.Inputs) []baur.Input {
 
 	for _, in := range inputs.Strings {
 		result = append(result, &storageInputString{InputString: in})
+	}
+
+	for _, in := range inputs.EnvironmentVariables {
+		result = append(result, &storageInputEnvVar{InputEnvVar: in})
 	}
 
 	return result

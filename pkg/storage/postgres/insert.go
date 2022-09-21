@@ -341,6 +341,104 @@ func insertTaskRunInputFilesIfNotExist(ctx context.Context, db dbConn, taskRunID
 	return nil
 }
 
+func clonedSortedInputEnvVars(inputs []*storage.InputEnvVar) []*storage.InputEnvVar {
+	inputs = append([]*storage.InputEnvVar{}, inputs...)
+
+	sort.Slice(inputs, func(i, j int) bool {
+		if inputs[i].Name < inputs[j].Name {
+			return true
+		}
+		if inputs[i].Name > inputs[j].Name {
+			return false
+		}
+
+		return inputs[i].Digest < inputs[j].Digest
+	})
+
+	return inputs
+}
+
+func insertInputEnVarsIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputEnvVar) ([]int, error) {
+	const stmt1 = `
+           INSERT INTO input_env_var (name, digest)
+	   VALUES
+`
+	const stmt2 = `
+	       ON CONFLICT ON CONSTRAINT input_env_var_name_digest_uniq
+	       DO UPDATE SET id=input_env_var.id
+	RETURNING id
+	`
+
+	// inputs are sorted to prevent an deadlock when running multiple
+	// transaction in parallel doing inserts, see
+	// https://github.com/simplesurance/baur/issues/343
+	inputs = clonedSortedInputEnvVars(inputs)
+
+	stmtVals := queryValueStr(len(inputs), 2)
+
+	queryArgs := make([]interface{}, 0, len(inputs)*2)
+	for _, in := range inputs {
+		queryArgs = append(queryArgs, in.Name, in.Digest)
+	}
+
+	query := stmt1 + stmtVals + " " + stmt2
+
+	rows, err := db.Query(ctx, query, queryArgs...)
+	if err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	ids := make([]int, 0, len(inputs))
+	if err := scanIDs(rows, &ids); err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	return ids, nil
+}
+
+func insertTaskRunInputEnvVarsIfNotExist(ctx context.Context, db dbConn, taskRunID int, inputEnvVars []*storage.InputEnvVar) error {
+	const stmt1 = `
+	INSERT INTO task_run_env_var_input (task_run_id, input_env_var_id)
+	VALUES
+	`
+
+	if len(inputEnvVars) == 0 {
+		return nil
+	}
+
+	inputIDs, err := insertInputEnVarsIfNotExist(ctx, db, inputEnvVars)
+	if err != nil {
+		return err
+	}
+
+	var stmtVals strings.Builder
+	argNr := 2
+	for i := 0; i < len(inputIDs); i++ {
+		fmt.Fprintf(&stmtVals, "($1, $%d)", argNr)
+		argNr++
+
+		if i < len(inputIDs)-1 {
+			stmtVals.WriteString(", ")
+		}
+	}
+
+	queryArgs := make([]interface{}, 1, (len(inputIDs)*2)+2)
+	queryArgs[0] = taskRunID
+
+	for _, inputID := range inputIDs {
+		queryArgs = append(queryArgs, inputID)
+	}
+
+	query := stmt1 + stmtVals.String()
+
+	_, err = db.Exec(ctx, query, queryArgs...)
+	if err != nil {
+		return newQueryError(query, err, queryArgs...)
+	}
+
+	return nil
+}
+
 func insertUploads(ctx context.Context, db dbConn, uploads []*storage.Upload) ([]int, error) {
 	const stmt1 = `
 	INSERT into upload (uri, method, start_timestamp, stop_timestamp)
@@ -495,6 +593,11 @@ func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.Ta
 	}
 
 	err = insertTaskRunInputFilesIfNotExist(ctx, tx, taskRunID, taskRun.Inputs.Files)
+	if err != nil {
+		return -1, err
+	}
+
+	err = insertTaskRunInputEnvVarsIfNotExist(ctx, tx, taskRunID, taskRun.Inputs.EnvironmentVariables)
 	if err != nil {
 		return -1, err
 	}
