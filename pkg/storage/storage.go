@@ -20,9 +20,15 @@ type InputString struct {
 	Digest string
 }
 
+type InputEnvVar struct {
+	Name   string
+	Digest string
+}
+
 type Inputs struct {
-	Files   []*InputFile
-	Strings []*InputString
+	Files                []*InputFile
+	Strings              []*InputString
+	EnvironmentVariables []*InputEnvVar
 }
 
 // UploadMethod is the method that was used to upload the object

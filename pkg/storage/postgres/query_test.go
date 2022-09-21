@@ -253,6 +253,17 @@ func TestInputs(t *testing.T) {
 					Digest: "46",
 				},
 			},
+			EnvironmentVariables: []*storage.InputEnvVar{
+				{
+					Name:   "VER",
+					Digest: "45",
+				},
+
+				{
+					Name:   "MYNUMBER",
+					Digest: "9",
+				},
+			},
 		},
 	}
 
@@ -265,6 +276,7 @@ func TestInputs(t *testing.T) {
 
 	assert.ElementsMatch(t, run.Inputs.Files, inputs.Files)
 	assert.ElementsMatch(t, run.Inputs.Strings, inputs.Strings)
+	assert.ElementsMatch(t, run.Inputs.EnvironmentVariables, inputs.EnvironmentVariables)
 }
 
 func TestTaskRun(t *testing.T) {

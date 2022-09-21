@@ -32,6 +32,12 @@ func ExampleApp(name string) *App {
 							Paths: []string{"dbmigrations/*.sql"},
 						},
 					},
+					EnvironmentVariables: []EnvVarsInputs{
+						{
+							Names:    []string{"APP_VERSION", name + "_*"},
+							Optional: false,
+						},
+					},
 					GolangSources: []GolangSources{
 						{
 							Queries:     []string{"./..."},

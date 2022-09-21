@@ -74,3 +74,18 @@ func redirectOutputToLogger(t *testing.T) {
 		stderr = oldStderr
 	})
 }
+
+// interceptExitCode changes the exitFunc to store the exit Code in
+// resultExitCode.
+// If the executed command does not exit with code 0, it will not panic.
+// The previous exitFunc will be restored when the test finished.
+func interceptExitCode(t *testing.T, resultExitCode *int) {
+	oldExitFunc := exitFunc
+	exitFunc = func(code int) {
+		*resultExitCode = code
+	}
+
+	t.Cleanup(func() {
+		exitFunc = oldExitFunc
+	})
+}

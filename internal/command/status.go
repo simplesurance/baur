@@ -177,11 +177,12 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 		var row []interface{}
 		var taskRun *storage.TaskRunWithID
 		var taskStatus baur.TaskStatus
+		var inputs *baur.Inputs
 
 		if storageQueryNeeded {
 			var err error
 
-			taskStatus, _, taskRun, err = statusMgr.Status(ctx, task)
+			taskStatus, inputs, taskRun, err = statusMgr.Status(ctx, task)
 			exitOnErrf(err, "%s: evaluating task status failed", task)
 
 			// querying the build status for all applications can
@@ -200,7 +201,7 @@ func (c *statusCmd) run(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		row = c.statusAssembleRow(repo.Path, task, taskRun, taskStatus)
+		row = c.statusAssembleRow(repo.Path, task, taskRun, taskStatus, inputs)
 
 		mustWriteRow(formatter, row...)
 	}
@@ -228,7 +229,7 @@ func (c *statusCmd) storageQueryIsNeeded() bool {
 	return false
 }
 
-func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus) []interface{} {
+func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus, inputs *baur.Inputs) []interface{} {
 	var row []interface{}
 
 	for _, f := range c.fields.Fields {

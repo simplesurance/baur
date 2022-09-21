@@ -15,7 +15,7 @@ import (
 )
 
 // schemaVer is the database schema version required by this package.
-const schemaVer int32 = 1
+const schemaVer int32 = 2
 
 // migration represents a database schema migration.
 type migration struct {

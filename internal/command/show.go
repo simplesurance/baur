@@ -201,7 +201,21 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 			}
 		}
 
-		if len(task.UnresolvedInputs.Files) > 0 && len(task.UnresolvedInputs.GolangSources) > 0 {
+		if len(task.UnresolvedInputs.Files) > 0 && len(task.UnresolvedInputs.EnvironmentVariables) > 0 {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+
+		for i, f := range task.UnresolvedInputs.EnvironmentVariables {
+			mustWriteRow(formatter, "", "", "Type:", term.Highlight("Environment Variable"))
+			mustWriteRow(formatter, "", "", "Optional:", term.Highlight(f.Optional))
+			mustWriteStringSliceRows(formatter, "Names:", 2, f.Names)
+
+			if i+1 < len(task.UnresolvedInputs.EnvironmentVariables) {
+				mustWriteRow(formatter, "", "", "", "")
+			}
+		}
+
+		if len(task.UnresolvedInputs.EnvironmentVariables) > 0 && len(task.UnresolvedInputs.GolangSources) > 0 {
 			mustWriteRow(formatter, "", "", "", "")
 		}
 

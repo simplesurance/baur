@@ -122,6 +122,9 @@ func ExampleInclude(id string) *Include {
 				GolangSources: []GolangSources{
 					{},
 				},
+				EnvironmentVariables: []EnvVarsInputs{
+					{},
+				},
 			},
 		},
 		Output: []*OutputInclude{

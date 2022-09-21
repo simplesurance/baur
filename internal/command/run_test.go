@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v2/internal/testutils/repotest"
@@ -209,4 +210,143 @@ exit 1
 	require.Equal(t, 1, exitCode)
 
 	require.Equal(t, 1, strings.Count(stdout.String(), "I will fail!"))
+}
+
+func createEnvVarTestApp(t *testing.T, appName, taskName string, envVarsCfg []cfg.EnvVarsInputs) {
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	scriptPath := filepath.Join(r.Dir, "script.sh")
+	err := os.WriteFile(
+		scriptPath, []byte(`#/usr/bin/env bash
+exit 0
+	`),
+		0755)
+	require.NoError(t, err)
+	doInitDb(t)
+
+	appCfg := cfg.App{
+		Name: appName,
+		Tasks: cfg.Tasks{{
+			Name:    taskName,
+			Command: []string{"bash", scriptPath},
+			Input: cfg.Input{
+				Files:                []cfg.FileInputs{{Paths: []string{scriptPath}}},
+				EnvironmentVariables: envVarsCfg,
+			},
+		}},
+	}
+	err = appCfg.ToFile(filepath.Join(r.Dir, ".app.toml"))
+	require.NoError(t, err)
+}
+
+func TestEnvVarInput_Required(t *testing.T) {
+	const envVarName = "BAUR_TEST_ENV_VAR"
+	const appName = "myapp"
+	const taskName = "build"
+
+	initTest(t)
+
+	envVarInputs := []cfg.EnvVarsInputs{
+		{Names: []string{envVarName}},
+	}
+	createEnvVarTestApp(t, appName, taskName, envVarInputs)
+
+	t.Run("run_fails_when_required_env_var_is_undefined", func(t *testing.T) {
+		var exitCode int
+
+		initTest(t)
+
+		interceptExitCode(t, &exitCode)
+		_, stderr := interceptCmdOutput(t)
+
+		require.NoError(t, newRunCmd().Execute())
+		require.Equal(t, 1, exitCode, "command did not exit with code 1")
+		assert.Contains(t,
+			stderr.String(),
+			fmt.Sprintf("environment variable %q is undefined", envVarName),
+		)
+	})
+
+	for _, envVarval := range []string{"", "hello"} {
+		t.Run(fmt.Sprintf("env_var_val_%q", envVarval), func(t *testing.T) {
+			initTest(t)
+
+			stdout, _ := interceptCmdOutput(t)
+
+			t.Setenv(envVarName, envVarval)
+			require.NoError(t, newRunCmd().Execute())
+			outStr := stdout.String()
+			assert.Contains(
+				t,
+				outStr,
+				fmt.Sprintf("%s.%s: run stored in database with ID", appName, taskName),
+			)
+
+			stdout, _ = interceptCmdOutput(t)
+			statusCmd := newStatusCmd()
+			statusCmd.SetArgs([]string{
+				"--csv", "-f", "run-id", fmt.Sprintf("%s.%s", appName, taskName)},
+			)
+			require.NoError(t, statusCmd.Execute())
+			runID := strings.TrimSpace(stdout.String())
+
+			stdout, stderr := interceptCmdOutput(t)
+			lsInputsCmd := newLsInputsCmd()
+			lsInputsCmd.SetArgs([]string{"--csv", runID})
+			require.NoError(t, lsInputsCmd.Execute())
+			assert.Contains(t, stdout.String(), "$"+envVarName, "env var is missing in 'ls inputs' output")
+
+			t.Setenv(envVarName, "rerunplz"+t.Name())
+			require.NoError(t, newRunCmd().Execute())
+			t.Log(stdout)
+			t.Log(stderr)
+			assert.Contains(
+				t,
+				stdout.String(),
+				fmt.Sprintf("%s.%s: run stored in database with ID", appName, taskName),
+			)
+		})
+	}
+}
+
+func TestEnvVarInput_Optional(t *testing.T) {
+	const envVarName = "BAUR_b_TEST_ENV_VAR"
+	const appName = "myapp"
+	const taskName = "build"
+
+	envVarInputs := []cfg.EnvVarsInputs{
+		{
+			Names:    []string{envVarName},
+			Optional: true,
+		},
+	}
+	createEnvVarTestApp(t, appName, taskName, envVarInputs)
+	t.Run("run_succeeds_with_optional_undefined_env_var", func(t *testing.T) {
+		initTest(t)
+
+		require.NotPanics(t, func() {
+			require.NoError(t, newRunCmd().Execute())
+		})
+	})
+
+	t.Run("ls_inputs_succeeds_with_optional_undefined_env_var", func(t *testing.T) {
+		initTest(t)
+
+		lsInputsCmd := newLsInputsCmd()
+		lsInputsCmd.SetArgs([]string{fmt.Sprintf("%s.%s", appName, taskName)})
+
+		require.NotPanics(t, func() {
+			require.NoError(t, lsInputsCmd.Execute())
+		})
+	})
+
+	t.Run("status_succeeds_with_optional_undefined_env_var", func(t *testing.T) {
+		initTest(t)
+
+		lsInputsCmd := newLsInputsCmd()
+		lsInputsCmd.SetArgs([]string{fmt.Sprintf("%s.%s", appName, taskName)})
+
+		require.NotPanics(t, func() {
+			require.NoError(t, newStatusCmd().Execute())
+		})
+	})
 }
