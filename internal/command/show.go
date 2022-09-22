@@ -79,19 +79,26 @@ func (c *showCmd) run(cmd *cobra.Command, args []string) {
 	c.showApp(arg)
 }
 
+func copyAppendSlice(slice []any, elems ...any) []any {
+	res := make([]any, len(slice))
+	copy(res, slice)
+	return append(res, elems...)
+}
+
 func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int, sl []string) {
-	rowArgs := make([]interface{}, 0, indentlvl+1+1)
+	defRowArgs := make([]interface{}, 0, indentlvl+1+1)
 
 	for i := 0; i < indentlvl; i++ {
-		rowArgs = append(rowArgs, "")
+		defRowArgs = append(defRowArgs, "")
 	}
 
 	for i, val := range sl {
+		var rowArgs []any
 
 		if i == 0 {
-			rowArgs = append(rowArgs, header)
+			rowArgs = copyAppendSlice(defRowArgs, header)
 		} else {
-			rowArgs = append(rowArgs, "")
+			rowArgs = copyAppendSlice(defRowArgs, "")
 		}
 
 		if i+1 < len(sl) {
