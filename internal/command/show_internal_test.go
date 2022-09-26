@@ -22,8 +22,8 @@ func TestMustWriteStringSliceRows(t *testing.T) {
 	formatter.Flush()
 
 	expectedOut := ("" +
-		indentStr + indentStr + hdr + indentStr + elems[0] + ", " + "\n" +
-		hdrIndent + indentStr + indentStr + indentStr + elems[1] + ", " + "\n" +
+		indentStr + indentStr + hdr + indentStr + elems[0] + "," + "\n" +
+		hdrIndent + indentStr + indentStr + indentStr + elems[1] + "," + "\n" +
 		hdrIndent + indentStr + indentStr + indentStr + elems[2] + "\n" +
 		"")
 	assert.Equal(t, expectedOut, buf.String())

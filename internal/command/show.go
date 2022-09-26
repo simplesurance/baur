@@ -102,7 +102,7 @@ func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int
 		}
 
 		if i+1 < len(sl) {
-			val += ", "
+			val += ","
 		}
 		rowArgs = append(rowArgs, term.Highlight(val))
 
