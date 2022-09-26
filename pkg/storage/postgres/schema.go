@@ -2,115 +2,151 @@ package postgres
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
+	"path"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/jackc/pgx/v4"
 )
 
-const schemaVer = 1
+// schemaVer is the database schema version required by this package.
+const schemaVer int32 = 1
 
-const initQuery = `
-CREATE TABLE migrations (
-	schema_version integer NOT NULL
-);
+// migration represents a database schema migration.
+type migration struct {
+	version int32
+	sql     string
+}
 
-INSERT INTO migrations (schema_version) VALUES(1);
+//go:embed migrations/*
+var migrationFs embed.FS
 
-CREATE TABLE application (
-	id serial PRIMARY KEY,
-	name text NOT NULL UNIQUE,
-	CONSTRAINT application_name_uniq UNIQUE (name)
-);
+var errSchemaNotExist = errors.New("database schema does not exist")
 
-CREATE TABLE vcs (
-	id serial PRIMARY KEY,
-	revision text NOT NULL,
-	dirty boolean NOT NULL,
-	CONSTRAINT vcs_revision_dirty_uniq UNIQUE (revision, dirty)
-);
+// mustParseMigrations reads the sql schema migrations from migrationFs and
+// returns them sorted ascending by version.
+func mustParseMigrations() []*migration {
+	// this function is normally only run once per baur invocation
+	const panicMsgPrefix = "postgres: migrations: "
+	const baseDir = "migrations"
+	validFilenameRe := regexp.MustCompile(`^[0-9]+.sql$`)
+	var res []*migration //nolint:prealloc
 
-CREATE TABLE output (
-	id serial PRIMARY KEY,
-	name text NOT NULL,
-	type text NOT NULL,
-	digest text NOT NULL,
-	size_bytes bigint NOT NULL CHECK (size_bytes >= 0),
-	CONSTRAINT output_name_type_digest_size_bytes_uniq UNIQUE (name, type, digest, size_bytes)
-);
+	entries, err := migrationFs.ReadDir(baseDir)
+	if err != nil {
+		panic(panicMsgPrefix + err.Error())
+	}
 
-CREATE TABLE upload (
-	id serial PRIMARY KEY,
-	uri text NOT NULL,
-	method text NOT NULL,
-	start_timestamp timestamp with time zone NOT NULL,
-	stop_timestamp timestamp with time zone NOT NULL
-);
+	for _, e := range entries {
+		name := e.Name()
+		// use path.Join instead of filepath.Join because on embed.FS
+		// the directory separator is always `/` independent of the OS
+		path := path.Join(baseDir, name)
+		if !e.Type().IsRegular() {
+			panic(fmt.Sprintf(panicMsgPrefix+"%q is not a regular file", path))
+		}
 
-CREATE TABLE task (
-	id serial PRIMARY KEY,
-	name text NOT NULL,
-	application_id integer NOT NULL REFERENCES application(id) ON DELETE CASCADE,
-	CONSTRAINT task_name_application_id_uniq UNIQUE (name, application_id)
-);
+		if !validFilenameRe.MatchString(name) {
+			panic(fmt.Sprintf(
+				panicMsgPrefix+"%q invalid filename, expecting only migration files matching regex: %q",
+				name, validFilenameRe.String(),
+			))
+		}
 
-CREATE TABLE task_run (
-	id serial PRIMARY KEY,
-	vcs_id integer REFERENCES vcs(id),
-	task_id integer NOT NULL REFERENCES task (id) ON DELETE CASCADE,
-	total_input_digest text NOT NULL,
-	start_timestamp timestamp with time zone NOT NULL,
-	stop_timestamp timestamp with time zone NOT NULL,
-	result text NOT NULL,
-	CONSTRAINT result_check CHECK (result in ('success', 'failure'))
-);
-CREATE INDEX idx_task_run_total_input_digest ON task_run(total_input_digest);
+		content, err := migrationFs.ReadFile(path)
+		if err != nil {
+			panic(panicMsgPrefix + err.Error())
+		}
+		ver, err := strconv.ParseInt(strings.TrimRight(name, ".sql"), 10, 32)
+		if err != nil {
+			panic(panicMsgPrefix + "could not parse numeric version: " + err.Error())
+		}
 
-CREATE TABLE input_file (
-	id serial PRIMARY KEY,
-	path text NOT NULL,
-	digest text NOT NULL,
-	CONSTRAINT input_file_path_digest_uniq UNIQUE (path, digest)
-);
-CREATE INDEX idx_input_file_path ON input_file(path);
+		if ver < 0 {
+			panic(fmt.Sprintf(
+				panicMsgPrefix+"%q has schema version %d, expecting version >=1",
+				path, ver,
+			))
+		}
 
-CREATE TABLE input_string (
-	id serial PRIMARY KEY,
-	string text NOT NULL,
-	digest text NOT NULL,
-	CONSTRAINT input_string_digest_uniq UNIQUE (digest)
-);
-/* An index on the input_string.string column would limit the size of the
-  values to the max. size of columns in indexes (8191B).
-*/
+		res = append(res, &migration{
+			sql:     string(content),
+			version: int32(ver),
+		})
+	}
 
-CREATE TABLE task_run_file_input (
-	task_run_id integer NOT NULL REFERENCES task_run(id) ON DELETE CASCADE,
-	input_file_id integer NOT NULL REFERENCES input_file(id) ON DELETE CASCADE,
-	CONSTRAINT task_run_file_input_task_run_id_input_id_uniq UNIQUE (task_run_id, input_file_id)
-);
-CREATE INDEX task_run_file_input_task_run_id_idx ON task_run_file_input(task_run_id);
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].version < res[j].version
+	})
 
-CREATE TABLE task_run_string_input (
-	task_run_id integer NOT NULL REFERENCES task_run(id) ON DELETE CASCADE,
-	input_string_id integer NOT NULL REFERENCES input_string(id) ON DELETE CASCADE,
-	CONSTRAINT task_run_string_input_task_run_id_input_string_id_uniq UNIQUE (task_run_id, input_string_id)
-);
-
-CREATE INDEX idx_task_run_string_input ON task_run_string_input(task_run_id);
-
-CREATE TABLE task_run_output (
-	task_run_id integer NOT NULL REFERENCES task_run (id) ON DELETE CASCADE,
-	output_id integer NOT NULL REFERENCES output (id) ON DELETE CASCADE,
-	upload_id integer NOT NULL REFERENCES upload(id) ON DELETE CASCADE,
-	CONSTRAINT task_output_task_run_id_output_id_upload_id_uniq UNIQUE (task_run_id, output_id, upload_id)
-);
-
-CREATE INDEX idx_task_run_output_task_run_id ON task_run_output(task_run_id);
-`
+	return res
+}
 
 // Init creates the baur tables in the postgresql database
 func (c *Client) Init(ctx context.Context) error {
-	_, err := c.db.Exec(ctx, initQuery)
+	return c.ApplyMigrations(ctx, mustParseMigrations())
+}
 
+// migrationsFromVer returns a slice from migrations that only contains
+// migrations with a version >= minVer.
+// if no migration has a version >=minver, nil is returned.
+func migrationsFromVer(minVer int32, migrations []*migration) []*migration {
+	for i, m := range migrations {
+		if m.version >= minVer {
+			return migrations[i:]
+		}
+	}
+
+	return nil
+}
+
+// Migrate transitions the database schema to the current version by running
+// all migrations sql script that have a newer version then current schema
+// version that the database uses.
+func (c *Client) Migrate(ctx context.Context) error {
+	err := c.schemaExist(ctx)
+	if err != nil {
+		if errors.Is(err, errSchemaNotExist) {
+			return c.Init(ctx)
+		}
+
+		return err
+	}
+
+	ver, err := c.schemaVersion(ctx)
+	if err != nil {
+		return err
+	}
+
+	migrations := migrationsFromVer(ver, mustParseMigrations())
+	return c.ApplyMigrations(ctx, migrations)
+}
+
+func (c *Client) ApplyMigrations(ctx context.Context, migrations []*migration) error {
+	return c.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+		for _, m := range migrations {
+			_, err := tx.Exec(ctx, m.sql)
+			if err != nil {
+				return fmt.Errorf("applying database schema migration %d failed: %w", m.version, err)
+			}
+		}
+
+		err := setSchemaVersion(ctx, tx, migrations[len(migrations)-1].version)
+		if err != nil {
+			return fmt.Errorf("updating schema version failed: %w", err)
+		}
+
+		return nil
+	})
+}
+
+func setSchemaVersion(ctx context.Context, tx pgx.Tx, ver int32) error {
+	_, err := tx.Exec(ctx, "UPDATE migrations SET schema_version=$1", ver)
 	return err
 }
 
@@ -128,41 +164,49 @@ func (c *Client) IsCompatible(ctx context.Context) error {
 	return c.ensureSchemaIsCompatible(ctx)
 }
 
-func (c *Client) ensureSchemaIsCompatible(ctx context.Context) error {
+// schemaVersion returns the version of the current schema in the database.
+func (c *Client) schemaVersion(ctx context.Context) (int32, error) {
 	var rowsCount int
+	var ver int32
 
 	rows, err := c.db.Query(ctx, "SELECT schema_version from migrations")
 	if err != nil {
-		return fmt.Errorf("querying schema_version failed: %w", err)
+		return -1, fmt.Errorf("querying schema_version failed: %w", err)
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
-		var ver int
-
 		if rowsCount != 0 {
-			return errors.New("migrations table contains >1 rows")
+			return -1, errors.New("migrations table contains >1 rows")
 		}
 
 		err = rows.Scan(&ver)
 		if err != nil {
-			return err
-		}
-
-		if ver != schemaVer {
-			return fmt.Errorf("database schema version is not compatible with baur version, schema version: %d, expected version: %d", ver, schemaVer)
+			return -1, err
 		}
 
 		rowsCount++
 	}
 
 	if err := rows.Err(); err != nil {
-		return err
+		return -1, err
 	}
 
 	if rowsCount != 1 {
-		return fmt.Errorf("read %d rows from migrations table, expected 1", rowsCount)
+		return -1, fmt.Errorf("read %d rows from migrations table, expected 1", rowsCount)
+	}
+
+	return ver, nil
+}
+
+func (c *Client) ensureSchemaIsCompatible(ctx context.Context) error {
+	ver, err := c.schemaVersion(ctx)
+	if err != nil {
+		return nil
+	}
+
+	if ver != schemaVer {
+		return fmt.Errorf("database schema version is not compatible with baur version, schema version: %d, expected version: %d", ver, schemaVer)
 	}
 
 	return nil
@@ -198,6 +242,7 @@ func (c *Client) v0SchemaNotExits(ctx context.Context) error {
 	return nil
 }
 
+// returns nil if the migrations table exist, otherwise schemaNotExistErr.
 func (c *Client) schemaExist(ctx context.Context) error {
 	exists, err := c.tableExists(ctx, "migrations")
 	if err != nil {
@@ -205,7 +250,7 @@ func (c *Client) schemaExist(ctx context.Context) error {
 	}
 
 	if !exists {
-		return errors.New("database schema does not exist")
+		return errSchemaNotExist
 	}
 
 	return nil
