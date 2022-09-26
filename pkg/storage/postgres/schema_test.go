@@ -50,3 +50,30 @@ func TestIsCompatible_SchemaVersionDoesNotMatch(t *testing.T) {
 	err = client.IsCompatible(ctx)
 	assert.Error(t, err, "database schema version is not compatible")
 }
+
+func TestApplyMigrations(t *testing.T) {
+	client, cleanupFn := newTestClient(t)
+	defer cleanupFn()
+
+	require.NoError(t, client.Init(ctx))
+
+	err := client.ApplyMigrations(ctx, []*migration{
+		{
+			version: 1,
+			sql:     "CREATE table t1()",
+		},
+		{
+			version: 2,
+			sql:     "CREATE table t2()",
+		},
+	})
+	require.NoError(t, err)
+
+	exist, err := client.tableExists(ctx, "t1")
+	require.NoError(t, err)
+	require.True(t, exist, "t1 table does not exist")
+
+	exist, err = client.tableExists(ctx, "t2")
+	require.NoError(t, err)
+	require.True(t, exist, "t2 table does not exist")
+}

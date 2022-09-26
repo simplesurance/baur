@@ -53,6 +53,7 @@ func (c *Client) Close() error {
 }
 
 type dbConn interface {
+	BeginFunc(context.Context, func(pgx.Tx) error) error
 	QueryRow(context.Context, string, ...interface{}) pgx.Row
 	Query(context.Context, string, ...interface{}) (pgx.Rows, error)
 	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
