@@ -508,20 +508,10 @@ func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.Ta
 }
 
 func (c *Client) SaveTaskRun(ctx context.Context, taskRun *storage.TaskRunFull) (int, error) {
-	tx, err := c.db.Begin(ctx)
-	if err != nil {
-		return -1, err
-	}
+	var id int
 
-	id, err := c.saveTaskRun(ctx, tx, taskRun)
-	if err != nil {
-		_ = tx.Rollback(ctx)
-		return -1, err
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return -1, err
-	}
-
-	return id, nil
+	return id, c.db.BeginFunc(ctx, func(tx pgx.Tx) (err error) {
+		id, err = c.saveTaskRun(ctx, tx, taskRun)
+		return err
+	})
 }
