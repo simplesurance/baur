@@ -251,7 +251,10 @@ func (c *Client) v0SchemaNotExits(ctx context.Context) error {
 	}
 
 	if exists {
-		return errors.New("incompatible database schema from old baur version exists")
+		return errors.New("incompatible database schema from baur version <2 found.\n" +
+			"Upgrading is unsupported.\n" +
+			"Please create a new database.",
+		)
 	}
 
 	return nil
