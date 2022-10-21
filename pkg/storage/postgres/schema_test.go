@@ -8,6 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
 func TestIsCompatible_AfterInit(t *testing.T) {
@@ -23,7 +25,7 @@ func TestIsCompatible_SchemaNotExist(t *testing.T) {
 	defer cleanupFn()
 
 	err := client.IsCompatible(ctx)
-	require.EqualError(t, err, "database schema does not exist")
+	require.ErrorIs(t, err, storage.ErrNotExist)
 }
 
 func TestIsCompatible_OldBaurSchemaExist(t *testing.T) {
@@ -57,7 +59,7 @@ func TestApplyMigrations(t *testing.T) {
 
 	require.NoError(t, client.Init(ctx))
 
-	err := client.ApplyMigrations(ctx, []*migration{
+	err := client.applyMigrations(ctx, []*migration{
 		{
 			version: 1,
 			sql:     "CREATE table t1()",

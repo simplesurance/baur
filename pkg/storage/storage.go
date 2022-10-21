@@ -10,6 +10,9 @@ import (
 // ErrNotExist indicates that a record does not exist
 var ErrNotExist = errors.New("does not exist")
 
+// ErrExists indicates that the database or a record already exist.
+var ErrExists = errors.New("already exists")
+
 type InputFile struct {
 	Path   string
 	Digest string
@@ -105,11 +108,14 @@ type Storer interface {
 	// RequiredSchemaVersion returns the schema version that the Storer
 	// implementation requires.
 	RequiredSchemaVersion() int32
-
-	// Init initializes a storage, e.g. creating the database scheme
-	Init(context.Context) error
 	// IsCompatible verifies that the storage is compatible with the baur version
 	IsCompatible(context.Context) error
+	// Upgrade upgrades the schema to RequiredSchemaVersion().
+	// If the database does not exist ErrNotExist is returned.
+	Upgrade(ctx context.Context) error
+	// Init initializes a storage, e.g. creating the database scheme.
+	// If it already exist, ErrExist is returned.
+	Init(context.Context) error
 
 	SaveTaskRun(context.Context, *TaskRunFull) (id int, err error)
 	LatestTaskRunByDigest(ctx context.Context, appName, taskName, totalInputDigest string) (*TaskRunWithID, error)
