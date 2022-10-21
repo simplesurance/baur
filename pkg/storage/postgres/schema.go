@@ -12,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v4"
+
+	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
 // schemaVer is the database schema version required by this package.
@@ -25,8 +27,6 @@ type migration struct {
 
 //go:embed migrations/*
 var migrationFs embed.FS
-
-var errSchemaNotExist = errors.New("database schema does not exist")
 
 // mustParseMigrations reads the sql schema migrations from migrationFs and
 // returns them sorted ascending by version.
@@ -111,7 +111,7 @@ func migrationsFromVer(minVer int32, migrations []*migration) []*migration {
 func (c *Client) Migrate(ctx context.Context) error {
 	err := c.schemaExist(ctx)
 	if err != nil {
-		if errors.Is(err, errSchemaNotExist) {
+		if errors.Is(err, storage.ErrNotExist) {
 			return c.Init(ctx)
 		}
 
@@ -242,7 +242,7 @@ func (c *Client) v0SchemaNotExits(ctx context.Context) error {
 	return nil
 }
 
-// returns nil if the migrations table exist, otherwise schemaNotExistErr.
+// schemaExist nil if the migrations table exist, otherwise storage.ErrNotExist.
 func (c *Client) schemaExist(ctx context.Context) error {
 	exists, err := c.tableExists(ctx, "migrations")
 	if err != nil {
@@ -250,8 +250,20 @@ func (c *Client) schemaExist(ctx context.Context) error {
 	}
 
 	if !exists {
-		return errSchemaNotExist
+		return storage.ErrNotExist
 	}
 
 	return nil
+}
+
+func (c *Client) SchemaVersion(ctx context.Context) (int32, error) {
+	if err := c.schemaExist(ctx); err != nil {
+		return -1, err
+	}
+
+	return c.schemaVersion(ctx)
+}
+
+func (c *Client) RequiredSchemaVersion() int32 {
+	return schemaVer
 }
