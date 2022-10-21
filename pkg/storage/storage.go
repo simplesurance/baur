@@ -99,6 +99,13 @@ const (
 type Storer interface {
 	Close() error
 
+	// SchemaVersion returns the version of the schema that the storage is
+	// using.
+	SchemaVersion(ctx context.Context) (int32, error)
+	// RequiredSchemaVersion returns the schema version that the Storer
+	// implementation requires.
+	RequiredSchemaVersion() int32
+
 	// Init initializes a storage, e.g. creating the database scheme
 	Init(context.Context) error
 	// IsCompatible verifies that the storage is compatible with the baur version
