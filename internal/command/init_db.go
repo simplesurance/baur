@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/pkg/baur"
+	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
 const initDbExample = `
@@ -64,6 +66,10 @@ func initDb(cmd *cobra.Command, args []string) {
 	defer storageClt.Close()
 
 	err = storageClt.Init(ctx)
+	if errors.Is(err, storage.ErrExists) {
+		stderr.ErrPrintln(errors.New("database already exists"))
+		exitFunc(1)
+	}
 	exitOnErr(err)
 
 	stdout.Println("database tables created successfully")

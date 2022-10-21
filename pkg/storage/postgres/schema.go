@@ -87,9 +87,19 @@ func mustParseMigrations() []*migration {
 	return res
 }
 
-// Init creates the baur tables in the postgresql database
+// Init creates the baur tables in the postgresql database.
+// If the database already exist, storage.ErrExist is returned.
 func (c *Client) Init(ctx context.Context) error {
-	return c.ApplyMigrations(ctx, mustParseMigrations())
+	err := c.schemaExist(ctx)
+	if err == nil {
+		return storage.ErrExists
+	}
+
+	if !errors.Is(err, storage.ErrNotExist) {
+		return err
+	}
+
+	return c.applyMigrations(ctx, mustParseMigrations())
 }
 
 // migrationsFromVer returns a slice from migrations that only contains
@@ -105,10 +115,11 @@ func migrationsFromVer(minVer int32, migrations []*migration) []*migration {
 	return nil
 }
 
-// Migrate transitions the database schema to the current version by running
+// Upgrade transitions the database schema to the current version by running
 // all migrations sql script that have a newer version then current schema
 // version that the database uses.
-func (c *Client) Migrate(ctx context.Context) error {
+// If the database does not exist, storage.ErrNotExist is returned.
+func (c *Client) Upgrade(ctx context.Context) error {
 	err := c.schemaExist(ctx)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotExist) {
@@ -118,16 +129,20 @@ func (c *Client) Migrate(ctx context.Context) error {
 		return err
 	}
 
+	if err := c.v0SchemaNotExits(ctx); err != nil {
+		return err
+	}
+
 	ver, err := c.schemaVersion(ctx)
 	if err != nil {
 		return err
 	}
 
 	migrations := migrationsFromVer(ver, mustParseMigrations())
-	return c.ApplyMigrations(ctx, migrations)
+	return c.applyMigrations(ctx, migrations)
 }
 
-func (c *Client) ApplyMigrations(ctx context.Context, migrations []*migration) error {
+func (c *Client) applyMigrations(ctx context.Context, migrations []*migration) error {
 	return c.db.BeginFunc(ctx, func(tx pgx.Tx) error {
 		for _, m := range migrations {
 			_, err := tx.Exec(ctx, m.sql)
