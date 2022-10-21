@@ -36,6 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.27.9
 	github.com/aws/smithy-go v1.13.2
 	github.com/bmatcuk/doublestar/v4 v4.2.0
+	github.com/simplesurance/baur/v2 v2.2.0
 )
 
 require (

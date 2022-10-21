@@ -300,6 +300,10 @@ github.com/simplesurance/baur/resolve/gosource
 github.com/simplesurance/baur/storage
 github.com/simplesurance/baur/upload/docker
 github.com/simplesurance/baur/upload/scheduler
+# github.com/simplesurance/baur/v2 v2.2.0
+## explicit; go 1.17
+github.com/simplesurance/baur/v2/pkg/storage
+github.com/simplesurance/baur/v2/pkg/storage/postgres
 # github.com/sirupsen/logrus v1.9.0
 ## explicit; go 1.13
 github.com/sirupsen/logrus
