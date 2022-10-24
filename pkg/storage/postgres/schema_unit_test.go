@@ -39,23 +39,20 @@ func TestMigrationsFromVer(t *testing.T) {
 
 	t.Run("0", func(t *testing.T) {
 		assert.ElementsMatch(t,
-			migrations,
+			migrations[1:],
 			migrationsFromVer(0, migrations),
 		)
 	})
 
 	t.Run("5", func(t *testing.T) {
 		assert.ElementsMatch(t,
-			[]*migration{{version: 5}, {version: 7}},
+			[]*migration{{version: 7}},
 			migrationsFromVer(5, migrations),
 		)
 	})
 
 	t.Run("7", func(t *testing.T) {
-		assert.ElementsMatch(t,
-			[]*migration{{version: 7}},
-			migrationsFromVer(7, migrations),
-		)
+		assert.Empty(t, migrationsFromVer(7, migrations))
 	})
 
 	t.Run("8", func(t *testing.T) {

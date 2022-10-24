@@ -103,11 +103,11 @@ func (c *Client) Init(ctx context.Context) error {
 }
 
 // migrationsFromVer returns a slice from migrations that only contains
-// migrations with a version >= minVer.
-// if no migration has a version >=minver, nil is returned.
+// migrations with a version > minVer.
+// if no migration has a version > minver, nil is returned.
 func migrationsFromVer(minVer int32, migrations []*migration) []*migration {
 	for i, m := range migrations {
-		if m.version >= minVer {
+		if m.version > minVer {
 			return migrations[i:]
 		}
 	}
