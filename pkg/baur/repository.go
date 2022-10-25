@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/simplesurance/baur/v2/internal/fs"
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/internal/fs"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 // Repository represents a baur repository.

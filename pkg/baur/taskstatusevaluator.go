@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/simplesurance/baur/v2/pkg/storage"
+	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
 // TaskStatusEvaluator determines if a task already run with the same set of

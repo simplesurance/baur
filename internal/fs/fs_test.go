@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 )
 
 func TestFindFileInParentDirsOnRoot(t *testing.T) {

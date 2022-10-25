@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/groupcache/lru"
 
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 const inputResolverCacheMaxEntries = 512

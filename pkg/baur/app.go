@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 // App represents an Application.

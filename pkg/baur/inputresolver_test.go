@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v2/internal/exec"
-	"github.com/simplesurance/baur/v2/internal/fs"
-	"github.com/simplesurance/baur/v2/internal/log"
-	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v2/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v2/internal/vcs"
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/internal/exec"
+	"github.com/simplesurance/baur/v3/internal/fs"
+	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 func TestFilesOptional(t *testing.T) {

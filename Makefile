@@ -1,8 +1,8 @@
 GIT_COMMIT := $(shell git rev-parse HEAD)
 GIT_DIRTY := $(if $(shell git diff-files),wip)
 VERSION := $(shell cat ver)
-LDFLAGS := "-X github.com/simplesurance/baur/v2/internal/version.GitCommit=$(GIT_COMMIT) \
-	    -X github.com/simplesurance/baur/v2/internal/version.Appendix=$(GIT_DIRTY)"
+LDFLAGS := "-X github.com/simplesurance/baur/v3/internal/version.GitCommit=$(GIT_COMMIT) \
+	    -X github.com/simplesurance/baur/v3/internal/version.Appendix=$(GIT_DIRTY)"
 TARFLAGS := --sort=name --mtime='2018-01-01 00:00:00' --owner=0 --group=0 --numeric-owner
 BUILDFLAGS := -trimpath -ldflags=$(LDFLAGS)
 export GO111MODULE=on

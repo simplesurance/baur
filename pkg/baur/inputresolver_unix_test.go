@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v2/internal/log"
-	"github.com/simplesurance/baur/v2/internal/vcs"
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 var testdataDir string

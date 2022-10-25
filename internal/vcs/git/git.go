@@ -12,8 +12,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/simplesurance/baur/v2/internal/exec"
-	"github.com/simplesurance/baur/v2/internal/fs"
+	"github.com/simplesurance/baur/v3/internal/exec"
+	"github.com/simplesurance/baur/v3/internal/fs"
 )
 
 var gitLsPathSpecErrRe = regexp.MustCompile(`pathspec ('.+') did not match any file\(s\) known to git`)

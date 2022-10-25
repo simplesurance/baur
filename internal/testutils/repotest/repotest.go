@@ -7,12 +7,12 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/simplesurance/baur/v2/internal/digest"
-	"github.com/simplesurance/baur/v2/internal/fs"
-	"github.com/simplesurance/baur/v2/internal/testutils/dbtest"
-	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v2/pkg/baur"
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/internal/digest"
+	"github.com/simplesurance/baur/v3/internal/fs"
+	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v3/pkg/baur"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {

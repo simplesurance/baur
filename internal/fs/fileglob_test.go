@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v2/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v2/internal/testutils/strtest"
+	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v3/internal/testutils/strtest"
 )
 
 func createFiles(t *testing.T, basedir string, paths []string) {

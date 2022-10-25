@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v2/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
 )
 
 // TestShowArgs verifies that the show command works with all supported
