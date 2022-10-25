@@ -106,11 +106,7 @@ func newStorageClient(psqlURI string) (storage.Storer, error) {
 		logger = log.StdLogger
 	}
 
-	client, err := postgres.New(ctx, uri, logger)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
+	return postgres.New(ctx, uri, logger)
 }
 
 // mustGetPSQLURI returns if it's set the URI from the environment variable
