@@ -3,9 +3,9 @@ package command
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v2/internal/digest"
-	"github.com/simplesurance/baur/v2/pkg/baur"
-	"github.com/simplesurance/baur/v2/pkg/storage"
+	"github.com/simplesurance/baur/v3/internal/digest"
+	"github.com/simplesurance/baur/v3/pkg/baur"
+	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
 type storageInputFile struct {

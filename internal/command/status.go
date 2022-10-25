@@ -5,14 +5,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v2/internal/command/flag"
-	"github.com/simplesurance/baur/v2/internal/command/term"
-	"github.com/simplesurance/baur/v2/internal/format"
-	"github.com/simplesurance/baur/v2/internal/format/csv"
-	"github.com/simplesurance/baur/v2/internal/format/table"
-	"github.com/simplesurance/baur/v2/internal/log"
-	"github.com/simplesurance/baur/v2/pkg/baur"
-	"github.com/simplesurance/baur/v2/pkg/storage"
+	"github.com/simplesurance/baur/v3/internal/command/flag"
+	"github.com/simplesurance/baur/v3/internal/command/term"
+	"github.com/simplesurance/baur/v3/internal/format"
+	"github.com/simplesurance/baur/v3/internal/format/csv"
+	"github.com/simplesurance/baur/v3/internal/format/table"
+	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/pkg/baur"
+	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
 const (

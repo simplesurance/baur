@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/simplesurance/baur/v2/internal/log"
-	"github.com/simplesurance/baur/v2/internal/resolve/glob"
-	"github.com/simplesurance/baur/v2/internal/resolve/gosource"
-	"github.com/simplesurance/baur/v2/internal/vcs"
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/internal/resolve/glob"
+	"github.com/simplesurance/baur/v3/internal/resolve/gosource"
+	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 // InputResolver resolves input definitions of a task to concrete files.

@@ -9,7 +9,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/simplesurance/baur/v2/internal/digest"
+	"github.com/simplesurance/baur/v3/internal/digest"
 )
 
 // Hash offers an interface to add data for computing a digest

@@ -6,10 +6,10 @@ import (
 	"io"
 	"testing"
 
-	"github.com/simplesurance/baur/v2/internal/command/term"
-	"github.com/simplesurance/baur/v2/internal/exec"
-	"github.com/simplesurance/baur/v2/internal/log"
-	"github.com/simplesurance/baur/v2/internal/testutils/logwriter"
+	"github.com/simplesurance/baur/v3/internal/command/term"
+	"github.com/simplesurance/baur/v3/internal/exec"
+	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/internal/testutils/logwriter"
 )
 
 // interceptCmdOutput changes the stdout and stderr streams to that the

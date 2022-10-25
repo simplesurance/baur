@@ -8,7 +8,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/simplesurance/baur/v2/internal/exec"
+	"github.com/simplesurance/baur/v3/internal/exec"
 )
 
 // ErrTaskRunSkipped is returned when a task run was skipped instead of executed.

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v2/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
 )
 
 var ctx = context.Background()

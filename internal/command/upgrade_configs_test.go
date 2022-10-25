@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v2/internal/command/flag"
-	"github.com/simplesurance/baur/v2/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v3/internal/command/flag"
+	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
 )
 
 func TestUpgrade(t *testing.T) {

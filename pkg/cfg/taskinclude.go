@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	"github.com/simplesurance/baur/v2/internal/deepcopy"
+	"github.com/simplesurance/baur/v3/internal/deepcopy"
 )
 
 // TaskInclude is a reusable Tasks definition

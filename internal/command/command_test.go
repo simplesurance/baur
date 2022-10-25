@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v2/internal/exec"
-	"github.com/simplesurance/baur/v2/internal/testutils/dbtest"
-	"github.com/simplesurance/baur/v2/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v2/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v2/pkg/baur"
+	"github.com/simplesurance/baur/v3/internal/exec"
+	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v3/pkg/baur"
 )
 
 var testdataDir string

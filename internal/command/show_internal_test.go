@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/simplesurance/baur/v2/internal/format/table"
+	"github.com/simplesurance/baur/v3/internal/format/table"
 )
 
 func TestMustWriteStringSliceRows(t *testing.T) {

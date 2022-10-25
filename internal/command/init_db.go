@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v2/internal/command/term"
-	"github.com/simplesurance/baur/v2/pkg/baur"
+	"github.com/simplesurance/baur/v3/internal/command/term"
+	"github.com/simplesurance/baur/v3/pkg/baur"
 )
 
 const initDbExample = `

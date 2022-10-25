@@ -1,8 +1,8 @@
 package baur
 
 import (
-	"github.com/simplesurance/baur/v2/internal/digest"
-	"github.com/simplesurance/baur/v2/internal/digest/sha384"
+	"github.com/simplesurance/baur/v3/internal/digest"
+	"github.com/simplesurance/baur/v3/internal/digest/sha384"
 )
 
 // InputFile represent a file.

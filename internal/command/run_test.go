@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v2/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v2/pkg/cfg"
+	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
 func TestRunSimultaneously(t *testing.T) {

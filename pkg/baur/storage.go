@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/simplesurance/baur/v2/internal/vcs"
-	"github.com/simplesurance/baur/v2/pkg/storage"
+	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
 // StoreRun stores the result of a task run in a baur storage.

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/simplesurance/baur/v2/internal/vcs/git"
+	"github.com/simplesurance/baur/v3/internal/vcs/git"
 )
 
 // StateFetcher is an interface for retrieving information about a VCS
