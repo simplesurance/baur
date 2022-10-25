@@ -44,7 +44,6 @@ func initDb(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		dbURL = args[0]
 	} else {
-
 		repo, err := findRepository()
 		if err != nil {
 			if os.IsNotExist(err) {
