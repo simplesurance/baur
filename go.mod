@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.31
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.27.9
 	github.com/aws/smithy-go v1.13.2
-	github.com/bmatcuk/doublestar/v4 v4.2.0
+	github.com/bmatcuk/doublestar/v4 v4.3.0
 	github.com/simplesurance/baur/v2 v2.2.0
 )
 
@@ -81,5 +81,3 @@ require (
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 )
-
-replace github.com/bmatcuk/doublestar/v4 => github.com/simplesurance/doublestar/v4 v4.0.0-20220919144030-63e293d7dccf
