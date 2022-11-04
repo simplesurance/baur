@@ -1,9 +1,5 @@
 package cfg
 
-import (
-	"strings"
-)
-
 // FileInputs stores glob paths to inputs of a task.
 type FileInputs struct {
 	// if attributes are added/removed or modified, the input resolver
@@ -32,10 +28,6 @@ func (f *FileInputs) validate() error {
 		if len(path) == 0 {
 			return newFieldError("can not be empty", "path")
 
-		}
-
-		if strings.Count(path, "**") > 1 {
-			return newFieldError("'**' can only appear one time in a path", "path")
 		}
 	}
 
