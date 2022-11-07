@@ -76,6 +76,51 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	return append(uniqInputs, envVarMapToInputslice(envVars)...), nil
 }
 
+func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]string, error) {
+	// resolving files with Optional flag must be handled with care:
+	// If optional is true and path does not exist, resolving must not result in an error.
+	// If !optional and parts of the path does not exist an error must be returned.
+	// We can not use cached results of lookups with optional
+	// flag enabled, if an lookup with !optional is requested, it would
+	// supress non-existing path errors.
+	// Also only successful !optional must be cached.
+	cacheKey := inputResolverFileCacheKey{
+		Path:     path,
+		Optional: optional,
+	}
+
+	if result := i.cache.GetFileInputs(&cacheKey); result != nil {
+		return result, nil
+	}
+
+	if optional {
+		if result := i.cache.GetFileInputs(&inputResolverFileCacheKey{Path: path, Optional: false}); result != nil {
+			return result, nil
+		}
+	}
+
+	result, err := i.globPathResolver.Resolve(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			result = []string{}
+			i.cache.AddFileInputs(
+				&inputResolverFileCacheKey{Path: path, Optional: true},
+				result,
+			)
+
+			if optional {
+				return result, nil
+			}
+		}
+
+		return result, err
+	}
+
+	i.cache.AddFileInputs(&cacheKey, result)
+
+	return result, err
+}
+
 func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs []cfg.FileInputs) ([]string, error) {
 	var result []string
 
@@ -93,23 +138,17 @@ func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs [
 				GitTrackedOnly: in.GitTrackedOnly,
 				Optional:       in.Optional,
 			}
-
 			if files := i.cache.GetFileInputs(&cacheKey); files != nil {
 				result = append(result, files...)
 				continue
 			}
 
-			resolvedPaths, err = i.globPathResolver.Resolve(path)
+			resolvedPaths, err = i.resolveCacheFileGlob(path, in.Optional)
 			if err != nil {
-				if in.Optional && errors.Is(err, os.ErrNotExist) {
-					i.cache.AddFileInputs(&cacheKey, []string{})
-					continue
-				}
-
 				return nil, err
 			}
 
-			if in.GitTrackedOnly {
+			if len(resolvedPaths) > 0 && in.GitTrackedOnly {
 				trackedOnlyPaths, err := i.vcsState.WithoutUntracked(resolvedPaths...)
 				if err != nil {
 					return nil, fmt.Errorf("removing untracked git files for input %q failed: %w", path, err)
