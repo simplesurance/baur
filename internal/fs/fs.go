@@ -199,16 +199,15 @@ func Mkdir(path string) error {
 // AbsPaths ensures that all elements in paths are absolute paths.
 // If an element is not an absolute path, it is joined with rootPath.
 func AbsPaths(rootPath string, paths []string) []string {
-	result := make([]string, 0, len(rootPath))
+	result := make([]string, len(paths))
 
-	for _, p := range paths {
+	for i, p := range paths {
 		if filepath.IsAbs(p) {
-			result = append(result, p)
+			result[i] = p
 			continue
 		}
 
-		absPath := filepath.Join(rootPath, p)
-		result = append(result, absPath)
+		result[i] = filepath.Join(rootPath, p)
 	}
 
 	return result
