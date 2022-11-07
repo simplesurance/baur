@@ -196,12 +196,18 @@ func Mkdir(path string) error {
 	return os.MkdirAll(path, os.FileMode(0755))
 }
 
-// AbsPaths prepends to all paths in relPaths the passed rootPath.
-func AbsPaths(rootPath string, relPaths []string) []string {
+// AbsPaths ensures that all elements in paths are absolute paths.
+// If an element is not an absolute path, it is joined with rootPath.
+func AbsPaths(rootPath string, paths []string) []string {
 	result := make([]string, 0, len(rootPath))
 
-	for _, relPath := range relPaths {
-		absPath := filepath.Join(rootPath, relPath)
+	for _, p := range paths {
+		if filepath.IsAbs(p) {
+			result = append(result, p)
+			continue
+		}
+
+		absPath := filepath.Join(rootPath, p)
 		result = append(result, absPath)
 	}
 
