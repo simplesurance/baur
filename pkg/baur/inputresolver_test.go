@@ -2,6 +2,7 @@ package baur
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -252,6 +253,8 @@ func TestFilesOptional(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			log.RedirectToTestingLog(t)
+
 			tempDir := t.TempDir()
 
 			for _, f := range tc.filesToCreate {
@@ -302,6 +305,8 @@ func TestFilesOptional(t *testing.T) {
 
 func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 	const fname = "hello"
+
+	log.RedirectToTestingLog(t)
 
 	tempDir := t.TempDir()
 
@@ -456,6 +461,8 @@ func TestResolveEnvVarInputs(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.Name, func(t *testing.T) {
+			log.RedirectToTestingLog(t)
+
 			for k, v := range tc.EnvVars {
 				t.Setenv(k, v)
 			}
@@ -471,4 +478,120 @@ func TestResolveEnvVarInputs(t *testing.T) {
 		})
 	}
 
+}
+
+func TestExcludedFiles(t *testing.T) {
+	testcases := []struct {
+		Name           string
+		FilesToCreate  []string
+		Inputs         cfg.Input
+		ExpectedResult []string
+	}{
+		{
+			Name:          "basic",
+			FilesToCreate: []string{"abc", "main.c", "readme.md", "changelog.md"},
+			Inputs: cfg.Input{
+				Files: []cfg.FileInputs{
+					{
+						Paths: []string{"*"},
+					},
+				},
+				ExcludedFiles: cfg.FileExcludeList{
+					Paths: []string{"*.md", "abc"},
+				},
+			},
+			ExpectedResult: []string{"main.c"},
+		},
+
+		{
+			Name:          "exclude_does_not_match",
+			FilesToCreate: []string{"abc"},
+			Inputs: cfg.Input{
+				Files: []cfg.FileInputs{
+					{
+						Paths: []string{"abc"},
+					},
+				},
+				ExcludedFiles: cfg.FileExcludeList{
+					Paths: []string{"xyz", "*.md"},
+				},
+			},
+			ExpectedResult: []string{"abc"},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.Name, func(t *testing.T) {
+			log.RedirectToTestingLog(t)
+			tempDir := t.TempDir()
+
+			for _, f := range tc.FilesToCreate {
+				fstest.WriteToFile(t, []byte(f), filepath.Join(tempDir, f))
+			}
+
+			resolver := NewInputResolver(&vcs.NoVCsState{})
+			result, err := resolver.Resolve(context.Background(), tempDir, &Task{
+				Directory:        tempDir,
+				UnresolvedInputs: &tc.Inputs,
+			})
+
+			require.NoError(t, err)
+
+			strResult := toStrSlice(result)
+			assert.ElementsMatch(t, strResult, tc.ExpectedResult)
+		})
+	}
+}
+
+func toStrSlice[S ~[]T, T fmt.Stringer](in S) []string {
+	result := make([]string, len(in))
+
+	for i, e := range in {
+		result[i] = e.String()
+	}
+
+	return result
+}
+
+type goSourceResolverMock struct {
+	result []string
+}
+
+func (g *goSourceResolverMock) Resolve(
+	ctx context.Context,
+	workdir string,
+	environment []string,
+	buildFlags []string,
+	withTests bool,
+	queries []string,
+) ([]string, error) {
+	return g.result, nil
+}
+
+func TestGoResolverFilesAreExcluded(t *testing.T) {
+	log.RedirectToTestingLog(t)
+	baseDir := filepath.FromSlash("/tmp")
+
+	resolver := NewInputResolver(&vcs.NoVCsState{})
+	resolver.goSourceResolver = &goSourceResolverMock{
+		result: []string{filepath.Join(baseDir, "main.go"), filepath.Join(baseDir, "atm", "atm.go")},
+	}
+
+	result, err := resolver.Resolve(
+		context.Background(),
+		filepath.FromSlash("/tmp"),
+		&Task{
+			UnresolvedInputs: &cfg.Input{
+				GolangSources: []cfg.GolangSources{{}},
+				ExcludedFiles: cfg.FileExcludeList{
+					Paths: []string{"main.go"},
+				},
+			},
+			Directory: baseDir,
+		},
+	)
+	assert.NoError(t, err)
+
+	strResult := toStrSlice(result)
+	assert.ElementsMatch(t, strResult, []string{filepath.Join("atm", "atm.go")})
 }

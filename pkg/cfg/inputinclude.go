@@ -11,6 +11,7 @@ type InputInclude struct {
 	EnvironmentVariables []EnvVarsInputs
 	Files                []FileInputs
 	GolangSources        []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
+	ExcludedFiles        FileExcludeList
 
 	filepath string
 }
@@ -25,6 +26,10 @@ func (in *InputInclude) golangSourcesInputs() []GolangSources {
 
 func (in *InputInclude) envVariables() []EnvVarsInputs {
 	return in.EnvironmentVariables
+}
+
+func (in *InputInclude) excludedFiles() *FileExcludeList {
+	return &in.ExcludedFiles
 }
 
 func (in *InputInclude) IsEmpty() bool {

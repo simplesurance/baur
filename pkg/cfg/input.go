@@ -5,12 +5,14 @@ type Input struct {
 	EnvironmentVariables []EnvVarsInputs
 	Files                []FileInputs
 	GolangSources        []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
+	ExcludedFiles        FileExcludeList
 }
 
 func (in *Input) IsEmpty() bool {
 	return len(in.Files) == 0 &&
 		len(in.GolangSources) == 0 &&
-		len(in.EnvironmentVariables) == 0
+		len(in.EnvironmentVariables) == 0 &&
+		len(in.ExcludedFiles.Paths) == 0
 }
 
 func (in *Input) fileInputs() []FileInputs {
@@ -25,11 +27,16 @@ func (in *Input) envVariables() []EnvVarsInputs {
 	return in.EnvironmentVariables
 }
 
+func (in *Input) excludedFiles() *FileExcludeList {
+	return &in.ExcludedFiles
+}
+
 // merge appends the information in other to in.
 func (in *Input) merge(other inputDef) {
 	in.Files = append(in.Files, other.fileInputs()...)
 	in.GolangSources = append(in.GolangSources, other.golangSourcesInputs()...)
 	in.EnvironmentVariables = append(in.EnvironmentVariables, other.envVariables()...)
+	in.ExcludedFiles.Paths = append(in.ExcludedFiles.Paths, other.excludedFiles().Paths...)
 }
 
 func (in *Input) resolve(resolver Resolver) error {
@@ -37,6 +44,10 @@ func (in *Input) resolve(resolver Resolver) error {
 		if err := f.resolve(resolver); err != nil {
 			return fieldErrorWrap(err, "Files")
 		}
+	}
+
+	if err := in.ExcludedFiles.resolve(resolver); err != nil {
+		return fieldErrorWrap(err, "ExcludedFiles")
 	}
 
 	for i, gs := range in.GolangSources {
@@ -68,6 +79,10 @@ func inputValidate(i inputDef) error {
 		if err := env.Validate(); err != nil {
 			return fieldErrorWrap(err, "EnvVariables")
 		}
+	}
+
+	if err := i.excludedFiles().Validate(); err != nil {
+		return fieldErrorWrap(err, "ExcludedFiles")
 	}
 
 	return nil

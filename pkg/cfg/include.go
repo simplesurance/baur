@@ -119,6 +119,7 @@ func ExampleInclude(id string) *Include {
 				Files: []FileInputs{
 					{},
 				},
+				ExcludedFiles: FileExcludeList{},
 				GolangSources: []GolangSources{
 					{},
 				},

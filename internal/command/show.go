@@ -215,7 +215,7 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 			}
 		}
 
-		if len(task.UnresolvedInputs.EnvironmentVariables) > 0 && len(task.UnresolvedInputs.GolangSources) > 0 {
+		if (len(task.UnresolvedInputs.EnvironmentVariables) > 0 || len(task.UnresolvedInputs.Files) > 0) && len(task.UnresolvedInputs.GolangSources) > 0 {
 			mustWriteRow(formatter, "", "", "", "")
 		}
 
@@ -231,6 +231,18 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 				mustWriteRow(formatter, "", "", "", "")
 			}
 		}
+
+		if len(task.UnresolvedInputs.ExcludedFiles.Paths) > 0 &&
+			(len(task.UnresolvedInputs.GolangSources) > 0 ||
+				len(task.UnresolvedInputs.EnvironmentVariables) > 0 ||
+				len(task.UnresolvedInputs.Files) > 0) {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+
+		mustWriteRow(formatter, "", "", "", "")
+		mustWriteRow(formatter, "", "", "Type:", term.Highlight("Excluded Files"))
+		mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.ExcludedFiles.Paths)
+
 	}
 
 	if task.HasOutputs() {
