@@ -56,7 +56,6 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	allInputsPaths := make([]string, 0, len(goSourcePaths)+len(globPaths)+len(task.CfgFilepaths))
 	allInputsPaths = append(allInputsPaths, globPaths...)
 	allInputsPaths = append(allInputsPaths, goSourcePaths...)
-
 	allInputsPaths = append(allInputsPaths, task.CfgFilepaths...)
 
 	uniqInputs, err := i.pathsToUniqInputs(repositoryDir, allInputsPaths)
@@ -82,7 +81,7 @@ func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]stri
 	// If !optional and parts of the path does not exist an error must be returned.
 	// We can not use cached results of lookups with optional
 	// flag enabled, if an lookup with !optional is requested, it would
-	// supress non-existing path errors.
+	// suppress non-existing path errors.
 	// Also only successful !optional must be cached.
 	cacheKey := inputResolverFileCacheKey{
 		Path:     path,
@@ -189,32 +188,26 @@ func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, i
 	return result, nil
 }
 
-func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, pathSlice ...[]string) ([]Input, error) {
-	var pathsCount int
-
-	for _, paths := range pathSlice {
-		pathsCount += len(paths)
-	}
+func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, paths []string) ([]Input, error) {
+	pathsCount := len(paths)
 
 	res := make([]Input, 0, pathsCount)
 	dedupMap := make(map[string]struct{}, pathsCount)
 
-	for _, paths := range pathSlice {
-		for _, path := range paths {
-			if _, exist := dedupMap[path]; exist {
-				log.Debugf("removed duplicate input %q", path)
-				continue
-			}
-
-			dedupMap[path] = struct{}{}
-
-			relPath, err := filepath.Rel(repositoryRoot, path)
-			if err != nil {
-				return nil, err
-			}
-
-			res = append(res, i.inputFileSingletonCache.CreateOrGetInputFile(path, relPath))
+	for _, path := range paths {
+		if _, exist := dedupMap[path]; exist {
+			log.Debugf("removed duplicate input %q", path)
+			continue
 		}
+
+		dedupMap[path] = struct{}{}
+
+		relPath, err := filepath.Rel(repositoryRoot, path)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, i.inputFileSingletonCache.CreateOrGetInputFile(path, relPath))
 	}
 
 	return res, nil
