@@ -1,16 +1,17 @@
 package fs
 
 import (
-	"fmt"
-	"path/filepath"
-
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-// FileGlob resolves the pattern to absolute file paths.
-// Files are resolved in the same way then filepath.Glob() does, with  Exceptions:
+// FileGlob resolves the pattern to file paths.
+// If the pattern is an absolute path, absolute paths are returned, otherwise
+// relative paths.
+// Files are resolved in the same way then filepath.Glob() does, with the
+// following exceptions:
 // - it also supports '**' to match files and directories recursively,
 // - it only returns paths to files, no directory paths,
+// - if a part of the pattern is a filepath and it does not exist, an errur is returned,
 // If a globPath doesn't match any files an empty []string is returned and
 // error is nil
 func FileGlob(pattern string) ([]string, error) {
@@ -20,13 +21,8 @@ func FileGlob(pattern string) ([]string, error) {
 	}
 
 	res := make([]string, 0, len(globRes))
-	for _, r := range globRes {
-		absPath, err := filepath.Abs(r)
-		if err != nil {
-			return nil, fmt.Errorf("evaluating absolute path of %q failed: %w", absPath, err)
-		}
-
-		isFile, err := IsFile(absPath)
+	for _, path := range globRes {
+		isFile, err := IsFile(path)
 		if err != nil {
 			return nil, err
 		}
@@ -34,7 +30,8 @@ func FileGlob(pattern string) ([]string, error) {
 		if !isFile {
 			continue
 		}
-		res = append(res, absPath)
+
+		res = append(res, path)
 	}
 
 	return res, err
