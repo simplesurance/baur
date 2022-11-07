@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/resolve/glob"
 	"github.com/simplesurance/baur/v3/internal/resolve/gosource"
@@ -16,10 +17,23 @@ import (
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
+// goSourceResolver returns a list source files required to compile a golang
+// binary.
+type goSourceResolver interface {
+	Resolve(
+		ctx context.Context,
+		workdir string,
+		environment []string,
+		buildFlags []string,
+		withTests bool,
+		queries []string,
+	) ([]string, error)
+}
+
 // InputResolver resolves input definitions of a task to concrete files.
 type InputResolver struct {
 	globPathResolver     *glob.Resolver
-	goSourceResolver     *gosource.Resolver
+	goSourceResolver     goSourceResolver
 	environmentVariables map[string]string
 
 	vcsState                vcs.StateFetcher
@@ -48,7 +62,11 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
 
-	globPaths, err := i.resolveFileInputs(repositoryDir, task.Directory, task.UnresolvedInputs.Files)
+	globPaths, err := i.resolveFileInputs(
+		repositoryDir,
+		task.Directory,
+		task.UnresolvedInputs.Files,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("resolving file inputs failed: %w", err)
 	}
@@ -58,7 +76,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	allInputsPaths = append(allInputsPaths, goSourcePaths...)
 	allInputsPaths = append(allInputsPaths, task.CfgFilepaths...)
 
-	uniqInputs, err := i.pathsToUniqInputs(repositoryDir, allInputsPaths)
+	uniqInputs, err := i.pathsToUniqInputs(repositoryDir, allInputsPaths, fs.AbsPaths(task.Directory, task.UnresolvedInputs.ExcludedFiles.Paths))
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +206,7 @@ func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, i
 	return result, nil
 }
 
-func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, paths []string) ([]Input, error) {
+func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, paths, excludePatterns []string) ([]Input, error) {
 	pathsCount := len(paths)
 
 	res := make([]Input, 0, pathsCount)
@@ -201,6 +219,16 @@ func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, paths []string)
 		}
 
 		dedupMap[path] = struct{}{}
+
+		excluded, excludePattern, err := i.globPathResolver.Matches(path, excludePatterns)
+		if err != nil {
+			return nil, fmt.Errorf("ExcludedFiles: %w", err)
+		}
+
+		if excluded {
+			log.Debugf("removed input %q, matches exclude pattern %q", path, excludePattern)
+			continue
+		}
 
 		relPath, err := filepath.Rel(repositoryRoot, path)
 		if err != nil {

@@ -32,6 +32,9 @@ func ExampleApp(name string) *App {
 							Paths: []string{"dbmigrations/*.sql"},
 						},
 					},
+					ExcludedFiles: FileExcludeList{
+						Paths: []string{"dbmigrations/1.sql"},
+					},
 					EnvironmentVariables: []EnvVarsInputs{
 						{
 							Names:    []string{"APP_VERSION", name + "_*"},

@@ -1,9 +1,12 @@
 package fs
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v3/internal/testutils/strtest"
@@ -163,4 +166,26 @@ func Test_Resolve(t *testing.T) {
 		checkFilesInResolvedFiles(t, tempdir, resolvedFiles, tc)
 	}
 
+}
+
+func TestGlobMatch(t *testing.T) {
+	tcs := []struct {
+		pattern     string
+		path        string
+		expectMatch bool
+	}{
+		{
+			pattern:     "?",
+			path:        "a",
+			expectMatch: true,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(fmt.Sprintf("pattern:%s,path:%s", tc.pattern, tc.path), func(t *testing.T) {
+			match, err := MatchGlob(tc.pattern, tc.path)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectMatch, match)
+		})
+	}
 }

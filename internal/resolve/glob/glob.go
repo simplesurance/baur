@@ -11,7 +11,7 @@ import (
 // directories recursively.
 type Resolver struct{}
 
-// Resolve resolves the globPath to absolute file paths.
+// Resolve resolves globPath to file paths.
 // Files are resolved in the same way then filepath.Glob() does, with 2 Exceptions:
 // - it also supports '**' to match files and directories recursively,
 // - it only returns paths to files, no directory paths,
@@ -24,4 +24,22 @@ func (r *Resolver) Resolve(globPath string) ([]string, error) {
 	}
 
 	return paths, nil
+}
+
+// Matches returns true and the matching pattern, if a pattern in patters
+// matches path. If none matches, false and an empty string is returned
+// If the pattern is malformed an error is returned.
+func (r *Resolver) Matches(path string, patterns []string) (bool, string, error) {
+	for _, pattern := range patterns {
+		match, err := fs.MatchGlob(pattern, path)
+		if err != nil {
+			return false, "", fmt.Errorf("matching pattern %q with path %q failed: %w", pattern, path, err)
+		}
+
+		if match {
+			return true, pattern, nil
+		}
+	}
+
+	return false, "", nil
 }

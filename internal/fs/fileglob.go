@@ -36,3 +36,7 @@ func FileGlob(pattern string) ([]string, error) {
 
 	return res, err
 }
+
+func MatchGlob(pattern, path string) (bool, error) {
+	return doublestar.PathMatch(pattern, path)
+}

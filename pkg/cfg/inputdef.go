@@ -4,4 +4,5 @@ type inputDef interface {
 	envVariables() []EnvVarsInputs
 	fileInputs() []FileInputs
 	golangSourcesInputs() []GolangSources
+	excludedFiles() *FileExcludeList
 }
