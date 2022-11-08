@@ -89,16 +89,10 @@ func bashComp(cmd *cobra.Command, args []string) {
 	complDir := getBashCompletionDir()
 
 	mustCreatebashComplDir(complDir)
-
 	complFile := filepath.Join(complDir, "baur")
-	f, err := os.Create(complFile)
-	exitOnErrf(err, "creating %q' failed", complFile)
 
-	err = rootCmd.GenBashCompletion(f)
+	err = rootCmd.GenBashCompletionFileV2(complFile, false)
 	exitOnErr(err, "generating bash completion failed")
-
-	err = f.Close()
-	exitOnErrf(err, "closing %q failed", complFile)
 
 	stdout.Printf("bash completion file written to %s\n", term.Highlight(complFile))
 }
