@@ -36,9 +36,10 @@ type lsAppsCmd struct {
 func newLsAppsCmd() *lsAppsCmd {
 	cmd := lsAppsCmd{
 		Command: cobra.Command{
-			Use:   "apps [APP_NAME|APP_DIR]...",
-			Short: "list applications",
-			Args:  cobra.ArbitraryArgs,
+			Use:               "apps [APP_NAME|APP_DIR]...",
+			Short:             "list applications",
+			Args:              cobra.ArbitraryArgs,
+			ValidArgsFunction: completeAppNameAndAppDir,
 		},
 
 		fields: flag.MustNewFields(
