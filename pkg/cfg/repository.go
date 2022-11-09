@@ -11,9 +11,9 @@ const (
 	minSearchDepth = 0
 	maxSearchDepth = 10
 	// Version identifies the format of the configuration files that the
-	// package is able to parse. Whenever an incompatible change is made,
-	// the Version number is increased.
-	Version int = 5
+	// package can parse. Whenever an incompatible change is made, the
+	// Version number is increased.
+	Version int = 6
 )
 
 // Repository contains the repository configuration.
