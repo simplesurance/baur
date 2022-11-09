@@ -56,10 +56,11 @@ type statusCmd struct {
 func newStatusCmd() *statusCmd {
 	cmd := statusCmd{
 		Command: cobra.Command{
-			Use:   "status [TARGET|APP_DIR]...",
-			Short: "list status of tasks",
-			Long:  statusLongHelp,
-			Args:  cobra.ArbitraryArgs,
+			Use:               "status [TARGET|APP_DIR]...",
+			Short:             "list status of tasks",
+			Long:              statusLongHelp,
+			Args:              cobra.ArbitraryArgs,
+			ValidArgsFunction: completeTarget,
 		},
 
 		fields: flag.MustNewFields(
