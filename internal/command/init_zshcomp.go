@@ -21,9 +21,10 @@ The generated script is printed to stdout.
 func newInitZshCompCmd() *initZshCompCmd {
 	cmd := initZshCompCmd{
 		Command: cobra.Command{
-			Use:   "zshcomp",
-			Short: "generate a zsh completion script",
-			Long:  initZshCompLongHelp,
+			Use:     "zshcomp",
+			Short:   "generate a zsh completion script",
+			Long:    initZshCompLongHelp,
+			GroupID: initShellCompletionGroupID,
 		},
 	}
 
