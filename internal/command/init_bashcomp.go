@@ -44,9 +44,10 @@ type initBashCompCmd struct {
 func newInitBashCompCmd() *initBashCompCmd {
 	cmd := initBashCompCmd{
 		Command: cobra.Command{
-			Use:   "bashcomp",
-			Short: "generate and install a bash completion script",
-			Long:  strings.TrimSpace(initBashCompLongHelp),
+			Use:     "bashcomp",
+			Short:   "generate and install a bash completion script",
+			Long:    strings.TrimSpace(initBashCompLongHelp),
+			GroupID: initShellCompletionGroupID,
 		},
 	}
 

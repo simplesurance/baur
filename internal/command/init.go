@@ -16,6 +16,8 @@ const (
 	cmdInitRepo     = "baur init repo"
 )
 
+const initShellCompletionGroupID = "shellcompletion"
+
 var initLongHelp = fmt.Sprintf(`
 The init commands initialize baur configuration files,
 create baur tables in the database or install bash completion files.
@@ -39,5 +41,6 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
+	initCmd.AddGroup(&cobra.Group{ID: initShellCompletionGroupID, Title: "Generating shell completions"})
 	rootCmd.AddCommand(initCmd)
 }
