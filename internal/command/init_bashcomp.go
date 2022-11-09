@@ -21,16 +21,29 @@ Environment Variables:
 BASH_COMPLETION_USER_DIR	Destination directory
 `
 
-// bashCompCmd represents the completion command
-var bashCompCmd = &cobra.Command{
-	Use:   "bashcomp",
-	Short: "generate and install a bash completion file for baur",
-	Long:  strings.TrimSpace(bashCompLongHelp),
-	Run:   bashComp,
+type initBashCompCmd struct {
+	cobra.Command
+	stdout bool
+}
+
+func newInitBashCompCmd() *initBashCompCmd {
+	cmd := initBashCompCmd{
+		Command: cobra.Command{
+			Use:   "bashcomp",
+			Short: "generate and install a bash completion file for baur",
+			Long:  strings.TrimSpace(bashCompLongHelp),
+		},
+	}
+
+	cmd.Run = cmd.run
+
+	cmd.Flags().BoolVar(&cmd.stdout, "stdout", false, "write completion script to stdout")
+
+	return &cmd
 }
 
 func init() {
-	initCmd.AddCommand(bashCompCmd)
+	initCmd.AddCommand(&newInitBashCompCmd().Command)
 }
 
 func xdgDataHome() (string, error) {
@@ -58,6 +71,7 @@ func xdgDataHome() (string, error) {
 }
 
 func getBashCompletionDir() (string, error) {
+	const envVar = "BASH_COMPLETION_USER_DIR"
 	/*
 		 https://github.com/scop/bash-completion/blob/master/README.md
 
@@ -71,21 +85,30 @@ func getBashCompletionDir() (string, error) {
 		loaded eagerly by our main script.
 	*/
 
-	if path := os.Getenv("BASH_COMPLETION_USER_DIR"); path != "" {
+	if path := os.Getenv(envVar); path != "" {
 		return path, nil
 	}
 
 	xdgHome, err := xdgDataHome()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s environment variable is empty and locating XDG_DATA_HOME failed: %w", envVar, err)
 	}
 
-	return filepath.Join(xdgHome, "bash-completion/completions"), nil
+	return filepath.Join(xdgHome, "bash-completion", "completions"), nil
 }
 
-func bashComp(cmd *cobra.Command, args []string) {
+func (c *initBashCompCmd) run(_ *cobra.Command, _ []string) {
+	if c.stdout {
+		err := rootCmd.GenBashCompletionV2(stdout, false)
+		exitOnErr(err, "generating bash completion failed")
+		return
+	}
+
 	complDir, err := getBashCompletionDir()
-	exitOnErr(err, "could not find bash completion directory")
+	exitOnErr(err,
+		"could not find bash completion directory,",
+		"try rerunning the command with '--stdout'",
+	)
 
 	err = fs.Mkdir(complDir)
 	exitOnErrf(err, "could not create directory %q", complDir)
