@@ -83,33 +83,13 @@ func getBashCompletionDir() (string, error) {
 	return filepath.Join(xdgHome, "bash-completion/completions"), nil
 }
 
-func mustCreatebashComplDir(path string) {
-	isDir, err := fs.IsDir(path)
-	if err == nil {
-		if isDir {
-			return
-		}
-
-		if !isDir {
-			stderr.Printf("'%s' must be a directory", path)
-			exitFunc(1)
-		}
-	}
-
-	if !os.IsNotExist(err) {
-		stderr.Println(err)
-		exitFunc(1)
-	}
-
-	err = fs.Mkdir(path)
-	exitOnErrf(err, "could not create bash completion dir %q", path)
-}
-
 func bashComp(cmd *cobra.Command, args []string) {
 	complDir, err := getBashCompletionDir()
 	exitOnErr(err, "could not find bash completion directory")
 
-	mustCreatebashComplDir(complDir)
+	err = fs.Mkdir(complDir)
+	exitOnErrf(err, "could not create directory %q", complDir)
+
 	complFile := filepath.Join(complDir, "baur")
 
 	err = rootCmd.GenBashCompletionFileV2(complFile, false)
