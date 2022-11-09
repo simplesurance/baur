@@ -30,9 +30,10 @@ type upgradeDbCmd struct {
 func newUpgradeDatabaseCmd() *upgradeDbCmd {
 	cmd := upgradeDbCmd{
 		Command: cobra.Command{
-			Use:   "db",
-			Short: "upgrade the database schema",
-			Long:  upgradeDbLongHelp,
+			Use:               "db",
+			Short:             "upgrade the database schema",
+			Long:              upgradeDbLongHelp,
+			ValidArgsFunction: cobra.NoFileCompletions,
 		},
 	}
 

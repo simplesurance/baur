@@ -26,12 +26,13 @@ by setting the '%s' environment variable.`,
 	term.Highlight(envVarPSQLURL))
 
 var initDbCmd = &cobra.Command{
-	Use:     "db [POSTGRES_URL]",
-	Short:   "create baur tables in a PostgreSQL database",
-	Example: strings.TrimSpace(initDbExample),
-	Long:    strings.TrimSpace(initDbLongHelp),
-	Run:     initDb,
-	Args:    cobra.MaximumNArgs(1),
+	Use:               "db [POSTGRES_URL]",
+	Short:             "create baur tables in a PostgreSQL database",
+	Example:           strings.TrimSpace(initDbExample),
+	Long:              strings.TrimSpace(initDbLongHelp),
+	Run:               initDb,
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: cobra.NoFileCompletions,
 }
 
 func init() {

@@ -21,10 +21,11 @@ The generated script is printed to stdout.
 func newInitPowerShellCompCmd() *initPowerShellCompCmd {
 	cmd := initPowerShellCompCmd{
 		Command: cobra.Command{
-			Use:     "powershellcomp",
-			Short:   "generate a powershell completion script",
-			Long:    initPowerShellCompLongHelp,
-			GroupID: initShellCompletionGroupID,
+			Use:               "powershellcomp",
+			Short:             "generate a powershell completion script",
+			Long:              initPowerShellCompLongHelp,
+			GroupID:           initShellCompletionGroupID,
+			ValidArgsFunction: cobra.NoFileCompletions,
 		},
 	}
 
