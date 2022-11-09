@@ -13,13 +13,28 @@ import (
 	"github.com/simplesurance/baur/v3/internal/fs"
 )
 
-const bashCompLongHelp = `
-Installs a bash completion file for baur.
-The bash_completion file is written into the user's bash completion directory.
+const (
+	envVarBashCompletionUserDir = "BASH_COMPLETION_USER_DIR"
+	envVarXDGDataHome           = "XDG_DATA_HOME"
+)
+
+var initBashCompLongHelp = fmt.Sprintf(`
+Generate and install a baur completion script for the bash shell.
+
+If --stdout is passed, the completion script is written to STDOUT.
+Otherwise it is written to the completion directory determined by the following
+environment variables.
 
 Environment Variables:
-BASH_COMPLETION_USER_DIR	Destination directory
-`
+ %s	Directory the completion script is written to
+ %s			If %s is empty, the script is written
+				to %s.
+`,
+	envVarBashCompletionUserDir,
+	envVarXDGDataHome,
+	envVarBashCompletionUserDir,
+	filepath.Join("$"+envVarXDGDataHome, bashCompRelDataHomeCompletionDir()),
+)
 
 type initBashCompCmd struct {
 	cobra.Command
@@ -30,8 +45,8 @@ func newInitBashCompCmd() *initBashCompCmd {
 	cmd := initBashCompCmd{
 		Command: cobra.Command{
 			Use:   "bashcomp",
-			Short: "generate and install a bash completion file for baur",
-			Long:  strings.TrimSpace(bashCompLongHelp),
+			Short: "generate and install a bash completion script",
+			Long:  strings.TrimSpace(initBashCompLongHelp),
 		},
 	}
 
@@ -47,19 +62,18 @@ func init() {
 }
 
 func xdgDataHome() (string, error) {
-	const envVar = "XDG_DATA_HOME"
 	/*
 		https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 		$XDG_DATA_HOME defines the base directory relative to which user-specific
 		data files should be stored. If $XDG_DATA_HOME is either not set or empty, a
 		default equal to $HOME/.local/share should be used.
 	*/
-	if path := os.Getenv(envVar); path != "" {
+	if path := os.Getenv(envVarXDGDataHome); path != "" {
 		return path, nil
 	}
 
 	if runtime.GOOS == "windows" {
-		return "", fmt.Errorf("%s environment variable is not set", envVar)
+		return "", fmt.Errorf("%s environment variable is not set", envVarXDGDataHome)
 	}
 
 	home, err := os.UserHomeDir()
@@ -70,8 +84,11 @@ func xdgDataHome() (string, error) {
 	return filepath.Join(home, ".local", "share"), nil
 }
 
-func getBashCompletionDir() (string, error) {
-	const envVar = "BASH_COMPLETION_USER_DIR"
+func bashCompRelDataHomeCompletionDir() string {
+	return filepath.Join("bash-completion", "completions")
+}
+
+func bashCompDir() (string, error) {
 	/*
 		 https://github.com/scop/bash-completion/blob/master/README.md
 
@@ -85,16 +102,18 @@ func getBashCompletionDir() (string, error) {
 		loaded eagerly by our main script.
 	*/
 
-	if path := os.Getenv(envVar); path != "" {
+	if path := os.Getenv(envVarBashCompletionUserDir); path != "" {
 		return path, nil
 	}
 
 	xdgHome, err := xdgDataHome()
 	if err != nil {
-		return "", fmt.Errorf("%s environment variable is empty and locating XDG_DATA_HOME failed: %w", envVar, err)
+		return "", fmt.Errorf("%s environment variable is empty and locating XDG_DATA_HOME failed: %w",
+			envVarBashCompletionUserDir, err,
+		)
 	}
 
-	return filepath.Join(xdgHome, "bash-completion", "completions"), nil
+	return filepath.Join(xdgHome, bashCompRelDataHomeCompletionDir()), nil
 }
 
 func (c *initBashCompCmd) run(_ *cobra.Command, _ []string) {
@@ -104,7 +123,7 @@ func (c *initBashCompCmd) run(_ *cobra.Command, _ []string) {
 		return
 	}
 
-	complDir, err := getBashCompletionDir()
+	complDir, err := bashCompDir()
 	exitOnErr(err,
 		"could not find bash completion directory,",
 		"try rerunning the command with '--stdout'",
@@ -116,7 +135,7 @@ func (c *initBashCompCmd) run(_ *cobra.Command, _ []string) {
 	complFile := filepath.Join(complDir, "baur")
 
 	err = rootCmd.GenBashCompletionFileV2(complFile, false)
-	exitOnErr(err, "generating bash completion failed")
+	exitOnErr(err, "generating completion script failed")
 
-	stdout.Printf("bash completion file written to %s\n", term.Highlight(complFile))
+	stdout.Printf("bash completion script written to %s\n", term.Highlight(complFile))
 }
