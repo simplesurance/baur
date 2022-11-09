@@ -71,7 +71,7 @@ func getBashCompletionDir() (string, error) {
 		loaded eagerly by our main script.
 	*/
 
-	if path, exist := os.LookupEnv("BASH_COMPLETION_USER_DIR"); exist {
+	if path := os.Getenv("BASH_COMPLETION_USER_DIR"); path != "" {
 		return path, nil
 	}
 
