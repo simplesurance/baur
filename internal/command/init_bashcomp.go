@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,9 +32,26 @@ func init() {
 	initCmd.AddCommand(bashCompCmd)
 }
 
-func getBashCompletionDir() string {
-	var exist bool
+func xdgDataHome() (string, error) {
+	/*
+		https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+		$XDG_DATA_HOME defines the base directory relative to which user-specific
+		data files should be stored. If $XDG_DATA_HOME is either not set or empty, a
+		default equal to $HOME/.local/share should be used.
+	*/
+	if path := os.Getenv("XDG_DATA_HOME"); path != "" {
+		return path, nil
+	}
 
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("finding home directory failed: %w", err)
+	}
+
+	return filepath.Join(home, ".local", "share"), nil
+}
+
+func getBashCompletionDir() (string, error) {
 	/*
 		 https://github.com/scop/bash-completion/blob/master/README.md
 
@@ -48,19 +66,15 @@ func getBashCompletionDir() string {
 	*/
 
 	if path, exist := os.LookupEnv("BASH_COMPLETION_USER_DIR"); exist {
-		return path
+		return path, nil
 	}
 
-	var xdgHome string
-	if xdgHome, exist = os.LookupEnv("XDG_DATA_HOME"); exist {
-		return filepath.Join(xdgHome, "bash-completion/completions")
+	xdgHome, err := xdgDataHome()
+	if err != nil {
+		return "", err
 	}
 
-	if home, exist := os.LookupEnv("HOME"); exist {
-		return filepath.Join(home, ".local/share/bash-completion/completions")
-	}
-
-	return "~/.local/share/bash-completion/completions"
+	return filepath.Join(xdgHome, "bash-completion/completions"), nil
 }
 
 func mustCreatebashComplDir(path string) {
@@ -86,7 +100,8 @@ func mustCreatebashComplDir(path string) {
 }
 
 func bashComp(cmd *cobra.Command, args []string) {
-	complDir := getBashCompletionDir()
+	complDir, err := getBashCompletionDir()
+	exitOnErr(err, "could not find bash completion directory")
 
 	mustCreatebashComplDir(complDir)
 	complFile := filepath.Join(complDir, "baur")
