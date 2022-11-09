@@ -23,11 +23,12 @@ If no argument is passed, the file is created in the current directory.
 `
 
 var initRepoCmd = &cobra.Command{
-	Use:   "repo [DIR]",
-	Short: "create a repository config file",
-	Long:  strings.TrimSpace(initRepoLongHelp),
-	Run:   initRepo,
-	Args:  cobra.MaximumNArgs(1),
+	Use:               "repo [DIR]",
+	Short:             "create a repository config file",
+	Long:              strings.TrimSpace(initRepoLongHelp),
+	Run:               initRepo,
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: completeOnlyDirectories,
 }
 
 func initRepo(cmd *cobra.Command, args []string) {

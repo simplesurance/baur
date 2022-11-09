@@ -99,3 +99,7 @@ func completeTarget(
 
 	return result, cobra.ShellCompDirectiveDefault
 }
+
+func completeOnlyDirectories(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	return nil, cobra.ShellCompDirectiveFilterDirs
+}
