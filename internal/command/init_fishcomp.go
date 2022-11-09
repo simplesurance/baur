@@ -36,9 +36,10 @@ Environment Variables:
 func newInitFishCompCmd() *initFishCompCmd {
 	cmd := initFishCompCmd{
 		Command: cobra.Command{
-			Use:   "fishcomp",
-			Short: "generate and install a fish completion script",
-			Long:  initFishCompLongHelp,
+			Use:     "fishcomp",
+			Short:   "generate and install a fish completion script",
+			Long:    initFishCompLongHelp,
+			GroupID: initShellCompletionGroupID,
 		},
 	}
 
