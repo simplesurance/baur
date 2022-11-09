@@ -105,10 +105,11 @@ type runCmd struct {
 func newRunCmd() *runCmd {
 	cmd := runCmd{
 		Command: cobra.Command{
-			Use:     "run [TARGET|APP_DIR]...",
-			Short:   "run tasks",
-			Long:    runLongHelp,
-			Example: strings.TrimSpace(runExample),
+			Use:               "run [TARGET|APP_DIR]...",
+			Short:             "run tasks",
+			Long:              runLongHelp,
+			Example:           strings.TrimSpace(runExample),
+			ValidArgsFunction: completeTarget,
 		},
 	}
 
