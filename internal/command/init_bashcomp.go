@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -33,14 +34,19 @@ func init() {
 }
 
 func xdgDataHome() (string, error) {
+	const envVar = "XDG_DATA_HOME"
 	/*
 		https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 		$XDG_DATA_HOME defines the base directory relative to which user-specific
 		data files should be stored. If $XDG_DATA_HOME is either not set or empty, a
 		default equal to $HOME/.local/share should be used.
 	*/
-	if path := os.Getenv("XDG_DATA_HOME"); path != "" {
+	if path := os.Getenv(envVar); path != "" {
 		return path, nil
+	}
+
+	if runtime.GOOS == "windows" {
+		return "", fmt.Errorf("%s environment variable is not set", envVar)
 	}
 
 	home, err := os.UserHomeDir()
