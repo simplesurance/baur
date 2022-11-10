@@ -62,6 +62,11 @@ func newLsRunsCmd() *lsRunsCmd {
 			Long:    strings.TrimSpace(lsRunsLongHelp),
 			Example: strings.TrimSpace(lsRunsExample),
 			Args:    cobra.ExactArgs(1),
+			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{
+				withoutAppNames:  true,
+				withoutPaths:     true,
+				withoutWildcards: true,
+			}),
 		},
 
 		sort: flag.NewSort(map[string]storage.Field{
