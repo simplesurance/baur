@@ -135,7 +135,7 @@ func (c *initBashCompCmd) run(_ *cobra.Command, _ []string) {
 
 	complFile := filepath.Join(complDir, "baur")
 
-	err = rootCmd.GenBashCompletionFileV2(complFile, false)
+	err = rootCmd.GenBashCompletionFileV2(complFile, true)
 	exitOnErr(err, "generating completion script failed")
 
 	stdout.Printf("bash completion script written to %s\n", term.Highlight(complFile))
