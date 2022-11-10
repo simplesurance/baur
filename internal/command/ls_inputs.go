@@ -33,6 +33,9 @@ func newLsInputsCmd() *lsInputsCmd {
 			Use:   "inputs APP_NAME.TASK_NAME|RUN_ID|APP_DIR",
 			Short: "list inputs of a task or task run",
 			Args:  cobra.ExactArgs(1),
+			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{
+				withoutWildcards: true,
+			}),
 		},
 	}
 
