@@ -6,11 +6,14 @@ import (
 	"strings"
 
 	baur_old "github.com/simplesurance/baur"
-	cfg_old "github.com/simplesurance/baur/cfg"
+	cfg_v4 "github.com/simplesurance/baur/cfg"
+	cfg_v5 "github.com/simplesurance/baur/v2/pkg/cfg"
 
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/pkg/cfg"
 	v4 "github.com/simplesurance/baur/v3/pkg/cfg/upgrade/v4"
+	v5 "github.com/simplesurance/baur/v3/pkg/cfg/upgrade/v5"
 )
 
 // CfgUpgrader converts baur configurations files from a previous format to the
@@ -36,7 +39,7 @@ func (u *CfgUpgrader) upgradeAppConfigs(
 ) error {
 	for _, app := range apps {
 		cfgPath := filepath.Join(app.Path, baur_old.AppCfgFile)
-		appCfg, err := cfg_old.AppFromFile(cfgPath)
+		appCfg, err := cfg_v4.AppFromFile(cfgPath)
 		if err != nil {
 			return fmt.Errorf("reading application config %q failed: %w", cfgPath, err)
 		}
@@ -80,19 +83,40 @@ func (u *CfgUpgrader) upgradeAppConfigs(
 // Each upgraded configuration file is validated by running the responsible
 // validate() method from the cfg package.
 func (u *CfgUpgrader) Upgrade() error {
-	const oldUpgradeVer = 4
-
-	includesToUpgrade := map[string]struct{}{}
-	repoCfgPath := filepath.Join(u.repoRootDir, baur_old.RepositoryCfgFile)
-
-	oldRepoCfg, err := cfg_old.RepositoryFromFile(repoCfgPath)
+	repoCfgPath := filepath.Join(u.repoRootDir, RepositoryCfgFile)
+	repoCfg, err := cfg.RepositoryFromFile(repoCfgPath)
 	if err != nil {
 		return fmt.Errorf("loading repository config %q failed: %w", repoCfgPath, err)
 	}
 
-	if oldRepoCfg.ConfigVersion != oldUpgradeVer {
-		return fmt.Errorf("repository config (%q) has version %d, only version %d can be upgraded",
-			repoCfgPath, oldRepoCfg.ConfigVersion, oldUpgradeVer)
+	if repoCfg.ConfigVersion == 0 {
+		return fmt.Errorf("loading repository config %q succeeded but 'config_version' parameter is missing or 0", repoCfgPath)
+	}
+
+	if repoCfg.ConfigVersion != 4 && repoCfg.ConfigVersion != 5 {
+		return fmt.Errorf("%q specifies 'config_version=%d', upgrading is only supported from version 4 and 5", repoCfgPath, repoCfg.ConfigVersion)
+	}
+
+	if repoCfg.ConfigVersion == 4 {
+		if err := u.upgradeV4(); err != nil {
+			return fmt.Errorf("upgrading configuration files from version %d to %d failed: %w", repoCfg.ConfigVersion, 5, err)
+		}
+	}
+
+	if err := u.upgradeV5(repoCfgPath); err != nil {
+		return fmt.Errorf("upgrading configuration files from version %d to %d failed: %w", 5, 6, err)
+	}
+
+	return nil
+}
+
+func (u *CfgUpgrader) upgradeV4() error {
+	includesToUpgrade := map[string]struct{}{}
+	repoCfgPath := filepath.Join(u.repoRootDir, baur_old.RepositoryCfgFile)
+
+	oldRepoCfg, err := cfg_v4.RepositoryFromFile(repoCfgPath)
+	if err != nil {
+		return fmt.Errorf("loading repository config %q failed: %w", repoCfgPath, err)
 	}
 
 	oldRepo, err := baur_old.NewRepository(repoCfgPath)
@@ -112,7 +136,7 @@ func (u *CfgUpgrader) Upgrade() error {
 	}
 
 	for includePath := range includesToUpgrade {
-		oldInclude, err := cfg_old.IncludeFromFile(includePath)
+		oldInclude, err := cfg_v4.IncludeFromFile(includePath)
 		if err != nil {
 			return err
 		}
@@ -131,7 +155,7 @@ func (u *CfgUpgrader) Upgrade() error {
 			return err
 		}
 
-		log.Debugf("%s: updated", includePath)
+		log.Debugf("%s: was updated from v4 to v5", includePath)
 	}
 
 	newRepoCfg := v4.UpgradeRepositoryConfig(oldRepoCfg)
@@ -143,6 +167,28 @@ func (u *CfgUpgrader) Upgrade() error {
 	if err := newRepoCfg.ToFile(repoCfgPath); err != nil {
 		return fmt.Errorf("writing new repository config file to disk failed: %w", err)
 	}
+
+	log.Debugf("%s: was updated from v4 to v5", repoCfgPath)
+
+	return nil
+}
+
+func (u *CfgUpgrader) upgradeV5(repoCfgPath string) error {
+	oldRepoCfg, err := cfg_v5.RepositoryFromFile(repoCfgPath)
+	if err != nil {
+		return fmt.Errorf("loading repository config %q failed: %w", repoCfgPath, err)
+	}
+
+	if err := fs.BackupFile(repoCfgPath); err != nil {
+		return err
+	}
+
+	newRepoCfg := v5.UpgradeRepositoryConfig(oldRepoCfg)
+	if err := newRepoCfg.ToFile(repoCfgPath, cfg.ToFileOptOverwrite()); err != nil {
+		return fmt.Errorf("writing new repository config file to disk failed: %w", err)
+	}
+
+	log.Debugf("%s: was updated from v5 to v6", repoCfgPath)
 
 	return nil
 }
