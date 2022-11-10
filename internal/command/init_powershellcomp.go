@@ -34,6 +34,6 @@ func newInitPowerShellCompCmd() *initPowerShellCompCmd {
 }
 
 func (c *initPowerShellCompCmd) run(_ *cobra.Command, _ []string) {
-	err := rootCmd.GenPowerShellCompletion(stdout)
+	err := rootCmd.GenPowerShellCompletionWithDesc(stdout)
 	exitOnErr(err)
 }

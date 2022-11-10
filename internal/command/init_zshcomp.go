@@ -34,6 +34,6 @@ func newInitZshCompCmd() *initZshCompCmd {
 }
 
 func (c *initZshCompCmd) run(_ *cobra.Command, _ []string) {
-	err := rootCmd.GenZshCompletionNoDesc(stdout)
+	err := rootCmd.GenZshCompletion(stdout)
 	exitOnErr(err)
 }
