@@ -17,7 +17,7 @@ func mockGitCommitID() (string, error) {
 func completeAppNameAndAppDir(
 	_ *cobra.Command,
 	_ []string,
-	toComplete string,
+	_ string,
 ) ([]string, cobra.ShellCompDirective) {
 	repo, err := findRepository()
 	if err != nil {
@@ -50,54 +50,62 @@ func completeAppNameAndAppDir(
 	return result, cobra.ShellCompDirectiveDefault
 }
 
-func completeTarget(
-	_ *cobra.Command,
-	_ []string,
-	_ string,
-) ([]string, cobra.ShellCompDirective) {
-	repo, err := findRepository()
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveError
-	}
+type completeTargetFuncOpts struct {
+	withoutWildcards bool
+}
 
-	loader, err := baur.NewLoader(repo.Cfg, mockGitCommitID, log.StdLogger)
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveError
-	}
-
-	tasks, err := loader.LoadTasks()
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveError
-	}
-
-	wd, _ := os.Getwd()
-
-	resultSet := make(map[string]struct{}, len(tasks)*3)
-	for _, t := range tasks {
-		resultSet[t.ID()] = struct{}{}
-		resultSet["*."+t.ID()] = struct{}{}
-
-		if _, exist := resultSet[t.AppName]; exist {
-			continue
+func newCompleteTargetFunc(
+	opts completeTargetFuncOpts,
+) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		repo, err := findRepository()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
 		}
 
-		resultSet[t.AppName] = struct{}{}
-		resultSet[t.AppName+".*"] = struct{}{}
+		loader, err := baur.NewLoader(repo.Cfg, mockGitCommitID, log.StdLogger)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
 
-		if wd != "" {
-			appRelPath, err := filepath.Rel(wd, t.Directory)
-			if err == nil {
-				resultSet[appRelPath] = struct{}{}
+		tasks, err := loader.LoadTasks()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		wd, _ := os.Getwd()
+
+		resultSet := make(map[string]struct{}, len(tasks)*3)
+		for _, t := range tasks {
+			resultSet[t.ID()] = struct{}{}
+			if !opts.withoutWildcards {
+				resultSet["*."+t.ID()] = struct{}{}
+			}
+
+			if _, exist := resultSet[t.AppName]; exist {
+				continue
+			}
+
+			resultSet[t.AppName] = struct{}{}
+			if !opts.withoutWildcards {
+				resultSet[t.AppName+".*"] = struct{}{}
+			}
+
+			if wd != "" {
+				appRelPath, err := filepath.Rel(wd, t.Directory)
+				if err == nil {
+					resultSet[appRelPath] = struct{}{}
+				}
 			}
 		}
-	}
 
-	result := make([]string, 0, len(resultSet))
-	for k := range resultSet {
-		result = append(result, k)
-	}
+		result := make([]string, 0, len(resultSet))
+		for k := range resultSet {
+			result = append(result, k)
+		}
 
-	return result, cobra.ShellCompDirectiveDefault
+		return result, cobra.ShellCompDirectiveDefault
+	}
 }
 
 func completeOnlyDirectories(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {

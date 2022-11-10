@@ -109,7 +109,7 @@ func newRunCmd() *runCmd {
 			Short:             "run tasks",
 			Long:              runLongHelp,
 			Example:           strings.TrimSpace(runExample),
-			ValidArgsFunction: completeTarget,
+			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{}),
 		},
 	}
 

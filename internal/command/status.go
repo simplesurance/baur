@@ -60,7 +60,7 @@ func newStatusCmd() *statusCmd {
 			Short:             "list status of tasks",
 			Long:              statusLongHelp,
 			Args:              cobra.ArbitraryArgs,
-			ValidArgsFunction: completeTarget,
+			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{}),
 		},
 
 		fields: flag.MustNewFields(
