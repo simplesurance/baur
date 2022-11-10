@@ -139,5 +139,11 @@ func (c *initBashCompCmd) run(_ *cobra.Command, _ []string) {
 	err = rootCmd.GenBashCompletionFileV2(complFile, false)
 	exitOnErr(err, "generating completion script failed")
 
-	stdout.Printf("bash completion script written to %s\n", term.Highlight(complFile))
+	stdout.Printf(
+		"bash completion script was written to %s.\n"+
+			"To load completions in your current shell session run:\n"+
+			"\t%s\n",
+		term.Highlight(complFile),
+		term.Highlight(fmt.Sprintf("source %s", complFile)),
+	)
 }
