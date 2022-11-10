@@ -43,7 +43,7 @@ jobs:
           key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
       - name: Run Tests with Race Detector
         run: |
-          go test -v -tags=dbtest -race -timeout 5m ./...
+          go test -tags=dbtest -race -timeout 5m ./...
         shell: bash
       - name: Run Tests without Race Detector and CGO
         env:
