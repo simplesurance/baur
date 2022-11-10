@@ -28,9 +28,10 @@ func init() {
 func newLsOutputsCmd() *lsOutputsCmd {
 	cmd := lsOutputsCmd{
 		Command: cobra.Command{
-			Use:   "outputs <RUN_ID>",
-			Short: "list outputs of a task run",
-			Args:  cobra.ExactArgs(1),
+			Use:               "outputs <RUN_ID>",
+			Short:             "list outputs of a task run",
+			Args:              cobra.ExactArgs(1),
+			ValidArgsFunction: cobra.NoFileCompletions,
 		},
 	}
 
