@@ -302,6 +302,8 @@ github.com/simplesurance/baur/upload/docker
 github.com/simplesurance/baur/upload/scheduler
 # github.com/simplesurance/baur/v2 v2.2.0
 ## explicit; go 1.17
+github.com/simplesurance/baur/v2/internal/deepcopy
+github.com/simplesurance/baur/v2/pkg/cfg
 github.com/simplesurance/baur/v2/pkg/storage
 github.com/simplesurance/baur/v2/pkg/storage/postgres
 # github.com/sirupsen/logrus v1.9.0
