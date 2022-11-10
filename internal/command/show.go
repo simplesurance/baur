@@ -44,11 +44,12 @@ type showCmd struct {
 func newShowCmd() *showCmd {
 	cmd := showCmd{
 		Command: cobra.Command{
-			Use:     "show <APP_DIR|APP_NAME[.TASK_NAME]|RUN_ID>",
-			Short:   "show information about apps or recorded task runs",
-			Args:    cobra.ExactArgs(1),
-			Long:    strings.TrimSpace(showLongHelp),
-			Example: strings.TrimSpace(showExamples),
+			Use:               "show <APP_DIR|APP_NAME[.TASK_NAME]|RUN_ID>",
+			Short:             "show information about apps or recorded task runs",
+			Args:              cobra.ExactArgs(1),
+			Long:              strings.TrimSpace(showLongHelp),
+			Example:           strings.TrimSpace(showExamples),
+			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{withoutWildcards: true}),
 		},
 	}
 
