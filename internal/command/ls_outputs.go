@@ -46,15 +46,15 @@ func newLsOutputsCmd() *lsOutputsCmd {
 }
 
 func (c *lsOutputsCmd) run(cmd *cobra.Command, args []string) {
-	repo := mustFindRepository()
-	pgClient := mustNewCompatibleStorage(repo)
-	defer pgClient.Close()
-
 	taskRunID, err := strconv.Atoi(args[0])
 	if err != nil {
 		stderr.Printf("'%s' is not a numeric task run ID\n", args[0])
 		exitFunc(1)
 	}
+
+	repo := mustFindRepository()
+	pgClient := mustNewCompatibleStorage(repo)
+	defer pgClient.Close()
 
 	_, err = pgClient.TaskRun(ctx, taskRunID)
 	if err != nil {
