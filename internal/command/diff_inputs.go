@@ -82,6 +82,11 @@ func newDiffInputsCmd() *diffInputsCmd {
 			Long:    strings.TrimSpace(diffInputslongHelp),
 			Example: strings.TrimSpace(diffInputsExample),
 			Args:    diffArgs(),
+			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{
+				withoutWildcards: true,
+				withoutAppNames:  true,
+				withoutPaths:     true,
+			}),
 		},
 	}
 

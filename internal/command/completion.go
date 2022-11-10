@@ -52,6 +52,8 @@ func completeAppNameAndAppDir(
 
 type completeTargetFuncOpts struct {
 	withoutWildcards bool
+	withoutPaths     bool
+	withoutAppNames  bool
 }
 
 func newCompleteTargetFunc(
@@ -73,7 +75,10 @@ func newCompleteTargetFunc(
 			return nil, cobra.ShellCompDirectiveError
 		}
 
-		wd, _ := os.Getwd()
+		wd := ""
+		if !opts.withoutPaths {
+			wd, _ = os.Getwd()
+		}
 
 		resultSet := make(map[string]struct{}, len(tasks)*3)
 		for _, t := range tasks {
@@ -82,8 +87,10 @@ func newCompleteTargetFunc(
 				resultSet["*."+t.ID()] = struct{}{}
 			}
 
-			if _, exist := resultSet[t.AppName]; exist {
-				continue
+			if !opts.withoutAppNames {
+				if _, exist := resultSet[t.AppName]; exist {
+					continue
+				}
 			}
 
 			resultSet[t.AppName] = struct{}{}
