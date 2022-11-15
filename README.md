@@ -37,7 +37,8 @@ On following runs, baur only runs tasks for which the inputs changed.
   \
   Inputs can be defined as 
   [glob file patterns](https://en.wikipedia.org/wiki/Glob_(programming)),
-  as strings on the commandline, or as Go package queries.
+  environment variables, as strings on the commandline, or as Go package
+  queries.
 
 * **Artifact Upload** \
   Artifacts can be uploaded to **S3** buckets, to **Docker** registries or
@@ -59,7 +60,6 @@ On following runs, baur only runs tasks for which the inputs changed.
   [Templating](https://github.com/simplesurance/baur/wiki/v2-Configuration#templating-in-configuration-files)
   can be used in configuration files.
 
-
 ## Quickstart
 
 ### Installation
@@ -75,11 +75,10 @@ After downloading the release archive, extract the `baur` binary
 
 #### From Source
 
-With Go >= 1.16.0 installed you can build and install the latest version from
-the master branch by running:
+You can build and install the latest version from the master branch by running:
 
 ```sh
-go install github.com/simplesurance/baur/v2/...@master
+go install github.com/simplesurance/baur/v3/...@master
 ```
 
 ### Setup
@@ -104,10 +103,10 @@ your first application configuration file.
 ### First Steps
 
 To show information about the available commands run:
+
 ```sh
 baur --help
 ```
-
 
 Some commands to start with are:
 
@@ -120,13 +119,13 @@ Some commands to start with are:
 | `baur ls inputs --digests shop.build` | List inputs with their digests of the *build* task of an application called *shop*                   |
 | `baur run --help`                     | Show the usage information for the *run* command.                                                    |
 
-## Upgrading from baur 0.20 to 2.0
-
-See [Upgrade Instructions in the wiki](https://github.com/simplesurance/baur/wiki/v2-Upgrade)
-
 ## Documentation
 
 Documentation is available in the [wiki](https://github.com/simplesurance/baur/wiki).
+
+## Upgrading from older baur Versions
+
+See [Upgrade Instructions in the wiki](https://github.com/simplesurance/baur/wiki#upgrade-guide)
 
 ## Contributing
 
