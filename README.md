@@ -19,10 +19,10 @@ repository](https://github.com/simplesurance/baur-example).
 Per application tasks are defined in a [TOML](https://github.com/toml-lang/toml)
 configuration file. Each task specifies:
 
-- a command to run,
-- which inputs (files) affect the result of the task run
-- and optionally outputs that are created when the command is run and where
-  those artifacts will be uploaded to.
+* a command to run,
+* which inputs (files) affect the result of the task run
+* and optionally outputs that are created when the command is run and where
+  those artifacts are uploaded to.
 
 When baur runs a task, it calculates a digest for the task inputs and stores it
 in a PostgreSQL database. \
@@ -35,7 +35,7 @@ On following runs, baur only runs tasks for which the inputs changed.
   baur can only runs tasks that have not been run before for the current set of
   inputs.
   \
-  Inputs can be defined as 
+  Inputs can be defined as
   [glob file patterns](https://en.wikipedia.org/wiki/Glob_(programming)),
   environment variables, as strings on the commandline, or as Go package
   queries.
@@ -135,10 +135,10 @@ idea before in the [Ideas forum](https://github.com/simplesurance/baur/discussio
 
 ## Contact
 
-- Questions? -  [Q&A Forum](https://github.com/simplesurance/baur/discussions/categories/q-a)
-- Suggestion for a cool feature or other improvements? - [Ideas Forum](https://github.com/simplesurance/baur/discussions/categories/ideas)
+* Questions? -  [Q&A Forum](https://github.com/simplesurance/baur/discussions/categories/q-a)
+* Suggestion for a cool feature or other improvements? - [Ideas Forum](https://github.com/simplesurance/baur/discussions/categories/ideas)
 
 ## Links
 
-- [Example Repository](https://github.com/simplesurance/baur-example)
-- [Wiki](https://github.com/simplesurance/baur/wiki)
+* [Example Repository](https://github.com/simplesurance/baur-example)
+* [Wiki](https://github.com/simplesurance/baur/wiki)
