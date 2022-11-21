@@ -6,8 +6,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
 
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "monthly"
+    commit-message:
+      prefix: "vendor"
+      include: "scope"
