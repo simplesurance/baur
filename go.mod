@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.17.5
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.31
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.27.9
-	github.com/aws/smithy-go v1.13.2
+	github.com/aws/smithy-go v1.13.4
 	github.com/bmatcuk/doublestar/v4 v4.3.0
 	github.com/simplesurance/baur/v2 v2.2.0
 )
