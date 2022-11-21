@@ -110,7 +110,7 @@ func (c *initFishCompCmd) run(_ *cobra.Command, _ []string) {
 	err = fs.Mkdir(complDir)
 	exitOnErrf(err, "could not create directory %q", complDir)
 
-	err = rootCmd.GenFishCompletionFile(complFile, true)
+	err = rootCmd.GenFishCompletionFile(complFile, false)
 	exitOnErr(err, "generating completion script failed")
 
 	stdout.Printf("fish completion script written to %s\n", term.Highlight(complFile))
