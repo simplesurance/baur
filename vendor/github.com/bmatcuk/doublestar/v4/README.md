@@ -115,8 +115,21 @@ argument(s).
 WithFailOnIOErrors()
 ```
 
-If passed, it enables aborting and returning the error when an IO error is
-encountered.
+If passed, doublestar will abort and return IO errors when encountered. Note
+that if the glob pattern references a path that does not exist (such as
+`nonexistent/path/*`), this is _not_ considered an IO error: it is considered a
+pattern with no matches.
+
+```go
+WithFailOnPatternNotExist()
+```
+
+If passed, doublestar will abort and return `doublestar.ErrPatternNotExist` if
+the pattern references a path that does not exist before any meta characters
+such as `nonexistent/path/*`. Note that alts (ie, `{...}`) are expanded before
+this check. In other words, a pattern such as `{a,b}/*` may fail if either `a`
+or `b` do not exist but `*/{a,b}` will never fail because the star may match
+nothing.
 
 ### Glob
 
