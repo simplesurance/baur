@@ -1,0 +1,51 @@
+release:
+  draft: true
+  prerelease: auto
+builds:
+  - main: cmd/baur/main.go
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - "-X github.com/simplesurance/baur/v3/internal/version.GitCommit={{ .FullCommit }}"
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+archives:
+  - format: tar.xz
+    name_template: "{{ .ProjectName }}-{{ .Os }}_{{ .Arch }}-{{ .Version }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      # Do not include README.md and LICENCE file in archive
+      # (https://goreleaser-git-revert-1958-snapshot-auto.goreleaser.vercel.app/customization/archive/#packaging-only-the-binaries):
+      - none*
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
+  algorithm: sha256
+signs:
+  - artifacts: checksum
+    args:
+      - "--local-user"
+      - "0xC8B381683DBCEDFE"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+snapshot:
+  name_template: "{{ incpatch .Version }}-dev"
+changelog:
+  skip: false
+  sort: asc
+  filters:
+    exclude:
+      - '^README::'
+      - '^tests:'
