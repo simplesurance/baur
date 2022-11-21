@@ -60,7 +60,7 @@ func TestResolveSymlink(t *testing.T) {
 			testdir:   "directory_broken",
 			inputPath: "symlink",
 			validateFn: func(t *testing.T, err error, result []Input) {
-				require.ErrorContains(t, err, "no such file or directory")
+				require.ErrorContains(t, err, "file does not exist")
 				require.Len(t, result, 0)
 			},
 		},
@@ -76,7 +76,7 @@ func TestResolveSymlink(t *testing.T) {
 			testdir:   "file_broken",
 			inputPath: "symlink",
 			validateFn: func(t *testing.T, err error, result []Input) {
-				require.ErrorContains(t, err, "no such file or directory")
+				require.ErrorContains(t, err, "file does not exist")
 				require.Len(t, result, 0)
 			},
 		},
@@ -128,7 +128,7 @@ func TestResolveSymlink(t *testing.T) {
 			testdir:   "symlinks/directory_containing_broken_symlink",
 			inputPath: "**",
 			validateFn: func(t *testing.T, err error, result []Input) {
-				require.ErrorContains(t, err, "no such file or directory")
+				require.ErrorContains(t, err, "file does not exist")
 			},
 		},
 		{
@@ -136,7 +136,7 @@ func TestResolveSymlink(t *testing.T) {
 			inputPath: "directory_containing_broken_symlin**/**",
 			validateFn: func(t *testing.T, err error, result []Input) {
 				t.Log(err)
-				require.ErrorContains(t, err, "no such file or directory")
+				require.ErrorContains(t, err, "file does not exist")
 			},
 		},
 	}

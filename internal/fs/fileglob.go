@@ -1,6 +1,9 @@
 package fs
 
 import (
+	"errors"
+	"os"
+
 	"github.com/bmatcuk/doublestar/v4"
 )
 
@@ -9,14 +12,23 @@ import (
 // relative paths.
 // Files are resolved in the same way then filepath.Glob() does, with the
 // following exceptions:
-// - it also supports '**' to match files and directories recursively,
-// - it only returns paths to files, no directory paths,
-// - if a part of the pattern is a filepath and it does not exist, an errur is returned,
+//   - it also supports '**' to match files and directories recursively,
+//   - it only returns paths to files, no directory paths,
+//   - if a part of the pattern is a path and it does not exist an error that
+//     can be tested with os.IsNotExist() is returned.
+//
 // If a globPath doesn't match any files an empty []string is returned and
 // error is nil
 func FileGlob(pattern string) ([]string, error) {
-	globRes, err := doublestar.FilepathGlob(pattern, doublestar.WithFailOnIOErrors())
+	globRes, err := doublestar.FilepathGlob(
+		pattern,
+		doublestar.WithFailOnIOErrors(),
+		doublestar.WithFailOnPatternNotExist(),
+	)
 	if err != nil {
+		if errors.Is(err, doublestar.ErrPatternNotExist) {
+			return nil, os.ErrNotExist
+		}
 		return nil, err
 	}
 
