@@ -1,6 +1,11 @@
 release:
   draft: true
   prerelease: auto
+
+before:
+  hooks:
+    - scripts/ver-is-up2date.sh
+
 builds:
   - main: cmd/baur/main.go
     env:
