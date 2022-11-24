@@ -96,22 +96,31 @@ func WorktreeIsDirty(dir string) (bool, error) {
 // The returned paths are relative to dir.
 func UntrackedFiles(dir string) ([]string, error) {
 	const untrackedFilePrefix = "?? "
+	const ignoredFilePrefix = "!! "
 
 	var res []string
 
-	cmdResult, err := exec.Command("git", "status", "--porcelain").Directory(dir).ExpectSuccess().Run()
+	cmdResult, err := exec.
+		Command("git", "status", "--porcelain", "--untracked-files=all", "--ignored").
+		Directory(dir).ExpectSuccess().Run()
 	if err != nil {
 		return nil, err
 	}
 
 	scanner := bufio.NewScanner(bytes.NewReader(cmdResult.Output))
 	for scanner.Scan() {
+		var relPath string
+
 		line := scanner.Text()
-		if !strings.HasPrefix(line, untrackedFilePrefix) {
+		//nolint:gocritic // ifElseChain: rewrite if-else to switch statement
+		if strings.HasPrefix(line, untrackedFilePrefix) {
+			relPath = strings.TrimPrefix(line, untrackedFilePrefix)
+		} else if strings.HasPrefix(line, ignoredFilePrefix) {
+			relPath = strings.TrimPrefix(line, ignoredFilePrefix)
+		} else {
 			continue
 		}
 
-		relPath := strings.TrimPrefix(line, untrackedFilePrefix)
 		// on Windows git prints paths with forward slashes as
 		// separator, convert them to windows backslash seperators via
 		// filepath.FromSlash()
