@@ -240,9 +240,11 @@ func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
 			mustWriteRow(formatter, "", "", "", "")
 		}
 
-		mustWriteRow(formatter, "", "", "", "")
-		mustWriteRow(formatter, "", "", "Type:", term.Highlight("Excluded Files"))
-		mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.ExcludedFiles.Paths)
+		if len(task.UnresolvedInputs.ExcludedFiles.Paths) > 0 {
+			mustWriteRow(formatter, "", "", "", "")
+			mustWriteRow(formatter, "", "", "Type:", term.Highlight("Excluded Files"))
+			mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.ExcludedFiles.Paths)
+		}
 
 	}
 
