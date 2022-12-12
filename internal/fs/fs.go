@@ -196,6 +196,18 @@ func Mkdir(path string) error {
 	return os.MkdirAll(path, os.FileMode(0755))
 }
 
+// Mkdirs creates directories for all paths and their parent directories if
+// they don't exist
+func Mkdirs(paths ...string) error {
+	for _, p := range paths {
+		if err := Mkdir(p); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // AbsPaths ensures that all elements in paths are absolute paths.
 // If an element is not an absolute path, it is joined with rootPath.
 func AbsPaths(rootPath string, paths []string) []string {
