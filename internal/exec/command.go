@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 )
@@ -142,12 +143,18 @@ func (c *Cmd) Run() (*Result, error) {
 	cmd := exec.Command(c.path, c.args...)
 	cmd.Dir = c.dir
 	cmd.Env = c.env
+	cmd.SysProcAttr = defSysProcAttr()
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
 	}
 	cmd.Stderr = cmd.Stdout
+
+	// lock to thread because of:
+	// https://github.com/golang/go/issues/27505#issuecomment-713706104
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	c.debugfFn(c.debugfPrefix+"running '%s' in directory '%s'\n", cmdString(cmd), cmd.Dir)
 	err = cmd.Start()
@@ -171,7 +178,6 @@ func (c *Cmd) Run() (*Result, error) {
 
 	if err := in.Err(); err != nil {
 		_ = cmd.Wait()
-
 		return nil, err
 	}
 
