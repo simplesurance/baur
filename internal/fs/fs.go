@@ -191,7 +191,8 @@ func FileSize(path string) (int64, error) {
 	return stat.Size(), nil
 }
 
-// Mkdir creates recursively directories
+// Mkdir creates the the directory path and all parents if they don't exist.
+// The permissions of new directories are 0755.
 func Mkdir(path string) error {
 	return os.MkdirAll(path, os.FileMode(0755))
 }
