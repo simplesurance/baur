@@ -31,11 +31,8 @@ func (e ExitCodeError) Error() string {
 
 // Cmd represents a command that can be run.
 type Cmd struct {
-	path string
-	args []string
-	env  []string
+	*exec.Cmd
 
-	dir           string
 	debugfFn      func(format string, v ...interface{})
 	debugfPrefix  string
 	expectSuccess bool
@@ -47,10 +44,11 @@ type Cmd struct {
 // as Path.
 // By default a command is run in the current working directory.
 func Command(name string, arg ...string) *Cmd {
+	cmd := exec.Command(name, arg...)
+	cmd.SysProcAttr = defSysProcAttr()
+
 	return &Cmd{
-		path:         name,
-		args:         arg,
-		dir:          ".",
+		Cmd:          cmd,
 		debugfFn:     DefaultDebugfFn,
 		debugfPrefix: DefaultDebugPrefix,
 	}
@@ -58,14 +56,14 @@ func Command(name string, arg ...string) *Cmd {
 
 // Directory changes the directory in which the command is executed.
 func (c *Cmd) Directory(dir string) *Cmd {
-	c.dir = dir
+	c.Cmd.Dir = dir
 	return c
 }
 
-// Env specifies the environment variables that the process uses.
+// Env sets the environment variables that the process uses.
 // Each element is in the format KEY=VALUE.
 func (c *Cmd) Env(env []string) *Cmd {
-	c.env = env
+	c.Cmd.Env = env
 	return c
 }
 
@@ -143,10 +141,7 @@ func exitCodeFromErr(err error) (int, error) {
 
 // Run executes the command.
 func (c *Cmd) Run() (*Result, error) {
-	cmd := exec.Command(c.path, c.args...)
-	cmd.Dir = c.dir
-	cmd.Env = c.env
-	cmd.SysProcAttr = defSysProcAttr()
+	cmd := c.Cmd
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
@@ -197,6 +192,9 @@ func (c *Cmd) Run() (*Result, error) {
 		Dir:      cmd.Dir,
 		ExitCode: exitCode,
 		Output:   outBuf.Bytes(),
+	}
+	if result.Dir == "" {
+		result.Dir = "."
 	}
 
 	if c.expectSuccess && exitCode != 0 {
