@@ -67,14 +67,6 @@ func (c *Cmd) Env(env []string) *Cmd {
 	return c
 }
 
-// DebugfFunc sets the debug function for the command. It accepts a
-// printf-style printf function and call it for every line that the command
-// prints to STDOUT and STDERR when it's run.
-func (c *Cmd) DebugfFunc(fn func(format string, arg ...interface{})) *Cmd {
-	c.debugfFn = fn
-	return c
-}
-
 // DebugfPrefix sets a prefix that is prepended to the message that is passed to the Debugf function.
 func (c *Cmd) DebugfPrefix(prefix string) *Cmd {
 	c.debugfPrefix = prefix
