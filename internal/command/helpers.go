@@ -227,6 +227,11 @@ func exitOnErr(err error, msg ...interface{}) {
 	exitFunc(1)
 }
 
+func exitWithErrf(format string, v ...interface{}) {
+	stderr.ErrStrPrintf(format, v...)
+	exitFunc(1)
+}
+
 func mustTaskRepoRelPath(repositoryDir string, task *baur.Task) string {
 	path, err := filepath.Rel(repositoryDir, task.Directory)
 	exitOnErr(err)

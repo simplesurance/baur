@@ -63,6 +63,11 @@ func (s *Stream) ErrPrintf(err error, format string, a ...interface{}) {
 	s.ErrPrintln(err, fmt.Sprintf(format, a...))
 }
 
+// ErrStrPrintf prints a message prefixed with errorPrefix.
+func (s *Stream) ErrStrPrintf(format string, a ...interface{}) {
+	s.Printf(errorPrefix+" "+format, a...)
+}
+
 // PrintSep prints a separator line
 func (s *Stream) PrintSep() {
 	fmt.Fprintln(s.stream, separator)
