@@ -22,14 +22,14 @@ type Output interface {
 }
 
 // StdLogger is the logger that is used from the log functions in this package
-var StdLogger = New(false)
+var StdLogger = New(false, "")
 
 // New returns a new Logger that logs to Stderr.
 // Debug messages are only printed if debugEnabled is true
-func New(debugEnabled bool) *Logger {
+func New(debugEnabled bool, prefix string) *Logger {
 	return &Logger{
 		debugEnabled: debugEnabled,
-		output:       log.New(os.Stderr, "", 0),
+		output:       log.New(os.Stderr, prefix, log.Lmsgprefix),
 	}
 }
 
