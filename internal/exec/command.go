@@ -80,9 +80,6 @@ func (c *Cmd) ExpectSuccess() *Cmd {
 	return c
 }
 
-func HiddenFiles(dir string, overlayDir string, unhiddenFiles []string) {
-}
-
 func cmdString(cmd *exec.Cmd) string {
 	// cmd.Args[0] contains the command name, cmd.Path the absolute command path,
 	// omit cmd.Args[0] from the string
