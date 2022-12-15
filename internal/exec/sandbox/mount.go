@@ -2,10 +2,10 @@ package sandbox
 
 import (
 	"fmt"
+	"syscall"
 
 	"golang.org/x/sys/unix"
 
-	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
 )
 
@@ -46,47 +46,18 @@ func Mount(fs MountInfo) error {
 
 func Umount(fs MountInfo) error {
 	attrs := fs.MountAttrs()
-	log.Debugf("umounting %s filesystem at %s (umount flags: %d)", attrs.FsType, attrs.Target, attrs.UmountFlags)
-	return unix.Unmount(attrs.Target, attrs.UmountFlags)
-}
 
-type OverlayFsMount struct {
-	attrs MountAttrs
-	// TODO: are the following fields actually needed?
-	lowerDir string
-	upperDir string
-	workDir  string
-}
+	if log.DebugEnabled() {
+		var mountType string
+		if attrs.FsType != "" {
+			mountType = attrs.FsType + " filesystem"
+		} else if (attrs.MountFlags & syscall.MS_BIND) != 0 {
+			mountType = "bind mount"
 
-func NewOverlayFSMount(lowerdir, upperdir, workdir, mntpoint string) *OverlayFsMount {
-	return &OverlayFsMount{
-		attrs: MountAttrs{
-			Source: "none",
-			Target: mntpoint,
-			FsType: "overlay",
-			MountData: fmt.Sprintf("userxattr,lowerdir=%s,upperdir=%s,workdir=%s",
-				lowerdir, upperdir, workdir,
-			),
-		},
-		lowerDir: lowerdir,
-		upperDir: upperdir,
-		workDir:  workdir,
+		}
+
+		log.Debugf("umounting %s at %s (umount flags: %d)", mountType, attrs.Target, attrs.UmountFlags)
 	}
-}
 
-// Mkdirs creates the directories needed to mount the overlayFs.
-// These are the lowerdir, upperdir, workdir and mntpoint directories.
-// If the directories already exist, this is a noop.
-func (f *OverlayFsMount) Mkdirs() error {
-	return fs.Mkdirs(
-		f.lowerDir,
-		f.upperDir,
-		f.workDir,
-		f.attrs.Target,
-	)
-
-}
-
-func (f *OverlayFsMount) MountAttrs() *MountAttrs {
-	return &f.attrs
+	return unix.Unmount(attrs.Target, attrs.UmountFlags)
 }

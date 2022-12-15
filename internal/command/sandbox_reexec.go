@@ -50,14 +50,17 @@ func (c *sandboxReexecCmd) run(cmd *cobra.Command, args []string) {
 	hd, err := sandbox.HideFiles(info.RepositoryDir, tmpdir, []string{".baur.toml"})
 	exitOnErr(err, "hiding files in repository directory failed")
 
-	err = runShell(ctx)
+	err = runShell(ctx, info.RepositoryDir)
 	if err != nil {
+		// TODO print a nicer error message to distinguish starting the command failed and it exited with code != 0
 		stderr.ErrPrintf(err, "running shell failed")
 	}
 
+	// TODO: run cleanup function also when terminating because of a signal
+
 	closeErr := hd.Close()
 	if closeErr != nil {
-		stderr.ErrPrintf(err, "clean up failed")
+		stderr.ErrPrintf(closeErr, "cleanup failed")
 	}
 
 	if err != nil || closeErr != nil {
@@ -65,12 +68,13 @@ func (c *sandboxReexecCmd) run(cmd *cobra.Command, args []string) {
 	}
 }
 
-func runShell(ctx context.Context) error {
+func runShell(ctx context.Context, workingDir string) error {
 	stdout.Println("starting shell...")
 	cmd := exec.CommandContext(ctx, "bash")
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
+	cmd.Dir = workingDir
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Pdeathsig:  syscall.SIGKILL,
 		Foreground: true,

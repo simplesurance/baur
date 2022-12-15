@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
 )
 
@@ -90,10 +91,10 @@ func ReExecInNs(ctx context.Context, args []string, data io.Reader) error {
 // HiddenDirectory is directory in which all files that are not in an allow
 // list are hidden.
 type HiddenDirectory struct {
-	dir           string
-	tmpdir        string
-	unhiddenFiles []string
-	overlayFs     *OverlayFsMount
+	dir       string
+	tmpdir    string
+	overlayFs *OverlayFsMount
+	bindMount *BindMount
 }
 
 // HideFiles hides all files in dir that are not listen in unhiddenFiles.
@@ -112,22 +113,21 @@ type HiddenDirectory struct {
 // OverlayFs uses character device files to represent deleted dirs and files.
 func HideFiles(dir, tmpdir string, unhiddenFiles []string) (*HiddenDirectory, error) {
 	hd := HiddenDirectory{
-		dir:           dir,
-		unhiddenFiles: unhiddenFiles,
-		tmpdir:        tmpdir,
+		dir:    dir,
+		tmpdir: tmpdir,
 	}
 
 	if _, err := os.Stat(tmpdir); err == nil {
 		return nil, fmt.Errorf("tmpdir %q must not exist", tmpdir)
 	}
 
-	hd.overlayFs = NewOverlayFSMount(
-		filepath.Join(tmpdir, "lower"),
+	overlayFs := NewOverlayFSMount(
+		dir,
 		filepath.Join(tmpdir, "upper"),
 		filepath.Join(tmpdir, "work"),
 		filepath.Join(tmpdir, "mnt"),
 	)
-	err := hd.overlayFs.Mkdirs()
+	err := overlayFs.Mkdirs()
 	if err != nil {
 		if rmErr := os.RemoveAll(tmpdir); rmErr != nil {
 			return nil, fmt.Errorf("%s, deleting tmpdir during cleanup also failed: %s",
@@ -136,23 +136,54 @@ func HideFiles(dir, tmpdir string, unhiddenFiles []string) (*HiddenDirectory, er
 
 		return nil, err
 	}
-	if err := Mount(hd.overlayFs); err != nil {
-		err = fmt.Errorf("mount overlayfs failed: %w", err)
-		if rmErr := os.RemoveAll(tmpdir); rmErr != nil {
-			return nil, fmt.Errorf("%s, deleting tmpdir during cleanup also failed: %s",
-				err, rmErr)
+	if err := Mount(overlayFs); err != nil {
+		err = fmt.Errorf("mounting overlayfs failed: %w", err)
+		if cleanupErr := hd.Close(); cleanupErr != nil {
+			return nil, fmt.Errorf("%s, cleanup failed too: %s", err, cleanupErr)
 		}
 
-		return nil, fmt.Errorf("mounting overlayfs failed: %w", err)
+		return nil, err
 	}
+	hd.overlayFs = overlayFs
+
+	err = fs.RemoveAllExcept(overlayFs.MountPoint(), []string{".baur.toml"})
+	if err != nil {
+		err = fmt.Errorf("removing non-input files from overlayfs failed: %w", err)
+
+		if cleanupErr := hd.Close(); cleanupErr != nil {
+			return nil, fmt.Errorf("%s, cleanup failed too: %s", err, cleanupErr)
+		}
+
+		return nil, err
+	}
+
+	bindMount := NewBindMount(hd.overlayFs.MountPoint(), dir)
+	if err := Mount(bindMount); err != nil {
+		err = fmt.Errorf("bind mounting %q to %q failed: %w", hd.overlayFs.MountPoint(), dir, err)
+		if cleanupErr := hd.Close(); cleanupErr != nil {
+			return nil, fmt.Errorf("%s, cleanup failed too: %s", err, cleanupErr)
+		}
+
+		return nil, err
+	}
+	hd.bindMount = bindMount
 
 	return &hd, nil
 }
 
 func (h *HiddenDirectory) Close() error {
-	if err := Umount(h.overlayFs); err != nil {
-		return fmt.Errorf("umounting overlayfs failed: %w", err)
+	if h.bindMount != nil {
+		if err := Umount(h.bindMount); err != nil {
+			return fmt.Errorf("umounting bind mount: %w", err)
+		}
 	}
+
+	if h.overlayFs != nil {
+		if err := Umount(h.overlayFs); err != nil {
+			return fmt.Errorf("umounting overlayfs failed: %w", err)
+		}
+	}
+
 	if err := os.RemoveAll(h.tmpdir); err != nil {
 		return fmt.Errorf("deleting tmpdir failed: %w", err)
 	}

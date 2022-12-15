@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/exec/sandbox"
+	"github.com/simplesurance/baur/v3/pkg/baur"
 )
 
 // TODO: change this dir to a reasonable directory, make it configurable
@@ -30,8 +31,14 @@ type shellCmd struct {
 func newShellCmd() *shellCmd {
 	cmd := shellCmd{
 		Command: cobra.Command{
-			Use:   "shell",
+			Use:   "shell TASK-ID",
 			Short: "Start a shell in the run environment of a task",
+			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{
+				withoutWildcards: true,
+				withoutPaths:     true,
+				withoutAppNames:  true,
+			}),
+			Args: cobra.ExactArgs(1),
 		},
 	}
 	cmd.Run = cmd.run
@@ -42,7 +49,23 @@ func newShellCmd() *shellCmd {
 func (c *shellCmd) run(cmd *cobra.Command, args []string) {
 	var data bytes.Buffer
 
+	// TODO: bind mount read-only + print warning
+	// TODO: print message stating that no files can be changed in the repo-dir
+
 	repo := mustFindRepository()
+	vcsState := mustGetRepoState(repo.Path)
+	task := mustArgToTask(repo, vcsState, args[0])
+	inputs, err := baur.NewInputResolver(vcsState).Resolve(ctx, repo.Path, task)
+	exitOnErr(err, "resolving task inputs failed")
+	for _, input := range inputs {
+		inputFile, ok := input.(*baur.InputFile)
+		if !ok {
+			continue
+		}
+		inputFile.RelPath()
+
+	}
+
 	reexecData := sandboxReExecInfo{
 		RepositoryDir:   repo.Path,
 		OverlayFsTmpDir: overlayDir,

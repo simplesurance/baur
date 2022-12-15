@@ -4,8 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
+
+	"github.com/simplesurance/baur/v3/internal/log"
 )
 
 // IsFile returns true if path is a file.
@@ -248,4 +253,142 @@ func RealPath(path string) (string, error) {
 	}
 
 	return absPath, nil
+}
+
+// RemoveAllExcept deletes all files and directories in baseDir, except the ones matching paths in keep.
+// Symlinks are not followed.
+// // All files in keep are interpreted as relative paths to baseDir.
+func RemoveAllExcept(baseDir string, keep []string) error {
+	if runtime.GOOS == "windows" {
+		// TODO: check is here because of the strings prefix, check,
+		// does not work with windows paths
+		return fmt.Errorf("only unix OSes supported")
+	}
+
+	if len(keep) == 0 {
+		return fmt.Errorf("keep list is empty")
+	}
+
+	baseDir = filepath.Clean(baseDir)
+
+	if baseDir == string(filepath.Separator) {
+		// TODO: move this check to the caller(?)
+		return fmt.Errorf("runninig on root path not allowed")
+
+	}
+
+	// TODO: THIS IS HORRIBILY INEFFICIENT!
+	// - Instead of issueing delete operations per-file, issue them for
+	// directories if none of a file in dir needs to be kept.
+	// - Prevent calling rm empty dirs multiple times, by deleting also
+	//   a dir if it only contains empty directories
+	// Maybe use a tree structure to find matches in keep efficiently?
+	allowList := make(map[string]struct{}, len(keep))
+	for _, p := range keep {
+		var absPath string
+		if filepath.IsAbs(p) {
+			return fmt.Errorf("keep path %s is not a relative path", p)
+		}
+
+		absPath = filepath.Join(baseDir, p)
+
+		// check is done because a relative path containing "../" could escape baseDir otherwise
+		if !strings.HasPrefix(absPath, baseDir+string(filepath.Separator)) {
+			return fmt.Errorf("%s (%s) path of keep list is not in the baseDir %s", p, absPath, baseDir)
+		}
+		allowList[absPath] = struct{}{}
+	}
+
+	var rmNonAllowedFiles fs.WalkDirFunc
+	rmNonAllowedFiles = func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		if _, exist := allowList[path]; !exist {
+			// TODO: IS THIS SAFE ENOUGH?? CHECK IF FILE IS REALLY
+			// IN MNT DIR?
+			log.Debugf("deleting %s", path)
+			err := os.Remove(path)
+			if err != nil {
+				return err
+			}
+
+		} else {
+
+			//log.Debugf("keep %q", path)
+		}
+
+		return nil
+	}
+
+	err := filepath.WalkDir(baseDir, rmNonAllowedFiles)
+	if err != nil {
+		return err
+	}
+
+	var rmEmptyDirs fs.WalkDirFunc
+	foundEmptyDir := false
+	rmEmptyDirs = func(path string, d fs.DirEntry, err error) error {
+		if path == baseDir {
+			return nil
+		}
+
+		if err != nil {
+			if os.IsNotExist(err) {
+				//log.Debugf("not exist %q", path)
+				return nil
+			}
+			return err
+		}
+
+		if !d.IsDir() {
+			return nil
+		}
+
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				//log.Debugf("not exist %q", path)
+				return nil
+			}
+			return err
+		}
+
+		for _, e := range entries {
+			log.Debugf("%v: %v", path, e.Name())
+		}
+		if len(entries) == 0 {
+			log.Debugf("deleting %s", path)
+			err := os.Remove(path)
+			if err != nil {
+				if os.IsNotExist(err) {
+					log.Debugf("not exist %q", path)
+					return nil
+				}
+				return err
+			}
+			foundEmptyDir = true
+		}
+
+		return nil
+
+	}
+
+	for {
+		foundEmptyDir = false
+		err = filepath.WalkDir(baseDir, rmEmptyDirs)
+		if err != nil {
+			return err
+		}
+		if !foundEmptyDir {
+			log.Debugf("no empty dir found")
+			return nil
+		}
+		log.Debugln("empty dir found, again..")
+	}
 }
