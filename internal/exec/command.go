@@ -5,10 +5,15 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 	"syscall"
+	"time"
+
+	"github.com/simplesurance/baur/v3/internal/log"
 )
 
 var (
@@ -132,6 +137,133 @@ func (c *Cmd) Run() (*Result, error) {
 	}
 
 	return &result, nil
+}
+
+const ReExecDataPipeFD uintptr = 3
+
+// ReExecInNs executes the current running binary (/proc/self/exe) again in
+// a new Linux user- and mount Namespace.
+// args are passed as command line arguments.
+// data is piped to the the process via file-descriptor 3. If data is passed,
+// the process must read it, otherwise the operation will fail.
+// data is usually information that tells the new process what to do.
+// The reexecuted process will run with uid & gid 0 but have the same
+// permissions then the currently executing process.
+func (c *Cmd) RunInNs(data io.Reader) (*Result, error) {
+	//cmd := exec.CommandContext(ctx, "/proc/self/exe", args...)
+	cmd := c.Cmd
+
+	outReader, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	cmd.Stderr = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	xtraReader, xtraWriter, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+	defer xtraReader.Close()
+	// xtraWriter is closed without defer
+	cmd.ExtraFiles = []*os.File{xtraReader}
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Unshareflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS,
+		UidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getuid(),
+				Size:        1,
+			},
+		},
+		GidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getgid(),
+				Size:        1,
+			},
+		},
+	}
+
+	log.Debugf("starting new process of myself (%q) in new user and mount namespaces", cmd)
+
+	// lock to thread because of:
+	// https://github.com/golang/go/issues/27505#issuecomment-713706104
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	err = cmd.Start()
+	if err != nil {
+		xtraWriter.Close()
+		return nil, err
+	}
+
+	err = xtraWriter.SetWriteDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		log.Debugf("WARN: setting deadling on pipe failed: %s", err)
+	}
+
+	_, err = io.Copy(xtraWriter, data)
+	if err != nil {
+		err = fmt.Errorf("piping data to child process failed: %w", err)
+		killErr := cmd.Process.Kill()
+		if killErr != nil {
+			return nil, fmt.Errorf("%s, killing the child process (pid: %d) too: %s",
+				err, cmd.Process.Pid, killErr)
+		}
+
+		return nil, err
+	}
+	_ = xtraWriter.Close()
+
+	var outBuf bytes.Buffer
+	firstline := true
+	in := bufio.NewScanner(outReader)
+	for in.Scan() {
+		c.debugfFn(c.debugfPrefix + in.Text() + "\n")
+		if firstline {
+			firstline = false
+		} else {
+			outBuf.WriteRune('\n')
+		}
+
+		outBuf.Write(in.Bytes())
+	}
+
+	if err := in.Err(); err != nil {
+		err := fmt.Errorf("reading from stdout pipe failed: %w", err)
+		if waitErr := cmd.Wait(); waitErr != nil {
+			return nil, fmt.Errorf("%s, executing the command failed too: %s", err, waitErr)
+		}
+
+		return nil, err
+	}
+
+	var exitCode int
+	waitErr := cmd.Wait()
+	if exitCode, err = exitCodeFromErr(waitErr); err != nil {
+		return nil, err
+	}
+
+	c.debugfFn(c.debugfPrefix+"command terminated with exitCode: %d\n", exitCode)
+
+	result := Result{
+		Command:  cmdString(cmd),
+		Dir:      cmd.Dir,
+		ExitCode: exitCode,
+		Output:   outBuf.Bytes(),
+	}
+	if result.Dir == "" {
+		result.Dir = "."
+	}
+
+	if c.expectSuccess && exitCode != 0 {
+		return nil, ExitCodeError{Result: &result}
+	}
+
+	return &result, nil
+
 }
 
 func cmdString(cmd *exec.Cmd) string {

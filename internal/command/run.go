@@ -209,8 +209,18 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 		// the closure is executed
 		ptCopy := pt
 		c.taskRunnerRoutinePool.Queue(func() {
+			var runResult *baur.RunResult
+			var err error
+
 			task := ptCopy.task
-			runResult, err := c.runTask(task)
+
+			runResult, err = c.taskRunner.RunIsolated(task, *ptCopy.inputs)
+			//if repo.Cfg.TaskIsolation.Enabled {
+			//	runResult, err = c.taskRunner.RunIsolated(task, *ptCopy.inputs)
+			//} else {
+			//	runResult, err = c.runTask(task)
+			//}
+
 			if err != nil {
 				// error is printed in runTask()
 				c.skipAllScheduledTaskRuns()

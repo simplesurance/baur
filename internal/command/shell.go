@@ -14,8 +14,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/exec/sandbox"
+	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 )
 
@@ -63,11 +62,16 @@ func (c *shellCmd) run(cmd *cobra.Command, args []string) {
 	// TODO: print message stating that no files can be changed in the repo-dir
 
 	repo := mustFindRepository()
-	if len(repo.Cfg.TaskIsolation.ShellCommand) == 0 {
-		exitWithErrf("shell command to execute is unknown.\nPlease specify the %s field in the %s configuration file.",
-			term.Highlight("TaskIsolation.ShellCommand"),
-			baur.RepositoryCfgFile)
+	// TODO: UNCOMMENT + USE IT in COMMAND
+	//if len(repo.Cfg.TaskIsolation.ShellCommand) == 0 {
+	//	exitWithErrf("shell command to execute is unknown.\nPlease specify the %s field in the %s configuration file.",
+	//		term.Highlight("TaskIsolation.ShellCommand"),
+	//		baur.RepositoryCfgFile)
 
+	//}
+	runCmd := repo.Cfg.TaskIsolation.ShellCommand
+	if len(runCmd) == 0 {
+		runCmd = []string{"bash"}
 	}
 
 	vcsState := mustGetRepoState(repo.Path)
@@ -75,12 +79,13 @@ func (c *shellCmd) run(cmd *cobra.Command, args []string) {
 	inputs, err := baur.NewInputResolver(vcsState).Resolve(ctx, repo.Path, task)
 	exitOnErr(err, "resolving task inputs failed")
 
-	reExecInfoBuf, err := (&sandboxReExecInfo{
+	reExecInfoBuf, err := (&exec.ReExecInfo{
 		RepositoryDir:       repo.Path,
 		OverlayFsTmpDir:     overlayDir,
-		Command:             []string{"bash"},
+		Command:             runCmd,
+		WorkingDirectory:    repo.Path,
 		AllowedFilesRelPath: append(relFileInputPaths(inputs), alwaysAllowed...),
-	}).encode()
+	}).Encode()
 
 	exitOnErr(err, "encoding info for _sandbox_reexec failed")
 
@@ -88,7 +93,17 @@ func (c *shellCmd) run(cmd *cobra.Command, args []string) {
 		fmt.Sprintf("--verbose=%t", verboseFlag),
 		"__sandbox_reexec",
 	}
-	err = sandbox.ReExecInNs(ctx, reExecArgs, reExecInfoBuf)
+	exec.DefaultDebugfFn = stdout.Printf
+	_, err = exec.Command("/proc/self/exe", reExecArgs...).
+		// TODO: this does not make sense:
+		// - pipe output of command direct to to os.Stdout and
+		// os.Stderr, instead of to buffer and loosing stdout/stderr
+		// distinction
+		// - also it looses support for displaying colors, because stdout won't be a terminal anymore
+		DebugfPrefix("").
+		ExpectSuccess().
+		RunInNs(reExecInfoBuf)
+
 	exitOnErr(err)
 }
 

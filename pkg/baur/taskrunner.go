@@ -55,6 +55,63 @@ func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
 	}, nil
 }
 
+// TODO: DUPLICATE FROM INTERNAL/COMMAND/SHELL.GO, DO NOT DO THIS
+var alwaysAllowed = []string{
+	".baur.toml",
+	".git",
+}
+
+func (t *TaskRunner) RunIsolated(task *Task, inputs Inputs) (*RunResult, error) {
+	startTime := time.Now()
+
+	if t.SkipRunsIsEnabled() {
+		return nil, ErrTaskRunSkipped
+	}
+
+	// TODO: FIX HARDCODED VERBOSE FLAG
+	args := []string{
+		fmt.Sprintf("--verbose=%t", false),
+		"__sandbox_reexec",
+	}
+
+	reExecInfoBuf, err := (&exec.ReExecInfo{
+		RepositoryDir:       task.RepositoryRoot,
+		OverlayFsTmpDir:     "/home/fho/tmp", // TODO: CHANGE THIS!!!!!!!!!!!
+		Command:             task.Command,
+		WorkingDirectory:    task.Directory,
+		AllowedFilesRelPath: append(relFileInputPaths(inputs.Inputs()), alwaysAllowed...),
+	}).Encode()
+
+	execResult, err := exec.Command("/proc/self/exe", args...).
+		DebugfPrefix(color.YellowString(fmt.Sprintf("%s: ", task))).
+		RunInNs(reExecInfoBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RunResult{
+		Result:    execResult,
+		StartTime: startTime,
+		StopTime:  time.Now(),
+	}, nil
+}
+
+// TODO: THIS IS DUPLICATED FROM INTERNAL/COMMAND/SHELL.GO, DO NOT DO THAT!
+func relFileInputPaths(inputs []Input) []string {
+	result := make([]string, 0, len(inputs))
+
+	for _, input := range inputs {
+		inputFile, ok := input.(*InputFile)
+		if !ok {
+			continue
+		}
+
+		result = append(result, inputFile.RelPath())
+	}
+
+	return result
+}
+
 func (t *TaskRunner) setSkipRuns(val uint32) {
 	atomic.StoreUint32(&t.skipEnabled, val)
 }

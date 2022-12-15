@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -61,6 +62,12 @@ func ReExecInNs(ctx context.Context, args []string, data io.Reader) error {
 	defer pipeReader.Close()
 
 	log.Debugf("starting new process of myself (%q) in new user and mount namespaces", cmd)
+
+	// lock to thread because of:
+	// https://github.com/golang/go/issues/27505#issuecomment-713706104
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
 	err = cmd.Start()
 	if err != nil {
 		pipeWriter.Close()

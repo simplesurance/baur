@@ -1,11 +1,9 @@
 package command
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
+	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	baur_exec "github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/exec/sandbox"
 	"github.com/simplesurance/baur/v3/internal/log"
 )
@@ -44,7 +43,7 @@ func newSandboxReexecCmd() *sandboxReexecCmd {
 
 func (c *sandboxReexecCmd) run(cmd *cobra.Command, args []string) {
 	fd := os.NewFile(sandbox.ReExecDataPipeFD, "reexec-data")
-	info, err := sandboxReExecInfoDecode(fd)
+	info, err := baur_exec.ReExecInfoDecode(fd)
 	_ = fd.Close()
 	exitOnErrf(err, "decoding data from fd %d into %T failed", sandbox.ReExecDataPipeFD, &info)
 
@@ -55,7 +54,7 @@ func (c *sandboxReexecCmd) run(cmd *cobra.Command, args []string) {
 	hd, err := sandbox.HideFiles(info.RepositoryDir, tmpdir, info.AllowedFilesRelPath)
 	exitOnErr(err, "hiding files in repository directory failed")
 
-	err = runShell(ctx, info.Command, info.RepositoryDir)
+	err = runShell(ctx, info.Command, info.WorkingDirectory)
 	if err != nil {
 		// TODO print a nicer error message to distinguish starting the command failed and it exited with code != 0
 		stderr.ErrPrintf(err, "running shell failed")
@@ -74,9 +73,19 @@ func (c *sandboxReexecCmd) run(cmd *cobra.Command, args []string) {
 }
 
 func runShell(ctx context.Context, command []string, workingDir string) error {
+	if len(command) == 0 {
+		return errors.New("command to execute is unspecified")
+	}
+	var args []string
+
 	// TODO: use our exec package
-	stdout.Println("starting shell...")
-	cmd := exec.CommandContext(ctx, "bash")
+	name := command[0]
+	if len(command) > 1 {
+		args = command[1:]
+	}
+
+	stdout.Printf("starting %s...\n", name)
+	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
@@ -87,33 +96,4 @@ func runShell(ctx context.Context, command []string, workingDir string) error {
 	}
 
 	return cmd.Run()
-}
-
-type sandboxReExecInfo struct {
-	RepositoryDir       string
-	OverlayFsTmpDir     string
-	Command             []string
-	AllowedFilesRelPath []string
-}
-
-func (s *sandboxReExecInfo) encode() (*bytes.Buffer, error) {
-	var buf bytes.Buffer
-
-	err := gob.NewEncoder(&buf).Encode(s)
-	if err != nil {
-		return nil, err
-	}
-
-	return &buf, nil
-}
-
-func sandboxReExecInfoDecode(r io.ReadCloser) (*sandboxReExecInfo, error) {
-	var result sandboxReExecInfo
-
-	err := gob.NewDecoder(r).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, err
 }
