@@ -18,17 +18,6 @@ var (
 	DefaultDebugPrefix = "exec: "
 )
 
-// ExitCodeError is returned from Run() when a command exited with a code != 0.
-type ExitCodeError struct {
-	*Result
-}
-
-// Error returns the error description.
-func (e ExitCodeError) Error() string {
-	return fmt.Sprintf("exec: running '%s' in directory '%s' exited with code %d, expected 0, output: '%s'",
-		e.Command, e.Dir, e.ExitCode, e.Output)
-}
-
 // Cmd represents a command that can be run.
 type Cmd struct {
 	*exec.Cmd
@@ -78,44 +67,6 @@ func (c *Cmd) DebugfPrefix(prefix string) *Cmd {
 func (c *Cmd) ExpectSuccess() *Cmd {
 	c.expectSuccess = true
 	return c
-}
-
-func cmdString(cmd *exec.Cmd) string {
-	// cmd.Args[0] contains the command name, cmd.Path the absolute command path,
-	// omit cmd.Args[0] from the string
-	if len(cmd.Args) > 1 {
-		return fmt.Sprintf("%s %v", cmd.Path, strings.Join(cmd.Args[1:], " "))
-	}
-
-	return cmd.Path
-}
-
-// Result describes the result of a run Cmd.
-type Result struct {
-	Command  string
-	Dir      string
-	Output   []byte
-	ExitCode int
-}
-
-// StrOutput returns Result.Output as string.
-func (r *Result) StrOutput() string {
-	return string(r.Output)
-}
-
-func exitCodeFromErr(err error) (int, error) {
-	var ee *exec.ExitError
-	var ok bool
-
-	if ee, ok = err.(*exec.ExitError); !ok {
-		return 0, err
-	}
-
-	if status, ok := ee.Sys().(syscall.WaitStatus); ok {
-		return status.ExitStatus(), nil
-	}
-
-	return 0, err
 }
 
 // Run executes the command.
@@ -181,4 +132,29 @@ func (c *Cmd) Run() (*Result, error) {
 	}
 
 	return &result, nil
+}
+
+func cmdString(cmd *exec.Cmd) string {
+	// cmd.Args[0] contains the command name, cmd.Path the absolute command path,
+	// omit cmd.Args[0] from the string
+	if len(cmd.Args) > 1 {
+		return fmt.Sprintf("%s %v", cmd.Path, strings.Join(cmd.Args[1:], " "))
+	}
+
+	return cmd.Path
+}
+
+func exitCodeFromErr(err error) (int, error) {
+	var ee *exec.ExitError
+	var ok bool
+
+	if ee, ok = err.(*exec.ExitError); !ok {
+		return 0, err
+	}
+
+	if status, ok := ee.Sys().(syscall.WaitStatus); ok {
+		return status.ExitStatus(), nil
+	}
+
+	return 0, err
 }
