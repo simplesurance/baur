@@ -305,11 +305,20 @@ func RemoveAllExcept(baseDir string, keep []string) error {
 			return err
 		}
 
-		if d.IsDir() {
+		if path == baseDir {
 			return nil
 		}
 
-		if _, exist := allowList[path]; !exist {
+		_, allowed := allowList[path]
+		if d.IsDir() {
+			if allowed {
+				return filepath.SkipDir
+			} else {
+				return nil
+			}
+		}
+
+		if !allowed {
 			// TODO: IS THIS SAFE ENOUGH?? CHECK IF FILE IS REALLY
 			// IN MNT DIR?
 			log.Debugf("deleting %s", path)
@@ -317,10 +326,6 @@ func RemoveAllExcept(baseDir string, keep []string) error {
 			if err != nil {
 				return err
 			}
-
-		} else {
-
-			//log.Debugf("keep %q", path)
 		}
 
 		return nil
@@ -334,16 +339,16 @@ func RemoveAllExcept(baseDir string, keep []string) error {
 	var rmEmptyDirs fs.WalkDirFunc
 	foundEmptyDir := false
 	rmEmptyDirs = func(path string, d fs.DirEntry, err error) error {
-		if path == baseDir {
-			return nil
-		}
-
 		if err != nil {
 			if os.IsNotExist(err) {
 				//log.Debugf("not exist %q", path)
 				return nil
 			}
 			return err
+		}
+
+		if path == baseDir {
+			return nil
 		}
 
 		if !d.IsDir() {

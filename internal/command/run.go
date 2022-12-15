@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -144,6 +145,14 @@ func (c *runCmd) run(cmd *cobra.Command, args []string) {
 	startTime := time.Now()
 
 	repo := mustFindRepository()
+	if repo.Cfg.TaskIsolation.Enabled && runtime.GOOS != "linux" {
+		exitWithErrf("TaskIsolation is only supported on Linux.\n"+
+			"Set %s to %s in the %s repository config file.",
+			term.Highlight("TaskIsolation.Enabled"),
+			term.Highlight("false"),
+			baur.RepositoryCfgFile,
+		)
+	}
 	c.repoRootPath = repo.Path
 
 	c.storage = mustNewCompatibleStorage(repo)

@@ -20,8 +20,9 @@ const (
 type Repository struct {
 	ConfigVersion int `toml:"config_version" comment:"Internal field, version of baur configuration format"`
 
-	Database Database
-	Discover Discover
+	Database      Database
+	Discover      Discover
+	TaskIsolation TaskIsolation
 
 	filePath string
 }
@@ -35,6 +36,13 @@ type Database struct {
 type Discover struct {
 	Dirs        []string `toml:"application_dirs" comment:"Directories in which applications (.app.toml files) are discovered"`
 	SearchDepth int      `toml:"search_depth" comment:"Descend at most search_depth levels to find application configs"`
+}
+
+// TaskIsolation contains settings related to executing Commands of Tasks in
+// isolated environments.
+type TaskIsolation struct {
+	Enabled      bool     `toml:"enabled" comment:"Allow task commands to only access repository files listed as it's inputs."`
+	ShellCommand []string `toml:"shell_command" comment:"The command ran by 'baur shell.\n"`
 }
 
 // RepositoryFromFile reads the repository config from a file and returns it.
@@ -68,6 +76,10 @@ func ExampleRepository() *Repository {
 
 		Database: Database{
 			PGSQLURL: "postgres://postgres@localhost:5432/baur?sslmode=disable&connect_timeout=5",
+		},
+		TaskIsolation: TaskIsolation{
+			Enabled:      false,
+			ShellCommand: []string{"/bin/bash"},
 		},
 	}
 }

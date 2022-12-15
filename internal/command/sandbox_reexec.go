@@ -1,9 +1,11 @@
 package command
 
 import (
+	"bytes"
 	"context"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,8 +28,13 @@ type sandboxReexecCmd struct {
 func newSandboxReexecCmd() *sandboxReexecCmd {
 	cmd := sandboxReexecCmd{
 		Command: cobra.Command{
-			Use:   "__sandbox_reexec",
-			Short: "internal command",
+			Use:               "__sandbox_reexec",
+			Short:             "internal command",
+			Hidden:            true,
+			ValidArgsFunction: cobra.NoFileCompletions,
+			PersistentPreRun: func(_ *cobra.Command, _ []string) {
+				log.StdLogger = log.New(verboseFlag, "reexec: ") // TODO: better prefix?
+			},
 		},
 	}
 	cmd.Run = cmd.run
@@ -36,21 +43,19 @@ func newSandboxReexecCmd() *sandboxReexecCmd {
 }
 
 func (c *sandboxReexecCmd) run(cmd *cobra.Command, args []string) {
-	var info sandboxReExecInfo
 	fd := os.NewFile(sandbox.ReExecDataPipeFD, "reexec-data")
-	err := gob.NewDecoder(fd).Decode(&info)
-	exitOnErrf(err, "decoding data from fd %d into %T failed", sandbox.ReExecDataPipeFD, &info)
+	info, err := sandboxReExecInfoDecode(fd)
 	_ = fd.Close()
+	exitOnErrf(err, "decoding data from fd %d into %T failed", sandbox.ReExecDataPipeFD, &info)
 
-	// TODO: add prefix to all log messages, that indicates that messages are logged from child process
 	log.Debugf("received the following data from parent process: +%v", info)
 
 	// TODO: rename info.OverlayFsTmpDir??
 	tmpdir := filepath.Join(info.OverlayFsTmpDir, fmt.Sprint(os.Getpid()))
-	hd, err := sandbox.HideFiles(info.RepositoryDir, tmpdir, []string{".baur.toml"})
+	hd, err := sandbox.HideFiles(info.RepositoryDir, tmpdir, info.AllowedFilesRelPath)
 	exitOnErr(err, "hiding files in repository directory failed")
 
-	err = runShell(ctx, info.RepositoryDir)
+	err = runShell(ctx, info.Command, info.RepositoryDir)
 	if err != nil {
 		// TODO print a nicer error message to distinguish starting the command failed and it exited with code != 0
 		stderr.ErrPrintf(err, "running shell failed")
@@ -68,7 +73,8 @@ func (c *sandboxReexecCmd) run(cmd *cobra.Command, args []string) {
 	}
 }
 
-func runShell(ctx context.Context, workingDir string) error {
+func runShell(ctx context.Context, command []string, workingDir string) error {
+	// TODO: use our exec package
 	stdout.Println("starting shell...")
 	cmd := exec.CommandContext(ctx, "bash")
 	cmd.Stderr = os.Stderr
@@ -81,4 +87,33 @@ func runShell(ctx context.Context, workingDir string) error {
 	}
 
 	return cmd.Run()
+}
+
+type sandboxReExecInfo struct {
+	RepositoryDir       string
+	OverlayFsTmpDir     string
+	Command             []string
+	AllowedFilesRelPath []string
+}
+
+func (s *sandboxReExecInfo) encode() (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+
+	err := gob.NewEncoder(&buf).Encode(s)
+	if err != nil {
+		return nil, err
+	}
+
+	return &buf, nil
+}
+
+func sandboxReExecInfoDecode(r io.ReadCloser) (*sandboxReExecInfo, error) {
+	var result sandboxReExecInfo
+
+	err := gob.NewDecoder(r).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, err
 }

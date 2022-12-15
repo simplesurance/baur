@@ -146,7 +146,7 @@ func HideFiles(dir, tmpdir string, unhiddenFiles []string) (*HiddenDirectory, er
 	}
 	hd.overlayFs = overlayFs
 
-	err = fs.RemoveAllExcept(overlayFs.MountPoint(), []string{".baur.toml"})
+	err = fs.RemoveAllExcept(overlayFs.MountPoint(), unhiddenFiles)
 	if err != nil {
 		err = fmt.Errorf("removing non-input files from overlayfs failed: %w", err)
 

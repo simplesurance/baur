@@ -7,12 +7,14 @@ package command
 // - configure shell completion
 
 import (
-	"bytes"
-	"encoding/gob"
+	"errors"
 	"fmt"
+	"os"
+	"runtime"
 
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/internal/exec/sandbox"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 )
@@ -47,43 +49,60 @@ func newShellCmd() *shellCmd {
 }
 
 func (c *shellCmd) run(cmd *cobra.Command, args []string) {
-	var data bytes.Buffer
+	if runtime.GOOS != "linux" {
+		stderr.ErrPrintln(errors.New("This command is only supported on Linux."))
+		os.Exit(1)
+	}
+
+	alwaysAllowed := []string{
+		".baur.toml",
+		".git/",
+	}
 
 	// TODO: bind mount read-only + print warning
 	// TODO: print message stating that no files can be changed in the repo-dir
 
 	repo := mustFindRepository()
+	if len(repo.Cfg.TaskIsolation.ShellCommand) == 0 {
+		exitWithErrf("shell command to execute is unknown.\nPlease specify the %s field in the %s configuration file.",
+			term.Highlight("TaskIsolation.ShellCommand"),
+			baur.RepositoryCfgFile)
+
+	}
+
 	vcsState := mustGetRepoState(repo.Path)
 	task := mustArgToTask(repo, vcsState, args[0])
 	inputs, err := baur.NewInputResolver(vcsState).Resolve(ctx, repo.Path, task)
 	exitOnErr(err, "resolving task inputs failed")
-	for _, input := range inputs {
-		inputFile, ok := input.(*baur.InputFile)
-		if !ok {
-			continue
-		}
-		inputFile.RelPath()
 
-	}
+	reExecInfoBuf, err := (&sandboxReExecInfo{
+		RepositoryDir:       repo.Path,
+		OverlayFsTmpDir:     overlayDir,
+		Command:             []string{"bash"},
+		AllowedFilesRelPath: append(relFileInputPaths(inputs), alwaysAllowed...),
+	}).encode()
 
-	reexecData := sandboxReExecInfo{
-		RepositoryDir:   repo.Path,
-		OverlayFsTmpDir: overlayDir,
-		Command:         []string{"bash"},
-	}
-	err := gob.NewEncoder(&data).Encode(&reexecData)
-	exitOnErr(err, "encoding info for _sandbox_reexec failed: %w", err)
+	exitOnErr(err, "encoding info for _sandbox_reexec failed")
 
 	reExecArgs := []string{
 		fmt.Sprintf("--verbose=%t", verboseFlag),
 		"__sandbox_reexec",
 	}
-	err = sandbox.ReExecInNs(ctx, reExecArgs, &data)
+	err = sandbox.ReExecInNs(ctx, reExecArgs, reExecInfoBuf)
 	exitOnErr(err)
 }
 
-type sandboxReExecInfo struct {
-	RepositoryDir   string
-	OverlayFsTmpDir string
-	Command         []string
+func relFileInputPaths(inputs []baur.Input) []string {
+	result := make([]string, 0, len(inputs))
+
+	for _, input := range inputs {
+		inputFile, ok := input.(*baur.InputFile)
+		if !ok {
+			continue
+		}
+
+		result = append(result, inputFile.RelPath())
+	}
+
+	return result
 }
