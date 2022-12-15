@@ -60,9 +60,9 @@ func (c *Cmd) Directory(dir string) *Cmd {
 	return c
 }
 
-// Env sets the environment variables that the process uses.
+// SetEnv sets the environment variables that the process uses.
 // Each element is in the format KEY=VALUE.
-func (c *Cmd) Env(env []string) *Cmd {
+func (c *Cmd) SetEnv(env []string) *Cmd {
 	c.Cmd.Env = env
 	return c
 }

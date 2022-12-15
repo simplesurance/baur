@@ -19,7 +19,7 @@ type goEnv struct {
 func getGoEnv(env []string) (*goEnv, error) {
 	var result goEnv
 
-	res, err := exec.Command("go", "env", "-json").Env(env).ExpectSuccess().Run()
+	res, err := exec.Command("go", "env", "-json").SetEnv(env).ExpectSuccess().Run()
 	if err != nil {
 		return nil, err
 	}

@@ -37,7 +37,7 @@ func deathSignalParent() {
 	DefaultDebugfFn = func(format string, a ...any) { fmt.Printf(format, a...) }
 
 	cmd := Command(os.Args[0]).
-		Env([]string{
+		SetEnv([]string{
 			"BAUR_EXEC_DEATHSIG_TEST_PARENT=",
 			"BAUR_EXEC_DEATHSIG_TEST_CHILD=1",
 		})
