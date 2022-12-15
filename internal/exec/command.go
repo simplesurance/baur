@@ -103,16 +103,6 @@ func (r *Result) StrOutput() string {
 	return string(r.Output)
 }
 
-// ExpectSuccess if the ExitCode in Result is not 0, the function returns an
-// ExitCodeError for the execution.
-func (r *Result) ExpectSuccess() error {
-	if r.ExitCode == 0 {
-		return nil
-	}
-
-	return ExitCodeError{Result: r}
-}
-
 func exitCodeFromErr(err error) (int, error) {
 	var ee *exec.ExitError
 	var ok bool
