@@ -64,8 +64,9 @@ func (s *Stream) ErrPrintf(err error, format string, a ...interface{}) {
 }
 
 // ErrStrPrintf prints a message prefixed with errorPrefix.
+// It always prints a newline character.
 func (s *Stream) ErrStrPrintf(format string, a ...interface{}) {
-	s.Printf(errorPrefix+" "+format, a...)
+	s.Printf(errorPrefix+" "+format+"\n", a...)
 }
 
 // PrintSep prints a separator line
