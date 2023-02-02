@@ -24,6 +24,7 @@ func FileGlob(pattern string) ([]string, error) {
 		pattern,
 		doublestar.WithFailOnIOErrors(),
 		doublestar.WithFailOnPatternNotExist(),
+		doublestar.WithFilesOnly(),
 	)
 	if err != nil {
 		if errors.Is(err, doublestar.ErrPatternNotExist) {
@@ -32,21 +33,14 @@ func FileGlob(pattern string) ([]string, error) {
 		return nil, err
 	}
 
-	res := make([]string, 0, len(globRes))
 	for _, path := range globRes {
-		isFile, err := IsFile(path)
+		_, err = os.Stat(path)
 		if err != nil {
 			return nil, err
 		}
-
-		if !isFile {
-			continue
-		}
-
-		res = append(res, path)
 	}
 
-	return res, err
+	return globRes, err
 }
 
 func MatchGlob(pattern, path string) (bool, error) {
