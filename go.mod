@@ -3,9 +3,9 @@ module github.com/simplesurance/baur/v3
 go 1.19
 
 require (
-	github.com/Microsoft/hcsshim v0.9.5 // indirect
+	github.com/Microsoft/hcsshim v0.9.6 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
-	github.com/containerd/containerd v1.6.10 // indirect
+	github.com/containerd/containerd v1.6.18 // indirect
 	github.com/docker/docker v20.10.22+incompatible // indirect
 	github.com/fatih/color v1.13.0
 	github.com/fsouza/go-dockerclient v1.9.1
