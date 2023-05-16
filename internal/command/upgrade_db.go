@@ -42,7 +42,7 @@ func newUpgradeDatabaseCmd() *upgradeDbCmd {
 	return &cmd
 }
 
-func (*upgradeDbCmd) run(cmd *cobra.Command, _ []string) {
+func (*upgradeDbCmd) run(_ *cobra.Command, _ []string) {
 	repo := mustFindRepository()
 
 	clt, err := newStorageClient(mustGetPSQLURI(repo.Cfg))

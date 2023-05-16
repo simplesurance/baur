@@ -112,7 +112,7 @@ func (incl *Include) validateUniqIncludeIDs() error {
 }
 
 // ExampleInclude returns an Include struct with exemplary values.
-func ExampleInclude(id string) *Include {
+func ExampleInclude() *Include {
 	return &Include{
 		Input: []*InputInclude{
 			{

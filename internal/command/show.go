@@ -58,7 +58,7 @@ func newShowCmd() *showCmd {
 	return &cmd
 }
 
-func (c *showCmd) run(cmd *cobra.Command, args []string) {
+func (c *showCmd) run(_ *cobra.Command, args []string) {
 	arg := args[0]
 
 	buildID, err := strconv.Atoi(arg)

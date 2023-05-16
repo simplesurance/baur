@@ -124,7 +124,7 @@ func parseSpec(s string) (app, task string) {
 	panic("default case not run")
 }
 
-func (c *lsRunsCmd) run(cmd *cobra.Command, args []string) {
+func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 	var sorters []*storage.Sorter
 
 	defaultSorter := storage.Sorter{

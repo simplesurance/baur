@@ -56,7 +56,7 @@ func newLsInputsCmd() *lsInputsCmd {
 	return &cmd
 }
 
-func (c *lsInputsCmd) run(cmd *cobra.Command, args []string) {
+func (c *lsInputsCmd) run(_ *cobra.Command, args []string) {
 	var inputs []baur.Input
 
 	if taskID, err := strconv.Atoi(args[0]); err == nil {

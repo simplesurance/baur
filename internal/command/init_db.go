@@ -39,7 +39,7 @@ func init() {
 	initCmd.AddCommand(initDbCmd)
 }
 
-func initDb(cmd *cobra.Command, args []string) {
+func initDb(_ *cobra.Command, args []string) {
 	var dbURL string
 
 	if len(args) == 1 {
