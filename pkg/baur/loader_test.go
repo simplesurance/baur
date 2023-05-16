@@ -19,7 +19,7 @@ func TestFindAppConfigsRemovesDups(t *testing.T) {
 
 	searchDirs := []string{".", "app1", "app1/.", "app1/..", "app1/../app1/."}
 
-	result, err := findAppConfigs(searchDirs, 5, log.StdLogger)
+	result, err := findAppConfigs(repoDir, searchDirs, 5, log.StdLogger)
 	require.NoError(t, err)
 
 	require.Len(t, result, 1)

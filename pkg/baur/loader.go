@@ -32,7 +32,7 @@ type Loader struct {
 func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), logger Logger) (*Loader, error) {
 	repositoryRootDir := filepath.Dir(repoCfg.FilePath())
 
-	appConfigPaths, err := findAppConfigs(fs.AbsPaths(repositoryRootDir, repoCfg.Discover.Dirs), repoCfg.Discover.SearchDepth, logger)
+	appConfigPaths, err := findAppConfigs(repositoryRootDir, repoCfg.Discover.Dirs, repoCfg.Discover.SearchDepth, logger)
 	if err != nil {
 		return nil, fmt.Errorf("discovering application config files failed: %w", err)
 	}
@@ -352,15 +352,28 @@ func isAppDirectory(dir string) bool {
 	return isFile
 }
 
-func findAppConfigs(searchDirs []string, searchDepth int, logger Logger) ([]string, error) {
+func findAppConfigs(repoDir string, searchDirs []string, searchDepth int, logger Logger) ([]string, error) {
 	appDirs := map[string]struct{}{}
+	visitedSearchDirs := make(map[string]struct{}, len(searchDirs))
 
 	for _, searchDir := range searchDirs {
-		if err := fs.DirsExist(searchDir); err != nil {
+		realSearchDir, err := fs.RealPath(searchDir)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, alreadyVisited := visitedSearchDirs[realSearchDir]; alreadyVisited {
+			logger.Debugf("loader: multiple entries (%q and another) in application_dirs list in %q resolve to the same realpath: %q",
+				searchDir, RepositoryCfgFile, realSearchDir)
+			continue
+		}
+		visitedSearchDirs[realSearchDir] = struct{}{}
+
+		if err := fs.DirsExist(realSearchDir); err != nil {
 			return nil, fmt.Errorf("application search directory: %w", err)
 		}
 
-		cfgPaths, err := fs.FindFilesInSubDir(searchDir, AppCfgFile, searchDepth)
+		cfgPaths, err := fs.FindFilesInSubDir(realSearchDir, AppCfgFile, searchDepth)
 		if err != nil {
 			return nil, err
 		}
