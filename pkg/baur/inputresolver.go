@@ -62,11 +62,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
 	}
 
-	globPaths, err := i.resolveFileInputs(
-		repositoryDir,
-		task.Directory,
-		task.UnresolvedInputs.Files,
-	)
+	globPaths, err := i.resolveFileInputs(task.Directory, task.UnresolvedInputs.Files)
 	if err != nil {
 		return nil, fmt.Errorf("resolving file inputs failed: %w", err)
 	}
@@ -138,7 +134,7 @@ func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]stri
 	return result, err
 }
 
-func (i *InputResolver) resolveFileInputs(repositoryDir, appDir string, inputs []cfg.FileInputs) ([]string, error) {
+func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs) ([]string, error) {
 	var result []string
 
 	for _, in := range inputs {

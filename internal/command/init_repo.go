@@ -31,7 +31,7 @@ var initRepoCmd = &cobra.Command{
 	ValidArgsFunction: completeOnlyDirectories,
 }
 
-func initRepo(cmd *cobra.Command, args []string) {
+func initRepo(_ *cobra.Command, args []string) {
 	var repoDir string
 	var err error
 

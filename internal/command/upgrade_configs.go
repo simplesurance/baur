@@ -30,7 +30,7 @@ func newUpgradeConfigsCmd() *upgradeConfigsCmd {
 	return &cmd
 }
 
-func (c *upgradeConfigsCmd) run(cmd *cobra.Command, _ []string) {
+func (c *upgradeConfigsCmd) run(_ *cobra.Command, _ []string) {
 	cwd, err := os.Getwd()
 	exitOnErr(err)
 

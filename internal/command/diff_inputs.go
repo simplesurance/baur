@@ -109,7 +109,7 @@ func newDiffInputsCmd() *diffInputsCmd {
 // - there is less than or greater than 2 args specified
 // - either arg is not in the format APP-NAME.TASK-AME> or a numeric value
 func diffArgs() cobra.PositionalArgs {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(_ *cobra.Command, args []string) error {
 		if len(args) != 2 {
 			return fmt.Errorf("accepts 2 args, received %d", len(args))
 		}
@@ -124,7 +124,7 @@ func diffArgs() cobra.PositionalArgs {
 	}
 }
 
-func (c *diffInputsCmd) run(cmd *cobra.Command, args []string) {
+func (c *diffInputsCmd) run(_ *cobra.Command, args []string) {
 	if len(c.inputStr) == 0 && args[0] == args[1] {
 		exitOnErr(fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1]))
 	}
@@ -243,16 +243,16 @@ func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage
 	defer psql.Close()
 
 	if strings.Contains(argDetails.runID, "^") {
-		return getPreviousTaskRun(repo, psql, argDetails)
+		return getPreviousTaskRun(psql, argDetails)
 	}
 
 	id, err := strconv.Atoi(argDetails.runID)
 	exitOnErr(err)
 
-	return getTaskRunByID(repo, psql, id)
+	return getTaskRunByID(psql, id)
 }
 
-func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
+func getPreviousTaskRun(psql storage.Storer, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
 	filters := []*storage.Filter{
 		{
 			Field:    storage.FieldApplicationName,
@@ -303,7 +303,7 @@ func getPreviousTaskRun(repo *baur.Repository, psql storage.Storer, argDetails *
 	return taskRun
 }
 
-func getTaskRunByID(repo *baur.Repository, psql storage.Storer, id int) *storage.TaskRunWithID {
+func getTaskRunByID(psql storage.Storer, id int) *storage.TaskRunWithID {
 	filters := []*storage.Filter{
 		{
 			Field:    storage.FieldID,

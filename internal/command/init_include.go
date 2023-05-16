@@ -28,7 +28,7 @@ var initIncludeCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 }
 
-func initInclude(cmd *cobra.Command, args []string) {
+func initInclude(_ *cobra.Command, args []string) {
 	var filename string
 
 	if len(args) == 1 {
@@ -40,7 +40,7 @@ func initInclude(cmd *cobra.Command, args []string) {
 		filename = defIncludeFilename
 	}
 
-	cfgInclude := cfg.ExampleInclude("example")
+	cfgInclude := cfg.ExampleInclude()
 	err := cfgInclude.ToFile(filename, cfg.ToFileOptCommented())
 	if err != nil {
 		if os.IsExist(err) {

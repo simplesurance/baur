@@ -361,7 +361,7 @@ func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
 	require.NoError(t, err)
 	r := NewInputResolver(vcsState)
 
-	resolvedFiles, err := r.resolveFileInputs(gitDir, appDir, []cfg.FileInputs{
+	resolvedFiles, err := r.resolveFileInputs(appDir, []cfg.FileInputs{
 		{
 			Paths:          []string{"**"},
 			GitTrackedOnly: true,
@@ -558,12 +558,12 @@ type goSourceResolverMock struct {
 }
 
 func (g *goSourceResolverMock) Resolve(
-	ctx context.Context,
-	workdir string,
-	environment []string,
-	buildFlags []string,
-	withTests bool,
-	queries []string,
+	_ context.Context,
+	_ string,
+	_ []string,
+	_ []string,
+	_ bool,
+	_ []string,
 ) ([]string, error) {
 	return g.result, nil
 }

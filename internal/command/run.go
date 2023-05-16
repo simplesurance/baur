@@ -133,7 +133,7 @@ func newRunCmd() *runCmd {
 	return &cmd
 }
 
-func (c *runCmd) run(cmd *cobra.Command, args []string) {
+func (c *runCmd) run(_ *cobra.Command, args []string) {
 	var err error
 
 	if c.taskRunnerGoRoutines == 0 {

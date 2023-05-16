@@ -46,7 +46,7 @@ func newLsOutputsCmd() *lsOutputsCmd {
 	return &cmd
 }
 
-func (c *lsOutputsCmd) run(cmd *cobra.Command, args []string) {
+func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 	taskRunID, err := strconv.Atoi(args[0])
 	if err != nil {
 		stderr.Printf("'%s' is not a numeric task run ID\n", args[0])

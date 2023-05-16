@@ -33,7 +33,7 @@ var initAppCmd = &cobra.Command{
 	ValidArgsFunction: cobra.NoFileCompletions,
 }
 
-func initApp(cmd *cobra.Command, args []string) {
+func initApp(_ *cobra.Command, args []string) {
 	var appName string
 
 	cwd, err := os.Getwd()

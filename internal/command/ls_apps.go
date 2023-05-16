@@ -90,7 +90,7 @@ func (c *lsAppsCmd) createHeader() []string {
 	return headers
 }
 
-func (c *lsAppsCmd) run(cmd *cobra.Command, args []string) {
+func (c *lsAppsCmd) run(_ *cobra.Command, args []string) {
 	var headers []string
 	var formatter format.Formatter
 
