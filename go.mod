@@ -34,6 +34,7 @@ require (
 	github.com/aws/smithy-go v1.13.5
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/simplesurance/baur/v2 v2.2.0
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 )
 
 require (

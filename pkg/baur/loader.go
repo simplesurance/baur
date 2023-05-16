@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 	"github.com/simplesurance/baur/v3/pkg/cfg/resolver"
@@ -30,7 +32,7 @@ type Loader struct {
 func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), logger Logger) (*Loader, error) {
 	repositoryRootDir := filepath.Dir(repoCfg.FilePath())
 
-	appConfigPaths, err := findAppConfigs(fs.AbsPaths(repositoryRootDir, repoCfg.Discover.Dirs), repoCfg.Discover.SearchDepth)
+	appConfigPaths, err := findAppConfigs(fs.AbsPaths(repositoryRootDir, repoCfg.Discover.Dirs), repoCfg.Discover.SearchDepth, logger)
 	if err != nil {
 		return nil, fmt.Errorf("discovering application config files failed: %w", err)
 	}
@@ -350,8 +352,8 @@ func isAppDirectory(dir string) bool {
 	return isFile
 }
 
-func findAppConfigs(searchDirs []string, searchDepth int) ([]string, error) {
-	var result []string
+func findAppConfigs(searchDirs []string, searchDepth int, logger Logger) ([]string, error) {
+	appDirs := map[string]struct{}{}
 
 	for _, searchDir := range searchDirs {
 		if err := fs.DirsExist(searchDir); err != nil {
@@ -363,10 +365,17 @@ func findAppConfigs(searchDirs []string, searchDepth int) ([]string, error) {
 			return nil, err
 		}
 
-		result = append(result, cfgPaths...)
+		for _, path := range cfgPaths {
+			if _, exists := appDirs[path]; exists {
+				logger.Debugf("loader: multiple entries in application_dirs list in %q discover the same app cfg %q,"+
+					"remove duplicate entries to improve performance", RepositoryCfgFile, path)
+				continue
+			}
+			appDirs[path] = struct{}{}
+		}
 	}
 
-	return result, nil
+	return maps.Keys(appDirs), nil
 }
 
 func dedupApps(apps []*App) []*App {

@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,23 +15,6 @@ import (
 	"github.com/simplesurance/baur/v3/internal/vcs"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
-
-var testdataDir string
-
-func init() {
-	_, testfile, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("could not get test filename")
-	}
-
-	absPath, err := filepath.Abs(testfile)
-	if err != nil {
-		panic(fmt.Sprintf(
-			" could not get absolute path of testfile (%s): %s",
-			testfile, err))
-	}
-	testdataDir = filepath.Join(filepath.Dir(absPath), "testdata")
-}
 
 func relPathsFromInputs(t *testing.T, in []Input) []string {
 	res := make([]string, len(in))
