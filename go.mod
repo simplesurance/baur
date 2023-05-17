@@ -17,7 +17,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/simplesurance/baur v0.20.0
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
