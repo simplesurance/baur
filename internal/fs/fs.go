@@ -202,15 +202,20 @@ func AbsPaths(rootPath string, paths []string) []string {
 	result := make([]string, len(paths))
 
 	for i, p := range paths {
-		if filepath.IsAbs(p) {
-			result[i] = p
-			continue
-		}
-
-		result[i] = filepath.Join(rootPath, p)
+		result[i] = AbsPath(rootPath, p)
 	}
 
 	return result
+}
+
+// AbsPath ensures that path is an absolute path.
+// If it isn't, it is joined with rootPath.
+func AbsPath(rootPath string, path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+
+	return filepath.Join(rootPath, path)
 }
 
 const FileBackupSuffix = ".bak"
