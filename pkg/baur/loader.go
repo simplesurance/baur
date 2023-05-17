@@ -357,7 +357,7 @@ func findAppConfigs(repoDir string, searchDirs []string, searchDepth int, logger
 	visitedSearchDirs := make(map[string]struct{}, len(searchDirs))
 
 	for _, searchDir := range searchDirs {
-		realSearchDir, err := fs.RealPath(searchDir)
+		realSearchDir, err := fs.RealPath(fs.AbsPath(repoDir, searchDir))
 		if err != nil {
 			return nil, err
 		}
