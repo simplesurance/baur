@@ -1,6 +1,6 @@
 module github.com/simplesurance/baur/v3
 
-go 1.19
+go 1.20
 
 require (
 	github.com/containerd/containerd v1.6.18 // indirect
