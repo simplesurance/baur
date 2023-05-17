@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/containerd/containerd v1.6.18 // indirect
 	github.com/docker/docker v23.0.3+incompatible // indirect
-	github.com/fatih/color v1.13.0
+	github.com/fatih/color v1.15.0
 	github.com/fsouza/go-dockerclient v1.9.7
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
@@ -68,7 +68,7 @@ require (
 	github.com/klauspost/compress v1.11.13 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/moby/patternmatcher v0.5.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
