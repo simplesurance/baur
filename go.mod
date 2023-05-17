@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/containerd/containerd v1.6.18 // indirect
-	github.com/docker/docker v23.0.2+incompatible // indirect
+	github.com/docker/docker v23.0.3+incompatible // indirect
 	github.com/fatih/color v1.13.0
 	github.com/fsouza/go-dockerclient v1.9.7
 	github.com/gogo/protobuf v1.3.2 // indirect
