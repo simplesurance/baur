@@ -17,3 +17,8 @@ updates:
     commit-message:
       prefix: "vendor"
       include: "scope"
+    groups:
+        aws-sdk:
+            patterns:
+                - "github.com/aws/aws-sdk-go-v2*"
+                - "github.com/aws/smithy-go"
