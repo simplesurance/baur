@@ -9,7 +9,7 @@ require (
 	github.com/fsouza/go-dockerclient v1.9.7
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
 	github.com/jackc/pgx/v4 v4.18.1
