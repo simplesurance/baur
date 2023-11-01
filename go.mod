@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.41.0
 	github.com/aws/smithy-go v1.16.0
-	github.com/bmatcuk/doublestar/v4 v4.6.0
+	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/simplesurance/baur/v2 v2.2.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 )
