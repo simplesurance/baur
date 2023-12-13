@@ -130,10 +130,42 @@ type IgnoreConfiguredEndpointsProvider interface {
 
 // GetIgnoreConfiguredEndpoints is used in knowing when to disable configured
 // endpoints feature.
-func GetIgnoreConfiguredEndpoints(ctx context.Context, configs []Config) (value bool, found bool, err error) {
+func GetIgnoreConfiguredEndpoints(ctx context.Context, configs []interface{}) (value bool, found bool, err error) {
 	for _, cfg := range configs {
 		if p, ok := cfg.(IgnoreConfiguredEndpointsProvider); ok {
 			value, found, err = p.GetIgnoreConfiguredEndpoints(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+type baseEndpointProvider interface {
+	getBaseEndpoint(ctx context.Context) (string, bool, error)
+}
+
+func getBaseEndpoint(ctx context.Context, configs configs) (value string, found bool, err error) {
+	for _, cfg := range configs {
+		if p, ok := cfg.(baseEndpointProvider); ok {
+			value, found, err = p.getBaseEndpoint(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+type servicesObjectProvider interface {
+	getServicesObject(ctx context.Context) (map[string]map[string]string, bool, error)
+}
+
+func getServicesObject(ctx context.Context, configs configs) (value map[string]map[string]string, found bool, err error) {
+	for _, cfg := range configs {
+		if p, ok := cfg.(servicesObjectProvider); ok {
+			value, found, err = p.getServicesObject(ctx)
 			if err != nil || found {
 				break
 			}
@@ -151,6 +183,40 @@ func getAppID(ctx context.Context, configs configs) (value string, found bool, e
 	for _, cfg := range configs {
 		if p, ok := cfg.(appIDProvider); ok {
 			value, found, err = p.getAppID(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+// disableRequestCompressionProvider provides access to the DisableRequestCompression
+type disableRequestCompressionProvider interface {
+	getDisableRequestCompression(context.Context) (bool, bool, error)
+}
+
+func getDisableRequestCompression(ctx context.Context, configs configs) (value bool, found bool, err error) {
+	for _, cfg := range configs {
+		if p, ok := cfg.(disableRequestCompressionProvider); ok {
+			value, found, err = p.getDisableRequestCompression(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+// requestMinCompressSizeBytesProvider provides access to the MinCompressSizeBytes
+type requestMinCompressSizeBytesProvider interface {
+	getRequestMinCompressSizeBytes(context.Context) (int64, bool, error)
+}
+
+func getRequestMinCompressSizeBytes(ctx context.Context, configs configs) (value int64, found bool, err error) {
+	for _, cfg := range configs {
+		if p, ok := cfg.(requestMinCompressSizeBytesProvider); ok {
+			value, found, err = p.getRequestMinCompressSizeBytes(ctx)
 			if err != nil || found {
 				break
 			}
