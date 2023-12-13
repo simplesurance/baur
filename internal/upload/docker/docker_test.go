@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"testing"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -28,7 +29,7 @@ func TestGetAuth(t *testing.T) {
 
 	const myRegistryHostname = "myregistry.com"
 	const myRegistryPort = dockerRegistryDefaultPort
-	myRegistryURL := fmt.Sprintf("https://%s:%s", myRegistryHostname, myRegistryPort)
+	myRegistryURL := fmt.Sprintf("https://%s", net.JoinHostPort(myRegistryHostname, myRegistryPort))
 	const myRegistryUser = "hugo"
 	const myRegistryPasswd = "hello"
 
