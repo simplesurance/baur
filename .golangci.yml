@@ -21,6 +21,7 @@ linters:
     - sqlclosecheck
     - staticcheck
     - tenv
+    - testifylint
     - typecheck
     - unconvert
     - unused
