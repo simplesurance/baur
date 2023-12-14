@@ -55,7 +55,7 @@ func Test2ArgsRequired(t *testing.T) {
 			diffInputsCmd.SetArgs(tc.args)
 			err := diffInputsCmd.Execute()
 
-			assert.EqualError(t, err, fmt.Sprintf("accepts 2 args, received %d", len(tc.args)))
+			require.EqualError(t, err, fmt.Sprintf("accepts 2 args, received %d", len(tc.args)))
 		})
 	}
 }
@@ -93,7 +93,7 @@ func TestWildCardsNotAllowed(t *testing.T) {
 			diffInputsCmd.SetArgs([]string{tc.appTask, "app.task"})
 			err := diffInputsCmd.Execute()
 
-			assert.EqualError(t, err, fmt.Sprintf("invalid argument: \"%s\"", tc.appTask))
+			require.EqualError(t, err, fmt.Sprintf("invalid argument: \"%s\"", tc.appTask))
 		})
 	}
 }
@@ -127,7 +127,7 @@ func TestAppAndTaskRequired(t *testing.T) {
 			diffInputsCmd.SetArgs([]string{tc.appTask, "app.task"})
 			err := diffInputsCmd.Execute()
 
-			assert.EqualError(t, err, fmt.Sprintf("invalid argument: \"%s\"", tc.appTask))
+			require.EqualError(t, err, fmt.Sprintf("invalid argument: \"%s\"", tc.appTask))
 		})
 	}
 }
@@ -455,5 +455,5 @@ func execCmd(t *testing.T, cmd *diffInputsCmd, expectedExitCode int) {
 	}()
 
 	err := cmd.Execute()
-	assert.Nil(t, err)
+	require.NoError(t, err)
 }

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v3/internal/testutils/strtest"
@@ -184,7 +185,7 @@ func TestGlobMatch(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(fmt.Sprintf("pattern:%s,path:%s", tc.pattern, tc.path), func(t *testing.T) {
 			match, err := MatchGlob(tc.pattern, tc.path)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectMatch, match)
 		})
 	}

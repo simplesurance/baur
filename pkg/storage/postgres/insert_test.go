@@ -108,13 +108,13 @@ func TestSaveTaskRun(t *testing.T) {
 				id, err := client.SaveTaskRun(ctx, taskRun)
 
 				if expectedResult {
-					assert.NoError(t, err)
+					assert.NoError(t, err) //nolint: testifylint
 					assert.Greater(t, id, 0)
 
 					return
 				}
 
-				assert.Error(t, err)
+				require.Error(t, err)
 			}
 		})
 	}

@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -114,5 +113,5 @@ func TestEnsureValidateFailsOnDuplicateTaskNames(t *testing.T) {
 	err = loadedApp.Merge(includeDB, &mockResolver{})
 	require.NoError(t, err)
 
-	assert.Error(t, loadedApp.Validate())
+	require.Error(t, loadedApp.Validate())
 }

@@ -94,7 +94,7 @@ func baurCSVStatusCmd(t *testing.T, cmd *statusCmd) []*csvStatus {
 	result := make([]*csvStatus, 0, len(statusOut))
 
 	for _, line := range statusOut {
-		require.Equal(t, 5, len(line))
+		require.Len(t, line, 5)
 		result = append(result, &csvStatus{
 			taskID: line[0],
 			status: line[3],
@@ -168,7 +168,7 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 				gittest.CommitFilesToGit(t, ".")
 
 				res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().Run()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				commit = strings.TrimSpace(res.StrOutput())
 			}

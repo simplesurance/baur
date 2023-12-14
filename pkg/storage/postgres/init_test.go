@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
@@ -37,7 +36,7 @@ func newTestClient(t *testing.T) (*Client, func()) {
 
 	return &client, func() {
 		err := tx.Rollback(ctx)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		con.Close()
 	}

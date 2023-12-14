@@ -590,7 +590,7 @@ func TestGoResolverFilesAreExcluded(t *testing.T) {
 			Directory: baseDir,
 		},
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	strResult := toStrSlice(result)
 	assert.ElementsMatch(t, strResult, []string{filepath.Join("atm", "atm.go")})
