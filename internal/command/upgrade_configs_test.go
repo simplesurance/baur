@@ -28,7 +28,7 @@ func TestUpgrade(t *testing.T) {
 	var err error
 	if runtime.GOOS == "windows" {
 		originalDir, err = os.Getwd()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 
 	tempDir := t.TempDir()

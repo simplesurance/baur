@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 )
 
 func TestFindFileInParentDirsOnRoot(t *testing.T) {
 	_, err := FindFileInParentDirs(filepath.FromSlash("/"), "mytestfile-which-must-not-exist-1234")
-	assert.ErrorIs(t, err, os.ErrNotExist)
+	require.ErrorIs(t, err, os.ErrNotExist)
 }
 
 func TestFindFileInParentDirWithExcessivePathSeperator(t *testing.T) {
@@ -27,6 +28,6 @@ func TestFindFileInParentDirWithExcessivePathSeperator(t *testing.T) {
 	fstest.WriteToFile(t, []byte("hello"), filepath.Join(tempdir, subdir1, wantedFilename))
 
 	foundPath, err := FindFileInParentDirs(subdir2AbsPath+string(os.PathSeparator), wantedFilename)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, wantedFileAbsPath, foundPath)
 }

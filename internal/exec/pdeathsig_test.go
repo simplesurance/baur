@@ -64,11 +64,11 @@ func TestProcessTerminatesWithParent(t *testing.T) {
 	cmd.Env = append(os.Environ(), "BAUR_EXEC_DEATHSIG_TEST_PARENT=1")
 
 	stdoutReader, err := cmd.StdoutPipe()
-	assert.NoError(t, err, "opening stdout pipe for new cmd failed")
+	require.NoError(t, err, "opening stdout pipe for new cmd failed")
 	cmd.Stderr = cmd.Stdout
 
 	err = cmd.Start()
-	assert.NoError(t, err, "starting parent process failed")
+	require.NoError(t, err, "starting parent process failed")
 
 	t.Log("started parent process, waiting for it to print that it started the child")
 
@@ -112,7 +112,7 @@ func TestProcessTerminatesWithParent(t *testing.T) {
 
 	t.Log("killing parent process")
 	err = cmd.Process.Kill()
-	assert.NoError(t, err, "killing parent process failed")
+	require.NoError(t, err, "killing parent process failed")
 
 	time.Sleep(2 * time.Second)
 	out, err := io.ReadAll(stdoutReader)

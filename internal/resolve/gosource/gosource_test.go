@@ -47,7 +47,7 @@ func TestResolve(t *testing.T) {
 			fileContent, err := os.ReadFile(testCfgFilename)
 			require.NoError(t, err)
 
-			require.NoError(t, err, json.Unmarshal(fileContent, &testCfg))
+			require.ErrorIs(t, err, json.Unmarshal(fileContent, &testCfg))
 
 			cwd, err := os.Getwd()
 			require.NoError(t, err)

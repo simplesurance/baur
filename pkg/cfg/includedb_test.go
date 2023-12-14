@@ -114,7 +114,7 @@ func taskInclude() TaskIncludes {
 }
 
 // TestLoadTaskIncludeWithIncludesInSameFile validates that:
-// - TaskIncludes can refer Input/Output includes in the same file.
+// - TaskIncludes can refer )Input/Output includes in the same file.
 // - The loaded TaskInclude contains all data from the config.
 func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 	const inclFilePath = "include.toml"
@@ -615,7 +615,7 @@ func TestTaskIncludeFailsForNonExistingIncludeName(t *testing.T) {
 
 	includeDB := NewIncludeDB(t.Logf)
 	err = loadedApp.Merge(includeDB, &mockResolver{})
-	require.True(t, errors.Is(err, ErrIncludeIDNotFound), "merge did not return ErrIncludeIDNotFound: %v", err)
+	require.ErrorIs(t, err, ErrIncludeIDNotFound, "merge did not return ErrIncludeIDNotFound: %v", err)
 }
 
 // TestVarsInIncludeFiles ensures vars are correctly replaced when they

@@ -3,7 +3,6 @@ package cfg
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -11,7 +10,7 @@ func TestAppsWithoutAnyTasksAreValid(t *testing.T) {
 	app := App{Name: "testapp"}
 
 	err := app.Validate()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestTaskNameValidation(t *testing.T) {

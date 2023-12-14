@@ -77,14 +77,14 @@ func TestResolve(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(tt *testing.T) {
 			result, err := subject.Resolve(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if tc.expectedResult != "" {
 				assert.Equal(tt, tc.expectedResult, result)
 			}
 
 			if tc.validator != nil {
-				assert.NoError(tt, tc.validator(result))
+				require.NoError(tt, tc.validator(result))
 			}
 		})
 	}

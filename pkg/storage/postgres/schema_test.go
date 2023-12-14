@@ -6,7 +6,6 @@ package postgres
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -50,7 +49,7 @@ func TestIsCompatible_SchemaVersionDoesNotMatch(t *testing.T) {
 	require.NoError(t, err)
 
 	err = client.IsCompatible(ctx)
-	assert.Error(t, err, "database schema version is not compatible")
+	require.Error(t, err, "database schema version is not compatible")
 }
 
 func TestApplyMigrations(t *testing.T) {

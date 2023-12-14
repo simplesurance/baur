@@ -70,9 +70,9 @@ func TestGetAuth(t *testing.T) {
 		auth := client.getAuth(DefaultRegistry)
 		require.NotNil(t, auth)
 
-		assert.Equal(t, auth.ServerAddress, DefaultRegistry)
-		assert.Equal(t, auth.Password, defRegistryPasswd)
-		assert.Equal(t, auth.Username, defRegistryUser)
+		assert.Equal(t, DefaultRegistry, auth.ServerAddress)
+		assert.Equal(t, defRegistryPasswd, auth.Password)
+		assert.Equal(t, defRegistryUser, auth.Username)
 	})
 
 	t.Run("example-url", func(t *testing.T) {
@@ -81,9 +81,9 @@ func TestGetAuth(t *testing.T) {
 		auth := client.getAuth(exampleURL)
 		require.NotNil(t, auth)
 
-		assert.Equal(t, auth.ServerAddress, exampleURL)
-		assert.Equal(t, auth.Password, examplePasswd)
-		assert.Equal(t, auth.Username, exampleUser)
+		assert.Equal(t, exampleURL, auth.ServerAddress)
+		assert.Equal(t, examplePasswd, auth.Password)
+		assert.Equal(t, exampleUser, auth.Username)
 	})
 
 	// when a URL is used as server and the image is tagged without url
