@@ -17,7 +17,7 @@ type Hash struct {
 	hash stdhash.Hash
 }
 
-// New returns a  sha384.Hash to compute a digest
+// New returns a sha384.Hash to compute a digest
 func New() *Hash {
 	return &Hash{hash: sha512.New384()}
 }
