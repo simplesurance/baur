@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v3/internal/digest/sha384"
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 )
 
@@ -25,8 +26,8 @@ func TestDigestDoesNotDependOnRepoPath(t *testing.T) {
 	fstest.WriteToFile(t, []byte("hello"), absFilepath1)
 	fstest.WriteToFile(t, []byte("hello"), absFilepath2)
 
-	f1 := NewInputFile(absFilepath1, relFilepath1)
-	f2 := NewInputFile(absFilepath2, relFilepath2)
+	f1 := NewInputFile(absFilepath1, relFilepath1, sha384.File)
+	f2 := NewInputFile(absFilepath2, relFilepath2, sha384.File)
 
 	d1, err := f1.Digest()
 	require.NoError(t, err)

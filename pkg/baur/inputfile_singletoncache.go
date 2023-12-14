@@ -1,17 +1,25 @@
 package baur
 
+import (
+	"github.com/simplesurance/baur/v3/internal/digest"
+)
+
 const inputFileSingletonCacheInitialSize = 250
+
+type FileHashFn func(path string) (*digest.Digest, error)
 
 // InputFileSingletonCache stores previously created InputFiles and returns
 // them for the same path instead of creating another instance.
 type InputFileSingletonCache struct {
-	cache map[string]*InputFile
+	cache      map[string]*InputFile
+	fileHasher FileHashFn
 }
 
 // newInputFile SingletonCache creates a inputFileSingletonCache.
-func NewInputFileSingletonCache() *InputFileSingletonCache {
+func NewInputFileSingletonCache(fileHasher FileHashFn) *InputFileSingletonCache {
 	return &InputFileSingletonCache{
-		cache: make(map[string]*InputFile, inputFileSingletonCacheInitialSize),
+		cache:      make(map[string]*InputFile, inputFileSingletonCacheInitialSize),
+		fileHasher: fileHasher,
 	}
 }
 
@@ -23,7 +31,7 @@ func (c *InputFileSingletonCache) CreateOrGetInputFile(absPath, relPath string) 
 		return f
 	}
 
-	f := NewInputFile(absPath, relPath)
+	f := NewInputFile(absPath, relPath, c.fileHasher)
 	c.cache[absPath] = f
 
 	return f

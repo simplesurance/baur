@@ -24,7 +24,7 @@ func TestSymlinkTargetFileOwnerChange(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, gids, "requiring the user to be at least in 1 additional group, to run the testcase")
 
-	info := prepareSymlinkTestDir(t)
+	info := prepareSymlinkTestDir(t, false, false)
 	require.NoError(t, err)
 
 	fi, err := os.Stat(info.SymlinkTargetFilePath)

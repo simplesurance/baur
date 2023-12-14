@@ -134,3 +134,22 @@ func UntrackedFiles(dir string) ([]string, error) {
 
 	return res, nil
 }
+
+// ObjectID calculates the git ID (hash) of a fille.
+func ObjectID(ctx context.Context, absFilePath, repoRelFilePath string) (string, error) {
+	// TODO: calculate the object ID instead of running an external command
+	// git hash-object, or by calculating the ID on our own as described in https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
+	result, err := exec.Command("git", "hash-object", "--path", repoRelFilePath, absFilePath).
+		ExpectSuccess().
+		RunCombinedOut(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	objectID := strings.TrimSpace(result.StrOutput())
+	if objectID == "" {
+		return "", errors.New("git returned nothing")
+	}
+
+	return objectID, nil
+}

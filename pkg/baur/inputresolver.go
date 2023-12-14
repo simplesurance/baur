@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
+	"github.com/simplesurance/baur/v3/internal/digest/sha384"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/resolve/glob"
@@ -32,6 +34,7 @@ type goSourceResolver interface {
 
 // InputResolver resolves input definitions of a task to concrete files.
 type InputResolver struct {
+	repoDir              string
 	globPathResolver     *glob.Resolver
 	goSourceResolver     goSourceResolver
 	environmentVariables map[string]string
@@ -43,13 +46,23 @@ type InputResolver struct {
 
 // NewInputResolver returns an InputResolver that caches resolver
 // results.
-func NewInputResolver(vcsState vcs.StateFetcher) *InputResolver {
+func NewInputResolver(vcsState vcs.StateFetcher, repoDir string) *InputResolver {
+	var hasher FileHashFn
+	if _, gitUnavail := vcsState.(*vcs.NoVCsState); gitUnavail {
+		hasher = sha384.File
+		log.Debugf("inputresolver: using sha384 file hasher\n")
+	} else {
+		hasher = gitobjectid.New(repoDir, log.Debugf).File
+		log.Debugf("inputresolver: using gitobject file hasher\n")
+	}
+
 	return &InputResolver{
+		repoDir:                 repoDir,
 		globPathResolver:        &glob.Resolver{},
 		goSourceResolver:        gosource.NewResolver(log.Debugf),
 		vcsState:                vcsState,
 		cache:                   newInputResolverCache(),
-		inputFileSingletonCache: NewInputFileSingletonCache(),
+		inputFileSingletonCache: NewInputFileSingletonCache(hasher),
 	}
 }
 
