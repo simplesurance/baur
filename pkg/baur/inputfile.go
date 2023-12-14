@@ -10,6 +10,8 @@ type InputFile struct {
 	absPath     string
 	repoRelPath string
 
+	fileHasher FileHashFn
+
 	digest *digest.Digest
 }
 
@@ -17,10 +19,11 @@ type InputFile struct {
 // absPath is the absolute path to the file. It is used to create the digest.
 // relPath is a relative path to the file. It is used as part of the digest. To
 // which base path relPath is relative is arbitrary.
-func NewInputFile(absPath, relPath string) *InputFile {
+func NewInputFile(absPath, relPath string, fileHasher FileHashFn) *InputFile {
 	return &InputFile{
 		absPath:     absPath,
 		repoRelPath: relPath,
+		fileHasher:  fileHasher,
 	}
 }
 
@@ -42,14 +45,19 @@ func (f *InputFile) AbsPath() string {
 // CalcDigest calculates the digest of the file.
 // The Digest is the sha384 sum of the repoRelPath and the content of the file.
 func (f *InputFile) CalcDigest() (*digest.Digest, error) {
-	sha := sha384.New()
-
-	err := sha.AddBytes([]byte(f.repoRelPath))
+	contentD, err := f.fileHasher(f.absPath)
 	if err != nil {
 		return nil, err
 	}
 
-	err = sha.AddFile(f.absPath)
+	sha := sha384.New()
+
+	err = sha.AddBytes([]byte(f.repoRelPath))
+	if err != nil {
+		return nil, err
+	}
+
+	err = sha.AddBytes([]byte(contentD.String()))
 	if err != nil {
 		return nil, err
 	}

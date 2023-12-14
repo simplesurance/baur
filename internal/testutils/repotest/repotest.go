@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/simplesurance/baur/v3/internal/digest"
+	"github.com/simplesurance/baur/v3/internal/digest/sha384"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
@@ -207,7 +208,7 @@ func (r *Repo) WriteAdditionalFileContents(t *testing.T, appName, fileName, cont
 	t.Helper()
 
 	absPath := filepath.Join(r.Dir, appName, fileName)
-	file := baur.NewInputFile(absPath, filepath.Join(appName, fileName))
+	file := baur.NewInputFile(absPath, filepath.Join(appName, fileName), sha384.File)
 	fstest.WriteToFile(t, []byte(contents), absPath)
 
 	digest, err := file.CalcDigest()

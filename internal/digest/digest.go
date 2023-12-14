@@ -16,6 +16,8 @@ const (
 	SHA256
 	// SHA384 is the sha384 algorithm
 	SHA384
+
+	GitObjectID
 )
 
 // String returns the textual representation
@@ -26,6 +28,8 @@ func (t Algorithm) String() string {
 
 	case SHA384:
 		return "sha384"
+	case GitObjectID:
+		return "gitobjectid"
 	default:
 		return "undefined"
 	}
@@ -45,7 +49,6 @@ func (d *Digest) String() string {
 // FromString converts a "<Algorithm>:<hash> string to Digest
 func FromString(in string) (*Digest, error) {
 	var algorithm Algorithm
-
 	spl := strings.Split(strings.TrimSpace(in), ":")
 	if len(spl) != 2 {
 		return nil, errors.New("invalid format, must contain exactly 1 ':'")
@@ -76,5 +79,16 @@ func FromString(in string) (*Digest, error) {
 	return &Digest{
 		Sum:       sum,
 		Algorithm: algorithm,
+	}, nil
+}
+
+func FromStrDigest(digest string, algo Algorithm) (*Digest, error) {
+	b, err := hex.DecodeString(digest)
+	if err != nil {
+		return nil, fmt.Errorf("converting digest (%q) to hex failed: %w", digest, err)
+	}
+	return &Digest{
+		Sum:       b,
+		Algorithm: algo,
 	}, nil
 }

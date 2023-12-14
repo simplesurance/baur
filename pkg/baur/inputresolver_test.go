@@ -272,7 +272,7 @@ func TestFilesOptional(t *testing.T) {
 
 			vcsState, err := vcs.GetState(tempDir, log.Debugf)
 			require.NoError(t, err)
-			r := NewInputResolver(vcsState)
+			r := NewInputResolver(vcsState, tempDir)
 
 			tc.task.Directory = tempDir
 
@@ -314,7 +314,7 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 
 	vcsState, err := vcs.GetState(tempDir, log.Debugf)
 	require.NoError(t, err)
-	r := NewInputResolver(vcsState)
+	r := NewInputResolver(vcsState, tempDir)
 
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
 
@@ -361,7 +361,7 @@ func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
 
 	vcsState, err := vcs.GetState(gitDir, log.Debugf)
 	require.NoError(t, err)
-	r := NewInputResolver(vcsState)
+	r := NewInputResolver(vcsState, gitDir)
 
 	resolvedFiles, err := r.resolveFileInputs(appDir, []cfg.FileInputs{
 		{
@@ -469,7 +469,7 @@ func TestResolveEnvVarInputs(t *testing.T) {
 				t.Setenv(k, v)
 			}
 
-			resolver := NewInputResolver(&vcs.NoVCsState{})
+			resolver := NewInputResolver(&vcs.NoVCsState{}, ".")
 			resolver.setEnvVars()
 			resolvedEnvVars, err := resolver.resolveEnvVarInputs(tc.Inputs)
 			if tc.ExpectedErrStr != "" {
@@ -531,7 +531,7 @@ func TestExcludedFiles(t *testing.T) {
 				fstest.WriteToFile(t, []byte(f), filepath.Join(tempDir, f))
 			}
 
-			resolver := NewInputResolver(&vcs.NoVCsState{})
+			resolver := NewInputResolver(&vcs.NoVCsState{}, tempDir)
 			result, err := resolver.Resolve(context.Background(), tempDir, &Task{
 				Directory:        tempDir,
 				UnresolvedInputs: &tc.Inputs,
@@ -574,7 +574,7 @@ func TestGoResolverFilesAreExcluded(t *testing.T) {
 	log.RedirectToTestingLog(t)
 	baseDir := filepath.FromSlash("/tmp")
 
-	resolver := NewInputResolver(&vcs.NoVCsState{})
+	resolver := NewInputResolver(&vcs.NoVCsState{}, baseDir)
 	resolver.goSourceResolver = &goSourceResolverMock{
 		result: []string{filepath.Join(baseDir, "main.go"), filepath.Join(baseDir, "atm", "atm.go")},
 	}
@@ -712,7 +712,7 @@ func TestResolveSymlink(t *testing.T) {
 
 			vcsState, err := vcs.GetState(testDir, log.Debugf)
 			require.NoError(t, err)
-			r := NewInputResolver(vcsState)
+			r := NewInputResolver(vcsState, tc.testdir)
 
 			result, err := r.Resolve(context.Background(), testDir, &Task{
 				Directory: testDir,
@@ -727,25 +727,79 @@ func TestResolveSymlink(t *testing.T) {
 	}
 }
 
-func TestFileContentChanges(t *testing.T) {
-	log.RedirectToTestingLog(t)
-	tempDir := t.TempDir()
-	const fRel = "file"
-	f := filepath.Join(tempDir, fRel)
-	fstest.WriteToFile(t, []byte("111"), f)
+type gitFileTC struct {
+	CreateGitRepo        bool
+	AddToGitBeforeChange bool
+	AddToGitAfterChange  bool
+}
 
-	task := Task{
-		RepositoryRoot: tempDir,
-		Directory:      tempDir,
-		UnresolvedInputs: &cfg.Input{
-			Files: []cfg.FileInputs{{Paths: []string{fRel}}},
+func newGitFileTcVariations() []*gitFileTC {
+	return []*gitFileTC{
+		{
+			CreateGitRepo:        false,
+			AddToGitBeforeChange: false,
+			AddToGitAfterChange:  false,
+		},
+		{
+			CreateGitRepo:        true,
+			AddToGitBeforeChange: false,
+			AddToGitAfterChange:  false,
+		},
+		{
+			CreateGitRepo:        true,
+			AddToGitBeforeChange: true,
+			AddToGitAfterChange:  false,
+		},
+		{
+			CreateGitRepo:        true,
+			AddToGitBeforeChange: true,
+			AddToGitAfterChange:  true,
+		},
+		{
+			CreateGitRepo:        true,
+			AddToGitBeforeChange: false,
+			AddToGitAfterChange:  true,
 		},
 	}
-	before := resolveInputs(t, &task)
+}
 
-	fstest.WriteToFile(t, []byte("11113"), f)
-	after := resolveInputs(t, &task)
-	require.NotEqual(t, before.String(), after.String())
+func TestFileContentChanges(t *testing.T) {
+	for _, tc := range newGitFileTcVariations() {
+		t.Run(
+			fmt.Sprintf("gitrepo:%+v,commitbeforechange:%v,commitafterchange:%v",
+				tc.CreateGitRepo, tc.AddToGitBeforeChange, tc.AddToGitAfterChange),
+			func(t *testing.T) {
+				log.RedirectToTestingLog(t)
+				tempDir := t.TempDir()
+				if tc.CreateGitRepo {
+					gittest.CreateRepository(t, tempDir)
+				}
+
+				const fRel = "file 🙀 very\\ sp€cイal"
+				f := filepath.Join(tempDir, fRel)
+				fstest.WriteToFile(t, []byte("111"), f)
+
+				if tc.AddToGitBeforeChange {
+					gittest.CommitFilesToGit(t, tempDir)
+				}
+
+				task := Task{
+					RepositoryRoot: tempDir,
+					Directory:      tempDir,
+					UnresolvedInputs: &cfg.Input{
+						Files: []cfg.FileInputs{{Paths: []string{fRel}}},
+					},
+				}
+				before := resolveInputs(t, &task)
+				fstest.WriteToFile(t, []byte("11113"), f)
+				if tc.AddToGitAfterChange {
+					gittest.CommitFilesToGit(t, tempDir)
+				}
+
+				after := resolveInputs(t, &task)
+				require.NotEqual(t, before.String(), after.String())
+			})
+	}
 }
 
 type symlinkTestInfo struct {
@@ -756,8 +810,12 @@ type symlinkTestInfo struct {
 	TotalInputDigest      *digest.Digest
 }
 
-func prepareSymlinkTestDir(t *testing.T) *symlinkTestInfo {
+func prepareSymlinkTestDir(t *testing.T, createGitRepo, commitFilesToGit bool) *symlinkTestInfo {
+	t.Helper()
 	tempDir := t.TempDir()
+	if createGitRepo {
+		gittest.CreateRepository(t, tempDir)
+	}
 	f := filepath.Join(tempDir, "file")
 
 	const symlinkRel = "slink"
@@ -765,6 +823,10 @@ func prepareSymlinkTestDir(t *testing.T) *symlinkTestInfo {
 
 	fstest.WriteToFile(t, []byte("hello"), f)
 	require.NoError(t, os.Symlink(f, symlink))
+
+	if commitFilesToGit {
+		gittest.CommitFilesToGit(t, tempDir)
+	}
 
 	task := Task{
 		RepositoryRoot: tempDir,
@@ -786,7 +848,12 @@ func prepareSymlinkTestDir(t *testing.T) *symlinkTestInfo {
 }
 
 func resolveInputs(t *testing.T, task *Task) *digest.Digest {
-	resolver := NewInputResolver(&vcs.NoVCsState{})
+	t.Helper()
+
+	vcsState, err := vcs.GetState(task.RepositoryRoot, t.Logf)
+	require.NoError(t, err)
+
+	resolver := NewInputResolver(vcsState, task.RepositoryRoot)
 	result, err := resolver.Resolve(
 		context.Background(),
 		task.RepositoryRoot,
@@ -804,7 +871,7 @@ func TestSymlinkIsReplacedByTargetFile(t *testing.T) {
 	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/490")
 	log.RedirectToTestingLog(t)
 
-	info := prepareSymlinkTestDir(t)
+	info := prepareSymlinkTestDir(t, false, false)
 
 	require.NoError(t, os.Remove(info.SymlinkPath))
 	require.NoError(t, os.Rename(info.SymlinkTargetFilePath, info.SymlinkPath))
@@ -817,7 +884,7 @@ func TestSymlinkTargetPathChangesFileIsSame(t *testing.T) {
 	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/491")
 	log.RedirectToTestingLog(t)
 
-	info := prepareSymlinkTestDir(t)
+	info := prepareSymlinkTestDir(t, false, false)
 
 	newTargetFilePath := filepath.Join(info.TempDir, "file1")
 
@@ -830,19 +897,28 @@ func TestSymlinkTargetPathChangesFileIsSame(t *testing.T) {
 }
 
 func TestSymlinkTargetFileContentChanges(t *testing.T) {
-	log.RedirectToTestingLog(t)
-
-	info := prepareSymlinkTestDir(t)
-	fstest.WriteToFile(t, []byte("hello symlink"), info.SymlinkTargetFilePath)
-	digestAfter := resolveInputs(t, info.Task)
-	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
+	for _, tc := range newGitFileTcVariations() {
+		t.Run(
+			fmt.Sprintf("gitrepo:%+v,commitbeforechange:%v,commitafterchange:%v",
+				tc.CreateGitRepo, tc.AddToGitBeforeChange, tc.AddToGitAfterChange),
+			func(t *testing.T) {
+				log.RedirectToTestingLog(t)
+				info := prepareSymlinkTestDir(t, tc.CreateGitRepo, tc.AddToGitBeforeChange)
+				fstest.WriteToFile(t, []byte("hello symlink"), info.SymlinkTargetFilePath)
+				if tc.AddToGitAfterChange {
+					gittest.CommitFilesToGit(t, info.TempDir)
+				}
+				digestAfter := resolveInputs(t, info.Task)
+				require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
+			})
+	}
 }
 
 func TestSymlinkTargetFilePermissionsChange(t *testing.T) {
 	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/492")
 	log.RedirectToTestingLog(t)
 
-	info := prepareSymlinkTestDir(t)
+	info := prepareSymlinkTestDir(t, false, false)
 	require.NoError(t, os.Chmod(info.SymlinkTargetFilePath, 0777))
 
 	digestAfter := resolveInputs(t, info.Task)

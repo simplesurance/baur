@@ -4,11 +4,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/simplesurance/baur/v3/internal/digest/sha384"
+
 	"github.com/stretchr/testify/require"
 )
 
 func TestInputFileSingletonCache(t *testing.T) {
-	c := NewInputFileSingletonCache()
+	c := NewInputFileSingletonCache(sha384.File)
 	f1Path := filepath.Join("etc", "issue")
 	f2Path := filepath.Join("etc", "motd")
 	f1 := c.CreateOrGetInputFile(f1Path, "issue")

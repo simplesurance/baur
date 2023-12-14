@@ -58,6 +58,15 @@ func (h *Hash) AddBytes(b []byte) error {
 	return nil
 }
 
+// File returns the sha384 of the file at path.
+func File(path string) (*digest.Digest, error) {
+	h := New()
+	if err := h.AddFile(path); err != nil {
+		return nil, err
+	}
+	return h.Digest(), nil
+}
+
 // Sum aggregates multiple digests to a single SHA384 digest
 func Sum(digests []*digest.Digest) (*digest.Digest, error) {
 	hash := New()
