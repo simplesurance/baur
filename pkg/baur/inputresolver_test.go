@@ -336,10 +336,10 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
 	log.RedirectToTestingLog(t)
 
-	oldExecDebugFfN := exec.DefaultDebugfFn
-	exec.DefaultDebugfFn = t.Logf
+	oldExecDebugFfN := exec.DefaultLogFn
+	exec.DefaultLogFn = t.Logf
 	t.Cleanup(func() {
-		exec.DefaultDebugfFn = oldExecDebugFfN
+		exec.DefaultLogFn = oldExecDebugFfN
 	})
 
 	gitDir := t.TempDir()

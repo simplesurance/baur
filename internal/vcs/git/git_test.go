@@ -17,10 +17,10 @@ func TestUntrackedFilesIncludesGitIgnoredFiles(t *testing.T) {
 	const ignoredFileName = "f2"
 
 	log.RedirectToTestingLog(t)
-	oldExecDebugFfN := exec.DefaultDebugfFn
-	exec.DefaultDebugfFn = t.Logf
+	oldExecDebugFfN := exec.DefaultLogFn
+	exec.DefaultLogFn = t.Logf
 	t.Cleanup(func() {
-		exec.DefaultDebugfFn = oldExecDebugFfN
+		exec.DefaultLogFn = oldExecDebugFfN
 	})
 
 	tempDir := t.TempDir()
@@ -46,10 +46,10 @@ func TestUntrackedFilesIncludesFilesInSubdirs(t *testing.T) {
 	untrackedFilepathInSubdir := filepath.Join("a", "b", "c", "f4")
 
 	log.RedirectToTestingLog(t)
-	oldExecDebugFfN := exec.DefaultDebugfFn
-	exec.DefaultDebugfFn = t.Logf
+	oldExecDebugFfN := exec.DefaultLogFn
+	exec.DefaultLogFn = t.Logf
 	t.Cleanup(func() {
-		exec.DefaultDebugfFn = oldExecDebugFfN
+		exec.DefaultLogFn = oldExecDebugFfN
 	})
 
 	tempDir := t.TempDir()
@@ -85,10 +85,10 @@ func TestUntrackedFilesDoesNotContainTrackedFile(t *testing.T) {
 	const trackedFilename = "f1"
 
 	log.RedirectToTestingLog(t)
-	oldExecDebugFfN := exec.DefaultDebugfFn
-	exec.DefaultDebugfFn = t.Logf
+	oldExecDebugFfN := exec.DefaultLogFn
+	exec.DefaultLogFn = t.Logf
 	t.Cleanup(func() {
-		exec.DefaultDebugfFn = oldExecDebugFfN
+		exec.DefaultLogFn = oldExecDebugFfN
 	})
 
 	tempDir := t.TempDir()

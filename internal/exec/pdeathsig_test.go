@@ -4,6 +4,7 @@ package exec
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -34,7 +35,7 @@ func TestMain(m *testing.M) {
 }
 
 func deathSignalParent() {
-	DefaultDebugfFn = func(format string, a ...any) { fmt.Printf(format, a...) }
+	DefaultLogFn = func(format string, a ...any) { fmt.Printf(format, a...) }
 
 	cmd := Command(os.Args[0]).
 		Env([]string{
@@ -42,7 +43,7 @@ func deathSignalParent() {
 			"BAUR_EXEC_DEATHSIG_TEST_CHILD=1",
 		})
 
-	_, err := cmd.Run()
+	_, err := cmd.Run(context.Background())
 	if err != nil {
 		fmt.Printf("parent: executing child process failed: %s\n", err)
 		os.Exit(2)
@@ -84,7 +85,7 @@ func TestProcessTerminatesWithParent(t *testing.T) {
 		}
 
 		t.Logf("read from parent's process stdout: %q", parentStdoutLine)
-		parentStdoutLine = strings.TrimPrefix(parentStdoutLine, DefaultDebugPrefix)
+		parentStdoutLine = strings.TrimPrefix(parentStdoutLine, DefaultLogPrefix)
 
 		if strings.HasPrefix(parentStdoutLine, "running ") {
 			continue

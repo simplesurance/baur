@@ -60,8 +60,8 @@ func redirectOutputToLogger(t *testing.T) {
 	// parallel running tests
 	log.RedirectToTestingLog(t)
 
-	oldExecDebugFfN := exec.DefaultDebugfFn
-	exec.DefaultDebugfFn = t.Logf
+	oldExecDebugFfN := exec.DefaultLogFn
+	exec.DefaultLogFn = t.Logf
 
 	oldStdout := stdout
 	stdout = term.NewStream(logwriter.New(t, io.Discard))
@@ -69,7 +69,7 @@ func redirectOutputToLogger(t *testing.T) {
 	stderr = term.NewStream(logwriter.New(t, io.Discard))
 
 	t.Cleanup(func() {
-		exec.DefaultDebugfFn = oldExecDebugFfN
+		exec.DefaultLogFn = oldExecDebugFfN
 		stdout = oldStdout
 		stderr = oldStderr
 	})
