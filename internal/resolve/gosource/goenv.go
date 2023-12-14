@@ -1,6 +1,7 @@
 package gosource
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -19,13 +20,13 @@ type goEnv struct {
 func getGoEnv(env []string) (*goEnv, error) {
 	var result goEnv
 
-	res, err := exec.Command("go", "env", "-json").Env(env).ExpectSuccess().Run()
+	res, err := exec.Command("go", "env", "-json").Env(env).ExpectSuccess().RunCombinedOut(context.TODO())
 	if err != nil {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(res.Output, &result); err != nil {
-		return nil, fmt.Errorf("converting %q to json failed: %w", string(res.Output), err)
+	if err := json.Unmarshal(res.CombinedOutput, &result); err != nil {
+		return nil, fmt.Errorf("converting %q to json failed: %w", string(res.CombinedOutput), err)
 	}
 
 	if result.GoModCache == "" {

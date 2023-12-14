@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/routines"
 	"github.com/simplesurance/baur/v3/internal/upload/docker"
@@ -155,6 +154,9 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 
 	c.taskRunnerRoutinePool = routines.NewPool(c.taskRunnerGoRoutines)
 	c.taskRunner = baur.NewTaskRunner()
+	if c.showOutput && !verboseFlag {
+		c.taskRunner.LogFn = stdout.Printf
+	}
 
 	c.dockerClient, err = docker.NewClient(log.StdLogger.Debugf)
 	exitOnErr(err)
@@ -188,10 +190,6 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	} else {
 		stdout.Printf("Running %d/%d task(s) with status %s\n\n",
 			len(pendingTasks), len(tasks), term.ColoredTaskStatus(baur.TaskStatusExecutionPending))
-	}
-
-	if c.showOutput {
-		exec.DefaultDebugfFn = stdout.Printf
 	}
 
 	for _, pt := range pendingTasks {
@@ -287,7 +285,7 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 	}
 
 	if result.Result.ExitCode != 0 {
-		if c.showOutput {
+		if c.showOutput || verboseFlag {
 			stderr.Printf("%s: execution %s (%s), command exited with code %d\n",
 				term.Highlight(task),
 				statusStrFailed,
@@ -297,14 +295,15 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 				result.ExitCode,
 			)
 		} else {
-			stderr.Printf("%s: execution %s (%s), command exited with code %d, output:\n%s\n",
+			err := result.Result.ExpectSuccess()
+			stderr.Printf("%s: execution %s (%s): %s\n",
 				term.Highlight(task),
 				statusStrFailed,
 				term.FormatDuration(
 					result.StopTime.Sub(result.StartTime),
 				),
-				result.ExitCode,
-				result.StrOutput())
+				err.Error(),
+			)
 		}
 
 		return nil, fmt.Errorf("execution failed with exit code %d", result.ExitCode)

@@ -38,7 +38,7 @@ var exitFunc = func(code int) { os.Exit(code) }
 func initSb(_ *cobra.Command, _ []string) {
 	if verboseFlag {
 		log.StdLogger.EnableDebug(verboseFlag)
-		exec.DefaultDebugfFn = log.StdLogger.Debugf
+		exec.DefaultLogFn = log.StdLogger.Debugf
 	}
 
 	if noColorFlag {

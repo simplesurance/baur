@@ -4,6 +4,7 @@ package git
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -44,7 +45,7 @@ func IsGitDir(dir string) (bool, error) {
 		return false, err
 	}
 
-	result, err := exec.Command("git", "rev-parse", "--git-dir").Directory(dir).Run()
+	result, err := exec.Command("git", "rev-parse", "--git-dir").Directory(dir).RunCombinedOut(context.TODO())
 	if err != nil {
 		return false, err
 	}
@@ -64,7 +65,7 @@ func IsGitDir(dir string) (bool, error) {
 // CommitID return the commit id of HEAD by running git rev-parse in the passed
 // directory
 func CommitID(dir string) (string, error) {
-	res, err := exec.Command("git", "rev-parse", "HEAD").Directory(dir).ExpectSuccess().Run()
+	res, err := exec.Command("git", "rev-parse", "HEAD").Directory(dir).ExpectSuccess().RunCombinedOut(context.TODO())
 	if err != nil {
 		return "", err
 	}
@@ -80,12 +81,12 @@ func CommitID(dir string) (string, error) {
 // WorktreeIsDirty returns true if the repository contains modified files,
 // untracked files are considered, files in .gitignore are ignored
 func WorktreeIsDirty(dir string) (bool, error) {
-	res, err := exec.Command("git", "status", "-s").Directory(dir).ExpectSuccess().Run()
+	res, err := exec.Command("git", "status", "-s").Directory(dir).ExpectSuccess().RunCombinedOut(context.TODO())
 	if err != nil {
 		return false, err
 	}
 
-	if len(res.Output) == 0 {
+	if len(res.CombinedOutput) == 0 {
 		return false, nil
 	}
 
@@ -102,12 +103,12 @@ func UntrackedFiles(dir string) ([]string, error) {
 
 	cmdResult, err := exec.
 		Command("git", "status", "--porcelain", "--untracked-files=all", "--ignored").
-		Directory(dir).ExpectSuccess().Run()
+		Directory(dir).ExpectSuccess().RunCombinedOut((context.TODO()))
 	if err != nil {
 		return nil, err
 	}
 
-	scanner := bufio.NewScanner(bytes.NewReader(cmdResult.Output))
+	scanner := bufio.NewScanner(bytes.NewReader(cmdResult.CombinedOutput))
 	for scanner.Scan() {
 		var relPath string
 

@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -17,10 +18,13 @@ var ErrTaskRunSkipped = errors.New("task run skipped")
 // TaskRunner executes the command of a task.
 type TaskRunner struct {
 	skipEnabled uint32 // must be accessed via atomic operations
+	LogFn       exec.PrintfFn
 }
 
 func NewTaskRunner() *TaskRunner {
-	return &TaskRunner{}
+	return &TaskRunner{
+		LogFn: exec.DefaultLogFn,
+	}
 }
 
 // RunResult represents the results of a task run.
@@ -39,11 +43,11 @@ func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
 		return nil, ErrTaskRunSkipped
 	}
 
-	// TODO: rework exec, stream the output instead of storing all in memory
 	execResult, err := exec.Command(task.Command[0], task.Command[1:]...).
 		Directory(task.Directory).
-		DebugfPrefix(color.YellowString(fmt.Sprintf("%s: ", task))).
-		Run()
+		LogPrefix(color.YellowString(fmt.Sprintf("%s: ", task))).
+		LogFn(t.LogFn).
+		Run(context.TODO())
 	if err != nil {
 		return nil, err
 	}
