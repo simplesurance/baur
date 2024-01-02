@@ -140,8 +140,8 @@ github.com/aws/smithy-go/waiter
 # github.com/bmatcuk/doublestar/v4 v4.6.1
 ## explicit; go 1.16
 github.com/bmatcuk/doublestar/v4
-# github.com/containerd/containerd v1.6.18
-## explicit; go 1.17
+# github.com/containerd/containerd v1.6.26
+## explicit; go 1.19
 github.com/containerd/containerd/pkg/userns
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
@@ -178,7 +178,7 @@ github.com/docker/go-units
 # github.com/fatih/color v1.16.0
 ## explicit; go 1.17
 github.com/fatih/color
-# github.com/fsouza/go-dockerclient v1.10.0
+# github.com/fsouza/go-dockerclient v1.10.1
 ## explicit; go 1.20
 github.com/fsouza/go-dockerclient
 # github.com/gogo/protobuf v1.3.2
@@ -227,11 +227,13 @@ github.com/jackc/puddle
 # github.com/jmespath/go-jmespath v0.4.0
 ## explicit; go 1.14
 github.com/jmespath/go-jmespath
-# github.com/klauspost/compress v1.11.13
-## explicit; go 1.13
+# github.com/klauspost/compress v1.15.9
+## explicit; go 1.16
+github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
-github.com/klauspost/compress/snappy
+github.com/klauspost/compress/internal/cpuinfo
+github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kr/text v0.2.0
@@ -260,7 +262,7 @@ github.com/morikuni/aec
 # github.com/opencontainers/go-digest v1.0.0
 ## explicit; go 1.13
 github.com/opencontainers/go-digest
-# github.com/opencontainers/image-spec v1.1.0-rc2
+# github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b
 ## explicit; go 1.17
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
@@ -301,7 +303,7 @@ github.com/simplesurance/baur/v2/internal/deepcopy
 github.com/simplesurance/baur/v2/pkg/cfg
 github.com/simplesurance/baur/v2/pkg/storage
 github.com/simplesurance/baur/v2/pkg/storage/postgres
-# github.com/sirupsen/logrus v1.9.0
+# github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
 # github.com/spf13/cobra v1.8.0
