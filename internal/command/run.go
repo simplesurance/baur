@@ -155,7 +155,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	c.taskRunnerRoutinePool = routines.NewPool(c.taskRunnerGoRoutines)
 	c.taskRunner = baur.NewTaskRunner()
 	if c.showOutput && !verboseFlag {
-		c.taskRunner.LogFn = stdout.Printf
+		c.taskRunner.LogFn = stderr.Printf
 	}
 
 	c.dockerClient, err = docker.NewClient(log.StdLogger.Debugf)

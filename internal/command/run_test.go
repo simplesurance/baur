@@ -151,12 +151,12 @@ echo "greetings from script.sh"
 
 	runCmdTest := newRunCmd()
 	runCmdTest.SetArgs([]string{"-o"})
-	stdout, _ := interceptCmdOutput(t)
+	_, stderr := interceptCmdOutput(t)
 
 	err = runCmdTest.Execute()
 	require.NoError(t, err)
 
-	require.Equal(t, 1, strings.Count(stdout.String(), "greetings from script.sh"))
+	require.Equal(t, 1, strings.Count(stderr.String(), "greetings from script.sh"))
 }
 
 func TestRunShowOutputOnErrorOutputIsPrintedOnce(t *testing.T) {
@@ -194,7 +194,7 @@ exit 1
 
 	runCmdTest := newRunCmd()
 	runCmdTest.SetArgs([]string{"-o"})
-	stdout, _ := interceptCmdOutput(t)
+	_, stderr := interceptCmdOutput(t)
 
 	oldExitFunc := exitFunc
 	var exitCode int
@@ -209,7 +209,7 @@ exit 1
 	require.NoError(t, err)
 	require.Equal(t, 1, exitCode)
 
-	require.Equal(t, 1, strings.Count(stdout.String(), "I will fail!"))
+	require.Equal(t, 1, strings.Count(stderr.String(), "I will fail!"))
 }
 
 func createEnvVarTestApp(t *testing.T, appName, taskName string, envVarsCfg []cfg.EnvVarsInputs) {
