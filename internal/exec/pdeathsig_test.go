@@ -56,7 +56,7 @@ func deathSignalParent() {
 
 func deathSignalChild() {
 	fmt.Printf("child started, pid: %d\n", os.Getpid())
-	select {}
+	time.Sleep(24 * time.Hour)
 }
 
 func TestProcessTerminatesWithParent(t *testing.T) {
