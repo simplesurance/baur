@@ -1,3 +1,6 @@
+---
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
 release:
   draft: true
   prerelease: auto
