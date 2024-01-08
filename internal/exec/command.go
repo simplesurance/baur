@@ -21,7 +21,7 @@ type PrintfFn func(format string, a ...any)
 
 var (
 	// DefaultLogFn is the default debug print function.
-	DefaultLogFn = func(string, ...interface{}) {}
+	DefaultLogFn PrintfFn
 	// DefaultLogPrefix is the default prefix that is prepended to messages passed to the debugf function.
 	DefaultLogPrefix = "exec: "
 	// DefaultStderrColorFn is the default function that is used to colorize stderr output that is streamed to the log function.
@@ -104,6 +104,9 @@ func (c *Cmd) Env(env []string) *Cmd {
 }
 
 func (c *Cmd) logf(format string, a ...any) {
+	if c.logFn == nil {
+		return
+	}
 	c.logFn(c.logPrefix+format, a...)
 }
 
