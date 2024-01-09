@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -29,13 +30,13 @@ func taskMerge(task taskDef, workingDir string, resolver Resolver, includeDB *In
 		// The includeSpec can refer to an input or output.
 		// If no input include for it exist, ErrIncludeIDNotFound is
 		// ignored and we try to load an output include instead.
-		if err != nil && err != ErrIncludeIDNotFound {
+		if err != nil && !errors.Is(err, ErrIncludeIDNotFound) {
 			return fieldErrorWrap(fmt.Errorf("%q: %w", includeSpec, err), "Includes")
 		}
 
 		outputInclude, err := includeDB.loadOutputInclude(resolver, workingDir, includeSpec)
 		if err != nil {
-			if err == ErrIncludeIDNotFound {
+			if errors.Is(err, ErrIncludeIDNotFound) {
 				return fieldErrorWrap(fmt.Errorf("%q: %w", includeSpec, err), "Includes")
 			}
 

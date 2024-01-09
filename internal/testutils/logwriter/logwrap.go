@@ -2,6 +2,7 @@ package logwriter
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -45,7 +46,7 @@ func (l *Logger) Write(p []byte) (int, error) {
 	for {
 		line, err := l.buf.ReadString('\n')
 		if err != nil {
-			if err != io.EOF {
+			if !errors.Is(err, io.EOF) {
 				panic(fmt.Sprintf("logwrap: reading from buffer failed: %s", err))
 			}
 			// add chunk without line-ending back to buffer

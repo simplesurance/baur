@@ -2,6 +2,7 @@ package version
 
 import (
 	_ "embed" // is required to initialize the rawVersion variable with content from the ver file
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -77,7 +78,7 @@ func New(ver string) (*SemVer, error) {
 
 	ver = strings.TrimSpace(ver)
 	matches, err := fmt.Sscanf(ver, "%d.%d.%d-%s", &major, &minor, &patch, &appendix)
-	if (err != nil && err != io.ErrUnexpectedEOF) || matches < 1 {
+	if (err != nil && !errors.Is(err, io.ErrUnexpectedEOF)) || matches < 1 {
 		return nil, fmt.Errorf("invalid format, should be <Major>[.<Minor>[.<Patch>[-appendix]]]: %w", err)
 	}
 

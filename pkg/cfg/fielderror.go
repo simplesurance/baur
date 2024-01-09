@@ -25,9 +25,9 @@ func newFieldError(msg string, path ...string) *fieldError {
 // If it is of type FieldError, the passed paths are prepended to it's
 // ElementPath and err is returned.
 func fieldErrorWrap(err error, path ...string) error {
-	valError, ok := err.(*fieldError)
-	if ok {
-		valError.elementPath = append(path, valError.elementPath...)
+	var fErr *fieldError
+	if errors.As(err, &fErr) {
+		fErr.elementPath = append(path, fErr.elementPath...)
 		return err
 	}
 

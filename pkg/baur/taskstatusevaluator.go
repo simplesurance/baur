@@ -2,6 +2,7 @@ package baur
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -79,7 +80,7 @@ func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs *Inputs,
 
 	run, err := t.store.LatestTaskRunByDigest(ctx, task.AppName, task.Name, totalInputDigest.String())
 	if err != nil {
-		if err == storage.ErrNotExist {
+		if errors.Is(err, storage.ErrNotExist) {
 			return TaskStatusExecutionPending, nil, nil
 		}
 

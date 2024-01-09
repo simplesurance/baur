@@ -46,10 +46,10 @@ func (u *CfgUpgrader) upgradeAppConfigs(
 
 		if err := appCfg.Validate(); err != nil {
 			if appCfg.Name != "" {
-				return fmt.Errorf("%s: %s", appCfg.Name, err)
+				return fmt.Errorf("%s: %w", appCfg.Name, err)
 			}
 
-			return fmt.Errorf("%s: %s", cfgPath, err)
+			return fmt.Errorf("%s: %w", cfgPath, err)
 		}
 
 		newAppCfg := v4.UpgradeAppConfig(appCfg)
@@ -142,7 +142,7 @@ func (u *CfgUpgrader) upgradeV4() error {
 		}
 
 		if err := oldInclude.Validate(); err != nil {
-			return fmt.Errorf("%s: %s", includePath, err)
+			return fmt.Errorf("%s: %w", includePath, err)
 		}
 
 		newInclude := v4.UpgradeIncludeConfig(oldInclude)

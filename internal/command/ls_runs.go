@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -168,7 +169,7 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 	)
 
 	if err != nil {
-		if err == storage.ErrNotExist {
+		if errors.Is(err, storage.ErrNotExist) {
 			stderr.Println("no matching task runs exist")
 			exitFunc(1)
 		}
