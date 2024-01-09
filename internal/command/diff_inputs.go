@@ -292,7 +292,7 @@ func getPreviousTaskRun(psql storage.Storer, argDetails *diffInputArgDetails) *s
 		},
 	)
 
-	if err != nil && errors.Unwrap(err) != found {
+	if err != nil && errors.Unwrap(err) != found { //nolint:errorlint
 		exitOnErr(err)
 	}
 
@@ -331,7 +331,7 @@ func getTaskRunByID(psql storage.Storer, id int) *storage.TaskRunWithID {
 		},
 	)
 
-	if err != nil && err == storage.ErrNotExist {
+	if errors.Is(err, storage.ErrNotExist) {
 		err = fmt.Errorf("task-run %d does not exist", id)
 	}
 	exitOnErr(err)

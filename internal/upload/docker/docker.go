@@ -3,6 +3,7 @@ package docker
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -163,7 +164,7 @@ func (c *Client) Upload(image, registryAddr, repository, tag string) (string, er
 	for {
 		outStream.Flush()
 		line, err := outBuf.ReadString('\n')
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 
@@ -190,9 +191,11 @@ func (c *Client) SizeBytes(imageID string) (int64, error) {
 // Exists return true if the image with the given ID exist, otherwise false.
 func (c *Client) Exists(imageID string) (bool, error) {
 	_, err := c.clt.InspectImage(imageID)
-	if err != nil && err != docker.ErrNoSuchImage {
+	if err != nil {
+		if errors.Is(err, docker.ErrNoSuchImage) {
+			return false, nil
+		}
 		return false, err
 	}
-
-	return err != docker.ErrNoSuchImage, nil
+	return true, nil
 }

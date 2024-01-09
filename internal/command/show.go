@@ -334,7 +334,7 @@ func (*showCmd) showBuild(taskRunID int) {
 
 	taskRun, err := storageClt.TaskRun(ctx, taskRunID)
 	if err != nil {
-		if err == storage.ErrNotExist {
+		if errors.Is(err, storage.ErrNotExist) {
 			stderr.Printf("task run with id %d does not exist\n", taskRunID)
 			exitFunc(1)
 		}

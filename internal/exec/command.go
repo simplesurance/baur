@@ -112,13 +112,12 @@ func (c *Cmd) logf(format string, a ...any) {
 
 func exitCodeFromErr(waitErr error) (exitCode int, err error) {
 	var ee *exec.ExitError
-	var ok bool
 
 	if waitErr == nil {
 		return 0, err
 	}
 
-	if ee, ok = waitErr.(*exec.ExitError); !ok {
+	if !errors.As(waitErr, &ee) {
 		return -1, waitErr
 	}
 

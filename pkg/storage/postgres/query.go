@@ -101,7 +101,7 @@ func (c *Client) inputStrings(ctx context.Context, taskRunID int) ([]*storage.In
 
 	rows, err := c.db.Query(ctx, query, taskRunID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, storage.ErrNotExist
 		}
 
@@ -140,7 +140,7 @@ func (c *Client) inputFiles(ctx context.Context, taskRunID int) ([]*storage.Inpu
 
 	rows, err := c.db.Query(ctx, query, taskRunID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, storage.ErrNotExist
 		}
 
@@ -178,7 +178,7 @@ func (c *Client) inputEnvVars(ctx context.Context, taskRunID int) ([]*storage.In
 
 	rows, err := c.db.Query(ctx, query, taskRunID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, storage.ErrNotExist
 		}
 

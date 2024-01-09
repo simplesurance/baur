@@ -2,6 +2,7 @@ package fs
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -174,7 +175,7 @@ func FileReadLine(path string) (string, error) {
 
 	r := bufio.NewReader(fd)
 	content, err := r.ReadString('\n')
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return "", err
 	}
 

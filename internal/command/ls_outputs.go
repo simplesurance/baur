@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"os"
 	"strconv"
 
@@ -59,7 +60,7 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 
 	_, err = pgClient.TaskRun(ctx, taskRunID)
 	if err != nil {
-		if err == storage.ErrNotExist {
+		if errors.Is(err, storage.ErrNotExist) {
 			stderr.Printf("task run with ID %d does not exist", taskRunID)
 			exitFunc(1)
 		}
@@ -67,7 +68,7 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 
 	outputs, err := pgClient.Outputs(ctx, taskRunID)
 	if err != nil {
-		if err == storage.ErrNotExist {
+		if errors.Is(err, storage.ErrNotExist) {
 			log.Debugf("task run with ID %d has no outputs", taskRunID)
 		} else {
 			exitOnErr(err)
