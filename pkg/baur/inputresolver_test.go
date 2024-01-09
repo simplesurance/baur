@@ -3,6 +3,7 @@ package baur
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -630,7 +631,7 @@ func TestResolveSymlink(t *testing.T) {
 			testdir:   "directory_broken",
 			inputPath: "**",
 			validateFn: func(t *testing.T, err error, result []Input) {
-				require.ErrorContains(t, err, "no such file or directory")
+				require.ErrorIs(t, err, os.ErrNotExist)
 				require.Empty(t, result)
 			},
 		},
@@ -638,7 +639,7 @@ func TestResolveSymlink(t *testing.T) {
 			testdir:   "file_broken",
 			inputPath: "symlink",
 			validateFn: func(t *testing.T, err error, result []Input) {
-				require.ErrorContains(t, err, "file does not exist")
+				require.ErrorIs(t, err, os.ErrNotExist)
 				require.Empty(t, result)
 			},
 		},
@@ -646,7 +647,7 @@ func TestResolveSymlink(t *testing.T) {
 			testdir:   "file_broken",
 			inputPath: "**",
 			validateFn: func(t *testing.T, err error, result []Input) {
-				require.ErrorContains(t, err, "no such file or directory")
+				require.ErrorIs(t, err, os.ErrNotExist)
 				require.Empty(t, result)
 			},
 		},
@@ -689,16 +690,15 @@ func TestResolveSymlink(t *testing.T) {
 		{
 			testdir:   "symlinks/directory_containing_broken_symlink",
 			inputPath: "**",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, _ []Input) {
 				require.ErrorContains(t, err, "file does not exist")
 			},
 		},
 		{
 			testdir:   "symlinks",
 			inputPath: "directory_containing_broken_symlin**/**",
-			validateFn: func(t *testing.T, err error, result []Input) {
-				t.Log(err)
-				require.ErrorContains(t, err, "file does not exist")
+			validateFn: func(t *testing.T, err error, _ []Input) {
+				require.ErrorIs(t, err, os.ErrNotExist)
 			},
 		},
 	}
