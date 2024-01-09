@@ -58,7 +58,7 @@ func GetState(dir string, logfunc Logfn) (StateFetcher, error) {
 	}
 
 	if isGitDir {
-		logfunc("vcs: %s is part of a git repository found\n", dir)
+		logfunc("vcs: %s is part of a git repository\n", dir)
 
 		state.current = git.NewRepository(dir)
 
