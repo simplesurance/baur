@@ -15,7 +15,8 @@ import (
 	"github.com/fatih/color"
 )
 
-const defMaxErrOutputBytesPerStream = 16 * 1024
+const maxErrOutputBytesPerStream = 16 * 1024
+const outputStreamLineReaderBufSiz = 512 * 1024
 
 type PrintfFn func(format string, a ...any)
 
@@ -55,7 +56,7 @@ func Command(name string, arg ...string) *Cmd {
 		logFn:                      DefaultLogFn,
 		stdout:                     nil,
 		stderr:                     nil,
-		maxStoredErrBytesPerStream: defMaxErrOutputBytesPerStream,
+		maxStoredErrBytesPerStream: maxErrOutputBytesPerStream,
 		logFnStderrStreamColorfn:   DefaultStderrColorFn,
 	}
 }
@@ -145,7 +146,7 @@ func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) 
 	go func() {
 		sc := bufio.NewScanner(logReader)
 		// use a bigger buf to make it more unlikely that it will fail because of very long lines
-		sc.Buffer([]byte{}, 512*1024)
+		sc.Buffer([]byte{}, outputStreamLineReaderBufSiz)
 
 		for sc.Scan() {
 			if useColorStderrColorfn && c.logFnStderrStreamColorfn != nil {
@@ -156,7 +157,23 @@ func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) 
 		}
 
 		if err := sc.Err(); err != nil {
-			_ = logReader.CloseWithError(fmt.Errorf("%s: streaming output failed: %w", name, err))
+			if errors.Is(err, bufio.ErrTooLong) {
+				c.logf("streaming output failed, shown output might be complete, lines are too long, requiring newlines after latest %dBytes in output\n",
+					outputStreamLineReaderBufSiz)
+			} else {
+				c.logf("streaming output failed, shown output might be complete: %s\n", err)
+			}
+			// We do not Close the logReader with an error because
+			// it would cause the MultiWriter to fail on all subsequent Write() operations for all streams,
+			// the command could fail because it could not write to
+			// stderr/sdout anymore.
+
+			// drain the logReader until the end, to prevent blocks of the MultiWriter
+			_, cpErr := io.Copy(io.Discard, logReader)
+			if cpErr != nil {
+				logReader.CloseWithError(fmt.Errorf("draining stream reader after line scanning failed, also failed: %w", errors.Join(err, cpErr)))
+			}
+
 		}
 		close(scannerTerminated)
 	}()

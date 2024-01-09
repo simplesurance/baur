@@ -46,15 +46,14 @@ func TestLongStdoutOutputIsTruncated(t *testing.T) {
 
 	res, err := Command(
 		"dd", "if=/dev/urandom", "bs=1024", fmt.Sprintf("count=%d", outBytes/1024),
-	).
-		Run(ctx)
+	).Run(ctx)
 	require.NoError(t, err)
 	require.NoError(t, res.ExpectSuccess())
 
-	assert.GreaterOrEqual(t, len(res.stdout.Bytes()), defMaxErrOutputBytesPerStream)
+	assert.GreaterOrEqual(t, len(res.stdout.Bytes()), maxErrOutputBytesPerStream)
 
 	// expected size: defMaxErrOutputBytesPerStream for the prefix output + defMaxErrOutputBytesPerStream for the suffix output + some bytes for the information that has been truncated
-	assert.LessOrEqual(t, len(res.stdout.Bytes()), 2*defMaxErrOutputBytesPerStream+1024)
+	assert.LessOrEqual(t, len(res.stdout.Bytes()), 2*maxErrOutputBytesPerStream+1024)
 }
 
 func TestCancellingRuningCommand(t *testing.T) {
@@ -65,6 +64,12 @@ func TestCancellingRuningCommand(t *testing.T) {
 	assert.Error(t, err, "command execution did not fail") //nolint:testifylint
 	require.Error(t, ctx.Err(), "context err is nil")
 	assert.ErrorIs(t, err, ctx.Err()) //nolint:testifylint
-	t.Log(err)
+}
 
+func TestExecDoesNotFailIfLongLinesAreStreamed(t *testing.T) {
+	_, err := Command("bash", "-c",
+		fmt.Sprintf("tr -d '\n' </dev/urandom | head -c %d",
+			2*outputStreamLineReaderBufSiz)).LogFn(t.Logf).
+		ExpectSuccess().Run(context.Background())
+	require.NoError(t, err)
 }
