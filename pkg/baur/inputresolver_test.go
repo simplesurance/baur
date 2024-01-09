@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v3/internal/digest"
 	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
@@ -724,4 +725,126 @@ func TestResolveSymlink(t *testing.T) {
 			tc.validateFn(t, err, result)
 		})
 	}
+}
+
+func TestFileContentChanges(t *testing.T) {
+	log.RedirectToTestingLog(t)
+	tempDir := t.TempDir()
+	const fRel = "file"
+	f := filepath.Join(tempDir, fRel)
+	fstest.WriteToFile(t, []byte("111"), f)
+
+	task := Task{
+		RepositoryRoot: tempDir,
+		Directory:      tempDir,
+		UnresolvedInputs: &cfg.Input{
+			Files: []cfg.FileInputs{{Paths: []string{fRel}}},
+		},
+	}
+	before := resolveInputs(t, &task)
+
+	fstest.WriteToFile(t, []byte("11113"), f)
+	after := resolveInputs(t, &task)
+	require.NotEqual(t, before.String(), after.String())
+}
+
+type symlinkTestInfo struct {
+	TempDir               string
+	SymlinkPath           string
+	SymlinkTargetFilePath string
+	Task                  *Task
+	TotalInputDigest      *digest.Digest
+}
+
+func prepareSymlinkTestDir(t *testing.T) *symlinkTestInfo {
+	tempDir := t.TempDir()
+	f := filepath.Join(tempDir, "file")
+
+	const symlinkRel = "slink"
+	symlink := filepath.Join(tempDir, symlinkRel)
+
+	fstest.WriteToFile(t, []byte("hello"), f)
+	require.NoError(t, os.Symlink(f, symlink))
+
+	task := Task{
+		RepositoryRoot: tempDir,
+		Directory:      tempDir,
+		UnresolvedInputs: &cfg.Input{
+			Files: []cfg.FileInputs{{Paths: []string{symlinkRel}}},
+		},
+	}
+
+	digest := resolveInputs(t, &task)
+
+	return &symlinkTestInfo{
+		TempDir:               tempDir,
+		SymlinkPath:           symlink,
+		SymlinkTargetFilePath: f,
+		Task:                  &task,
+		TotalInputDigest:      digest,
+	}
+}
+
+func resolveInputs(t *testing.T, task *Task) *digest.Digest {
+	resolver := NewInputResolver(&vcs.NoVCsState{})
+	result, err := resolver.Resolve(
+		context.Background(),
+		task.RepositoryRoot,
+		task,
+	)
+	require.NoError(t, err)
+
+	digest, err := NewInputs(result).Digest()
+	require.NoError(t, err)
+	require.NotEmpty(t, digest.String())
+	return digest
+}
+
+func TestSymlinkIsReplacedByTargetFile(t *testing.T) {
+	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/490")
+	log.RedirectToTestingLog(t)
+
+	info := prepareSymlinkTestDir(t)
+
+	require.NoError(t, os.Remove(info.SymlinkPath))
+	require.NoError(t, os.Rename(info.SymlinkTargetFilePath, info.SymlinkPath))
+
+	digestAfterReplace := resolveInputs(t, info.Task)
+	require.NotEqual(t, info.TotalInputDigest.String(), digestAfterReplace.String())
+}
+
+func TestSymlinkTargetPathChangesFileIsSame(t *testing.T) {
+	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/491")
+	log.RedirectToTestingLog(t)
+
+	info := prepareSymlinkTestDir(t)
+
+	newTargetFilePath := filepath.Join(info.TempDir, "file1")
+
+	require.NoError(t, os.Rename(info.SymlinkTargetFilePath, newTargetFilePath))
+	require.NoError(t, os.Remove(info.SymlinkPath))
+	require.NoError(t, os.Symlink(newTargetFilePath, info.SymlinkPath))
+
+	digestAfter := resolveInputs(t, info.Task)
+	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
+}
+
+func TestSymlinkTargetFileContentChanges(t *testing.T) {
+	log.RedirectToTestingLog(t)
+
+	info := prepareSymlinkTestDir(t)
+	fstest.WriteToFile(t, []byte("hello symlink"), info.SymlinkTargetFilePath)
+	digestAfter := resolveInputs(t, info.Task)
+	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
+}
+
+func TestSymlinkTargetFilePermissionsChange(t *testing.T) {
+	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/492")
+	log.RedirectToTestingLog(t)
+
+	info := prepareSymlinkTestDir(t)
+	require.NoError(t, os.Chmod(info.SymlinkTargetFilePath, 0777))
+
+	digestAfter := resolveInputs(t, info.Task)
+	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
 }
