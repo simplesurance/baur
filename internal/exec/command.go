@@ -208,10 +208,10 @@ func (c *Cmd) Run(ctx context.Context) (*Result, error) {
 
 	// if a write to one of the writers of the MultiWriter fails, the command will fail
 	stdoutPss := prefixSuffixSaver{N: c.maxStoredErrBytesPerStream}
-	cmd.Stdout = newMultiWriter(c.stdout, stdoutLogWriter, &stdoutPss)
+	cmd.Stdout = newMultiWriter(&stdoutPss, c.stdout, stdoutLogWriter)
 
 	stderrPss := prefixSuffixSaver{N: c.maxStoredErrBytesPerStream}
-	cmd.Stderr = newMultiWriter(c.stderr, stderrLogWriter, &stderrPss)
+	cmd.Stderr = newMultiWriter(&stderrPss, c.stderr, stderrLogWriter)
 
 	// lock to thread because of:
 	// https://github.com/golang/go/issues/27505#issuecomment-713706104
