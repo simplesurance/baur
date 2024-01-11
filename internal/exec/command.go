@@ -9,7 +9,6 @@ import (
 	"io"
 	"os/exec"
 	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/fatih/color"
@@ -29,6 +28,7 @@ var (
 	DefaultStderrColorFn = color.New(color.FgRed).SprintFunc()
 )
 
+// Cmd represent a command that can be executed as new process.
 type Cmd struct {
 	name string
 	args []string
@@ -47,7 +47,7 @@ type Cmd struct {
 	logFnStderrStreamColorfn func(a ...any) string
 }
 
-// Command returns an executable representation of a Command.
+// Command creates a Cmd that executes the binary named name with the arguments args.
 func Command(name string, arg ...string) *Cmd {
 	return &Cmd{
 		name:                       name,
@@ -79,8 +79,9 @@ func (c *Cmd) LogFn(fn PrintfFn) *Cmd {
 	return c
 }
 
-// ExpectSuccess if called, Run() will return an error if the command did not
-// exit with code 0.
+// ExpectSuccess when the command is executed and the execution of the process
+// fails (e.g. exit status != 0 on unix) return an ExitCodeError instead of
+// nil.
 func (c *Cmd) ExpectSuccess() *Cmd {
 	c.expectSuccess = true
 	return c
@@ -109,24 +110,6 @@ func (c *Cmd) logf(format string, a ...any) {
 		return
 	}
 	c.logFn(c.logPrefix+format, a...)
-}
-
-func exitCodeFromErr(waitErr error) (exitCode int, err error) {
-	var ee *exec.ExitError
-
-	if waitErr == nil {
-		return 0, err
-	}
-
-	if !errors.As(waitErr, &ee) {
-		return -1, waitErr
-	}
-
-	if status, ok := ee.Sys().(syscall.WaitStatus); ok {
-		return status.ExitStatus(), nil
-	}
-
-	return -1, waitErr
 }
 
 func newMultiWriter(w ...io.Writer) io.Writer {
@@ -191,6 +174,9 @@ func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) 
 }
 
 // Run executes the command.
+// If the command could not be started an error is returned.
+// If the command was started successfully, and terminated unsuccessfully no
+// error is returned, except if *Cmd.ExpectSuccess() was called before.
 func (c *Cmd) Run(ctx context.Context) (*Result, error) {
 	cmd := exec.CommandContext(ctx, c.name, c.args...)
 	cmd.SysProcAttr = defSysProcAttr()
@@ -225,33 +211,34 @@ func (c *Cmd) Run(ctx context.Context) (*Result, error) {
 		return nil, errors.Join(err, stdoutLogWriterCloseFn(), stderrLogWriterCloseFn())
 	}
 
-	waitErr := cmd.Wait()
+	err = cmd.Wait()
 	logWriterErr := errors.Join(stdoutLogWriterCloseFn(), stderrLogWriterCloseFn())
-
-	if waitErr != nil && ctx.Err() != nil {
-		return nil, errors.Join(ctx.Err(), waitErr, logWriterErr)
+	if err != nil && ctx.Err() != nil {
+		return nil, errors.Join(ctx.Err(), err, logWriterErr)
 	}
 
 	if logWriterErr != nil {
-		return nil, errors.Join(logWriterErr, waitErr)
+		return nil, errors.Join(logWriterErr, err)
 	}
 
-	exitCode, exitCodeErr := exitCodeFromErr(waitErr)
-	if exitCodeErr != nil {
-		return nil, exitCodeErr
+	var ee *exec.ExitError
+	if err != nil && !errors.As(err, &ee) {
+		return nil, err
 	}
-
-	c.logf("command terminated with exitCode: %d\n", exitCode)
 
 	result := Result{
 		Command:  cmd.String(),
 		Dir:      cmd.Dir,
-		ExitCode: exitCode,
+		ExitCode: cmd.ProcessState.ExitCode(),
+		success:  cmd.ProcessState.Success(),
 		stdout:   &stdoutPss,
 		stderr:   &stderrPss,
+		ee:       ee,
 	}
-	if c.expectSuccess && exitCode != 0 {
-		return nil, ExitCodeError{Result: &result}
+	c.logf("command terminated with exit code: %d\n", result.ExitCode)
+
+	if c.expectSuccess && !result.success {
+		return nil, &ExitCodeError{Result: &result}
 	}
 
 	return &result, nil

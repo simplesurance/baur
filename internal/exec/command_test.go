@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"runtime"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestCombinedStdoutOutput(t *testing.T) {
@@ -53,6 +55,8 @@ func TestCommandFails(t *testing.T) {
 	if len(res.CombinedOutput) != 0 {
 		t.Fatalf("expected no output from command but got '%s'", res.StrOutput())
 	}
+	require.Error(t, res.ExpectSuccess())
+	t.Log(res.ExpectSuccess())
 }
 
 func TestExpectSuccess(t *testing.T) {

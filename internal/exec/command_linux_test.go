@@ -18,6 +18,7 @@ func TestCombinedStderrOutput(t *testing.T) {
 
 	res, err := Command("sh", "-c", fmt.Sprintf("echo -n '%s' 1>&2", echoStr)).RunCombinedOut(ctx)
 	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	if res.ExitCode != 0 {
 		t.Fatal(res.ExpectSuccess())
@@ -50,6 +51,7 @@ func TestLongStdoutOutputIsTruncated(t *testing.T) {
 		"dd", "if=/dev/urandom", "bs=1024", fmt.Sprintf("count=%d", outBytes/1024),
 	).Run(ctx)
 	require.NoError(t, err)
+	require.NotNil(t, res)
 	require.NoError(t, res.ExpectSuccess())
 
 	assert.GreaterOrEqual(t, len(res.stdout.Bytes()), maxErrOutputBytesPerStream)
