@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"runtime"
@@ -57,4 +58,18 @@ func TestExpectSuccess(t *testing.T) {
 	}
 	require.Error(t, err)
 	assert.Nil(t, res)
+}
+
+func TestOutputStream(t *testing.T) {
+	ctx := context.Background()
+	const echoStr = "hello\nline2"
+
+	buf := bytes.Buffer{}
+
+	_, err := Command("bash", "-c",
+		fmt.Sprintf("echo '%s'", echoStr)).LogPrefix("").
+		LogFn(func(f string, a ...any) { fmt.Fprintf(&buf, f, a...) }).ExpectSuccess().Run(ctx)
+	require.NoError(t, err)
+	require.Contains(t, buf.String(), echoStr)
+
 }
