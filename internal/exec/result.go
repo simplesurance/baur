@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -10,26 +11,31 @@ type ExitCodeError struct {
 	*Result
 }
 
-// Error returns the error description.
-func (e *ExitCodeError) Error() string {
+type SprintFn func(...any) string
+
+func (e *ExitCodeError) ColoredError(highlightFn SprintFn, errorFn SprintFn, withCmdOutput bool) string {
 	var result strings.Builder
 	var stdoutExists bool
 
-	result.WriteString("executing \"")
+	result.WriteString("executing ")
 	result.WriteString(e.Command)
-	result.WriteString("\" in \"")
+	result.WriteString(" in \"")
 	result.WriteString(e.Dir)
-	result.WriteString("\" failed: ")
+	result.WriteString("\" ")
+	result.WriteString(errorFn("failed"))
+	result.WriteString(": ")
 	result.WriteString(e.ee.String())
 
-	if len(e.stdout.Bytes()) == 0 && len(e.stderr.Bytes()) == 0 {
+	if !withCmdOutput || (len(e.stdout.Bytes()) == 0 && len(e.stderr.Bytes()) == 0) {
 		return result.String()
 	}
 
-	result.WriteString(", output:\n")
+	result.WriteRune('\n')
 
 	if b := e.stdout.Bytes(); len(b) > 0 {
-		result.WriteString("### stdout ###\n")
+		result.WriteString("### ")
+		result.WriteString(highlightFn("stdout "))
+		result.WriteString("###\n")
 		result.WriteString(strings.TrimSpace(string(b)))
 		result.WriteRune('\n')
 		stdoutExists = true
@@ -39,12 +45,20 @@ func (e *ExitCodeError) Error() string {
 		if stdoutExists {
 			result.WriteRune('\n')
 		}
-		result.WriteString("### stderr ###\n")
-		result.WriteString(strings.TrimSpace(string(b)))
+		result.WriteString("### ")
+		result.WriteString(highlightFn("stderr "))
+		result.WriteString("###\n")
+		result.WriteString(errorFn(strings.TrimSpace(string(b))))
 		result.WriteRune('\n')
 	}
 
 	return result.String()
+}
+
+// Error returns the error description.
+func (e *ExitCodeError) Error() string {
+	return e.ColoredError(fmt.Sprint, fmt.Sprint, true)
+
 }
 
 // Result describes the result of a run Cmd.
