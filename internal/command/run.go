@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
+	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/routines"
 	"github.com/simplesurance/baur/v3/internal/upload/docker"
@@ -267,56 +268,45 @@ func (c *runCmd) skipAllScheduledTaskRuns() {
 
 func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 	result, err := c.taskRunner.Run(task)
-	if err != nil {
-		if errors.Is(err, baur.ErrTaskRunSkipped) {
-			stderr.Printf("%s: execution %s\n",
-				term.Highlight(task),
-				statusStrSkipped,
-			)
-			return nil, err
-		}
+	if err == nil {
+		err = result.ExpectSuccess()
+	}
 
-		stderr.Printf("%s: execution %s, error: %s\n",
+	if err == nil {
+		stdout.TaskPrintf(task, "execution %s (%s)\n",
+			statusStrSuccess,
+			term.FormatDuration(
+				result.StopTime.Sub(result.StartTime),
+			),
+		)
+
+		return result, nil
+	}
+
+	if errors.Is(err, baur.ErrTaskRunSkipped) {
+		stderr.Printf("%s: execution %s\n",
 			term.Highlight(task),
-			statusStrFailed,
-			err,
+			statusStrSkipped,
 		)
 		return nil, err
 	}
 
-	if result.Result.ExitCode != 0 {
-		if c.showOutput || verboseFlag {
-			stderr.Printf("%s: execution %s (%s), command exited with code %d\n",
-				term.Highlight(task),
-				statusStrFailed,
-				term.FormatDuration(
-					result.StopTime.Sub(result.StartTime),
-				),
-				result.ExitCode,
-			)
-		} else {
-			err := result.Result.ExpectSuccess()
-			stderr.Printf("%s: execution %s (%s): %s\n",
-				term.Highlight(task),
-				statusStrFailed,
-				term.FormatDuration(
-					result.StopTime.Sub(result.StartTime),
-				),
-				err.Error(),
-			)
-		}
-
-		return nil, fmt.Errorf("execution failed with exit code %d", result.ExitCode)
+	var ee *exec.ExitCodeError
+	if errors.As(err, &ee) {
+		stderr.Printf("%s: %s\n",
+			term.Highlight(task),
+			ee.ColoredError(term.Highlight, term.RedHighlight, !c.showOutput && !verboseFlag),
+		)
+		return nil, err
 	}
 
-	stdout.TaskPrintf(task, "execution %s (%s)\n",
-		statusStrSuccess,
-		term.FormatDuration(
-			result.StopTime.Sub(result.StartTime),
-		),
+	stderr.Printf("%s: executing %q %s: %s\n",
+		term.Highlight(task),
+		term.Highlight(result.Command),
+		statusStrFailed,
+		err,
 	)
-
-	return result, nil
+	return nil, err
 }
 
 type pendingTask struct {
