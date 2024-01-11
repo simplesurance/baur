@@ -19,11 +19,7 @@ func TestCombinedStderrOutput(t *testing.T) {
 	res, err := Command("sh", "-c", fmt.Sprintf("echo -n '%s' 1>&2", echoStr)).RunCombinedOut(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-
-	if res.ExitCode != 0 {
-		t.Fatal(res.ExpectSuccess())
-	}
-
+	require.Equal(t, 0, res.ExitCode, "unexpected exit code")
 	assert.Equal(t, echoStr, res.StrOutput(), "unexpected output")
 }
 
