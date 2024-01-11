@@ -124,11 +124,11 @@ func newMultiWriter(w ...io.Writer) io.Writer {
 }
 
 func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) (io.Writer, func() error) {
-	logReader, logWriter := io.Pipe()
-	scannerTerminated := make(chan struct{})
+	r, w := io.Pipe()
+	done := make(chan struct{})
 
 	go func() {
-		sc := bufio.NewScanner(logReader)
+		sc := bufio.NewScanner(r)
 		// use a bigger buf to make it more unlikely that it will fail because of very long lines
 		sc.Buffer([]byte{}, outputStreamLineReaderBufSiz)
 
@@ -142,10 +142,10 @@ func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) 
 
 		if err := sc.Err(); err != nil {
 			if errors.Is(err, bufio.ErrTooLong) {
-				c.logf("streaming output failed, shown output might be complete, lines are too long, requiring newlines after latest %dBytes in output\n",
-					outputStreamLineReaderBufSiz)
+				c.logf("WARN: streaming %s output failed, shown output might be complete, lines are too long, requiring newlines after latest %dBytes in output\n",
+					name, outputStreamLineReaderBufSiz)
 			} else {
-				c.logf("streaming output failed, shown output might be complete: %s\n", err)
+				c.logf("WARN: streaming %s output failed, shown output might be complete: %s\n", name, err)
 			}
 			// We do not Close the logReader with an error because
 			// it would cause the MultiWriter to fail on all subsequent Write() operations for all streams,
@@ -153,21 +153,21 @@ func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) 
 			// stderr/sdout anymore.
 
 			// drain the logReader until the end, to prevent blocks of the MultiWriter
-			_, cpErr := io.Copy(io.Discard, logReader)
+			_, cpErr := io.Copy(io.Discard, r)
 			if cpErr != nil {
-				logReader.CloseWithError(fmt.Errorf("draining stream reader after line scanning failed, also failed: %w", errors.Join(err, cpErr)))
+				r.CloseWithError(fmt.Errorf("draining %s stream reader after line scanning failed, also failed: %w", name, errors.Join(err, cpErr)))
 			}
 
 		}
-		close(scannerTerminated)
+		close(done)
 	}()
 
-	return logWriter, func() error {
-		err := logWriter.Close()
-		<-scannerTerminated
+	return w, func() error {
+		err := w.Close()
+		<-done
 
 		if err != nil {
-			return fmt.Errorf("%s: closing output stream failed: %w", name, err)
+			return fmt.Errorf("closing %s output stream failed: %w", name, err)
 		}
 
 		return nil
