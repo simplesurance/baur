@@ -1,8 +1,10 @@
 package exec
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -72,4 +74,39 @@ func TestExecDoesNotFailIfLongLinesAreStreamed(t *testing.T) {
 			2*outputStreamLineReaderBufSiz)).LogFn(t.Logf).
 		ExpectSuccess().Run(context.Background())
 	require.NoError(t, err)
+}
+
+func TestStdoutStderrStream(t *testing.T) {
+	ctx := context.Background()
+	buf := bytes.Buffer{}
+	mu := sync.Mutex{}
+
+	_, err := Command("bash", "-c", "echo 'stdoutHello'; echo 'stderrHello' >&2; echo -n 'stdoutNoNewLine'; echo -e '\tstdoutEnd'").
+		LogPrefix("").
+		LogFn(func(f string, a ...any) {
+			mu.Lock()
+			defer mu.Unlock()
+			fmt.Fprintf(&buf, f, a...)
+		}).ExpectSuccess().Run(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "stdoutHello\n")
+	assert.Contains(t, buf.String(), "stderrHello\n")
+	assert.Contains(t, buf.String(), "stdoutNoNewLine\tstdoutEnd\n")
+}
+
+func TestStdoutStderrPrefixSaver(t *testing.T) {
+	ctx := context.Background()
+
+	// The condition is racy, run the test multiple time to make it it likely to trigger the bug.
+	for i := 0; i < 100; i++ {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			result, err := Command("bash", "-c", "echo 'stdoutHello'; echo 'stderrHello' >&2; echo -n 'stdoutNoNewLine'; echo -e '\tstdoutEnd'").
+				LogPrefix("").
+				Run(ctx)
+			require.NoError(t, err)
+			require.NotNil(t, result)
+			assert.Equal(t, "stdoutHello\nstdoutNoNewLine\tstdoutEnd\n", string(result.stdout.Bytes()))
+			assert.Equal(t, "stderrHello\n", string(result.stderr.Bytes()))
+		})
+	}
 }
