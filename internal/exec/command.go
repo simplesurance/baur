@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"runtime"
 	"time"
@@ -173,6 +174,18 @@ func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) 
 	}
 }
 
+func (c *Cmd) resolveDir(d string) string {
+	if d != "" {
+		return d
+	}
+	d, err := os.Getwd()
+	if err != nil {
+		c.logFn("WARN: determining current working directory failed: %s", err)
+		return ""
+	}
+	return d
+}
+
 // Run executes the command.
 // If the command could not be started an error is returned.
 // If the command was started successfully, and terminated unsuccessfully no
@@ -181,7 +194,7 @@ func (c *Cmd) Run(ctx context.Context) (*Result, error) {
 	cmd := exec.CommandContext(ctx, c.name, c.args...)
 	cmd.SysProcAttr = defSysProcAttr()
 	cmd.WaitDelay = time.Minute
-	cmd.Dir = c.dir
+	cmd.Dir = c.resolveDir(c.dir)
 	cmd.Env = c.env
 
 	stdoutLogWriterCloseFn := func() error { return nil }
