@@ -1,7 +1,7 @@
 package exec
 
 import (
-	"fmt"
+	"os/exec"
 	"strings"
 )
 
@@ -11,11 +11,18 @@ type ExitCodeError struct {
 }
 
 // Error returns the error description.
-func (e ExitCodeError) Error() string {
+func (e *ExitCodeError) Error() string {
 	var result strings.Builder
 	var stdoutExists bool
 
-	result.WriteString(fmt.Sprintf("command exited with code %d, output:\n", e.ExitCode))
+	result.WriteString("execution failed: ")
+	result.WriteString(e.ee.String())
+
+	if len(e.stdout.Bytes()) == 0 && len(e.stderr.Bytes()) == 0 {
+		return result.String()
+	}
+
+	result.WriteString(", output:\n")
 
 	if b := e.stdout.Bytes(); len(b) > 0 {
 		result.WriteString("### stdout ###\n")
@@ -41,19 +48,21 @@ type Result struct {
 	Command  string
 	Dir      string
 	ExitCode int
+	ee       *exec.ExitError
+	success  bool
 
 	stdout *prefixSuffixSaver
 	stderr *prefixSuffixSaver
 }
 
-// ExpectSuccess if the ExitCode in Result is not 0, the function returns an
-// ExitCodeError for the execution.
+// ExpectSuccess the command did not execute successful
+// (e.g. exit code != 0 on unix), a ExitCodeError is returned.
 func (r *Result) ExpectSuccess() error {
-	if r.ExitCode == 0 {
-		return nil
+	if !r.success {
+		return &ExitCodeError{Result: r}
 	}
 
-	return ExitCodeError{Result: r}
+	return nil
 }
 
 type ResultOut struct {
