@@ -15,7 +15,11 @@ func (e *ExitCodeError) Error() string {
 	var result strings.Builder
 	var stdoutExists bool
 
-	result.WriteString("execution failed: ")
+	result.WriteString("executing \"")
+	result.WriteString(e.Command)
+	result.WriteString("\" in \"")
+	result.WriteString(e.Dir)
+	result.WriteString("\" failed: ")
 	result.WriteString(e.ee.String())
 
 	if len(e.stdout.Bytes()) == 0 && len(e.stderr.Bytes()) == 0 {
