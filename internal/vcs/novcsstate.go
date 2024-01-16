@@ -22,3 +22,11 @@ func (*NoVCsState) WorktreeIsDirty() (bool, error) {
 func (NoVCsState) WithoutUntracked(_ ...string) ([]string, error) {
 	return nil, ErrVCSRepositoryNotExist
 }
+
+func (*NoVCsState) Name() string {
+	return "none"
+}
+
+func (*NoVCsState) UntrackedFiles() ([]string, error) {
+	return nil, ErrVCSRepositoryNotExist
+}

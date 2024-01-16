@@ -12,7 +12,7 @@ import (
 
 const separator = "------------------------------------------------------------------------------"
 
-var errorPrefix = color.New(color.FgRed).Sprint("ERROR:")
+var ErrorPrefix = color.New(color.FgRed).Sprint("ERROR:")
 
 // Stream is a concurrency-safe output for term.messages.
 type Stream struct {
@@ -49,18 +49,23 @@ func (s *Stream) TaskPrintf(task *baur.Task, format string, a ...interface{}) {
 // The method prints the error in the format: errorPrefix msg: err
 func (s *Stream) ErrPrintln(err error, msg ...interface{}) {
 	if len(msg) == 0 {
-		s.Println(errorPrefix, err)
+		s.Println(ErrorPrefix, err)
 		return
 	}
 
 	wholeMsg := fmt.Sprint(msg...)
-	s.Printf("%s %s: %s\n", errorPrefix, wholeMsg, err)
+	s.Printf("%s %s: %s\n", ErrorPrefix, wholeMsg, err)
 }
 
 // ErrPrintf prints an error with an optional printf-style message.
 // The method prints the error in the format: errorPrefix msg: err
 func (s *Stream) ErrPrintf(err error, format string, a ...interface{}) {
 	s.ErrPrintln(err, fmt.Sprintf(format, a...))
+}
+
+// PrintErrln prints as message that is prefixed with "ERROR: "
+func (s *Stream) PrintErrln(msg ...interface{}) {
+	s.Println(ErrorPrefix, fmt.Sprint(msg...))
 }
 
 // PrintSep prints a separator line

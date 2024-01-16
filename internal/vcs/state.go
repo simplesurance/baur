@@ -13,6 +13,8 @@ type StateFetcher interface {
 	CommitID() (string, error)
 	WorktreeIsDirty() (bool, error)
 	WithoutUntracked(paths ...string) ([]string, error)
+	Name() string
+	UntrackedFiles() ([]string, error)
 }
 
 var state = struct {

@@ -93,8 +93,8 @@ func WorktreeIsDirty(dir string) (bool, error) {
 	return true, nil
 }
 
-// UntrackedFiles returns a list of untracked files in the repository found at dir.
-// The returned paths are relative to dir.
+// UntrackedFiles returns a list of untracked and modified files in the git repository.
+// Files that exist and are in a .gitignore file are included.
 func UntrackedFiles(dir string) ([]string, error) {
 	const untrackedFilePrefix = "?? "
 	const ignoredFilePrefix = "!! "
