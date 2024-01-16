@@ -2,6 +2,7 @@ package s3
 
 import (
 	"context"
+	"net/url"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -53,8 +54,8 @@ func NewClient(ctx context.Context, logger Logger) (*Client, error) {
 	}, nil
 }
 
-// Upload uploads a file to an s3 bucket, on success it returns the URL to the
-// file.
+// Upload uploads a file to an s3 bucket, on success it returns the s3:// URL
+// of the object.
 func (c *Client) Upload(filepath, bucket, key string) (string, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
@@ -73,5 +74,11 @@ func (c *Client) Upload(filepath, bucket, key string) (string, error) {
 		return "", err
 	}
 
-	return res.Location, err
+	url := url.URL{
+		Scheme: "s3",
+		Host:   bucket,
+		Path:   *res.Key,
+	}
+
+	return url.String(), err
 }
