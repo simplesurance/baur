@@ -44,13 +44,14 @@ func init() {
 type statusCmd struct {
 	cobra.Command
 
-	csv            bool
-	quiet          bool
-	absPaths       bool
-	inputStr       []string
-	lookupInputStr string
-	buildStatus    flag.TaskStatus
-	fields         *flag.Fields
+	csv                     bool
+	quiet                   bool
+	absPaths                bool
+	inputStr                []string
+	lookupInputStr          string
+	buildStatus             flag.TaskStatus
+	fields                  *flag.Fields
+	requireCleanGitWorktree bool
 }
 
 func newStatusCmd() *statusCmd {
@@ -104,6 +105,9 @@ func newStatusCmd() *statusCmd {
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
 		"if a run can not be found, try to find a run with this value as input-string")
 
+	cmd.Flags().BoolVarP(&cmd.requireCleanGitWorktree, flagNameRequireCleanGitWorktree, "c", false,
+		"fail if the git repository contains modified or untracked files")
+
 	return &cmd
 }
 
@@ -139,10 +143,13 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 	var storageClt storage.Storer
 
 	repo := mustFindRepository()
+	vcsState := mustGetRepoState(repo.Path)
+
+	mustUntrackedFilesNotExist(c.requireCleanGitWorktree, vcsState)
 
 	loader, err := baur.NewLoader(
 		repo.Cfg,
-		mustGetRepoState(repo.Path).CommitID,
+		vcsState.CommitID,
 		log.StdLogger,
 	)
 	exitOnErr(err)

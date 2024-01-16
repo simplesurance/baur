@@ -19,6 +19,7 @@ import (
 	"github.com/simplesurance/baur/v3/internal/upload/filecopy"
 	"github.com/simplesurance/baur/v3/internal/upload/s3"
 	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/storage"
 )
@@ -29,6 +30,8 @@ baur run calc.check			run the check task of the calc application and upload the 
 baur run *.build			run all tasks named build of the all applications and upload the produced outputs
 baur run --force			run and upload all tasks of applications, independent of their status
 `
+
+const flagNameRequireCleanGitWorktree = "require-clean-git-worktree"
 
 var runLongHelp = fmt.Sprintf(`
 Execute tasks of applications.
@@ -80,12 +83,13 @@ type runCmd struct {
 	cobra.Command
 
 	// Cmdline parameters
-	skipUpload           bool
-	force                bool
-	inputStr             []string
-	lookupInputStr       string
-	taskRunnerGoRoutines uint
-	showOutput           bool
+	skipUpload              bool
+	force                   bool
+	inputStr                []string
+	lookupInputStr          string
+	taskRunnerGoRoutines    uint
+	showOutput              bool
+	requireCleanGitWorktree bool
 
 	// other fields
 	storage      storage.Storer
@@ -127,8 +131,10 @@ func newRunCmd() *runCmd {
 		"specifies the max. number of tasks to run in parallel")
 	cmd.Flags().BoolVarP(&cmd.showOutput, "show-task-output", "o", false,
 		"show the output of tasks, if disabled the output is only shown "+
-			"when task execution failed",
+			"when task execution fails",
 	)
+	cmd.Flags().BoolVarP(&cmd.requireCleanGitWorktree, flagNameRequireCleanGitWorktree, "c", false,
+		"fail if the git repository contains modified or untracked files")
 
 	return &cmd
 }
@@ -146,6 +152,10 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	repo := mustFindRepository()
 	c.repoRootPath = repo.Path
 
+	c.vcsState = mustGetRepoState(repo.Path)
+
+	mustUntrackedFilesNotExist(c.requireCleanGitWorktree, c.vcsState)
+
 	c.storage = mustNewCompatibleStorage(repo)
 	defer c.storage.Close()
 
@@ -159,14 +169,16 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 		c.taskRunner.LogFn = stderr.Printf
 	}
 
+	if c.requireCleanGitWorktree {
+		c.taskRunner.GitUntrackedFilesFn = git.UntrackedFiles
+	}
+
 	c.dockerClient, err = docker.NewClient(log.StdLogger.Debugf)
 	exitOnErr(err)
 
 	s3Client, err := s3.NewClient(ctx, log.StdLogger)
 	exitOnErr(err)
 	c.uploader = baur.NewUploader(c.dockerClient, s3Client, filecopy.New(log.Debugf))
-
-	c.vcsState = mustGetRepoState(repo.Path)
 
 	if c.skipUpload {
 		stdout.Printf("--skip-upload was passed, outputs won't be uploaded and task runs not recorded\n\n")
@@ -182,6 +194,13 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 
 	pendingTasks, err := c.filterPendingTasks(tasks)
 	exitOnErr(err)
+
+	if c.requireCleanGitWorktree && len(pendingTasks) == 1 {
+		// if we only execute 1 task, the initial worktree check is
+		// sufficient, no other tasks ran in between that could have
+		// modified the worktree
+		c.taskRunner.GitUntrackedFilesFn = nil
+	}
 
 	stdout.PrintSep()
 
@@ -297,6 +316,12 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 			term.Highlight(task),
 			ee.ColoredError(term.Highlight, term.RedHighlight, !c.showOutput && !verboseFlag),
 		)
+		return nil, err
+	}
+
+	var eUntracked *baur.ErrUntrackedGitFilesExist
+	if errors.As(err, &eUntracked) {
+		stderr.Println(untrackedFilesExistErrMsg(eUntracked.UntrackedFiles))
 		return nil, err
 	}
 

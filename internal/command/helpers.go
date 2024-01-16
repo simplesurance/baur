@@ -9,7 +9,9 @@ import (
 	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/internal/format"
 	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/internal/prettyprint"
 	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -218,6 +220,11 @@ func exitOnErrf(err error, format string, v ...interface{}) {
 	exitFunc(1)
 }
 
+func fatal(msg ...interface{}) {
+	stderr.PrintErrln(msg...)
+	exitFunc(1)
+}
+
 func exitOnErr(err error, msg ...interface{}) {
 	if err == nil {
 		return
@@ -246,4 +253,27 @@ func subStr(input string, start int, length int) string {
 	}
 
 	return string(asRunes[start : start+length])
+}
+
+func mustUntrackedFilesNotExist(requireCleanGitWorktree bool, vcsState vcs.StateFetcher) {
+	if !requireCleanGitWorktree {
+		return
+	}
+
+	if vcsState.Name() != git.Name {
+		exitOnErr(
+			fmt.Errorf("--%s was specified but baur repository is not a git repository", flagNameRequireCleanGitWorktree),
+		)
+	}
+
+	untracked, err := vcsState.UntrackedFiles()
+	exitOnErr(err)
+	if len(untracked) != 0 {
+		fatal(untrackedFilesExistErrMsg(untracked))
+	}
+}
+
+func untrackedFilesExistErrMsg(untrackedFiles []string) string {
+	return fmt.Sprintf("%s was specified, expecting only tracked unmodified files but found the following untracked or modified files:\n%s",
+		term.Highlight("--"+flagNameRequireCleanGitWorktree), term.Highlight(prettyprint.TruncatedStrSlice(untrackedFiles, 10)))
 }

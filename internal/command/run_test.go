@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
 	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
@@ -349,4 +351,22 @@ func TestEnvVarInput_Optional(t *testing.T) {
 			require.NoError(t, newStatusCmd().Execute())
 		})
 	})
+}
+
+func TestRunFailsWhenGitWorktreeIsDirty(t *testing.T) {
+	initTest(t)
+
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	gittest.CreateRepository(t, r.Dir)
+	r.CreateSimpleApp(t)
+	fname := "untrackedFile"
+	fstest.WriteToFile(t, []byte("hello"), filepath.Join(r.Dir, fname))
+
+	_, stderrBuf := interceptCmdOutput(t)
+	runCmd := newRunCmd()
+	runCmd.SetArgs([]string{"--" + flagNameRequireCleanGitWorktree})
+	require.Panics(t, func() { require.NoError(t, runCmd.Execute()) })
+
+	require.Contains(t, stderrBuf.String(), fname)
+	require.Contains(t, stderrBuf.String(), "expecting only tracked unmodified files")
 }

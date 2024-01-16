@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+const Name = "git"
+
 // Repository reads information from a Git repository.
 type Repository struct {
 	path string
@@ -113,4 +115,14 @@ func (g *Repository) initUntrackedFiles() error {
 	}
 
 	return nil
+}
+
+// UntrackedFiles returns a list of untracked and modified files in the git repository.
+// Files that exist and are in a .gitignore file are included.
+func (g *Repository) UntrackedFiles() ([]string, error) {
+	return UntrackedFiles(g.path)
+}
+
+func (g *Repository) Name() string {
+	return Name
 }
