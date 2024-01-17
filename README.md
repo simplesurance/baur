@@ -127,6 +127,13 @@ Documentation is available in the [wiki](https://github.com/simplesurance/baur/w
 
 See [Upgrade Instructions in the wiki](https://github.com/simplesurance/baur/wiki#upgrade-guide)
 
+## Versioning
+
+baur follows [Semantic Versioning](https://semver.org/) for its command line
+interface, configuration file format and database schema. \
+The APIs of the Go packages are **excluded** from the semantic versioning policy.
+Their APIs may change at any time in a backward incompatible manner.
+
 ## Contributing
 
 We are happy to receive Pull Requests for baur. \
