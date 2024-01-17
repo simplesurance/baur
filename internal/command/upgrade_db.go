@@ -2,7 +2,6 @@ package command
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -51,11 +50,9 @@ func (*upgradeDbCmd) run(_ *cobra.Command, _ []string) {
 
 	curVer, err := clt.SchemaVersion(ctx)
 	if errors.Is(err, storage.ErrNotExist) {
-		stderr.ErrPrintln(fmt.Errorf(
-			"database not found, run '%s' to create the database",
+		fatalf("database not found, run '%s' to create the database",
 			term.Highlight("baur init db"),
-		))
-		exitFunc(1)
+		)
 	}
 	exitOnErr(err, "querying database schema version failed")
 
@@ -65,8 +62,7 @@ func (*upgradeDbCmd) run(_ *cobra.Command, _ []string) {
 	}
 
 	if curVer > clt.RequiredSchemaVersion() {
-		stderr.Println("database schema is from a newer baur version, please update baur")
-		exitFunc(1)
+		fatal("database schema is from a newer baur version, please update baur")
 	}
 
 	err = clt.Upgrade(ctx)

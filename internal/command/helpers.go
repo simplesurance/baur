@@ -163,11 +163,11 @@ func mustArgToTasks(repo *baur.Repository, vcs vcs.StateFetcher, args []string) 
 	exitOnErr(err)
 
 	if len(tasks) == 0 {
-		exitOnErr(fmt.Errorf("could not find any tasks\n"+
+		fatalf("could not find any tasks\n"+
 			"- ensure the [Discover] section is correct in %s\n"+
 			"- ensure that you have >1 application dirs "+
 			"containing a %s file with task definitions",
-			repo.CfgPath, baur.AppCfgFile))
+			repo.CfgPath, baur.AppCfgFile)
 	}
 
 	return tasks
@@ -225,6 +225,11 @@ func fatal(msg ...interface{}) {
 	exitFunc(1)
 }
 
+func fatalf(format string, v ...interface{}) {
+	stderr.Printf(format, v...)
+	exitFunc(1)
+}
+
 func exitOnErr(err error, msg ...interface{}) {
 	if err == nil {
 		return
@@ -261,9 +266,7 @@ func mustUntrackedFilesNotExist(requireCleanGitWorktree bool, vcsState vcs.State
 	}
 
 	if vcsState.Name() != git.Name {
-		exitOnErr(
-			fmt.Errorf("--%s was specified but baur repository is not a git repository", flagNameRequireCleanGitWorktree),
-		)
+		fatalf("--%s was specified but baur repository is not a git repository", flagNameRequireCleanGitWorktree)
 	}
 
 	untracked, err := vcsState.UntrackedFiles()
