@@ -67,8 +67,7 @@ func initDb(_ *cobra.Command, args []string) {
 
 	err = storageClt.Init(ctx)
 	if errors.Is(err, storage.ErrExists) {
-		stderr.ErrPrintln(errors.New("database already exists"))
-		exitFunc(1)
+		fatal("database already exists")
 	}
 	exitOnErr(err)
 
