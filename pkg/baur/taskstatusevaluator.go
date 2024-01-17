@@ -45,7 +45,7 @@ func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatu
 	var taskStatus TaskStatus
 	var run *storage.TaskRunWithID
 
-	inputFiles, err := t.inputResolver.Resolve(ctx, t.repositoryDir, task)
+	inputFiles, err := t.inputResolver.Resolve(ctx, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err
 	}

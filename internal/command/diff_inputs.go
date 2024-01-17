@@ -215,7 +215,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	if argDetails.task != nil {
 		inputResolver := baur.NewInputResolver(c.vcsState, repo.Path)
 
-		inputFiles, err := inputResolver.Resolve(ctx, repo.Path, argDetails.task)
+		inputFiles, err := inputResolver.Resolve(ctx, argDetails.task)
 		if err != nil {
 			stderr.TaskPrintf(argDetails.task, err.Error())
 			os.Exit(1)

@@ -69,7 +69,7 @@ func NewInputResolver(vcsState vcs.StateFetcher, repoDir string) *InputResolver 
 // Resolve resolves the input definition of the task to concrete Files.
 // If an input definition does not resolve to >=1 paths, an error is returned.
 // The resolved Files are deduplicated.
-func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task *Task) ([]Input, error) {
+func (i *InputResolver) Resolve(ctx context.Context, task *Task) ([]Input, error) {
 	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, task.UnresolvedInputs.GolangSources)
 	if err != nil {
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
@@ -85,7 +85,7 @@ func (i *InputResolver) Resolve(ctx context.Context, repositoryDir string, task 
 	allInputsPaths = append(allInputsPaths, goSourcePaths...)
 	allInputsPaths = append(allInputsPaths, task.CfgFilepaths...)
 
-	uniqInputs, err := i.pathsToUniqInputs(repositoryDir, allInputsPaths, fs.AbsPaths(task.Directory, task.UnresolvedInputs.ExcludedFiles.Paths))
+	uniqInputs, err := i.pathsToUniqInputs(allInputsPaths, fs.AbsPaths(task.Directory, task.UnresolvedInputs.ExcludedFiles.Paths))
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, i
 	return result, nil
 }
 
-func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, paths, excludePatterns []string) ([]Input, error) {
+func (i *InputResolver) pathsToUniqInputs(paths, excludePatterns []string) ([]Input, error) {
 	pathsCount := len(paths)
 
 	res := make([]Input, 0, pathsCount)
@@ -239,7 +239,7 @@ func (i *InputResolver) pathsToUniqInputs(repositoryRoot string, paths, excludeP
 			continue
 		}
 
-		relPath, err := filepath.Rel(repositoryRoot, path)
+		relPath, err := filepath.Rel(i.repoDir, path)
 		if err != nil {
 			return nil, err
 		}

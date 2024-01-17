@@ -276,7 +276,7 @@ func TestFilesOptional(t *testing.T) {
 
 			tc.task.Directory = tempDir
 
-			result, err := r.Resolve(context.Background(), tempDir, &tc.task)
+			result, err := r.Resolve(context.Background(), &tc.task)
 			if tc.expectError {
 				require.Error(t, err)
 				require.Empty(t, result)
@@ -318,7 +318,7 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
 
-	result, err := r.Resolve(context.Background(), tempDir, &Task{
+	result, err := r.Resolve(context.Background(), &Task{
 		Directory: tempDir,
 		UnresolvedInputs: &cfg.Input{
 			Files: []cfg.FileInputs{
@@ -532,7 +532,7 @@ func TestExcludedFiles(t *testing.T) {
 			}
 
 			resolver := NewInputResolver(&vcs.NoVCsState{}, tempDir)
-			result, err := resolver.Resolve(context.Background(), tempDir, &Task{
+			result, err := resolver.Resolve(context.Background(), &Task{
 				Directory:        tempDir,
 				UnresolvedInputs: &tc.Inputs,
 			})
@@ -581,7 +581,6 @@ func TestGoResolverFilesAreExcluded(t *testing.T) {
 
 	result, err := resolver.Resolve(
 		context.Background(),
-		filepath.FromSlash("/tmp"),
 		&Task{
 			UnresolvedInputs: &cfg.Input{
 				GolangSources: []cfg.GolangSources{{}},
@@ -658,7 +657,7 @@ func TestResolveSymlink(t *testing.T) {
 			validateFn: func(t *testing.T, err error, result []Input) {
 				require.NoError(t, err)
 				assert.ElementsMatch(t,
-					[]string{"symlink"},
+					[]string{filepath.Join("file", "symlink")},
 					relPathsFromInputs(t, result),
 				)
 			},
@@ -669,7 +668,10 @@ func TestResolveSymlink(t *testing.T) {
 			validateFn: func(t *testing.T, err error, result []Input) {
 				require.NoError(t, err)
 				assert.ElementsMatch(t,
-					[]string{"thefile", "symlink"},
+					[]string{
+						filepath.Join("file", "thefile"),
+						filepath.Join("file", "symlink"),
+					},
 					relPathsFromInputs(t, result),
 				)
 			},
@@ -681,8 +683,8 @@ func TestResolveSymlink(t *testing.T) {
 				require.NoError(t, err)
 				assert.ElementsMatch(t,
 					[]string{
-						filepath.Join("symlink", "arealfile"),
-						filepath.Join("thedirectory", "arealfile"),
+						filepath.Join("directory_with_files", "thedirectory", "arealfile"),
+						filepath.Join("directory_with_files", "symlink", "arealfile"),
 					},
 					relPathsFromInputs(t, result),
 				)
@@ -708,14 +710,14 @@ func TestResolveSymlink(t *testing.T) {
 		t.Run(fmt.Sprintf("%s/%s", tc.testdir, tc.inputPath), func(t *testing.T) {
 			log.RedirectToTestingLog(t)
 
-			testDir := filepath.Join(testdataDir, "symlinks", tc.testdir)
+			repoDir := filepath.Join(testdataDir, "symlinks")
 
-			vcsState, err := vcs.GetState(testDir, log.Debugf)
+			vcsState, err := vcs.GetState(repoDir, log.Debugf)
 			require.NoError(t, err)
-			r := NewInputResolver(vcsState, tc.testdir)
+			r := NewInputResolver(vcsState, repoDir)
 
-			result, err := r.Resolve(context.Background(), testDir, &Task{
-				Directory: testDir,
+			result, err := r.Resolve(context.Background(), &Task{
+				Directory: filepath.Join(repoDir, tc.testdir),
 				UnresolvedInputs: &cfg.Input{Files: []cfg.FileInputs{{
 					Paths:    []string{tc.inputPath},
 					Optional: false,
@@ -856,7 +858,6 @@ func resolveInputs(t *testing.T, task *Task) *digest.Digest {
 	resolver := NewInputResolver(vcsState, task.RepositoryRoot)
 	result, err := resolver.Resolve(
 		context.Background(),
-		task.RepositoryRoot,
 		task,
 	)
 	require.NoError(t, err)
