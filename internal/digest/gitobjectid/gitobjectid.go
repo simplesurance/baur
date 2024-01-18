@@ -14,6 +14,8 @@ import (
 
 type PrintfFn func(format string, a ...any)
 
+var ErrFileNotFoundInCache = errors.New("git object id does not exist in repository, file might be untracked or modified")
+
 // Calc calculates git object IDs for files.
 // Object IDs are read the first time a digest is requested from the git repository.
 type Calc struct {
@@ -89,10 +91,26 @@ func (h *Calc) createDb(ch <-chan *git.Object, finishedCh chan struct{}) {
 }
 
 // File returns a git object ID as digest for the the file at absPath.
+// If it exist in the cached object ids read from the git repository, it is returned.
+// Otherwise it is calculated.
+func (h *Calc) File(absPath string) (*digest.Digest, error) {
+	d, err := h.FileDigestFromCache(absPath)
+	if err != nil {
+		if errors.Is(err, ErrFileNotFoundInCache) {
+			return h.calc(absPath)
+		}
+		return nil, err
+	}
+
+	return d, nil
+}
+
+// FileDigestFromCache looks up the git object id in the cached objects from the git repository.
+// If it is not found ErrFileNotFoundInCache is returned.
 //
 // On the first call of this function, the git object IDs are loaded from
 // the git repository.
-func (h *Calc) File(absPath string) (*digest.Digest, error) {
+func (h *Calc) FileDigestFromCache(absPath string) (*digest.Digest, error) {
 	// if the ID does not exist in the cache, it is calculated.
 	// The calculated ID could be added to the cache afterwards to be available for further loookups.
 	// This is not done because baur already has the
@@ -116,20 +134,17 @@ func (h *Calc) File(absPath string) (*digest.Digest, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if p != absPath {
 		if objectID, exists = h.objectIDs[p]; exists {
 			return digest.FromStrDigest(objectID, digest.GitObjectID)
 		}
 	}
 
-	d, err := h.fileWithoutCache(absPath)
-	if err != nil {
-		return nil, fmt.Errorf("git object id does not exist in cache and could not be calculated: %w", err)
-	}
-	return d, nil
+	return nil, ErrFileNotFoundInCache
 }
 
-func (h *Calc) fileWithoutCache(absPath string) (*digest.Digest, error) {
+func (h *Calc) calc(absPath string) (*digest.Digest, error) {
 	h.debugLogf("gitobjectid: object id not in cache, calculating ID for %q", absPath)
 	objectID, err := git.ObjectID(context.TODO(), absPath, h.repositoryDir)
 	if err != nil {

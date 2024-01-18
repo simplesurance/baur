@@ -46,13 +46,17 @@ type InputResolver struct {
 
 // NewInputResolver returns an InputResolver that caches resolver
 // results.
-func NewInputResolver(vcsState vcs.StateFetcher, repoDir string) *InputResolver {
+func NewInputResolver(vcsState vcs.StateFetcher, repoDir string, hashGitUntrackedFiles bool) *InputResolver {
 	var hasher FileHashFn
 	if _, gitUnavail := vcsState.(*vcs.NoVCsState); gitUnavail {
 		hasher = sha384.File
 		log.Debugf("inputresolver: using sha384 file hasher\n")
 	} else {
-		hasher = gitobjectid.New(repoDir, log.Debugf).File
+		if hashGitUntrackedFiles {
+			hasher = gitobjectid.New(repoDir, log.Debugf).File
+		} else {
+			hasher = gitobjectid.New(repoDir, log.Debugf).FileDigestFromCache
+		}
 		log.Debugf("inputresolver: using gitobject file hasher\n")
 	}
 

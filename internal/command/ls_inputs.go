@@ -94,7 +94,7 @@ func (c *lsInputsCmd) mustGetTaskInputs(taskSpec string) []baur.Input {
 	repo := mustFindRepository()
 	vcsState := mustGetRepoState(repo.Path)
 	task := mustArgToTask(repo, vcsState, taskSpec)
-	inputResolver := baur.NewInputResolver(vcsState, repo.Path)
+	inputResolver := baur.NewInputResolver(vcsState, repo.Path, true)
 
 	inputs, err := inputResolver.Resolve(ctx, task)
 	exitOnErr(err)
