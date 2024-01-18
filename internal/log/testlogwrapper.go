@@ -12,10 +12,10 @@ func NewTestLogOutput(t *testing.T) *TestLogOutput {
 	return &TestLogOutput{t: t}
 }
 
-func (l *TestLogOutput) Printf(format string, v ...interface{}) {
+func (l *TestLogOutput) Printf(format string, v ...any) {
 	l.t.Logf(format, v...)
 }
 
-func (l *TestLogOutput) Println(v ...interface{}) {
+func (l *TestLogOutput) Println(v ...any) {
 	l.t.Log(v...)
 }

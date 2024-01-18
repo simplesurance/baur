@@ -54,7 +54,7 @@ func (b *TaskStatus) Type() string {
 
 // Usage returns a usage description, important parts are passed through
 // highlightFn
-func (b *TaskStatus) Usage(highlightFn func(a ...interface{}) string) string {
+func (b *TaskStatus) Usage(highlightFn func(a ...any) string) string {
 	return strings.TrimSpace(fmt.Sprintf(`
 Only show tasks with this status
 Format: %s

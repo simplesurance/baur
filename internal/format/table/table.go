@@ -38,7 +38,7 @@ func (f *Formatter) writeHeader(headers []string) error {
 }
 
 // WriteRow writes a row to the tabwriter buffer
-func (f *Formatter) WriteRow(row ...interface{}) error {
+func (f *Formatter) WriteRow(row ...any) error {
 	var rowStr string
 
 	for i, col := range row {

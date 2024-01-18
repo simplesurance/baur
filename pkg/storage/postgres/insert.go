@@ -11,7 +11,7 @@ import (
 	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
-func strArgList(args ...interface{}) string {
+func strArgList(args ...any) string {
 	var result strings.Builder
 
 	result.WriteRune('[')
@@ -197,7 +197,7 @@ func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storag
 
 	stmtVals := queryValueStr(len(inputs), 2)
 
-	queryArgs := make([]interface{}, 0, len(inputs)*2)
+	queryArgs := make([]any, 0, len(inputs)*2)
 	for _, in := range inputs {
 		queryArgs = append(queryArgs, in.Path, in.Digest)
 	}
@@ -235,7 +235,7 @@ func insertInputStringFilesIfNotExist(ctx context.Context, db dbConn, inputs []*
 
 	stmtVals := queryValueStr(len(inputs), 2)
 
-	queryArgs := make([]interface{}, 0, len(inputs)*2)
+	queryArgs := make([]any, 0, len(inputs)*2)
 	for _, in := range inputs {
 		queryArgs = append(queryArgs, in.String, in.Digest)
 	}
@@ -281,7 +281,7 @@ func insertTaskRunInputStringsIfNotExist(ctx context.Context, db dbConn, taskRun
 		}
 	}
 
-	queryArgs := make([]interface{}, 1, (len(inputStringIDs)*2)+2)
+	queryArgs := make([]any, 1, (len(inputStringIDs)*2)+2)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputStringIDs {
@@ -324,7 +324,7 @@ func insertTaskRunInputFilesIfNotExist(ctx context.Context, db dbConn, taskRunID
 		}
 	}
 
-	queryArgs := make([]interface{}, 1, (len(inputIDs)*2)+2)
+	queryArgs := make([]any, 1, (len(inputIDs)*2)+2)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputIDs {
@@ -376,7 +376,7 @@ func insertInputEnVarsIfNotExist(ctx context.Context, db dbConn, inputs []*stora
 
 	stmtVals := queryValueStr(len(inputs), 2)
 
-	queryArgs := make([]interface{}, 0, len(inputs)*2)
+	queryArgs := make([]any, 0, len(inputs)*2)
 	for _, in := range inputs {
 		queryArgs = append(queryArgs, in.Name, in.Digest)
 	}
@@ -422,7 +422,7 @@ func insertTaskRunInputEnvVarsIfNotExist(ctx context.Context, db dbConn, taskRun
 		}
 	}
 
-	queryArgs := make([]interface{}, 1, (len(inputIDs)*2)+2)
+	queryArgs := make([]any, 1, (len(inputIDs)*2)+2)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputIDs {
@@ -447,7 +447,7 @@ func insertUploads(ctx context.Context, db dbConn, uploads []*storage.Upload) ([
 
 	stmtVals := queryValueStr(len(uploads), 4)
 
-	queryArgs := make([]interface{}, 0, len(uploads)*4)
+	queryArgs := make([]any, 0, len(uploads)*4)
 	for _, upload := range uploads {
 		queryArgs = append(
 			queryArgs,
@@ -481,7 +481,7 @@ func insertOutputIfNotExist(ctx context.Context, db dbConn, output *storage.Outp
 
 	var id int
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		output.Name,
 		output.Type,
 		output.Digest,
@@ -535,7 +535,7 @@ func insertTaskOutputsIfNotExist(ctx context.Context, db dbConn, taskRunID int, 
 
 	stmtVals := queryValueStr(len(records), 3)
 
-	queryArgs := make([]interface{}, 0, len(records)*3)
+	queryArgs := make([]any, 0, len(records)*3)
 	for _, record := range records {
 		queryArgs = append(queryArgs, taskRunID, record.outputID, record.uploadID)
 	}
@@ -569,7 +569,7 @@ func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.Ta
 		return -1, fmt.Errorf("storing task record failed: %w", err)
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		vcsID,
 		taskID,
 		taskRun.TotalInputDigest,

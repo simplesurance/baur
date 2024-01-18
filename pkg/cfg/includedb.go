@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type LogFn func(format string, v ...interface{})
+type LogFn func(format string, v ...any)
 
 // IncludeDB loads and stores include config files.
 // It's methods are not concurrency-safe.
@@ -26,7 +26,7 @@ var ErrIncludeIDNotFound = errors.New("id not found in include file")
 
 func NewIncludeDB(logf LogFn) *IncludeDB {
 	if logf == nil {
-		logf = func(_ string, _ ...interface{}) {}
+		logf = func(_ string, _ ...any) {}
 
 	}
 	return &IncludeDB{

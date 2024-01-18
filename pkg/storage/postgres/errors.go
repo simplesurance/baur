@@ -7,7 +7,7 @@ import (
 
 type queryError struct {
 	Query     string
-	Arguments []interface{}
+	Arguments []any
 	Err       error
 }
 
@@ -23,7 +23,7 @@ func (e *queryError) Error() string {
 	)
 }
 
-func newQueryError(query string, err error, args ...interface{}) *queryError {
+func newQueryError(query string, err error, args ...any) *queryError {
 	return &queryError{
 		Query:     query,
 		Arguments: args,

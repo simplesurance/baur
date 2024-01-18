@@ -23,7 +23,7 @@ var state = struct {
 	mu      sync.Mutex
 }{}
 
-type Logfn func(format string, v ...interface{})
+type Logfn func(format string, v ...any)
 
 // GetState returns a git.RepositoryState() if the current directory is in a
 // git repository and git command is in $PATH.
@@ -35,7 +35,7 @@ func GetState(dir string, logfunc Logfn) (StateFetcher, error) {
 	defer state.mu.Unlock()
 
 	if logfunc == nil {
-		logfunc = func(_ string, _ ...interface{}) {}
+		logfunc = func(_ string, _ ...any) {}
 	}
 
 	dir, err := filepath.Abs(dir)

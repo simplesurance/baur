@@ -9,15 +9,15 @@ import (
 	"github.com/simplesurance/baur/v3/internal/fs"
 )
 
-var defLogFn = func(string, ...interface{}) {}
+var defLogFn = func(string, ...any) {}
 
 // Client copies files from one path to another
 type Client struct {
-	debugLogFn func(string, ...interface{})
+	debugLogFn func(string, ...any)
 }
 
 // New returns a client
-func New(debugLogFn func(string, ...interface{})) *Client {
+func New(debugLogFn func(string, ...any)) *Client {
 	logFn := defLogFn
 	if debugLogFn != nil {
 		logFn = debugLogFn

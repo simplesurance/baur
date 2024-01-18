@@ -8,6 +8,6 @@ type s3Logger struct {
 	logger Logger
 }
 
-func (l *s3Logger) Logf(_ logging.Classification, format string, v ...interface{}) {
+func (l *s3Logger) Logf(_ logging.Classification, format string, v ...any) {
 	l.logger.Debugf(logPrefix+format, v...)
 }

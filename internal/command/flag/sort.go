@@ -61,7 +61,7 @@ func (s *Sort) Type() string {
 
 // Usage returns a usage description, important parts are passed through
 // highlightFn
-func (s *Sort) Usage(highlightFn func(a ...interface{}) string) string {
+func (s *Sort) Usage(highlightFn func(a ...any) string) string {
 	fields := make([]string, 0, len(s.validFields))
 
 	for k := range s.validFields {

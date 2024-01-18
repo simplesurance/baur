@@ -7,7 +7,7 @@ import (
 )
 
 // AsString returns in as indented JSON
-func AsString(in interface{}) string {
+func AsString(in any) string {
 	res, err := json.MarshalIndent(in, "", "  ")
 	if err != nil {
 		return fmt.Sprintf("%+v", in)

@@ -15,19 +15,19 @@ import (
 
 const globQueryPrefix = "fileglob="
 
-var defLogFn = func(string, ...interface{}) {}
+var defLogFn = func(string, ...any) {}
 
 // Resolver determines all Go Source files that are imported by Go-Files
 // in the passed paths
 type Resolver struct {
-	logFn func(string, ...interface{})
+	logFn func(string, ...any)
 }
 
 // NewResolver returns a resolver that resolves all go source files in the
 // GoDirs and their imports to filepaths.
 // env specifies the environment variables to use during resolving.
 // If empty or nil the default Go environment is used.
-func NewResolver(debugLogFn func(string, ...interface{})) *Resolver {
+func NewResolver(debugLogFn func(string, ...any)) *Resolver {
 	logFn := defLogFn
 	if debugLogFn != nil {
 		logFn = debugLogFn

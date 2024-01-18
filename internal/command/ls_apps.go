@@ -119,8 +119,8 @@ func (c *lsAppsCmd) run(_ *cobra.Command, args []string) {
 	exitOnErr(err)
 }
 
-func (c *lsAppsCmd) assembleRow(app *baur.App) []interface{} {
-	row := make([]interface{}, 0, 2)
+func (c *lsAppsCmd) assembleRow(app *baur.App) []any {
+	row := make([]any, 0, 2)
 
 	for _, f := range c.fields.Fields {
 		switch f {

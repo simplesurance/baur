@@ -13,7 +13,7 @@ import (
 )
 
 type Logger interface {
-	Debugf(format string, v ...interface{})
+	Debugf(format string, v ...any)
 }
 
 // Loader discovers and instantiates apps and tasks.

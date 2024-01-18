@@ -44,7 +44,7 @@ func (f Field) String() string {
 type Filter struct {
 	Field    Field
 	Operator Op
-	Value    interface{}
+	Value    any
 }
 
 // Op describes the filter operator

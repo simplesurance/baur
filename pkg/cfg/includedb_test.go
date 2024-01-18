@@ -23,7 +23,7 @@ func (m *mockResolver) Resolve(in string) (string, error) {
 
 // cfgToFile marshals a struct to a toml configuration file.
 // In opposite to toFile(), no fields are commented in the marshalled versions.
-func cfgToFile(t *testing.T, cfg interface{}, path string) {
+func cfgToFile(t *testing.T, cfg any, path string) {
 	t.Helper()
 
 	f, err := os.Create(path)

@@ -87,7 +87,7 @@ func copyAppendSlice(slice []any, elems ...any) []any {
 }
 
 func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int, sl []string) {
-	defRowArgs := make([]interface{}, 0, indentlvl+1+1)
+	defRowArgs := make([]any, 0, indentlvl+1+1)
 
 	for i := 0; i < indentlvl; i++ {
 		defRowArgs = append(defRowArgs, "")

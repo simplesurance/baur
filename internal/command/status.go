@@ -182,7 +182,7 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 	baur.SortTasksByID(tasks)
 
 	for i, task := range tasks {
-		var row []interface{}
+		var row []any
 		var taskRun *storage.TaskRunWithID
 		var taskStatus baur.TaskStatus
 
@@ -236,8 +236,8 @@ func (c *statusCmd) storageQueryIsNeeded() bool {
 	return false
 }
 
-func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus) []interface{} {
-	var row []interface{}
+func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus) []any {
+	var row []any
 
 	for _, f := range c.fields.Fields {
 		switch f {

@@ -64,7 +64,7 @@ func compileSortOrder(o storage.Order, column string) (string, error) {
 	}
 }
 
-func (q *query) compileFilterStr() (filterStr string, args []interface{}, err error) {
+func (q *query) compileFilterStr() (filterStr string, args []any, err error) {
 	if len(q.Filters) == 0 {
 		return
 	}
@@ -127,7 +127,7 @@ func (q *query) compileLimitStr() string {
 }
 
 // Compile creates the SQL query string and returns it with the arguments for the query
-func (q *query) Compile() (query string, args []interface{}, err error) {
+func (q *query) Compile() (query string, args []any, err error) {
 	if len(q.Filters) == 0 && len(q.Sorters) == 0 {
 		return q.BaseQuery, nil, nil
 	}

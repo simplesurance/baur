@@ -34,7 +34,7 @@ func ToFileOptCommented() toFileOpt { //nolint: revive // returns unexported typ
 }
 
 // toFile marshals a struct to TOML format and writes it to a file.
-func toFile(data interface{}, filepath string, opts ...toFileOpt) error {
+func toFile(data any, filepath string, opts ...toFileOpt) error {
 	var buf bytes.Buffer
 	var settings toFileOpts
 

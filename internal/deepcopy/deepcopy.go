@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 )
 
-func Copy(from, to interface{}) error {
+func Copy(from, to any) error {
 	var buf bytes.Buffer
 
 	err := gob.NewEncoder(&buf).Encode(from)
@@ -21,7 +21,7 @@ func Copy(from, to interface{}) error {
 	return nil
 }
 
-func MustCopy(from, to interface{}) {
+func MustCopy(from, to any) {
 	err := Copy(from, to)
 	if err != nil {
 		panic(err)
