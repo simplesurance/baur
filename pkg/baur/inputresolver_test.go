@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v3/internal/digest"
+	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
 	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
@@ -272,7 +273,7 @@ func TestFilesOptional(t *testing.T) {
 
 			vcsState, err := vcs.GetState(tempDir, log.Debugf)
 			require.NoError(t, err)
-			r := NewInputResolver(vcsState, tempDir)
+			r := NewInputResolver(vcsState, tempDir, true)
 
 			tc.task.Directory = tempDir
 
@@ -314,7 +315,7 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 
 	vcsState, err := vcs.GetState(tempDir, log.Debugf)
 	require.NoError(t, err)
-	r := NewInputResolver(vcsState, tempDir)
+	r := NewInputResolver(vcsState, tempDir, true)
 
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
 
@@ -361,7 +362,7 @@ func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
 
 	vcsState, err := vcs.GetState(gitDir, log.Debugf)
 	require.NoError(t, err)
-	r := NewInputResolver(vcsState, gitDir)
+	r := NewInputResolver(vcsState, gitDir, true)
 
 	resolvedFiles, err := r.resolveFileInputs(appDir, []cfg.FileInputs{
 		{
@@ -469,7 +470,7 @@ func TestResolveEnvVarInputs(t *testing.T) {
 				t.Setenv(k, v)
 			}
 
-			resolver := NewInputResolver(&vcs.NoVCsState{}, ".")
+			resolver := NewInputResolver(&vcs.NoVCsState{}, ".", true)
 			resolver.setEnvVars()
 			resolvedEnvVars, err := resolver.resolveEnvVarInputs(tc.Inputs)
 			if tc.ExpectedErrStr != "" {
@@ -531,7 +532,7 @@ func TestExcludedFiles(t *testing.T) {
 				fstest.WriteToFile(t, []byte(f), filepath.Join(tempDir, f))
 			}
 
-			resolver := NewInputResolver(&vcs.NoVCsState{}, tempDir)
+			resolver := NewInputResolver(&vcs.NoVCsState{}, tempDir, true)
 			result, err := resolver.Resolve(context.Background(), &Task{
 				Directory:        tempDir,
 				UnresolvedInputs: &tc.Inputs,
@@ -574,7 +575,7 @@ func TestGoResolverFilesAreExcluded(t *testing.T) {
 	log.RedirectToTestingLog(t)
 	baseDir := filepath.FromSlash("/tmp")
 
-	resolver := NewInputResolver(&vcs.NoVCsState{}, baseDir)
+	resolver := NewInputResolver(&vcs.NoVCsState{}, baseDir, true)
 	resolver.goSourceResolver = &goSourceResolverMock{
 		result: []string{filepath.Join(baseDir, "main.go"), filepath.Join(baseDir, "atm", "atm.go")},
 	}
@@ -714,7 +715,7 @@ func TestResolveSymlink(t *testing.T) {
 
 			vcsState, err := vcs.GetState(repoDir, log.Debugf)
 			require.NoError(t, err)
-			r := NewInputResolver(vcsState, repoDir)
+			r := NewInputResolver(vcsState, repoDir, true)
 
 			result, err := r.Resolve(context.Background(), &Task{
 				Directory: filepath.Join(repoDir, tc.testdir),
@@ -855,7 +856,7 @@ func resolveInputs(t *testing.T, task *Task) *digest.Digest {
 	vcsState, err := vcs.GetState(task.RepositoryRoot, t.Logf)
 	require.NoError(t, err)
 
-	resolver := NewInputResolver(vcsState, task.RepositoryRoot)
+	resolver := NewInputResolver(vcsState, task.RepositoryRoot, true)
 	result, err := resolver.Resolve(
 		context.Background(),
 		task,
@@ -924,4 +925,29 @@ func TestSymlinkTargetFilePermissionsChange(t *testing.T) {
 
 	digestAfter := resolveInputs(t, info.Task)
 	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
+}
+
+func TestHashGitUntrackedFilesDisabled(t *testing.T) {
+	const fname = "hello"
+
+	log.RedirectToTestingLog(t)
+	tempDir := t.TempDir()
+	gittest.CreateRepository(t, tempDir)
+
+	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
+
+	task := &Task{
+		Directory: tempDir,
+		UnresolvedInputs: &cfg.Input{
+			Files: []cfg.FileInputs{{Paths: []string{fname}}},
+		},
+	}
+
+	vcsState, err := vcs.GetState(tempDir, t.Logf)
+	require.NoError(t, err)
+	r := NewInputResolver(vcsState, tempDir, false)
+	inputs, err := r.Resolve(context.Background(), task)
+	require.NoError(t, err)
+	_, err = NewInputs(inputs).Digest()
+	require.ErrorIs(t, err, gitobjectid.ErrFileNotFoundInCache)
 }
