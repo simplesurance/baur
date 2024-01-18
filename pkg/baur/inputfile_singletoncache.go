@@ -8,31 +8,26 @@ const inputFileSingletonCacheInitialSize = 250
 
 type FileHashFn func(path string) (*digest.Digest, error)
 
-// InputFileSingletonCache stores previously created InputFiles and returns
+// InputFileSingletonCache stores previously created Inputs and returns
 // them for the same path instead of creating another instance.
 type InputFileSingletonCache struct {
-	cache      map[string]*InputFile
-	fileHasher FileHashFn
+	cache map[string]*InputFile
 }
 
 // newInputFile SingletonCache creates a inputFileSingletonCache.
-func NewInputFileSingletonCache(fileHasher FileHashFn) *InputFileSingletonCache {
+func NewInputFileSingletonCache() *InputFileSingletonCache {
 	return &InputFileSingletonCache{
-		cache:      make(map[string]*InputFile, inputFileSingletonCacheInitialSize),
-		fileHasher: fileHasher,
+		cache: make(map[string]*InputFile, inputFileSingletonCacheInitialSize),
 	}
 }
 
-// CreateOrGetInputFile returns a new InputFile if none with the same
-// repoRootPath and relPath has been created before with this method.
-// Otherwise it returns a reference to the previously created InputFile.
-func (c *InputFileSingletonCache) CreateOrGetInputFile(absPath, relPath string) *InputFile {
-	if f, exists := c.cache[absPath]; exists {
-		return f
-	}
+func (c *InputFileSingletonCache) Get(absPath string) (f *InputFile, exists bool) {
+	f, exists = c.cache[absPath]
+	return f, exists
+}
 
-	f := NewInputFile(absPath, relPath, c.fileHasher)
-	c.cache[absPath] = f
-
+// Add adds f to the cache and returns it.
+func (c *InputFileSingletonCache) Add(f *InputFile) *InputFile {
+	c.cache[f.AbsPath()] = f
 	return f
 }

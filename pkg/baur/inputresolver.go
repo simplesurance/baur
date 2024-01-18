@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/simplesurance/baur/v3/internal/digest"
 	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
 	"github.com/simplesurance/baur/v3/internal/digest/sha384"
 	"github.com/simplesurance/baur/v3/internal/fs"
@@ -16,6 +17,7 @@ import (
 	"github.com/simplesurance/baur/v3/internal/resolve/glob"
 	"github.com/simplesurance/baur/v3/internal/resolve/gosource"
 	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
@@ -34,40 +36,45 @@ type goSourceResolver interface {
 
 // InputResolver resolves input definitions of a task to concrete files.
 type InputResolver struct {
-	repoDir              string
-	globPathResolver     *glob.Resolver
-	goSourceResolver     goSourceResolver
-	environmentVariables map[string]string
-
+	repoDir                 string
+	globPathResolver        *glob.Resolver
+	goSourceResolver        goSourceResolver
+	environmentVariables    map[string]string
 	vcsState                vcs.StateFetcher
-	cache                   *inputResolverCache
 	inputFileSingletonCache *InputFileSingletonCache
+	cache                   *inputResolverCache
+	gitTrackedDb            *git.TrackedObjects
+	fileHashfn              FileHashFn
 }
 
 // NewInputResolver returns an InputResolver that caches resolver
 // results.
 func NewInputResolver(vcsState vcs.StateFetcher, repoDir string, hashGitUntrackedFiles bool) *InputResolver {
-	var hasher FileHashFn
-	if _, gitUnavail := vcsState.(*vcs.NoVCsState); gitUnavail {
-		hasher = sha384.File
-		log.Debugf("inputresolver: using sha384 file hasher\n")
-	} else {
-		if hashGitUntrackedFiles {
-			hasher = gitobjectid.New(repoDir, log.Debugf).File
-		} else {
-			hasher = gitobjectid.New(repoDir, log.Debugf).FileDigestFromCache
-		}
-		log.Debugf("inputresolver: using gitobject file hasher\n")
-	}
-
-	return &InputResolver{
+	result := InputResolver{
 		repoDir:                 repoDir,
 		globPathResolver:        &glob.Resolver{},
 		goSourceResolver:        gosource.NewResolver(log.Debugf),
 		vcsState:                vcsState,
 		cache:                   newInputResolverCache(),
-		inputFileSingletonCache: NewInputFileSingletonCache(hasher),
+		inputFileSingletonCache: NewInputFileSingletonCache(),
 	}
+
+	if _, gitUnavail := vcsState.(*vcs.NoVCsState); gitUnavail {
+		result.fileHashfn = sha384.File
+		log.Debugf("inputresolver: using sha384 file hasher\n")
+		return &result
+	}
+
+	result.gitTrackedDb = git.NewTrackedObjects(repoDir, log.Debugf)
+	g := gitobjectid.New(repoDir, log.Debugf)
+	log.Debugf("inputresolver: using gitobject file hasher\n")
+
+	if hashGitUntrackedFiles {
+		result.fileHashfn = g.File
+		return &result
+	}
+
+	return &result
 }
 
 // Resolve resolves the input definition of the task to concrete Files.
@@ -248,10 +255,109 @@ func (i *InputResolver) pathsToUniqInputs(paths, excludePatterns []string) ([]In
 			return nil, err
 		}
 
-		res = append(res, i.inputFileSingletonCache.CreateOrGetInputFile(path, relPath))
+		f, err := i.createOrGetCachedInputFile(context.TODO(), path, relPath)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, f)
 	}
 
 	return res, nil
+}
+
+func (i *InputResolver) createOrGetCachedInputFile(ctx context.Context, absPath, relPath string) (*InputFile, error) {
+	if f, exists := i.inputFileSingletonCache.Get(absPath); exists {
+		return f, nil
+	}
+
+	if i.gitTrackedDb == nil {
+		f, err := i.newInputFile(absPath, relPath)
+		if err != nil {
+			return nil, err
+		}
+		return i.inputFileSingletonCache.Add(f), nil
+	}
+
+	obj, err := i.gitTrackedDb.Get(ctx, absPath)
+	if err == nil {
+		f, err := i.newInputFileWithTrackedOjb(ctx, absPath, relPath, obj)
+		if err != nil {
+			return nil, err
+		}
+		return i.inputFileSingletonCache.Add(f), nil
+	}
+
+	if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
+		f, err := i.newInputFile(absPath, relPath)
+		if err != nil {
+			return nil, err
+		}
+		return i.inputFileSingletonCache.Add(f), nil
+	}
+
+	return nil, err
+}
+
+func (i *InputResolver) newInputFile(absPath, relPath string) (*InputFile, error) {
+	fi, err := os.Lstat(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+		relTargetPath, err := fs.RealPathRel(i.repoDir, absPath)
+		if err != nil {
+			return nil, fmt.Errorf("%q: %w", absPath, err)
+		}
+
+		return NewInputFile(absPath, relPath,
+			WithHashFn(i.fileHashfn),
+			WithSymlinkTargetPath(relTargetPath),
+		), nil
+	}
+
+	return NewInputFile(absPath, relPath, WithHashFn(i.fileHashfn)), nil
+}
+
+func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath, relPath string, obj *git.TrackedObject) (*InputFile, error) {
+	if obj.Mode&git.ObjectTypeSymlink == git.ObjectTypeFile {
+		return NewInputFile(absPath, relPath,
+			WithHashFn(i.fileHashfn),
+			WithContentDigest(&digest.Digest{Sum: []byte(obj.ObjectID), Algorithm: digest.GitObjectID}),
+		), nil
+	}
+
+	if obj.Mode&git.ObjectTypeSymlink == git.ObjectTypeSymlink {
+		targetPath, err := fs.RealPath(absPath)
+		if err != nil {
+			return nil, err
+		}
+
+		relTargetPath, err := filepath.Rel(i.repoDir, targetPath)
+		if err != nil {
+			return nil, fmt.Errorf("%q: %w", absPath, err)
+		}
+
+		targetObj, err := i.gitTrackedDb.Get(ctx, targetPath)
+		if err != nil {
+			if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
+				return NewInputFile(absPath, relPath,
+					WithHashFn(i.fileHashfn),
+					WithSymlinkTargetPath(relTargetPath),
+				), nil
+			}
+			return nil, err
+		}
+
+		return NewInputFile(absPath, relPath,
+			WithHashFn(i.fileHashfn),
+			WithSymlinkTargetPath(relTargetPath),
+			WithContentDigest(&digest.Digest{Sum: []byte(targetObj.ObjectID), Algorithm: digest.GitObjectID}),
+		), nil
+	}
+
+	return nil, fmt.Errorf("internal error: got unsupport git.TrackedObject (%q) mode: %o", absPath, obj.Mode)
 }
 
 func (i *InputResolver) setEnvVars() {

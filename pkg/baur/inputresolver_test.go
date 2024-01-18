@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v3/internal/digest"
-	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
 	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
 	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
@@ -574,11 +574,13 @@ func (g *goSourceResolverMock) Resolve(
 func TestGoResolverFilesAreExcluded(t *testing.T) {
 	log.RedirectToTestingLog(t)
 	baseDir := filepath.FromSlash("/tmp")
+	f1 := filepath.Join(baseDir, "main.go")
+	f2 := filepath.Join(baseDir, "atm", "atm.go")
+	fstest.WriteToFile(t, []byte("a"), f1)
+	fstest.WriteToFile(t, []byte("b"), f2)
 
 	resolver := NewInputResolver(&vcs.NoVCsState{}, baseDir, true)
-	resolver.goSourceResolver = &goSourceResolverMock{
-		result: []string{filepath.Join(baseDir, "main.go"), filepath.Join(baseDir, "atm", "atm.go")},
-	}
+	resolver.goSourceResolver = &goSourceResolverMock{result: []string{f1, f2}}
 
 	result, err := resolver.Resolve(
 		context.Background(),
@@ -946,8 +948,6 @@ func TestHashGitUntrackedFilesDisabled(t *testing.T) {
 	vcsState, err := vcs.GetState(tempDir, t.Logf)
 	require.NoError(t, err)
 	r := NewInputResolver(vcsState, tempDir, false)
-	inputs, err := r.Resolve(context.Background(), task)
-	require.NoError(t, err)
-	_, err = NewInputs(inputs).Digest()
-	require.ErrorIs(t, err, gitobjectid.ErrFileNotFoundInCache)
+	_, err = r.Resolve(context.Background(), task)
+	require.ErrorIs(t, err, git.ErrObjectNotFound)
 }
