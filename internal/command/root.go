@@ -25,6 +25,7 @@ var rootCmd = &cobra.Command{
 var verboseFlag bool
 var cpuProfilingFlag bool
 var noColorFlag bool
+var repositoryPath string
 
 var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
 
@@ -52,6 +53,10 @@ func initSb(_ *cobra.Command, _ []string) {
 		err = pprof.StartCPUProfile(cpuProfFile)
 		exitOnErr(err)
 	}
+
+	if repositoryPath != "" {
+		exitOnErr(os.Chdir(repositoryPath))
+	}
 }
 
 // Execute parses commandline flags and execute their actions
@@ -67,6 +72,7 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVar(&cpuProfilingFlag, "cpu-prof", false,
 		fmt.Sprintf("enable cpu profiling, result is written to %q", defCPUProfFile))
 	rootCmd.PersistentFlags().BoolVar(&noColorFlag, "no-color", false, "disable color output (env. variable NO_COLOR is also supported)")
+	rootCmd.PersistentFlags().StringVar(&repositoryPath, "repository", "", "path to the baur repository root directory")
 
 	err := rootCmd.Execute()
 	exitOnErr(err)
