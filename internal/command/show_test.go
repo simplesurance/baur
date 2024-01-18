@@ -54,3 +54,23 @@ func TestShowArgs(t *testing.T) {
 	})
 
 }
+
+func TestShowWithRepositoryArg(t *testing.T) {
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+	app := r.CreateSimpleApp(t)
+
+	require.NoError(t, os.Chdir(os.TempDir()))
+	oldRepoPath := repositoryPath
+	t.Cleanup(func() {
+		repositoryPath = oldRepoPath
+		rootCmd.SetArgs(os.Args[1:])
+	})
+
+	rootCmd.SetArgs([]string{"show", app.Name})
+	_, stderrBuf := interceptCmdOutput(t)
+	require.Panics(t, func() { require.NoError(t, rootCmd.Execute()) })
+	require.Contains(t, stderrBuf.String(), "baur repository not found")
+
+	repositoryPath = r.Dir
+	require.NoError(t, rootCmd.Execute())
+}

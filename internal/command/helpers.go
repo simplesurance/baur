@@ -33,8 +33,22 @@ Examples:
 const envVarPSQLURL = "BAUR_POSTGRESQL_URL"
 
 func findRepository() (*baur.Repository, error) {
-	log.Debugln("searching for repository config...")
+	if repositoryPath != "" {
+		cfgPath := filepath.Join(repositoryPath, baur.RepositoryCfgFile)
+		log.Debugf("loading repository config: %q\n", cfgPath)
+		repo, err := baur.NewRepository(cfgPath)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return nil, fmt.Errorf("baur repository not found, ensure %q exists", cfgPath)
+			}
 
+			return nil, err
+		}
+
+		return repo, nil
+	}
+
+	log.Debugln("searching for repository config...")
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -42,25 +56,21 @@ func findRepository() (*baur.Repository, error) {
 
 	path, err := baur.FindRepositoryCfg(cwd)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			fatalf("baur repository not found, ensure a %q file exist in the current or a parent directory\n",
+				baur.RepositoryCfgFile)
+		}
 		return nil, err
 	}
 
 	log.Debugf("repository config found: %q", path)
-
 	return baur.NewRepository(path)
 }
 
-// mustFindRepository must find repo
 func mustFindRepository() *baur.Repository {
 	repo, err := findRepository()
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			stderr.Printf("baur repository not found, ensure a %q file exist in the current or a parent directory\n",
-				baur.RepositoryCfgFile)
-			exitFunc(1)
-		}
-		stderr.Printf("locating baur repository failed: %s\n", err)
-		exitFunc(1)
+		exitOnErr(err)
 	}
 
 	return repo
