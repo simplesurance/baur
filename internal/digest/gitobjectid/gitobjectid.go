@@ -111,21 +111,15 @@ func (h *Calc) File(absPath string) (*digest.Digest, error) {
 		return digest.FromStrDigest(objectID, digest.GitObjectID)
 	}
 
-	if _, isSymlink := h.symlinkPaths[absPath]; !isSymlink {
-		d, err := h.fileWithoutCache(absPath)
-		if err != nil {
-			return nil, fmt.Errorf("git object id does not exist in cache and could not be calculated: %w", err)
-		}
-		return d, nil
-	}
-
-	// if it is a known symlink, the db might contain the entry for the target path
+	// file might be a symlink, check if it's resolved path exist in the db
 	p, err := fs.RealPath(absPath)
 	if err != nil {
 		return nil, err
 	}
-	if objectID, exists = h.objectIDs[p]; exists {
-		return digest.FromStrDigest(objectID, digest.GitObjectID)
+	if p != absPath {
+		if objectID, exists = h.objectIDs[p]; exists {
+			return digest.FromStrDigest(objectID, digest.GitObjectID)
+		}
 	}
 
 	d, err := h.fileWithoutCache(absPath)
