@@ -101,7 +101,7 @@ func (f *Fields) Type() string {
 
 // Usage returns a usage description, important parts are passed through
 // highlightFn
-func (f *Fields) Usage(highlightFn func(a ...interface{}) string) string {
+func (f *Fields) Usage(highlightFn func(a ...any) string) string {
 	fields := make([]string, 0, len(f.supportedFields))
 	for k := range f.supportedFields {
 		fields = append(fields, k)

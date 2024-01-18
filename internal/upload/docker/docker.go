@@ -19,10 +19,10 @@ const dockerRegistryDefaultPort = "5000"
 type Client struct {
 	clt        *docker.Client
 	auths      *docker.AuthConfigurations
-	debugLogFn func(string, ...interface{})
+	debugLogFn func(string, ...any)
 }
 
-var defLogFn = func(string, ...interface{}) {}
+var defLogFn = func(string, ...any) {}
 
 // NewClient initializes a new docker client.
 // The following environment variables are respected:
@@ -39,7 +39,7 @@ var defLogFn = func(string, ...interface{}) {}
 // If reading auth data from the config fails, a message is logged via the
 // debugLogFn function but no error is returned. An Upload() operation would be
 // done without authentication.
-func NewClient(debugLogFn func(string, ...interface{})) (*Client, error) {
+func NewClient(debugLogFn func(string, ...any)) (*Client, error) {
 	logFn := defLogFn
 	if debugLogFn != nil {
 		logFn = debugLogFn

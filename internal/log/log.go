@@ -17,8 +17,8 @@ type Logger struct {
 // Output defines the output channel of a logger to that all log messages are
 // written.
 type Output interface {
-	Printf(format string, v ...interface{})
-	Println(v ...interface{})
+	Printf(format string, v ...any)
+	Println(v ...any)
 }
 
 // StdLogger is the logger that is used from the log functions in this package
@@ -45,7 +45,7 @@ func (l *Logger) DebugEnabled() bool {
 
 // Debugln logs a debug message to stdout.
 // It's only shown if debugging is enabled.
-func (l *Logger) Debugln(v ...interface{}) {
+func (l *Logger) Debugln(v ...any) {
 	if !l.debugEnabled {
 		return
 	}
@@ -55,7 +55,7 @@ func (l *Logger) Debugln(v ...interface{}) {
 
 // Debugf logs a debug message to stdout.
 // It's only shown if debugging is enabled.
-func (l *Logger) Debugf(format string, v ...interface{}) {
+func (l *Logger) Debugf(format string, v ...any) {
 	if !l.debugEnabled {
 		return
 	}
@@ -86,12 +86,12 @@ func DebugEnabled() bool {
 
 // Debugln logs a debug message to stdout.
 // It's only shown if debugging is enabled.
-func Debugln(v ...interface{}) {
+func Debugln(v ...any) {
 	StdLogger.Debugln(v...)
 }
 
 // Debugf logs a debug message to stdout.
 // It's only shown if debugging is enabled.
-func Debugf(format string, v ...interface{}) {
+func Debugf(format string, v ...any) {
 	StdLogger.Debugf(format, v...)
 }

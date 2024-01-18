@@ -24,14 +24,14 @@ func NewStream(out io.Writer) *Stream {
 	return &Stream{stream: out}
 }
 
-func (s *Stream) Printf(format string, a ...interface{}) {
+func (s *Stream) Printf(format string, a ...any) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	fmt.Fprintf(s.stream, format, a...)
 }
 
-func (s *Stream) Println(a ...interface{}) {
+func (s *Stream) Println(a ...any) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -39,7 +39,7 @@ func (s *Stream) Println(a ...interface{}) {
 }
 
 // TaskPrintf prints a message that is prefixed with '<TASK-NAME>: '
-func (s *Stream) TaskPrintf(task *baur.Task, format string, a ...interface{}) {
+func (s *Stream) TaskPrintf(task *baur.Task, format string, a ...any) {
 	prefix := Highlight(fmt.Sprintf("%s: ", task))
 
 	s.Printf(prefix+format, a...)
@@ -47,7 +47,7 @@ func (s *Stream) TaskPrintf(task *baur.Task, format string, a ...interface{}) {
 
 // ErrPrintln prints an error with an optional message.
 // The method prints the error in the format: errorPrefix msg: err
-func (s *Stream) ErrPrintln(err error, msg ...interface{}) {
+func (s *Stream) ErrPrintln(err error, msg ...any) {
 	if len(msg) == 0 {
 		s.Println(ErrorPrefix, err)
 		return
@@ -59,12 +59,12 @@ func (s *Stream) ErrPrintln(err error, msg ...interface{}) {
 
 // ErrPrintf prints an error with an optional printf-style message.
 // The method prints the error in the format: errorPrefix msg: err
-func (s *Stream) ErrPrintf(err error, format string, a ...interface{}) {
+func (s *Stream) ErrPrintf(err error, format string, a ...any) {
 	s.ErrPrintln(err, fmt.Sprintf(format, a...))
 }
 
 // PrintErrln prints as message that is prefixed with "ERROR: "
-func (s *Stream) PrintErrln(msg ...interface{}) {
+func (s *Stream) PrintErrln(msg ...any) {
 	s.Println(ErrorPrefix, fmt.Sprint(msg...))
 }
 

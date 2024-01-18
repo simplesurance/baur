@@ -18,7 +18,7 @@ type Client struct {
 
 // Logger defines the interface for an S3 logger
 type Logger interface {
-	Debugf(format string, v ...interface{})
+	Debugf(format string, v ...any)
 }
 
 // DefaultRetries is the number of retries for a S3 upload until an error is

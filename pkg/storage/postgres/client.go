@@ -17,7 +17,7 @@ type Client struct {
 
 // Logger is an interface for logging debug informations
 type Logger interface {
-	Debugln(v ...interface{})
+	Debugln(v ...any)
 }
 
 // New returns a new postgres client.
@@ -54,8 +54,8 @@ func (c *Client) Close() error {
 
 type dbConn interface {
 	BeginFunc(context.Context, func(pgx.Tx) error) error
-	QueryRow(context.Context, string, ...interface{}) pgx.Row
-	Query(context.Context, string, ...interface{}) (pgx.Rows, error)
-	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+	QueryRow(context.Context, string, ...any) pgx.Row
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
 	Begin(context.Context) (pgx.Tx, error)
 }

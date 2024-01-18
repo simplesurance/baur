@@ -216,12 +216,12 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 	return apps
 }
 
-func mustWriteRow(fmt format.Formatter, row ...interface{}) {
+func mustWriteRow(fmt format.Formatter, row ...any) {
 	err := fmt.WriteRow(row...)
 	exitOnErr(err)
 }
 
-func exitOnErrf(err error, format string, v ...interface{}) {
+func exitOnErrf(err error, format string, v ...any) {
 	if err == nil {
 		return
 	}
@@ -230,17 +230,17 @@ func exitOnErrf(err error, format string, v ...interface{}) {
 	exitFunc(1)
 }
 
-func fatal(msg ...interface{}) {
+func fatal(msg ...any) {
 	stderr.PrintErrln(msg...)
 	exitFunc(1)
 }
 
-func fatalf(format string, v ...interface{}) {
+func fatalf(format string, v ...any) {
 	stderr.Printf(format, v...)
 	exitFunc(1)
 }
 
-func exitOnErr(err error, msg ...interface{}) {
+func exitOnErr(err error, msg ...any) {
 	if err == nil {
 		return
 	}
