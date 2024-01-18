@@ -242,3 +242,23 @@ func RealPath(path string) (string, error) {
 
 	return absPath, nil
 }
+
+// RealPath resolves all symlinks and returns the path relative to basepath.
+func RealPathRel(basepath, path string) (string, error) {
+	path, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", fmt.Errorf("resolving symlinks in path failed: %w", err)
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("computing absolute path of %q failed: %w", path, err)
+	}
+
+	relPath, err := filepath.Rel(basepath, absPath)
+	if err != nil {
+		return "", fmt.Errorf("computing relative path of %q failed: %w", absPath, err)
+	}
+
+	return relPath, nil
+}

@@ -1,9 +1,13 @@
 package baur
 
 import (
+	"errors"
+
 	"github.com/simplesurance/baur/v3/internal/digest"
 	"github.com/simplesurance/baur/v3/internal/digest/sha384"
 )
+
+type InputFileOpt func(*InputFile)
 
 // InputFile represent a file.
 type InputFile struct {
@@ -11,20 +15,43 @@ type InputFile struct {
 	repoRelPath string
 
 	fileHasher FileHashFn
+	digest     *digest.Digest
 
-	digest *digest.Digest
+	repoRelSymlinkTargetPath string
+	contentDigest            *digest.Digest
+}
+
+func WithHashFn(h FileHashFn) InputFileOpt {
+	return func(i *InputFile) {
+		i.fileHasher = h
+	}
+}
+
+func WithContentDigest(d *digest.Digest) InputFileOpt {
+	return func(i *InputFile) {
+		i.contentDigest = d
+	}
+}
+
+func WithSymlinkTargetPath(repoRelTargetPath string) InputFileOpt {
+	return func(i *InputFile) {
+		i.repoRelSymlinkTargetPath = repoRelTargetPath
+	}
 }
 
 // NewInputFile creates an InputFile.
 // absPath is the absolute path to the file. It is used to create the digest.
 // relPath is a relative path to the file. It is used as part of the digest. To
 // which base path relPath is relative is arbitrary.
-func NewInputFile(absPath, relPath string, fileHasher FileHashFn) *InputFile {
-	return &InputFile{
+func NewInputFile(absPath, relPath string, opts ...InputFileOpt) *InputFile {
+	i := InputFile{
 		absPath:     absPath,
 		repoRelPath: relPath,
-		fileHasher:  fileHasher,
 	}
+	for _, fn := range opts {
+		fn(&i)
+	}
+	return &i
 }
 
 // String returns RelPath()
@@ -44,27 +71,48 @@ func (f *InputFile) AbsPath() string {
 
 // CalcDigest calculates the digest of the file.
 // The Digest is the sha384 sum of the repoRelPath and the content of the file.
+// If neither a file hash functon nor the content digest was provided on
+// construction of f, errors.ErrUnsupported is returned.
 func (f *InputFile) CalcDigest() (*digest.Digest, error) {
-	contentD, err := f.fileHasher(f.absPath)
-	if err != nil {
+	if f.contentDigest == nil && f.fileHasher == nil {
+		return nil, errors.ErrUnsupported
+	}
+
+	h := sha384.New()
+
+	if err := h.AddBytes([]byte("Path:")); err != nil {
+		return nil, err
+	}
+	if err := h.AddBytes([]byte(f.repoRelPath)); err != nil {
 		return nil, err
 	}
 
-	sha := sha384.New()
-
-	err = sha.AddBytes([]byte(f.repoRelPath))
-	if err != nil {
+	if err := h.AddBytes([]byte("SymlinkTarget:")); err != nil {
 		return nil, err
 	}
 
-	err = sha.AddBytes([]byte(contentD.String()))
-	if err != nil {
+	if f.repoRelSymlinkTargetPath != "" {
+		if err := h.AddBytes([]byte(f.repoRelSymlinkTargetPath)); err != nil {
+			return nil, err
+		}
+	}
+
+	if f.contentDigest == nil {
+		d, err := f.fileHasher(f.absPath)
+		if err != nil {
+			return nil, err
+		}
+		f.contentDigest = d
+	}
+
+	if err := h.AddBytes([]byte("Content:")); err != nil {
+		return nil, err
+	}
+	if err := h.AddBytes(f.contentDigest.Sum); err != nil {
 		return nil, err
 	}
 
-	f.digest = sha.Digest()
-
-	return f.digest, nil
+	return h.Digest(), nil
 }
 
 // Digest returns the previous calculated digest.

@@ -2,10 +2,12 @@ package git
 
 import (
 	"context"
-	"os"
+	"errors"
 	"path/filepath"
 	"sync"
 )
+
+var ErrObjectNotFound = errors.New("git object id not found, file might not exist, untracked or modified")
 
 type PrintfFn func(format string, a ...any)
 
@@ -89,7 +91,7 @@ func (h *TrackedObjects) createDb(ch <-chan *Object, finishedCh chan struct{}) {
 }
 
 // Get returns a TrackedObject for the file at absPath in the git repository.
-// If the file does not exist, is untracked or modified os.ErrNotExist is returned.
+// If the file does not exist, is untracked or modified ErrObjectNotFound is returned.
 //
 // On the first call, the objects are read from the Git repository. If it
 // fails, the call and following runs are returning the occurred error.
@@ -100,7 +102,7 @@ func (h *TrackedObjects) Get(ctx context.Context, absPath string) (*TrackedObjec
 
 	o, exists := h.info[absPath]
 	if !exists {
-		return nil, os.ErrNotExist
+		return nil, ErrObjectNotFound
 	}
 
 	return o, nil

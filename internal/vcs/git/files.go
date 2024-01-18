@@ -59,14 +59,6 @@ func (o *Object) String() string {
 	return fmt.Sprintf("status: %c mode: %o name: %s path: %s", o.Status, o.Mode, o.Name, o.RelPath)
 }
 
-func (o *Object) IsSymlink() bool {
-	return o.Mode&ObjectTypeSymlink == ObjectTypeSymlink
-}
-
-func (o *Object) IsFile() bool {
-	return o.Mode&ObjectTypeFile == ObjectTypeFile
-}
-
 func scanNullTerminatedLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
