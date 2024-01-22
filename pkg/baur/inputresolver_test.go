@@ -872,7 +872,6 @@ func resolveInputs(t *testing.T, task *Task) *digest.Digest {
 }
 
 func TestSymlinkIsReplacedByTargetFile(t *testing.T) {
-	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/490")
 	log.RedirectToTestingLog(t)
 
 	info := prepareSymlinkTestDir(t, false, false)
@@ -885,7 +884,6 @@ func TestSymlinkIsReplacedByTargetFile(t *testing.T) {
 }
 
 func TestSymlinkTargetPathChangesFileIsSame(t *testing.T) {
-	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/491")
 	log.RedirectToTestingLog(t)
 
 	info := prepareSymlinkTestDir(t, false, false)
