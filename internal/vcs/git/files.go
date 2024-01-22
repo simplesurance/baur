@@ -35,14 +35,21 @@ const (
 	ObjectStatusWithResolveUndoInfo byte = 'U'
 )
 
+// Mode is the file mode from git (https://git-scm.com/book/en/v2/Git-Internals-Git-Objects)
+// It is either:
+// 100644 - normal file,
+// 100755 - executable file,
+// 120000 symbolic link,
+type Mode uint32
+
 const (
-	ObjectTypeSymlink = 0120000
-	ObjectTypeFile    = 0100000
+	ObjectTypeSymlink Mode = 0120000
+	ObjectTypeFile    Mode = 0100000
 )
 
 type Object struct {
 	Status byte
-	Mode   uint32
+	Mode   Mode
 	// Name is the hash of the object
 	Name    string
 	RelPath string
@@ -157,7 +164,7 @@ func parseLsFilesLines(reader io.Reader, skipUntracked bool, ch chan<- *Object) 
 		if err != nil {
 			return fmt.Errorf("could not parse mode %q from substr: %q, line %q: %w", mode, substr, line, err)
 		}
-		o.Mode = uint32(modeUint)
+		o.Mode = Mode(modeUint)
 
 		if f2End == -1 || len(substr) < f2End-1 {
 			ch <- &o
