@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -52,6 +53,7 @@ type statusCmd struct {
 	buildStatus             flag.TaskStatus
 	fields                  *flag.Fields
 	requireCleanGitWorktree bool
+	format                  *flag.Format
 }
 
 func newStatusCmd() *statusCmd {
@@ -64,6 +66,7 @@ func newStatusCmd() *statusCmd {
 			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{}),
 		},
 
+		format: flag.NewFormatFlag(),
 		fields: flag.MustNewFields(
 			[]string{
 				statusAppNameParam,
@@ -84,8 +87,14 @@ func newStatusCmd() *statusCmd {
 	}
 	cmd.Run = cmd.run
 
+	cmd.Flags().Var(cmd.format, "format", cmd.format.Usage(term.Highlight))
+	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
+
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"List applications in RFC4180 CSV format")
+		"Output status in RFC4180 CSV format")
+	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
+
+	cmd.MarkFlagsMutuallyExclusive("format", "csv")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"Suppress printing a header and progress dots")
@@ -107,6 +116,12 @@ func newStatusCmd() *statusCmd {
 
 	cmd.Flags().BoolVarP(&cmd.requireCleanGitWorktree, flagNameRequireCleanGitWorktree, "c", false,
 		"fail if the git repository contains modified or untracked files")
+
+	cmd.PreRun = func(*cobra.Command, []string) {
+		if cmd.csv {
+			cmd.format.Val = flag.FormatCSV
+		}
+	}
 
 	return &cmd
 }
@@ -157,7 +172,7 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 	tasks, err := loader.LoadTasks(args...)
 	exitOnErr(err)
 
-	writeHeaders := !c.quiet && !c.csv
+	writeHeaders := !c.quiet && c.format.Val == flag.FormatPlain
 	storageQueryNeeded := c.storageQueryIsNeeded()
 
 	if storageQueryNeeded {
@@ -169,13 +184,14 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 		headers = c.statusCreateHeader()
 	}
 
-	if c.csv {
+	switch c.format.Val {
+	case flag.FormatCSV:
 		formatter = csv.New(headers, stdout)
-	} else {
+	case flag.FormatPlain:
 		formatter = table.New(headers, stdout)
 	}
 
-	showProgress := len(tasks) >= 5 && !c.quiet && !c.csv
+	showProgress := len(tasks) >= 5 && !c.quiet && c.format.Val == flag.FormatPlain
 
 	statusMgr := baur.NewTaskStatusEvaluator(
 		repo.Path,
@@ -186,8 +202,8 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 
 	baur.SortTasksByID(tasks)
 
+	var rows []*statusRow
 	for i, task := range tasks {
-		var row []any
 		var taskRun *storage.TaskRunWithID
 		var taskStatus baur.TaskStatus
 
@@ -213,13 +229,20 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 			continue
 		}
 
-		row = c.statusAssembleRow(repo.Path, task, taskRun, taskStatus)
-
-		mustWriteRow(formatter, row...)
+		row := c.assembleRow(repo.Path, task, taskRun, taskStatus)
+		if c.format.Val == flag.FormatJSON {
+			rows = append(rows, row)
+		} else {
+			mustWriteRow(formatter, row.asOrderedSlice(c.fields.Fields)...)
+		}
 	}
 
-	err = formatter.Flush()
-	exitOnErr(err)
+	if c.format.Val == flag.FormatJSON {
+		c.mustStatusRowsToJSON(rows)
+		return
+	}
+
+	exitOnErr(formatter.Flush())
 }
 
 func (c *statusCmd) storageQueryIsNeeded() bool {
@@ -241,43 +264,117 @@ func (c *statusCmd) storageQueryIsNeeded() bool {
 	return false
 }
 
-func (c *statusCmd) statusAssembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus) []any {
-	var row []any
+func strPtr(s string) *string {
+	return &s
+}
+
+func (c *statusCmd) mustStatusRowsToJSON(rows []*statusRow) {
+	// We don't marshal statusRow directly because we need custom
+	// behaviour to distinguish fields that should not be shown
+	// (not passed via --fields) and fields that are undefined
+	// (null). When marshalling rows fields that are not defined
+	// via "--fields" would always be shown as null.
+	res := make([]map[string]any, 0, len(rows))
+	for _, r := range rows {
+		res = append(res, r.asMap(c.fields.Fields))
+	}
+	enc := json.NewEncoder(stdout)
+	enc.SetIndent("", "  ")
+	exitOnErr(enc.Encode(res))
+}
+
+func (c *statusCmd) assembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus) *statusRow {
+	var row statusRow
 
 	for _, f := range c.fields.Fields {
 		switch f {
 		case statusAppNameParam:
-			row = append(row, task.AppName)
+			row.AppName = &task.AppName
 
 		case statusTaskIDParam:
-			row = append(row, task.ID())
+			row.TaskID = strPtr(task.ID())
 
 		case statusPathParam:
 			if c.absPaths {
-				row = append(row, task.Directory)
+				row.Path = &task.Directory
 			} else {
-				row = append(row, mustTaskRepoRelPath(repositoryDir, task))
+				row.Path = strPtr(mustTaskRepoRelPath(repositoryDir, task))
 			}
 
 		case statusStatusParam:
-			row = append(row, buildStatus)
+			row.Status = strPtr(buildStatus.String())
 
 		case statusRunIDParam:
 			if buildStatus == baur.TaskStatusRunExist {
-				row = append(row, fmt.Sprint(taskRun.ID))
-			} else {
-				// no build exist, we don't have a build id
-				row = append(row, "")
+				row.RunID = strPtr(fmt.Sprint(taskRun.ID))
 			}
 
 		case statusGitCommitParam:
 			if buildStatus == baur.TaskStatusRunExist {
-				row = append(row, fmt.Sprint(taskRun.VCSRevision))
-			} else {
-				row = append(row, "")
+				row.GitCommit = strPtr(fmt.Sprint(taskRun.VCSRevision))
 			}
+		}
+
+	}
+	return &row
+}
+
+type statusRow struct {
+	AppName   *string
+	GitCommit *string
+	Path      *string
+	RunID     *string
+	Status    *string
+	TaskID    *string
+}
+
+func (r *statusRow) asMap(order []string) map[string]any {
+	m := make(map[string]any, len(order))
+	for _, f := range order {
+		switch f {
+		case statusAppNameParam:
+			m["AppName"] = r.AppName
+		case statusTaskIDParam:
+			m["TaskID"] = r.TaskID
+		case statusPathParam:
+			m["Path"] = r.Path
+		case statusStatusParam:
+			m["Status"] = r.Status
+		case statusRunIDParam:
+			m["RunID"] = r.RunID
+		case statusGitCommitParam:
+			m["GitCommit"] = r.GitCommit
 		}
 	}
 
-	return row
+	return m
+}
+
+func (r *statusRow) asOrderedSlice(order []string) []any {
+	result := make([]any, 0, len(order))
+	for _, f := range order {
+		switch f {
+		case statusAppNameParam:
+			result = sliceAppendNilAsEmpty(result, r.AppName)
+		case statusTaskIDParam:
+			result = sliceAppendNilAsEmpty(result, r.TaskID)
+		case statusPathParam:
+			result = sliceAppendNilAsEmpty(result, r.Path)
+		case statusStatusParam:
+			result = sliceAppendNilAsEmpty(result, r.Status)
+		case statusRunIDParam:
+			result = sliceAppendNilAsEmpty(result, r.RunID)
+		case statusGitCommitParam:
+			result = sliceAppendNilAsEmpty(result, r.GitCommit)
+		}
+	}
+
+	return result
+}
+
+func sliceAppendNilAsEmpty(sl []any, v *string) []any {
+	if v == nil {
+		return append(sl, "")
+	}
+	return append(sl, *v)
 }

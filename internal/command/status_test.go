@@ -4,6 +4,7 @@
 package command
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
@@ -245,4 +247,54 @@ func TestStatusFailsWhenGitWorktreeIsDirty(t *testing.T) {
 
 	require.Contains(t, stderrBuf.String(), fname)
 	require.Contains(t, stderrBuf.String(), "expecting only tracked unmodified files")
+}
+
+func TestStatusJson(t *testing.T) {
+	initTest(t)
+
+	repoDir := filepath.Join(testdataDir, "multitasks")
+	err := os.Chdir(repoDir)
+	require.NoError(t, err)
+
+	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
+	require.NoError(t, err)
+
+	t.Setenv(envVarPSQLURL, dbURL)
+	runInitDb(t)
+
+	t.Run("default fields", func(t *testing.T) {
+		initTest(t)
+		statusCmd := newStatusCmd()
+		statusCmd.format = &flag.Format{Val: flag.FormatJSON}
+		stdoutBuf, _ := interceptCmdOutput(t)
+		require.NoError(t, statusCmd.Execute())
+
+		var res []map[string]any
+		require.NoError(t, json.Unmarshal(stdoutBuf.Bytes(), &res))
+		assert.Len(t, res, 11)
+		assert.Contains(t, res, map[string]any{
+			"Path":      "app3",
+			"Status":    "Pending",
+			"TaskID":    "app3.test",
+			"GitCommit": nil,
+			"RunID":     nil,
+		})
+	})
+
+	t.Run("custom fields", func(t *testing.T) {
+		initTest(t)
+		statusCmd := newStatusCmd()
+		statusCmd.format = &flag.Format{Val: flag.FormatJSON}
+		require.NoError(t, statusCmd.fields.Set("app-name,git-commit"))
+		statusCmd.SetArgs([]string{"app3.check"})
+		stdoutBuf, _ := interceptCmdOutput(t)
+		require.NoError(t, statusCmd.Execute())
+
+		var res []map[string]any
+		require.NoError(t, json.Unmarshal(stdoutBuf.Bytes(), &res))
+		assert.Equal(t, []map[string]any{{
+			"AppName":   "app3",
+			"GitCommit": nil,
+		}}, res)
+	})
 }
