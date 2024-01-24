@@ -43,7 +43,7 @@ func TestUpgrade(t *testing.T) {
 	require.NoError(t, os.Chdir(gitDir))
 
 	upgradeCmd := newUpgradeConfigsCmd()
-	upgradeCmd.Command.Run(&upgradeCmd.Command, nil)
+	upgradeCmd.Run(&upgradeCmd.Command, nil)
 
 	output := stdoutBuf.String()
 	t.Log(output)
@@ -56,9 +56,9 @@ func TestUpgrade(t *testing.T) {
 
 	stdoutBuf.Truncate(0)
 	statusCmd := newStatusCmd()
-	statusCmd.csv = true
+	statusCmd.format = &flag.Format{Val: flag.FormatCSV}
 	statusCmd.fields = &flag.Fields{Fields: []string{statusTaskIDParam}}
-	statusCmd.Command.Run(&statusCmd.Command, nil)
+	statusCmd.Run(&statusCmd.Command, nil)
 
 	taskIDs := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
 
