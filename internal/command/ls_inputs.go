@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/pkg/baur"
@@ -103,7 +102,7 @@ func (c *lsInputsCmd) mustGetTaskInputs(taskSpec string) []baur.Input {
 }
 
 func (c *lsInputsCmd) mustPrintTaskInputs(inputs *baur.Inputs) {
-	var formatter format.Formatter
+	var formatter Formatter
 	var headers []string
 	writeHeaders := !c.quiet && !c.csv
 

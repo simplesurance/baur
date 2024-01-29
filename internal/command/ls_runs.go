@@ -10,7 +10,6 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -139,7 +138,7 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 	psql := mustNewCompatibleStorage(repo)
 	defer psql.Close()
 
-	var formatter format.Formatter
+	var formatter Formatter
 	if c.csv {
 		formatter = csv.New(nil, stdout)
 	} else {
@@ -180,7 +179,7 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 	exitOnErr(formatter.Flush())
 }
 
-func printHeader(formatter format.Formatter) {
+func printHeader(formatter Formatter) {
 	mustWriteRow(
 		formatter,
 		"Id",
@@ -193,7 +192,7 @@ func printHeader(formatter format.Formatter) {
 	)
 }
 
-func (c *lsRunsCmd) printTaskRun(formatter format.Formatter, taskRun *storage.TaskRunWithID) {
+func (c *lsRunsCmd) printTaskRun(formatter Formatter, taskRun *storage.TaskRunWithID) {
 	if c.quiet {
 		mustWriteRow(formatter, taskRun.ID)
 	}

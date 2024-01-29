@@ -8,7 +8,6 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/log"
@@ -20,6 +19,11 @@ import (
 	"github.com/simplesurance/baur/v3/pkg/storage"
 	"github.com/simplesurance/baur/v3/pkg/storage/postgres"
 )
+
+type Formatter interface {
+	WriteRow(Row ...any) error
+	Flush() error
+}
 
 var targetHelp = fmt.Sprintf(`%s is in the format %s
 Examples:
@@ -219,7 +223,7 @@ func mustArgToApps(repo *baur.Repository, args []string) []*baur.App {
 	return apps
 }
 
-func mustWriteRow(fmt format.Formatter, row ...any) {
+func mustWriteRow(fmt Formatter, row ...any) {
 	err := fmt.WriteRow(row...)
 	exitOnErr(err)
 }
@@ -294,7 +298,7 @@ func untrackedFilesExistErrMsg(untrackedFiles []string) string {
 		term.Highlight("--"+flagNameRequireCleanGitWorktree), term.Highlight(prettyprint.TruncatedStrSlice(untrackedFiles, 10)))
 }
 
-func mustNewFormatter(formatterName string, hdrs []string) format.Formatter {
+func mustNewFormatter(formatterName string, hdrs []string) Formatter {
 	switch formatterName {
 	case flag.FormatCSV:
 		return csv.New(hdrs, stdout)

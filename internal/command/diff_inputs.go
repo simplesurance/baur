@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v3/internal/format"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/vcs"
@@ -341,7 +340,7 @@ func getTaskRunByID(psql storage.Storer, id int) *storage.TaskRunWithID {
 
 func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
 	if !c.quiet {
-		var formatter format.Formatter
+		var formatter Formatter
 
 		if c.csv {
 			formatter = csv.New(nil, stdout)
