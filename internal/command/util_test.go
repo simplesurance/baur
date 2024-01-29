@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
@@ -11,6 +13,17 @@ import (
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/testutils/logwriter"
 )
+
+var testdataDir string
+
+func init() {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(wd)
+	}
+
+	testdataDir = filepath.Join(wd, "testdata")
+}
 
 // interceptCmdOutput changes the stdout and stderr streams to that the
 // commands write to the returned buffers, all output is additionally still
