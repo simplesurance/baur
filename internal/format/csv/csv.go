@@ -36,6 +36,11 @@ func (f *Formatter) WriteRow(row ...any) error {
 	str := make([]string, 0, len(row))
 
 	for _, col := range row {
+		if col == nil {
+			str = append(str, "")
+			continue
+		}
+
 		str = append(str, fmt.Sprintf("%v", col))
 	}
 
