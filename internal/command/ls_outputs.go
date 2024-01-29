@@ -2,14 +2,12 @@ package command
 
 import (
 	"errors"
-	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format/csv"
-	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/pkg/storage"
 )
@@ -17,8 +15,9 @@ import (
 type lsOutputsCmd struct {
 	cobra.Command
 
-	quiet bool
-	csv   bool
+	quiet  bool
+	csv    bool
+	format *flag.Format
 }
 
 func init() {
@@ -33,15 +32,26 @@ func newLsOutputsCmd() *lsOutputsCmd {
 			Args:              cobra.ExactArgs(1),
 			ValidArgsFunction: cobra.NoFileCompletions,
 		},
+		format: flag.NewFormatFlag(),
 	}
 
 	cmd.Run = cmd.run
 
+	cmd.Flags().Var(cmd.format, "format", cmd.format.Usage(term.Highlight))
+	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
+
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
 		"Show output in RFC4180 CSV format")
+	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"Only show URIs")
+
+	cmd.PreRun = func(*cobra.Command, []string) {
+		if cmd.csv {
+			cmd.format.Val = flag.FormatCSV
+		}
+	}
 
 	return &cmd
 }
@@ -74,8 +84,10 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 		}
 	}
 
-	formatter := getLsOutputsFormatter(c.quiet, c.csv)
+	headers := c.createHeader()
+	formatter := mustNewFormatter(c.format.Val, headers)
 
+	withUnits := c.format.Val == flag.FormatPlain
 	for _, o := range outputs {
 		for _, upload := range o.Uploads {
 			if c.quiet {
@@ -86,10 +98,13 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 			mustWriteRow(formatter,
 				upload.URI,
 				o.Digest,
-				term.FormatSize(o.SizeBytes, term.FormatBaseWithoutUnitName(c.csv)),
+				term.FormatSize(
+					o.SizeBytes,
+					term.FormatBaseWithoutUnitName(!withUnits),
+				),
 				term.FormatDuration(
 					upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp),
-					term.FormatBaseWithoutUnitName(c.csv),
+					term.FormatBaseWithoutUnitName(!withUnits),
 				),
 				o.Type,
 				upload.Method,
@@ -101,18 +116,23 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 	exitOnErr(err)
 }
 
-func getLsOutputsFormatter(isQuiet, isCsv bool) Formatter {
-	var headers []string
-
-	if isCsv {
-		return csv.New(headers, os.Stdout)
+func (c *lsOutputsCmd) createHeader() []string {
+	if c.format.Val == flag.FormatJSON {
+		return []string{
+			"URI",
+			"Digest",
+			"Bytes",
+			"UploadDurationSeconds",
+			"OutputType",
+			"UploadMethod",
+		}
 	}
 
-	if isQuiet {
-		return table.New(headers, os.Stdout)
+	if c.format.Val == flag.FormatCSV || c.quiet {
+		return nil
 	}
 
-	headers = []string{
+	return []string{
 		"URI",
 		"Digest",
 		"Size",
@@ -120,6 +140,4 @@ func getLsOutputsFormatter(isQuiet, isCsv bool) Formatter {
 		"Output Type",
 		"Method",
 	}
-
-	return table.New(headers, os.Stdout)
 }
