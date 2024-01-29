@@ -335,6 +335,8 @@ func (r *statusRow) asMap(order []string) map[string]any {
 			m["RunID"] = r.RunID
 		case statusGitCommitParam:
 			m["GitCommit"] = r.GitCommit
+		default:
+			panic(fmt.Sprintf("BUG: asMap: got unsupported field name %q in order list", f))
 		}
 	}
 
@@ -357,6 +359,8 @@ func (r *statusRow) asOrderedSlice(order []string) []any {
 			result = sliceAppendNilAsEmpty(result, r.RunID)
 		case statusGitCommitParam:
 			result = sliceAppendNilAsEmpty(result, r.GitCommit)
+		default:
+			panic(fmt.Sprintf("BUG: asOrderedSlice: got unsupported field name %q in order list", f))
 		}
 	}
 
