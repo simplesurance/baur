@@ -1,13 +1,13 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
+	"github.com/simplesurance/baur/v3/internal/format/json"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -229,7 +229,7 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 	}
 
 	if c.format.Val == flag.FormatJSON {
-		c.mustStatusRowsToJSON(rows)
+		exitOnErr(json.Encode(stdout, rows, c.fields.Fields))
 		return
 	}
 
@@ -257,21 +257,6 @@ func (c *statusCmd) storageQueryIsNeeded() bool {
 
 func strPtr(s string) *string {
 	return &s
-}
-
-func (c *statusCmd) mustStatusRowsToJSON(rows []*statusRow) {
-	// We don't marshal statusRow directly because we need custom
-	// behaviour to distinguish fields that should not be shown
-	// (not passed via --fields) and fields that are undefined
-	// (null). When marshalling rows fields that are not defined
-	// via "--fields" would always be shown as null.
-	res := make([]map[string]any, 0, len(rows))
-	for _, r := range rows {
-		res = append(res, r.asMap(c.fields.Fields))
-	}
-	enc := json.NewEncoder(stdout)
-	enc.SetIndent("", "  ")
-	exitOnErr(enc.Encode(res))
 }
 
 func (c *statusCmd) assembleRow(repositoryDir string, task *baur.Task, taskRun *storage.TaskRunWithID, buildStatus baur.TaskStatus) *statusRow {
@@ -319,9 +304,9 @@ type statusRow struct {
 	TaskID    *string
 }
 
-func (r *statusRow) asMap(order []string) map[string]any {
-	m := make(map[string]any, len(order))
-	for _, f := range order {
+func (r *statusRow) AsMap(fields []string) map[string]any {
+	m := make(map[string]any, len(fields))
+	for _, f := range fields {
 		switch f {
 		case statusAppNameParam:
 			m["AppName"] = r.AppName
