@@ -22,17 +22,6 @@ import (
 	"github.com/simplesurance/baur/v3/pkg/baur"
 )
 
-var testdataDir string
-
-func init() {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(wd)
-	}
-
-	testdataDir = filepath.Join(wd, "testdata")
-}
-
 func runInitDb(t *testing.T) {
 	t.Helper()
 
@@ -48,7 +37,7 @@ func baurCSVLsApps(t *testing.T) [][]string {
 	stdoutBuf, _ := interceptCmdOutput(t)
 
 	lsAppsCmd := newLsAppsCmd()
-	lsAppsCmd.csv = true
+	lsAppsCmd.format.Val = flag.FormatCSV
 
 	lsAppsCmd.Command.Run(&lsAppsCmd.Command, nil)
 

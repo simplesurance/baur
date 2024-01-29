@@ -7,9 +7,7 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format"
-	"github.com/simplesurance/baur/v3/internal/format/csv"
-	"github.com/simplesurance/baur/v3/internal/format/table"
+	"github.com/simplesurance/baur/v3/internal/format/json"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 )
 
@@ -31,6 +29,7 @@ type lsAppsCmd struct {
 	quiet    bool
 	absPaths bool
 	fields   *flag.Fields
+	format   *flag.Format
 }
 
 func newLsAppsCmd() *lsAppsCmd {
@@ -42,6 +41,7 @@ func newLsAppsCmd() *lsAppsCmd {
 			ValidArgsFunction: completeAppNameAndAppDir,
 		},
 
+		format: flag.NewFormatFlag(),
 		fields: flag.MustNewFields(
 			[]string{
 				lsAppNameParam,
@@ -56,8 +56,14 @@ func newLsAppsCmd() *lsAppsCmd {
 
 	cmd.Run = cmd.run
 
+	cmd.Flags().Var(cmd.format, "format", cmd.format.Usage(term.Highlight))
+	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
+
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
 		"List applications in RFC4180 CSV format")
+	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
+
+	cmd.MarkFlagsMutuallyExclusive("format", "csv")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"Suppress printing a header and progress dots")
@@ -67,6 +73,12 @@ func newLsAppsCmd() *lsAppsCmd {
 
 	cmd.Flags().VarP(cmd.fields, "fields", "f",
 		cmd.fields.Usage(term.Highlight))
+
+	cmd.PreRun = func(*cobra.Command, []string) {
+		if cmd.csv {
+			cmd.format.Val = flag.FormatCSV
+		}
+	}
 
 	return &cmd
 
@@ -92,49 +104,90 @@ func (c *lsAppsCmd) createHeader() []string {
 
 func (c *lsAppsCmd) run(_ *cobra.Command, args []string) {
 	var headers []string
-	var formatter format.Formatter
+	var rows []*appRow
 
 	repo := mustFindRepository()
 	apps := mustArgToApps(repo, args)
 
-	if !c.quiet && !c.csv {
+	if !c.quiet && c.format.Val == flag.FormatPlain {
 		headers = c.createHeader()
 	}
 
-	if c.csv {
-		formatter = csv.New(headers, stdout)
-	} else {
-		formatter = table.New(headers, stdout)
-	}
+	formatter := mustNewFormatter(c.format.Val, headers)
 
 	baur.SortAppsByName(apps)
 
 	for _, app := range apps {
 		row := c.assembleRow(app)
 
-		mustWriteRow(formatter, row...)
+		if c.format.Val == flag.FormatJSON {
+			rows = append(rows, row)
+		} else {
+			mustWriteRow(formatter, row.asOrderedSlice(c.fields.Fields)...)
+		}
 	}
 
-	err := formatter.Flush()
-	exitOnErr(err)
+	if c.format.Val == flag.FormatJSON {
+		exitOnErr(json.Encode(stdout, rows, c.fields.Fields))
+		return
+	}
+
+	exitOnErr(formatter.Flush())
 }
 
-func (c *lsAppsCmd) assembleRow(app *baur.App) []any {
-	row := make([]any, 0, 2)
+func (c *lsAppsCmd) assembleRow(app *baur.App) *appRow {
+	var row appRow
 
 	for _, f := range c.fields.Fields {
 		switch f {
 		case lsAppNameParam:
-			row = append(row, app.Name)
+			row.Name = &app.Name
 
 		case lsAppPathParam:
 			if c.absPaths {
-				row = append(row, app.Path)
+				row.Path = &app.Path
 			} else {
-				row = append(row, app.RelPath)
+				row.Path = &app.RelPath
 			}
 		}
 	}
 
-	return row
+	return &row
+}
+
+type appRow struct {
+	Name *string
+	Path *string
+}
+
+func (r *appRow) asOrderedSlice(order []string) []any {
+	result := make([]any, 0, len(order))
+	for _, f := range order {
+		switch f {
+		case lsAppNameParam:
+			result = sliceAppendNilAsEmpty(result, r.Name)
+		case lsAppPathParam:
+			result = sliceAppendNilAsEmpty(result, r.Path)
+		default:
+			panic(fmt.Sprintf("BUG: asOrderedSlice: got unsupported field name %q in order list", f))
+		}
+	}
+
+	return result
+}
+
+func (r *appRow) AsMap(fields []string) map[string]any {
+	m := make(map[string]any, len(fields))
+	for _, f := range fields {
+		switch f {
+		case lsAppNameParam:
+			m["AppName"] = r.Name
+		case lsAppPathParam:
+			m["Path"] = r.Path
+		default:
+			panic(fmt.Sprintf("BUG: asMap: got unsupported field name %q in order list", f))
+		}
+	}
+
+	return m
 }
