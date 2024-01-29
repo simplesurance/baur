@@ -362,10 +362,3 @@ func (r *statusRow) asOrderedSlice(order []string) []any {
 
 	return result
 }
-
-func sliceAppendNilAsEmpty(sl []any, v *string) []any {
-	if v == nil {
-		return append(sl, "")
-	}
-	return append(sl, *v)
-}

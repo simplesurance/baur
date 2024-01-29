@@ -306,3 +306,10 @@ func mustNewFormatter(formatterName string, hdrs []string) format.Formatter {
 		panic(fmt.Sprintf("BUG: newFormatter: unsupported formatter name: %q", formatterName))
 	}
 }
+
+func sliceAppendNilAsEmpty(sl []any, v *string) []any {
+	if v == nil {
+		return append(sl, "")
+	}
+	return append(sl, *v)
+}
