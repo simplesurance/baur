@@ -106,12 +106,10 @@ func (c *lsAppsCmd) createHeader() []string {
 }
 
 func (c *lsAppsCmd) run(_ *cobra.Command, args []string) {
-
 	repo := mustFindRepository()
 	apps := mustArgToApps(repo, args)
 
 	headers := c.createHeader()
-
 	formatter := mustNewFormatter(c.format.Val, headers)
 
 	baur.SortAppsByName(apps)
