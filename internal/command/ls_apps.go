@@ -7,7 +7,6 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format/json"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 )
 
@@ -85,7 +84,11 @@ func newLsAppsCmd() *lsAppsCmd {
 }
 
 func (c *lsAppsCmd) createHeader() []string {
-	var headers []string
+	headers := make([]string, 0, len(c.fields.Fields))
+
+	if c.format.Val != flag.FormatJSON && (c.format.Val == flag.FormatCSV || c.quiet) {
+		return nil
+	}
 
 	for _, f := range c.fields.Fields {
 		switch f {
@@ -103,15 +106,11 @@ func (c *lsAppsCmd) createHeader() []string {
 }
 
 func (c *lsAppsCmd) run(_ *cobra.Command, args []string) {
-	var headers []string
-	var rows []*appRow
 
 	repo := mustFindRepository()
 	apps := mustArgToApps(repo, args)
 
-	if !c.quiet && c.format.Val == flag.FormatPlain {
-		headers = c.createHeader()
-	}
+	headers := c.createHeader()
 
 	formatter := mustNewFormatter(c.format.Val, headers)
 
@@ -119,75 +118,28 @@ func (c *lsAppsCmd) run(_ *cobra.Command, args []string) {
 
 	for _, app := range apps {
 		row := c.assembleRow(app)
-
-		if c.format.Val == flag.FormatJSON {
-			rows = append(rows, row)
-		} else {
-			mustWriteRow(formatter, row.asOrderedSlice(c.fields.Fields)...)
-		}
-	}
-
-	if c.format.Val == flag.FormatJSON {
-		exitOnErr(json.Encode(stdout, rows, c.fields.Fields))
-		return
+		mustWriteRow(formatter, row...)
 	}
 
 	exitOnErr(formatter.Flush())
 }
 
-func (c *lsAppsCmd) assembleRow(app *baur.App) *appRow {
-	var row appRow
+func (c *lsAppsCmd) assembleRow(app *baur.App) []any {
+	row := make([]any, 0, len(c.fields.Fields))
 
 	for _, f := range c.fields.Fields {
 		switch f {
 		case lsAppNameParam:
-			row.Name = &app.Name
+			row = append(row, app.Name)
 
 		case lsAppPathParam:
 			if c.absPaths {
-				row.Path = &app.Path
+				row = append(row, app.Path)
 			} else {
-				row.Path = &app.RelPath
+				row = append(row, app.RelPath)
 			}
 		}
 	}
 
-	return &row
-}
-
-type appRow struct {
-	Name *string
-	Path *string
-}
-
-func (r *appRow) asOrderedSlice(order []string) []any {
-	result := make([]any, 0, len(order))
-	for _, f := range order {
-		switch f {
-		case lsAppNameParam:
-			result = sliceAppendNilAsEmpty(result, r.Name)
-		case lsAppPathParam:
-			result = sliceAppendNilAsEmpty(result, r.Path)
-		default:
-			panic(fmt.Sprintf("BUG: asOrderedSlice: got unsupported field name %q in order list", f))
-		}
-	}
-
-	return result
-}
-
-func (r *appRow) AsMap(fields []string) map[string]any {
-	m := make(map[string]any, len(fields))
-	for _, f := range fields {
-		switch f {
-		case lsAppNameParam:
-			m["AppName"] = r.Name
-		case lsAppPathParam:
-			m["Path"] = r.Path
-		default:
-			panic(fmt.Sprintf("BUG: asMap: got unsupported field name %q in order list", f))
-		}
-	}
-
-	return m
+	return row
 }

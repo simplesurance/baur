@@ -28,7 +28,7 @@ func TestLsAppsJSON(t *testing.T) {
 	require.NoError(t, json.Unmarshal(stdoutBuf.Bytes(), &res))
 	assert.Len(t, res, 4)
 	assert.Contains(t, res, map[string]any{
-		"AppName": "app3",
-		"Path":    "app3",
+		"Name": "app3",
+		"Path": "app3",
 	})
 }
