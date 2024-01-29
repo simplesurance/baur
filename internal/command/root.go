@@ -61,6 +61,8 @@ func initSb(_ *cobra.Command, _ []string) {
 
 // Execute parses commandline flags and execute their actions
 func Execute() {
+	const repositoryFlagName = "repository"
+
 	if err := version.LoadPackageVars(); err != nil {
 		stderr.Printf("setting version failed: %s\n", err)
 	}
@@ -72,7 +74,8 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVar(&cpuProfilingFlag, "cpu-prof", false,
 		fmt.Sprintf("enable cpu profiling, result is written to %q", defCPUProfFile))
 	rootCmd.PersistentFlags().BoolVar(&noColorFlag, "no-color", false, "disable color output (env. variable NO_COLOR is also supported)")
-	rootCmd.PersistentFlags().StringVar(&repositoryPath, "repository", "", "path to the baur repository root directory")
+	rootCmd.PersistentFlags().StringVar(&repositoryPath, repositoryFlagName, "", "path to the baur repository root directory")
+	_ = rootCmd.MarkPersistentFlagDirname(repositoryFlagName)
 
 	err := rootCmd.Execute()
 	exitOnErr(err)
