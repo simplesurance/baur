@@ -8,9 +8,6 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format"
-	"github.com/simplesurance/baur/v3/internal/format/csv"
-	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -154,7 +151,6 @@ func (c *statusCmd) statusCreateHeader() []string {
 
 func (c *statusCmd) run(_ *cobra.Command, args []string) {
 	var headers []string
-	var formatter format.Formatter
 	var storageClt storage.Storer
 
 	repo := mustFindRepository()
@@ -184,12 +180,7 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 		headers = c.statusCreateHeader()
 	}
 
-	switch c.format.Val {
-	case flag.FormatCSV:
-		formatter = csv.New(headers, stdout)
-	case flag.FormatPlain:
-		formatter = table.New(headers, stdout)
-	}
+	formatter := mustNewFormatter(c.format.Val, headers)
 
 	showProgress := len(tasks) >= 5 && !c.quiet && c.format.Val == flag.FormatPlain
 

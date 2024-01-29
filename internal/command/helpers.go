@@ -6,8 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/internal/format"
+	"github.com/simplesurance/baur/v3/internal/format/csv"
+	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/prettyprint"
 	"github.com/simplesurance/baur/v3/internal/vcs"
@@ -289,4 +292,17 @@ func mustUntrackedFilesNotExist(requireCleanGitWorktree bool, vcsState vcs.State
 func untrackedFilesExistErrMsg(untrackedFiles []string) string {
 	return fmt.Sprintf("%s was specified, expecting only tracked unmodified files but found the following untracked or modified files:\n%s",
 		term.Highlight("--"+flagNameRequireCleanGitWorktree), term.Highlight(prettyprint.TruncatedStrSlice(untrackedFiles, 10)))
+}
+
+func mustNewFormatter(formatterName string, hdrs []string) format.Formatter {
+	switch formatterName {
+	case flag.FormatCSV:
+		return csv.New(hdrs, stdout)
+	case flag.FormatPlain:
+		return table.New(hdrs, stdout)
+	case flag.FormatJSON:
+		return nil
+	default:
+		panic(fmt.Sprintf("BUG: newFormatter: unsupported formatter name: %q", formatterName))
+	}
 }
