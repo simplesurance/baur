@@ -9,6 +9,7 @@ import (
 	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
+	"github.com/simplesurance/baur/v3/internal/format/json"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/prettyprint"
@@ -305,15 +306,8 @@ func mustNewFormatter(formatterName string, hdrs []string) Formatter {
 	case flag.FormatPlain:
 		return table.New(hdrs, stdout)
 	case flag.FormatJSON:
-		return nil
+		return json.New(hdrs, stdout)
 	default:
 		panic(fmt.Sprintf("BUG: newFormatter: unsupported formatter name: %q", formatterName))
 	}
-}
-
-func sliceAppendNilAsEmpty(sl []any, v *string) []any {
-	if v == nil {
-		return append(sl, "")
-	}
-	return append(sl, *v)
 }
