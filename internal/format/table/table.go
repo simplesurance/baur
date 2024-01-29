@@ -42,7 +42,9 @@ func (f *Formatter) WriteRow(row ...any) error {
 	var rowStr string
 
 	for i, col := range row {
-		rowStr += fmt.Sprintf("%v", col)
+		if col != nil {
+			rowStr += fmt.Sprintf("%v", col)
+		}
 
 		if i+1 < len(row) {
 			rowStr += "\t"
