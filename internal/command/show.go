@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/pkg/baur"
@@ -86,7 +85,7 @@ func copyAppendSlice(slice []any, elems ...any) []any {
 	return append(res, elems...)
 }
 
-func mustWriteStringSliceRows(fmt format.Formatter, header string, indentlvl int, sl []string) {
+func mustWriteStringSliceRows(fmt Formatter, header string, indentlvl int, sl []string) {
 	defRowArgs := make([]any, 0, indentlvl+1+1)
 
 	for i := 0; i < indentlvl; i++ {
@@ -179,7 +178,7 @@ func (c *showCmd) sortConfigFileSlice(in []string) []string {
 	return in
 }
 
-func (c *showCmd) printTask(formatter format.Formatter, task *baur.Task) {
+func (c *showCmd) printTask(formatter Formatter, task *baur.Task) {
 	mustWriteRow(formatter, term.Underline("Task"))
 	mustWriteRow(formatter, "", "Name:", term.Highlight(task.Name), "", "")
 	mustWriteRow(formatter, "", "Command:", term.Highlight(

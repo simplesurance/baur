@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/format"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/log"
@@ -102,7 +101,7 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 	exitOnErr(err)
 }
 
-func getLsOutputsFormatter(isQuiet, isCsv bool) format.Formatter {
+func getLsOutputsFormatter(isQuiet, isCsv bool) Formatter {
 	var headers []string
 
 	if isCsv {
