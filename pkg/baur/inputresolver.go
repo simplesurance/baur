@@ -267,69 +267,104 @@ func (i *InputResolver) pathsToUniqInputs(paths, excludePatterns []string) ([]In
 }
 
 func (i *InputResolver) createOrGetCachedInputFile(ctx context.Context, absPath, relPath string) (*InputFile, error) {
+	var f *InputFile
+	var err error
+
 	if f, exists := i.inputFileSingletonCache.Get(absPath); exists {
 		return f, nil
 	}
 
 	if i.gitTrackedDb == nil {
-		f, err := i.newInputFile(absPath, relPath)
-		if err != nil {
-			return nil, err
-		}
-		return i.inputFileSingletonCache.Add(f), nil
+		f, err = i.newInputFile(absPath, relPath)
+	} else {
+		f, err = i.newInputFileWithGitTrackedDb(ctx, absPath, relPath)
 	}
 
-	obj, err := i.gitTrackedDb.Get(ctx, absPath)
-	if err == nil {
-		f, err := i.newInputFileWithTrackedOjb(ctx, absPath, relPath, obj)
-		if err != nil {
-			return nil, err
-		}
-		return i.inputFileSingletonCache.Add(f), nil
-	}
-
-	if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
-		f, err := i.newInputFile(absPath, relPath)
-		if err != nil {
-			return nil, err
-		}
-		return i.inputFileSingletonCache.Add(f), nil
-	}
-
-	return nil, err
-}
-
-func (i *InputResolver) newInputFile(absPath, relPath string) (*InputFile, error) {
-	lfi, err := os.Lstat(absPath)
 	if err != nil {
 		return nil, err
 	}
 
-	if lfi.Mode()&os.ModeSymlink == os.ModeSymlink {
-		relTargetPath, err := fs.RealPathRel(i.repoDir, absPath)
+	return i.inputFileSingletonCache.Add(f), nil
+}
+
+func (i *InputResolver) newInputFile(absPath, relPath string) (*InputFile, error) {
+	realPath, err := fs.RealPath(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("%s: resolving realpath failed: %w", relPath, err)
+	}
+
+	executable, err := fs.FileHasOwnerExecPerm(realPath)
+	// FileHasOwnerExecPerm is only implemented on Unix, on other
+	// platforms it returns ErrUnsupported.
+	if err != nil && err != errors.ErrUnsupported { //nolint: errorlint // errors.Is() not needed
+		return nil, fmt.Errorf("%s: determining if owner has exec permissions failed %w", realPath, err)
+	}
+
+	if realPath == absPath {
+		return NewInputFile(absPath, relPath, executable, WithHashFn(i.fileHashfn)), nil
+	}
+
+	relRealPath, err := filepath.Rel(i.repoDir, realPath)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", relPath, err)
+	}
+
+	return NewInputFile(absPath, relPath,
+		executable,
+		WithHashFn(i.fileHashfn),
+		WithRealpath(relRealPath),
+	), nil
+}
+
+func (i *InputResolver) newInputFileWithGitTrackedDb(ctx context.Context, absPath, relPath string) (*InputFile, error) {
+	var obj *git.TrackedObject
+	var err error
+
+	obj, err = i.gitTrackedDb.Get(ctx, absPath)
+	if errors.Is(err, git.ErrObjectNotFound) {
+		// paths where the last component is a symlink are in gitTrackedDb,
+		// if another component (directory) is a symlink, it is not,
+		// only the resolved path can be found in gitTrackedDb.
+		realPath, errRP := fs.RealPath(absPath)
+		if errRP != nil {
+			return nil, fmt.Errorf("%s: resolving realpath failed: %w", relPath, errRP)
+		}
+
+		if realPath == absPath {
+			if i.fileHashfn == nil {
+				return nil, fmt.Errorf("%s: %w", relPath, err)
+			}
+
+			// TODO: newInputFile calls RealPath unnecessarrily again
+			return i.newInputFile(absPath, relPath)
+		}
+
+		obj, err = i.gitTrackedDb.Get(ctx, realPath)
 		if err != nil {
+			if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
+				return i.newInputFile(absPath, relPath)
+			}
 			return nil, fmt.Errorf("%s: %w", relPath, err)
 		}
 
-		executable, err := fs.FileHasOwnerExecPerm(absPath)
-		// FileHasOwnerExecPerm is only implemented on Unix, on other
-		// platforms it returns ErrUnsupported.
-		if err != nil && err != errors.ErrUnsupported { //nolint: errorlint // errors.Is() not needed here and more expensive
-			return nil, fmt.Errorf("%s: determining if owner has exec permissions failed %w", absPath, err)
+		relRealPath, err := filepath.Rel(i.repoDir, realPath)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", realPath, err)
 		}
 
 		return NewInputFile(absPath, relPath,
-			executable,
+			fs.OwnerHasExecPerm(os.FileMode(obj.Mode)),
 			WithHashFn(i.fileHashfn),
-			WithSymlinkTargetPath(relTargetPath),
+			WithRealpath(relRealPath),
+			WithContentDigest(&digest.Digest{Sum: []byte(obj.ObjectID), Algorithm: digest.GitObjectID}),
 		), nil
 	}
 
-	return NewInputFile(absPath, relPath, fs.OwnerHasExecPerm(lfi.Mode()), WithHashFn(i.fileHashfn)), nil
+	return i.newInputFileWithTrackedOjb(ctx, absPath, relPath, obj)
 }
 
 func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath, relPath string, obj *git.TrackedObject) (*InputFile, error) {
-	if obj.Mode&git.ObjectTypeSymlink == git.ObjectTypeFile {
+	if obj.Mode.IsRegularFile() {
 		return NewInputFile(absPath, relPath,
 			fs.OwnerHasExecPerm(os.FileMode(obj.Mode)),
 			WithHashFn(i.fileHashfn),
@@ -337,18 +372,18 @@ func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath,
 		), nil
 	}
 
-	if obj.Mode&git.ObjectTypeSymlink == git.ObjectTypeSymlink {
-		targetPath, err := fs.RealPath(absPath)
+	if obj.Mode.IsSymlink() {
+		realPath, err := fs.RealPath(absPath)
 		if err != nil {
 			return nil, err
 		}
 
-		relTargetPath, err := filepath.Rel(i.repoDir, targetPath)
+		relRealPath, err := filepath.Rel(i.repoDir, realPath)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", absPath, err)
 		}
 
-		targetObj, err := i.gitTrackedDb.Get(ctx, targetPath)
+		targetObj, err := i.gitTrackedDb.Get(ctx, realPath)
 		if err != nil {
 			if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
 				return i.newInputFile(absPath, relPath)
@@ -359,7 +394,7 @@ func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath,
 		return NewInputFile(absPath, relPath,
 			fs.OwnerHasExecPerm(os.FileMode(targetObj.Mode)),
 			WithHashFn(i.fileHashfn),
-			WithSymlinkTargetPath(relTargetPath),
+			WithRealpath(relRealPath),
 			WithContentDigest(&digest.Digest{Sum: []byte(targetObj.ObjectID), Algorithm: digest.GitObjectID}),
 		), nil
 	}
