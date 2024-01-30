@@ -15,12 +15,27 @@ func WriteToFile(t *testing.T, data []byte, path string) {
 
 	dir := filepath.Dir(path)
 
-	err := os.MkdirAll(dir, 0775)
+	MkdirAll(t, dir)
+
+	err := os.WriteFile(path, data, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
+}
 
-	err = os.WriteFile(path, data, 0644)
+func MkdirAll(t *testing.T, path string) {
+	t.Helper()
+
+	err := os.MkdirAll(path, 0775)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Symlink(t *testing.T, oldname, newname string) {
+	t.Helper()
+
+	err := os.Symlink(oldname, newname)
 	if err != nil {
 		t.Fatal(err)
 	}
