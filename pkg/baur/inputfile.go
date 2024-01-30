@@ -82,14 +82,14 @@ func (f *InputFile) CalcDigest() (*digest.Digest, error) {
 
 	h := sha384.New()
 
-	if err := h.AddBytes([]byte("Path:")); err != nil {
+	if err := h.AddBytes([]byte("P:")); err != nil {
 		return nil, err
 	}
 	if err := h.AddBytes([]byte(f.repoRelPath)); err != nil {
 		return nil, err
 	}
 
-	if err := h.AddBytes([]byte("SymlinkTarget:")); err != nil {
+	if err := h.AddBytes([]byte("ST:")); err != nil {
 		return nil, err
 	}
 
@@ -117,7 +117,7 @@ func (f *InputFile) CalcDigest() (*digest.Digest, error) {
 		}
 	}
 
-	if err := h.AddBytes([]byte("Content:")); err != nil {
+	if err := h.AddBytes([]byte("C:")); err != nil {
 		return nil, err
 	}
 	if err := h.AddBytes(f.contentDigest.Sum); err != nil {
