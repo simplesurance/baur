@@ -916,17 +916,6 @@ func TestSymlinkTargetFileContentChanges(t *testing.T) {
 	}
 }
 
-func TestSymlinkTargetFilePermissionsChange(t *testing.T) {
-	t.Skip("fails because of bug: https://github.com/simplesurance/baur/issues/492")
-	log.RedirectToTestingLog(t)
-
-	info := prepareSymlinkTestDir(t, false, false)
-	require.NoError(t, os.Chmod(info.SymlinkTargetFilePath, 0777))
-
-	digestAfter := resolveInputs(t, info.Task)
-	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
-}
-
 func TestHashGitUntrackedFilesDisabled(t *testing.T) {
 	const fname = "hello"
 

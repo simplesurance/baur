@@ -26,8 +26,8 @@ func TestDigestDoesNotDependOnRepoPath(t *testing.T) {
 	fstest.WriteToFile(t, []byte("hello"), absFilepath1)
 	fstest.WriteToFile(t, []byte("hello"), absFilepath2)
 
-	f1 := NewInputFile(absFilepath1, relFilepath1, WithHashFn(sha384.File))
-	f2 := NewInputFile(absFilepath2, relFilepath2, WithHashFn(sha384.File))
+	f1 := NewInputFile(absFilepath1, relFilepath1, false, WithHashFn(sha384.File))
+	f2 := NewInputFile(absFilepath2, relFilepath2, false, WithHashFn(sha384.File))
 
 	d1, err := f1.Digest()
 	require.NoError(t, err)
