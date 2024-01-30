@@ -308,14 +308,14 @@ func (i *InputResolver) newInputFile(absPath, relPath string) (*InputFile, error
 	if lfi.Mode()&os.ModeSymlink == os.ModeSymlink {
 		relTargetPath, err := fs.RealPathRel(i.repoDir, absPath)
 		if err != nil {
-			return nil, fmt.Errorf("%q: %w", absPath, err)
+			return nil, fmt.Errorf("%s: %w", relPath, err)
 		}
 
 		executable, err := fs.FileHasOwnerExecPerm(absPath)
 		// FileHasOwnerExecPerm is only implemented on Unix, on other
 		// platforms it returns ErrUnsupported.
 		if err != nil && err != errors.ErrUnsupported { //nolint: errorlint // errors.Is() not needed here and more expensive
-			return nil, fmt.Errorf("%q: determining if owner has exec permissions failed %w", absPath, err)
+			return nil, fmt.Errorf("%s: determining if owner has exec permissions failed %w", absPath, err)
 		}
 
 		return NewInputFile(absPath, relPath,
@@ -345,7 +345,7 @@ func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath,
 
 		relTargetPath, err := filepath.Rel(i.repoDir, targetPath)
 		if err != nil {
-			return nil, fmt.Errorf("%q: %w", absPath, err)
+			return nil, fmt.Errorf("%s: %w", absPath, err)
 		}
 
 		targetObj, err := i.gitTrackedDb.Get(ctx, targetPath)
@@ -364,7 +364,7 @@ func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath,
 		), nil
 	}
 
-	return nil, fmt.Errorf("internal error: got unsupport git.TrackedObject (%q) mode: %o", absPath, obj.Mode)
+	return nil, fmt.Errorf("%s: got unsupport git.TrackedObject mode: %o", relPath, obj.Mode)
 }
 
 func (i *InputResolver) setEnvVars() {
