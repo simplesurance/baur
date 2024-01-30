@@ -830,7 +830,7 @@ func prepareSymlinkTestDir(t *testing.T, createGitRepo, commitFilesToGit bool) *
 	symlink := filepath.Join(tempDir, symlinkRel)
 
 	fstest.WriteToFile(t, []byte("hello"), f)
-	require.NoError(t, os.Symlink(f, symlink))
+	fstest.Symlink(t, f, symlink)
 
 	if commitFilesToGit {
 		gittest.CommitFilesToGit(t, tempDir)
@@ -897,7 +897,7 @@ func TestSymlinkTargetPathChangesFileIsSame(t *testing.T) {
 
 	require.NoError(t, os.Rename(info.SymlinkTargetFilePath, newTargetFilePath))
 	require.NoError(t, os.Remove(info.SymlinkPath))
-	require.NoError(t, os.Symlink(newTargetFilePath, info.SymlinkPath))
+	fstest.Symlink(t, newTargetFilePath, info.SymlinkPath)
 
 	_, digestAfter := resolveInputs(t, info.Task)
 	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
