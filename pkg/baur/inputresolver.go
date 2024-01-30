@@ -300,29 +300,38 @@ func (i *InputResolver) createOrGetCachedInputFile(ctx context.Context, absPath,
 }
 
 func (i *InputResolver) newInputFile(absPath, relPath string) (*InputFile, error) {
-	fi, err := os.Lstat(absPath)
+	lfi, err := os.Lstat(absPath)
 	if err != nil {
 		return nil, err
 	}
 
-	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+	if lfi.Mode()&os.ModeSymlink == os.ModeSymlink {
 		relTargetPath, err := fs.RealPathRel(i.repoDir, absPath)
 		if err != nil {
 			return nil, fmt.Errorf("%q: %w", absPath, err)
 		}
 
+		executable, err := fs.FileHasOwnerExecPerm(absPath)
+		// FileHasOwnerExecPerm is only implemented on Unix, on other
+		// platforms it returns ErrUnsupported.
+		if err != nil && err != errors.ErrUnsupported { //nolint: errorlint // errors.Is() not needed here and more expensive
+			return nil, fmt.Errorf("%q: determining if owner has exec permissions failed %w", absPath, err)
+		}
+
 		return NewInputFile(absPath, relPath,
+			executable,
 			WithHashFn(i.fileHashfn),
 			WithSymlinkTargetPath(relTargetPath),
 		), nil
 	}
 
-	return NewInputFile(absPath, relPath, WithHashFn(i.fileHashfn)), nil
+	return NewInputFile(absPath, relPath, fs.OwnerHasExecPerm(lfi.Mode()), WithHashFn(i.fileHashfn)), nil
 }
 
 func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath, relPath string, obj *git.TrackedObject) (*InputFile, error) {
 	if obj.Mode&git.ObjectTypeSymlink == git.ObjectTypeFile {
 		return NewInputFile(absPath, relPath,
+			fs.OwnerHasExecPerm(os.FileMode(obj.Mode)),
 			WithHashFn(i.fileHashfn),
 			WithContentDigest(&digest.Digest{Sum: []byte(obj.ObjectID), Algorithm: digest.GitObjectID}),
 		), nil
@@ -342,15 +351,13 @@ func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath,
 		targetObj, err := i.gitTrackedDb.Get(ctx, targetPath)
 		if err != nil {
 			if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
-				return NewInputFile(absPath, relPath,
-					WithHashFn(i.fileHashfn),
-					WithSymlinkTargetPath(relTargetPath),
-				), nil
+				return i.newInputFile(absPath, relPath)
 			}
 			return nil, err
 		}
 
 		return NewInputFile(absPath, relPath,
+			fs.OwnerHasExecPerm(os.FileMode(targetObj.Mode)),
 			WithHashFn(i.fileHashfn),
 			WithSymlinkTargetPath(relTargetPath),
 			WithContentDigest(&digest.Digest{Sum: []byte(targetObj.ObjectID), Algorithm: digest.GitObjectID}),

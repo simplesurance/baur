@@ -208,7 +208,7 @@ func (r *Repo) WriteAdditionalFileContents(t *testing.T, appName, fileName, cont
 	t.Helper()
 
 	absPath := filepath.Join(r.Dir, appName, fileName)
-	file := baur.NewInputFile(absPath, filepath.Join(appName, fileName), baur.WithHashFn(sha384.File))
+	file := baur.NewInputFile(absPath, filepath.Join(appName, fileName), false, baur.WithHashFn(sha384.File))
 	fstest.WriteToFile(t, []byte(contents), absPath)
 
 	digest, err := file.CalcDigest()

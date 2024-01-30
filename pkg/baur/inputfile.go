@@ -11,14 +11,15 @@ type InputFileOpt func(*InputFile)
 
 // InputFile represent a file.
 type InputFile struct {
-	absPath     string
-	repoRelPath string
+	absPath                  string
+	repoRelPath              string
+	repoRelSymlinkTargetPath string
+	ownerHasExecutablePerm   bool
 
 	fileHasher FileHashFn
 	digest     *digest.Digest
 
-	repoRelSymlinkTargetPath string
-	contentDigest            *digest.Digest
+	contentDigest *digest.Digest
 }
 
 func WithHashFn(h FileHashFn) InputFileOpt {
@@ -43,10 +44,11 @@ func WithSymlinkTargetPath(repoRelTargetPath string) InputFileOpt {
 // absPath is the absolute path to the file. It is used to create the digest.
 // relPath is a relative path to the file. It is used as part of the digest. To
 // which base path relPath is relative is arbitrary.
-func NewInputFile(absPath, relPath string, opts ...InputFileOpt) *InputFile {
+func NewInputFile(absPath, relPath string, ownerHasExecutablePerm bool, opts ...InputFileOpt) *InputFile {
 	i := InputFile{
-		absPath:     absPath,
-		repoRelPath: relPath,
+		absPath:                absPath,
+		repoRelPath:            relPath,
+		ownerHasExecutablePerm: ownerHasExecutablePerm,
 	}
 	for _, fn := range opts {
 		fn(&i)
@@ -103,6 +105,16 @@ func (f *InputFile) CalcDigest() (*digest.Digest, error) {
 			return nil, err
 		}
 		f.contentDigest = d
+	}
+
+	if f.ownerHasExecutablePerm {
+		if err := h.AddBytes([]byte("E:1")); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := h.AddBytes([]byte("E:0")); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := h.AddBytes([]byte("Content:")); err != nil {
