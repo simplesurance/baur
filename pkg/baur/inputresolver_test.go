@@ -573,7 +573,7 @@ func (g *goSourceResolverMock) Resolve(
 
 func TestGoResolverFilesAreExcluded(t *testing.T) {
 	log.RedirectToTestingLog(t)
-	baseDir := filepath.FromSlash("/tmp")
+	baseDir := fstest.TempDir(t)
 	f1 := filepath.Join(baseDir, "main.go")
 	f2 := filepath.Join(baseDir, "atm", "atm.go")
 	fstest.WriteToFile(t, []byte("a"), f1)
@@ -922,7 +922,7 @@ func TestSymlinkTargetFileContentChanges(t *testing.T) {
 				inf, ok := inputs.inputs[0].(*InputFile)
 				require.True(t, ok)
 				assert.Equal(t, info.SymlinkPath, inf.absPath)
-				assert.Equal(t, info.SymlinkTargetFileRelPath, inf.repoRelSymlinkTargetPath, "unexpected symlink rel path")
+				assert.Equal(t, info.SymlinkTargetFileRelPath, inf.repoRelRealPath, "unexpected symlink rel path")
 			})
 	}
 }
@@ -948,4 +948,51 @@ func TestHashGitUntrackedFilesDisabled(t *testing.T) {
 	r := NewInputResolver(vcsState, tempDir, false)
 	_, err = r.Resolve(context.Background(), task)
 	require.ErrorIs(t, err, git.ErrObjectNotFound)
+}
+
+func TestFileInSymlinkDir(t *testing.T) {
+	const fname = "hello"
+	const subdir = "realDir"
+	const dirSlink = "dirSymlink"
+
+	testFn := func(withGit bool) {
+		t.Run(fmt.Sprintf("withGit:%t", withGit), func(t *testing.T) {
+			log.RedirectToTestingLog(t)
+			tempDir := fstest.TempDir(t)
+
+			f := filepath.Join(tempDir, subdir, fname)
+			fstest.WriteToFile(t, []byte("123"), f)
+			slink := filepath.Join(tempDir, dirSlink)
+			fstest.Symlink(t, filepath.Join(tempDir, subdir), slink)
+			if withGit {
+				gittest.CreateRepository(t, tempDir)
+				gittest.CommitFilesToGit(t, tempDir)
+			}
+
+			task := &Task{
+				Directory: tempDir,
+				UnresolvedInputs: &cfg.Input{
+					Files: []cfg.FileInputs{{Paths: []string{filepath.Join(dirSlink, fname)}}},
+				},
+			}
+
+			vcsState, err := vcs.GetState(tempDir, t.Logf)
+			require.NoError(t, err)
+			r := NewInputResolver(vcsState, tempDir, !withGit)
+			inputs, err := r.Resolve(context.Background(), task)
+			require.NoError(t, err)
+			require.Len(t, inputs, 1)
+			inf, ok := inputs[0].(*InputFile)
+			require.True(t, ok)
+			assert.Equal(t, filepath.Join(slink, fname), inf.absPath)
+			assert.Equal(t, filepath.Join(dirSlink, fname), inf.repoRelPath)
+			assert.Equal(t, filepath.Join(subdir, fname), inf.repoRelRealPath, "unexpected real path")
+
+			_, err = NewInputs(inputs).Digest()
+			require.NoError(t, err)
+		})
+	}
+
+	testFn(true)
+	testFn(false)
 }

@@ -11,10 +11,10 @@ type InputFileOpt func(*InputFile)
 
 // InputFile represent a file.
 type InputFile struct {
-	absPath                  string
-	repoRelPath              string
-	repoRelSymlinkTargetPath string
-	ownerHasExecutablePerm   bool
+	absPath                string
+	repoRelPath            string
+	repoRelRealPath        string
+	ownerHasExecutablePerm bool
 
 	fileHasher FileHashFn
 	digest     *digest.Digest
@@ -34,9 +34,12 @@ func WithContentDigest(d *digest.Digest) InputFileOpt {
 	}
 }
 
-func WithSymlinkTargetPath(repoRelTargetPath string) InputFileOpt {
+// WithRealpath specifies the real path for the file.
+// If one or more components of its repository relative path are symlinks (the
+// file or path components), this is the repository relative path with all components resolved.
+func WithRealpath(repoRelRealPath string) InputFileOpt {
 	return func(i *InputFile) {
-		i.repoRelSymlinkTargetPath = repoRelTargetPath
+		i.repoRelRealPath = repoRelRealPath
 	}
 }
 
@@ -89,12 +92,12 @@ func (f *InputFile) CalcDigest() (*digest.Digest, error) {
 		return nil, err
 	}
 
-	if err := h.AddBytes([]byte("ST:")); err != nil {
+	if err := h.AddBytes([]byte("R:")); err != nil {
 		return nil, err
 	}
 
-	if f.repoRelSymlinkTargetPath != "" {
-		if err := h.AddBytes([]byte(f.repoRelSymlinkTargetPath)); err != nil {
+	if f.repoRelRealPath != "" {
+		if err := h.AddBytes([]byte(f.repoRelRealPath)); err != nil {
 			return nil, err
 		}
 	}
