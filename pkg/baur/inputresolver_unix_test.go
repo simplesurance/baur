@@ -26,7 +26,7 @@ func TestSymlinkTargetFilePermissionsChange(t *testing.T) {
 				if tc.AddToGitAfterChange {
 					gittest.CommitFilesToGit(t, info.TempDir)
 				}
-				digestAfter := resolveInputs(t, info.Task)
+				_, digestAfter := resolveInputs(t, info.Task)
 				require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
 			})
 	}
