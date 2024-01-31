@@ -43,9 +43,20 @@ const (
 type Mode uint32
 
 const (
-	ObjectTypeSymlink Mode = 0120000
-	ObjectTypeFile    Mode = 0100000
+	ObjectTypeSymlink    Mode = 0o120000
+	ObjectTypeFile       Mode = 0o100000
+	ObjectTypeExectuable Mode = 0o100755
 )
+
+// IsRegularFile returns true if m is ObjectTypeFile or ObjectTypeExectuable.
+func (m Mode) IsRegularFile() bool {
+	return (m & (ObjectTypeSymlink ^ ObjectTypeFile)) == 0
+}
+
+// IsSymlink returns true if m is ObjectTypeSymlink.
+func (m Mode) IsSymlink() bool {
+	return (m & ObjectTypeSymlink) == ObjectTypeSymlink
+}
 
 type Object struct {
 	Status byte
