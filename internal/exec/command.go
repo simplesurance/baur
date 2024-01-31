@@ -134,9 +134,9 @@ func (c *Cmd) startOutputStreamLogging(name string, useColorStderrColorfn bool) 
 
 		for sc.Scan() {
 			if useColorStderrColorfn && c.logFnStderrStreamColorfn != nil {
-				c.logf(c.logFnStderrStreamColorfn(sc.Text()) + "\n")
+				c.logf("%s\n", c.logFnStderrStreamColorfn(sc.Text()))
 			} else {
-				c.logf(sc.Text() + "\n")
+				c.logf("%s\n", sc.Text())
 			}
 		}
 
