@@ -281,125 +281,124 @@ func (i *InputResolver) createOrGetCachedInputFile(ctx context.Context, absPath,
 	}
 
 	if err != nil {
-		return nil, err
-	}
-
-	return i.inputFileSingletonCache.Add(f), nil
-}
-
-func (i *InputResolver) newInputFile(absPath, relPath string) (*InputFile, error) {
-	realPath, err := fs.RealPath(absPath)
-	if err != nil {
-		return nil, fmt.Errorf("%s: resolving realpath failed: %w", relPath, err)
-	}
-
-	executable, err := fs.FileHasOwnerExecPerm(realPath)
-	// FileHasOwnerExecPerm is only implemented on Unix, on other
-	// platforms it returns ErrUnsupported.
-	if err != nil && err != errors.ErrUnsupported { //nolint: errorlint // errors.Is() not needed
-		return nil, fmt.Errorf("%s: determining if owner has exec permissions failed %w", realPath, err)
-	}
-
-	if realPath == absPath {
-		return NewInputFile(absPath, relPath, executable, WithHashFn(i.fileHashfn)), nil
-	}
-
-	relRealPath, err := filepath.Rel(i.repoDir, realPath)
-	if err != nil {
 		return nil, fmt.Errorf("%s: %w", relPath, err)
 	}
 
-	return NewInputFile(absPath, relPath,
-		executable,
-		WithHashFn(i.fileHashfn),
-		WithRealpath(relRealPath),
-	), nil
+	return i.inputFileSingletonCache.Add(f), nil
 }
 
 func (i *InputResolver) newInputFileWithGitTrackedDb(ctx context.Context, absPath, relPath string) (*InputFile, error) {
 	var obj *git.TrackedObject
 	var err error
 
-	obj, err = i.gitTrackedDb.Get(ctx, absPath)
-	if errors.Is(err, git.ErrObjectNotFound) {
-		// paths where the last component is a symlink are in gitTrackedDb,
-		// if another component (directory) is a symlink, it is not,
-		// only the resolved path can be found in gitTrackedDb.
-		realPath, errRP := fs.RealPath(absPath)
-		if errRP != nil {
-			return nil, fmt.Errorf("%s: resolving realpath failed: %w", relPath, errRP)
-		}
-
-		if realPath == absPath {
-			if i.fileHashfn == nil {
-				return nil, fmt.Errorf("%s: %w", relPath, err)
-			}
-
-			// TODO: newInputFile calls RealPath unnecessarrily again
+	obj, relRealPath, err := i.queryGitTrackedDb(ctx, absPath)
+	if err != nil {
+		if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
 			return i.newInputFile(absPath, relPath)
 		}
 
-		obj, err = i.gitTrackedDb.Get(ctx, realPath)
-		if err != nil {
-			if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
-				return i.newInputFile(absPath, relPath)
-			}
-			return nil, fmt.Errorf("%s: %w", relPath, err)
-		}
-
-		relRealPath, err := filepath.Rel(i.repoDir, realPath)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", realPath, err)
-		}
-
-		return NewInputFile(absPath, relPath,
-			fs.OwnerHasExecPerm(os.FileMode(obj.Mode)),
-			WithHashFn(i.fileHashfn),
-			WithRealpath(relRealPath),
-			WithContentDigest(&digest.Digest{Sum: []byte(obj.ObjectID), Algorithm: digest.GitObjectID}),
-		), nil
+		return nil, err
 	}
 
-	return i.newInputFileWithTrackedOjb(ctx, absPath, relPath, obj)
+	return NewInputFile(absPath, relPath,
+		fs.OwnerHasExecPerm(os.FileMode(obj.Mode)),
+		WithHashFn(i.fileHashfn),
+		WithRealpath(relRealPath),
+		WithContentDigest(&digest.Digest{Sum: []byte(obj.ObjectID), Algorithm: digest.GitObjectID}),
+	), nil
 }
 
-func (i *InputResolver) newInputFileWithTrackedOjb(ctx context.Context, absPath, relPath string, obj *git.TrackedObject) (*InputFile, error) {
+func (i *InputResolver) newInputFile(absPath, relPath string) (*InputFile, error) {
+	isExecutable, relRealPath, err := i.fileInfo(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewInputFile(absPath, relPath,
+		isExecutable,
+		WithHashFn(i.fileHashfn),
+		WithRealpath(relRealPath),
+	), nil
+}
+
+func (i *InputResolver) fileInfo(absPath string) (isExecutable bool, relRealPath string, err error) {
+	realPath, err := fs.RealPath(absPath)
+	if err != nil {
+		return false, "", err
+	}
+
+	executable, err := fs.FileHasOwnerExecPerm(realPath)
+	// FileHasOwnerExecPerm is only implemented on Unix, on other
+	// platforms it returns ErrUnsupported.
+	if err != nil && err != errors.ErrUnsupported { //nolint: errorlint // errors.Is() not needed
+		return false, "", fmt.Errorf("%s: determining if owner has exec permissions failed %w", realPath, err)
+	}
+
+	if realPath == absPath {
+		return executable, "", nil
+	}
+
+	relRealPath, err = filepath.Rel(i.repoDir, realPath)
+	if err != nil {
+		return false, "", fmt.Errorf("resolving relative path of real path failed: %w", err)
+	}
+
+	return executable, relRealPath, nil
+}
+
+func (i *InputResolver) queryGitTrackedDb(ctx context.Context, absPath string) (obj *git.TrackedObject, relRealPath string, err error) {
+	obj, err = i.gitTrackedDb.Get(ctx, absPath)
+	if err != nil {
+		if errors.Is(err, git.ErrObjectNotFound) {
+			realPath, rpErr := fs.RealPath(absPath)
+			if rpErr != nil {
+				return nil, "", err
+			}
+
+			if absPath == realPath {
+				return nil, "", err
+			}
+
+			obj, err := i.gitTrackedDb.Get(ctx, realPath)
+			if err != nil {
+				return nil, "", err
+			}
+
+			relRealPath, err := filepath.Rel(i.repoDir, realPath)
+			if err != nil {
+				return nil, "", fmt.Errorf("resolving relative path of real path failed: %w", err)
+			}
+
+			return obj, relRealPath, nil
+		}
+
+		return nil, "", err
+	}
+
 	if obj.Mode.IsRegularFile() {
-		return NewInputFile(absPath, relPath,
-			fs.OwnerHasExecPerm(os.FileMode(obj.Mode)),
-			WithHashFn(i.fileHashfn),
-			WithContentDigest(&digest.Digest{Sum: []byte(obj.ObjectID), Algorithm: digest.GitObjectID}),
-		), nil
+		return obj, "", nil
 	}
 
 	if obj.Mode.IsSymlink() {
 		realPath, err := fs.RealPath(absPath)
 		if err != nil {
-			return nil, err
-		}
-
-		relRealPath, err := filepath.Rel(i.repoDir, realPath)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", absPath, err)
+			return nil, "", err
 		}
 
 		targetObj, err := i.gitTrackedDb.Get(ctx, realPath)
 		if err != nil {
-			if errors.Is(err, git.ErrObjectNotFound) && i.fileHashfn != nil {
-				return i.newInputFile(absPath, relPath)
-			}
-			return nil, err
+			return nil, "", fmt.Errorf("getting git object for symlink target %q failed: %w", realPath, err)
 		}
 
-		return NewInputFile(absPath, relPath,
-			fs.OwnerHasExecPerm(os.FileMode(targetObj.Mode)),
-			WithHashFn(i.fileHashfn),
-			WithRealpath(relRealPath),
-			WithContentDigest(&digest.Digest{Sum: []byte(targetObj.ObjectID), Algorithm: digest.GitObjectID}),
-		), nil
+		relRealPath, err := filepath.Rel(i.repoDir, realPath)
+		if err != nil {
+			return nil, "", fmt.Errorf("resolving relative path of real path failed: %w", err)
+		}
+
+		return targetObj, relRealPath, nil
 	}
 
-	return nil, fmt.Errorf("%s: got unsupport git.TrackedObject mode: %o", relPath, obj.Mode)
+	return nil, "", fmt.Errorf("got unsupport git.TrackedObject mode: %o", obj.Mode)
 }
 
 func (i *InputResolver) setEnvVars() {
