@@ -33,13 +33,6 @@ func FileGlob(pattern string) ([]string, error) {
 		return nil, err
 	}
 
-	for _, path := range globRes {
-		_, err = os.Stat(path)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return globRes, err
 }
 
