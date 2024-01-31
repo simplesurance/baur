@@ -795,13 +795,13 @@ func TestFileContentChanges(t *testing.T) {
 						Files: []cfg.FileInputs{{Paths: []string{fRel}}},
 					},
 				}
-				_, before := resolveInputs(t, &task)
+				_, before := resolveInputs(t, &task, !tc.AddToGitBeforeChange)
 				fstest.WriteToFile(t, []byte("11113"), f)
 				if tc.AddToGitAfterChange {
 					gittest.CommitFilesToGit(t, tempDir)
 				}
 
-				_, after := resolveInputs(t, &task)
+				_, after := resolveInputs(t, &task, !tc.AddToGitAfterChange)
 				require.NotEqual(t, before.String(), after.String())
 			})
 	}
@@ -844,7 +844,7 @@ func prepareSymlinkTestDir(t *testing.T, createGitRepo, commitFilesToGit bool) *
 		},
 	}
 
-	inputs, digest := resolveInputs(t, &task)
+	inputs, digest := resolveInputs(t, &task, !commitFilesToGit)
 
 	return &symlinkTestInfo{
 		TempDir:                  tempDir,
@@ -857,13 +857,13 @@ func prepareSymlinkTestDir(t *testing.T, createGitRepo, commitFilesToGit bool) *
 	}
 }
 
-func resolveInputs(t *testing.T, task *Task) (*Inputs, *digest.Digest) {
+func resolveInputs(t *testing.T, task *Task, hashGitUntracked bool) (*Inputs, *digest.Digest) {
 	t.Helper()
 
 	vcsState, err := vcs.GetState(task.RepositoryRoot, t.Logf)
 	require.NoError(t, err)
 
-	resolver := NewInputResolver(vcsState, task.RepositoryRoot, true)
+	resolver := NewInputResolver(vcsState, task.RepositoryRoot, hashGitUntracked)
 	result, err := resolver.Resolve(
 		context.Background(),
 		task,
@@ -884,7 +884,7 @@ func TestSymlinkIsReplacedByTargetFile(t *testing.T) {
 	require.NoError(t, os.Remove(info.SymlinkPath))
 	require.NoError(t, os.Rename(info.SymlinkTargetFilePath, info.SymlinkPath))
 
-	_, digestAfterReplace := resolveInputs(t, info.Task)
+	_, digestAfterReplace := resolveInputs(t, info.Task, true)
 	require.NotEqual(t, info.TotalInputDigest.String(), digestAfterReplace.String())
 }
 
@@ -899,7 +899,7 @@ func TestSymlinkTargetPathChangesFileIsSame(t *testing.T) {
 	require.NoError(t, os.Remove(info.SymlinkPath))
 	fstest.Symlink(t, newTargetFilePath, info.SymlinkPath)
 
-	_, digestAfter := resolveInputs(t, info.Task)
+	_, digestAfter := resolveInputs(t, info.Task, true)
 	require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
 }
 
@@ -915,7 +915,7 @@ func TestSymlinkTargetFileContentChanges(t *testing.T) {
 				if tc.AddToGitAfterChange {
 					gittest.CommitFilesToGit(t, info.TempDir)
 				}
-				inputs, digestAfter := resolveInputs(t, info.Task)
+				inputs, digestAfter := resolveInputs(t, info.Task, !tc.AddToGitAfterChange)
 				require.NotEqual(t, info.TotalInputDigest.String(), digestAfter.String())
 
 				assert.Len(t, inputs.inputs, 1)
