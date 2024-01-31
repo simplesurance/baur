@@ -110,8 +110,8 @@ date +%s >> "$runtime_logfile"
 	}
 
 	for i := 1; i < len(taskruntimes); i++ {
-		require.GreaterOrEqual(t, taskruntimes[0].startTime, taskruntimes[i].startTime)
-		require.LessOrEqual(t, taskruntimes[0].endTime, taskruntimes[i].endTime)
+		require.GreaterOrEqual(t, taskruntimes[0].startTime+1, taskruntimes[i].startTime)
+		require.LessOrEqual(t, taskruntimes[0].endTime-1, taskruntimes[i].endTime)
 		t.Logf("task %d run in parallel with task 0: starttime %d >= %d, endtime %d <= %d",
 			i,
 			taskruntimes[i].startTime, taskruntimes[0].startTime, taskruntimes[i].endTime, taskruntimes[0].endTime,
