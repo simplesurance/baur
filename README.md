@@ -50,7 +50,7 @@ On following runs, baur only runs tasks for which the inputs changed.
 
 * **CI Optimized** \
   baur is made to be run in CI environments and supports to output information
-  in the easily-parseable CSV format.
+  in the easily-parseable CSV and JSON formats.
 
 * **Configuration File Includes** \
   Tasks, Inputs and Output definitions that are shared between tasks can be
