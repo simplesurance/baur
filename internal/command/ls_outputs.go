@@ -87,25 +87,36 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 	headers := c.createHeader()
 	formatter := mustNewFormatter(c.format.Val, headers)
 
-	withUnits := c.format.Val == flag.FormatPlain
+	withoutUnits := c.format.Val != flag.FormatPlain
 	for _, o := range outputs {
 		for _, upload := range o.Uploads {
+			var bytes any
+			var duration any
+
 			if c.quiet {
 				mustWriteRow(formatter, upload.URI)
 				continue
 			}
 
+			if c.format.Val == flag.FormatJSON {
+				bytes = o.SizeBytes
+				duration = upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp).Seconds()
+			} else {
+				bytes = term.FormatSize(
+					o.SizeBytes,
+					term.FormatBaseWithoutUnitName(withoutUnits),
+				)
+				duration = term.FormatDuration(
+					upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp),
+					term.FormatBaseWithoutUnitName(withoutUnits),
+				)
+			}
+
 			mustWriteRow(formatter,
 				upload.URI,
 				o.Digest,
-				term.FormatSize(
-					o.SizeBytes,
-					term.FormatBaseWithoutUnitName(!withUnits),
-				),
-				term.FormatDuration(
-					upload.UploadStopTimestamp.Sub(upload.UploadStartTimestamp),
-					term.FormatBaseWithoutUnitName(!withUnits),
-				),
+				bytes,
+				duration,
 				o.Type,
 				upload.Method,
 			)
