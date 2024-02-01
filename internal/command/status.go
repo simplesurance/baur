@@ -291,7 +291,11 @@ func (c *statusCmd) assembleRow(repositoryDir string, task *baur.Task, taskRun *
 
 		case statusRunIDParam:
 			if buildStatus == baur.TaskStatusRunExist {
-				row = append(row, taskRun.ID)
+				// convert Id to string to not be represented
+				// as integer in the JSON format, ID is an
+				// opaque identifier that could also container
+				// other chars then numbers
+				row = append(row, fmt.Sprint(taskRun.ID))
 			} else {
 				row = append(row, nil)
 			}
