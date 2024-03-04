@@ -22,7 +22,7 @@ func getGoEnv(workdir string, env []string) (*goEnv, error) {
 
 	res, err := exec.Command("go", "env", "-json").Directory(workdir).Env(env).ExpectSuccess().RunCombinedOut(context.TODO())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("running go env failed: %w", err)
 	}
 
 	if err := json.Unmarshal(res.CombinedOutput, &result); err != nil {
