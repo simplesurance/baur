@@ -12,21 +12,32 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/prettyprint"
+	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v3/internal/testutils/strtest"
 )
 
+type testCfg struct {
+	Cfg struct {
+		Environment []string
+		Queries     []string
+		BuildFlags  []string
+		Tests       bool
+		WorkingDir  string
+	}
+	ExpectedResults []string
+}
+
+func testCfgFromFile(t *testing.T, path string) *testCfg {
+	var result testCfg
+	fileContent, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(fileContent, &result))
+
+	return &result
+}
+
 func TestResolve(t *testing.T) {
 	const testCfgFilename = "test_config.json"
-
-	type testCfg struct {
-		Cfg struct {
-			Environment []string
-			Queries     []string
-			BuildFlags  []string
-			Tests       bool
-		}
-		ExpectedResults []string
-	}
 
 	testdataDirs, err := filepath.Glob(filepath.Join("testdata", "*"))
 	require.NoError(t, err)
@@ -38,33 +49,28 @@ func TestResolve(t *testing.T) {
 
 	for _, dir := range testdataDirs {
 		t.Run(dir, func(t *testing.T) {
-			var testCfg testCfg
+			log.RedirectToTestingLog(t)
 
-			log.StdLogger.SetOutput(log.NewTestLogOutput(t))
+			testCfg := testCfgFromFile(t, filepath.Join(dir, testCfgFilename))
+			require.NotEmpty(t, testCfg.Cfg.WorkingDir)
+			require.NotEmpty(t, testCfg.Cfg.Queries)
+			require.NotEmpty(t, testCfg.ExpectedResults)
 
-			require.NoError(t, os.Chdir(dir))
-
-			fileContent, err := os.ReadFile(testCfgFilename)
-			require.NoError(t, err)
-
-			require.ErrorIs(t, err, json.Unmarshal(fileContent, &testCfg))
-
-			cwd, err := os.Getwd()
-			require.NoError(t, err)
+			ostest.Chdir(t, filepath.FromSlash(strings.ReplaceAll(testCfg.Cfg.WorkingDir, "$TESTDIR", dir)))
 
 			for i := range testCfg.Cfg.Environment {
-				testCfg.Cfg.Environment[i] = strings.ReplaceAll(testCfg.Cfg.Environment[i], "$WORKDIR", cwd)
+				testCfg.Cfg.Environment[i] = strings.ReplaceAll(testCfg.Cfg.Environment[i], "$TESTDIR", dir)
 			}
 
 			for i := range testCfg.ExpectedResults {
-				testCfg.ExpectedResults[i] = strings.ReplaceAll(testCfg.ExpectedResults[i], "$WORKDIR", cwd)
+				testCfg.ExpectedResults[i] = strings.ReplaceAll(testCfg.ExpectedResults[i], "$TESTDIR", dir)
 				// The path separators in the test config are Unix style "/", they need to be converted to "\" when running on Windows
 				testCfg.ExpectedResults[i] = filepath.FromSlash(testCfg.ExpectedResults[i])
 			}
 
 			resolvedFiles, err := NewResolver(t.Logf).Resolve(
 				context.Background(),
-				cwd,
+				dir,
 				testCfg.Cfg.Environment,
 				testCfg.Cfg.BuildFlags,
 				testCfg.Cfg.Tests,

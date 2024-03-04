@@ -1,17 +1,19 @@
 {
 	"Cfg": {
-		"WorkingDir": "$TESTDIR",
+		"WorkingDir": "$TESTDIR/..",
 		"Environment": [
 			"GO111MODULE=on",
 			"GOFLAGS=-mod=vendor"
 		],
 		"Queries": [
-			"./..."
+			"fileglob=cmd/**/main.go"
 		]
 	},
 	"ExpectedResults": [
-		"$TESTDIR/main.go",
+		"$TESTDIR/cmd/one/main.go",
+		"$TESTDIR/cmd/two/main.go",
 		"$TESTDIR/generator/generator.go",
+		"$TESTDIR/intstr/intstr.go",
 		"$TESTDIR/vendor/github.com/google/uuid/dce.go",
 		"$TESTDIR/vendor/github.com/google/uuid/doc.go",
 		"$TESTDIR/vendor/github.com/google/uuid/hash.go",

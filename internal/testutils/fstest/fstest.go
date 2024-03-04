@@ -64,3 +64,14 @@ func TempDir(t *testing.T) string {
 
 	return p
 }
+
+// ReadFile reads the file at path and returns its content.
+func ReadFile(t *testing.T, path string) []byte {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading file %q failed: %s", path, err)
+	}
+
+	return data
+}
