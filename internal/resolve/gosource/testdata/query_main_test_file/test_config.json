@@ -6,7 +6,7 @@
 			"GOFLAGS=-mod=vendor"
 		],
 		"Queries": [
-			"file=./main_test.go"
+			"file=main_test.go"
 		],
 		"Tests": true
 	},
