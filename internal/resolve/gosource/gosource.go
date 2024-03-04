@@ -14,6 +14,7 @@ import (
 )
 
 const globQueryPrefix = "fileglob="
+const fileQueryPrefix = "file="
 
 var defLogFn = func(string, ...any) {}
 
@@ -57,16 +58,23 @@ func resolveGlobs(workDir string, queries []string) ([]string, error) {
 		}
 
 		for _, f := range files {
-			f, err := filepath.Rel(workDir, f)
-			if err != nil {
-				return nil, fmt.Errorf("resolving glob %q failed: %w", q, err)
-			}
-
 			result = append(result, fmt.Sprintf("file=%s", f))
 		}
 	}
 
 	return result, nil
+}
+
+func toAbsFilePatternPaths(workDir string, queries []string) {
+	for i, q := range queries {
+		v, found := strings.CutPrefix(q, fileQueryPrefix)
+		if !found || filepath.IsAbs(v) {
+			continue
+		}
+
+		queries[i] = fileQueryPrefix + filepath.Join(workDir, v)
+
+	}
 }
 
 // Resolve returns the Go source files in the passed directories plus all
@@ -85,6 +93,12 @@ func (r *Resolver) Resolve(
 	}
 
 	env := append(whitelistedEnv(), environment...)
+
+	// relative query paths are interpreted as relative to the cwd, not the
+	// cfg.WorkDir passed to packages.Resolve
+	// (https://github.com/golang/go/issues/65965).
+	// As woraround convert them to abs paths manually:
+	toAbsFilePatternPaths(workdir, queries)
 
 	queries, err := resolveGlobs(workdir, queries)
 	if err != nil {
