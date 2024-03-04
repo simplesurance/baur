@@ -1,13 +1,16 @@
 {
 	"Cfg": {
+		"WorkingDir": "$TESTDIR",
 		"Environment": [
-			"GOPATH=$WORKDIR",
+			"GOPATH=$TESTDIR",
 			"GO111MODULE=off"
 		],
-		"Queries": ["github.com/simplesurance/baur-test/..."]
+		"Queries": [
+			"github.com/simplesurance/baur-test/..."
+		]
 	},
 	"ExpectedResults": [
-		"$WORKDIR/src/github.com/simplesurance/baur-test/main.go",
-		"$WORKDIR/src/github.com/simplesurance/baur-test/generator/generator.go"
+		"$TESTDIR/src/github.com/simplesurance/baur-test/main.go",
+		"$TESTDIR/src/github.com/simplesurance/baur-test/generator/generator.go"
 	]
 }

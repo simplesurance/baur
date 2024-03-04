@@ -1,14 +1,17 @@
 {
 	"Cfg": {
-		"Queries": ["./..."],
+		"WorkingDir": "$TESTDIR",
+		"Queries": [
+			"./..."
+		],
 		"Tests": true
 	},
 	"ExpectedResults": [
-		"$WORKDIR/main.go",
-		"$WORKDIR/embed_test.go",
-		"$WORKDIR/hello.txt",
-		"$WORKDIR/data/a.txt",
-		"$WORKDIR/data/b.txt",
-		"$WORKDIR/hello_test.txt"
+		"$TESTDIR/main.go",
+		"$TESTDIR/embed_test.go",
+		"$TESTDIR/hello.txt",
+		"$TESTDIR/data/a.txt",
+		"$TESTDIR/data/b.txt",
+		"$TESTDIR/hello_test.txt"
 	]
 }
