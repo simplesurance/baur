@@ -13,6 +13,7 @@ linters:
     - goprintffuncname
     - gosimple
     - govet
+    - godox
     - ineffassign
     - misspell
     - nolintlint
@@ -32,3 +33,6 @@ linters:
 linters-settings:
   goimports:
     local-prefixes: github.com/simplesurance/baur/v3
+  godox:
+    keywords:
+      - FIXME
