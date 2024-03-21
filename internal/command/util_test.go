@@ -68,7 +68,7 @@ func initTest(t *testing.T) {
 }
 
 func redirectOutputToLogger(t *testing.T) {
-	// FIXME: when tests are run in parallel this will cause unexpected
+	// TODO: when tests are run in parallel this will cause unexpected
 	// results, global package vars are modified that would affect all
 	// parallel running tests
 	log.RedirectToTestingLog(t)
