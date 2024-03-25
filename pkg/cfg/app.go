@@ -26,6 +26,9 @@ func ExampleApp(name string) *App {
 			{
 				Name:    "build",
 				Command: []string{"make", "dist"},
+				Environment: Environment{
+					Variables: []string{"DEBUG=true"},
+				},
 				Input: Input{
 					Files: []FileInputs{
 						{

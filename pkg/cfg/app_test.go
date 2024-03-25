@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/simplesurance/baur/v3/internal/prettyprint"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,7 +35,7 @@ func Test_ExampleApp_WrittenAndReadCfgIsValid(t *testing.T) {
 	}
 
 	if err := rRead.Validate(); err != nil {
-		t.Errorf("validating conf from file failed: %s\nFile Content: %+v", err, rRead)
+		t.Errorf("validating conf after writing and reading it again from file failed: %s\nFile Content: %+v", err, prettyprint.AsString(rRead))
 	}
 }
 
