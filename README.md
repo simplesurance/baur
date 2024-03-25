@@ -4,7 +4,7 @@
 
 ## About
 
-baur is an incremental task runner for [monolithic
+baur is an incremental task runner for [monolithic Git
 repositories](https://en.wikipedia.org/wiki/Monorepo). \
 It can be used in CI environments to build, check and test only applications
 that changed in a commit.

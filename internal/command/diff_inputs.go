@@ -12,7 +12,7 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
-	"github.com/simplesurance/baur/v3/internal/vcs"
+	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/storage"
 )
@@ -36,7 +36,7 @@ type diffInputsCmd struct {
 	quiet    bool
 	inputStr []string
 
-	vcsState vcs.StateFetcher
+	gitRepo *git.Repository
 }
 
 const diffInputslongHelp = `
@@ -129,7 +129,7 @@ func (c *diffInputsCmd) run(_ *cobra.Command, args []string) {
 	}
 
 	repo := mustFindRepository()
-	c.vcsState = mustGetRepoState(repo.Path)
+	c.gitRepo = mustGetRepoState(repo.Path)
 	argDetails := c.getDiffInputArgDetails(repo, args)
 
 	inputs1, run1 := c.getTaskRunInputs(repo, argDetails[0])
@@ -169,7 +169,7 @@ func (c *diffInputsCmd) getDiffInputArgDetails(repo *baur.Repository, args []str
 	}
 
 	if len(mustHaveTasks) > 0 {
-		tasks := mustArgToTasks(repo, c.vcsState, mustHaveTasks)
+		tasks := mustArgToTasks(repo, c.gitRepo, mustHaveTasks)
 
 		for _, task := range tasks {
 			for _, argDetails := range results {
@@ -212,7 +212,7 @@ func parseDiffSpec(s string) (app, task, runID string) {
 
 func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID) {
 	if argDetails.task != nil {
-		inputResolver := baur.NewInputResolver(c.vcsState, repo.Path, true)
+		inputResolver := baur.NewInputResolver(c.gitRepo, repo.Path, true)
 
 		inputFiles, err := inputResolver.Resolve(ctx, argDetails.task)
 		if err != nil {

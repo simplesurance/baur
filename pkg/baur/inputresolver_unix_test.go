@@ -16,12 +16,12 @@ import (
 
 func TestSymlinkTargetFilePermissionsChange(t *testing.T) {
 	for _, tc := range newGitFileTcVariations() {
-		t.Run(fmt.Sprintf("gitrepo:%+v,commitbeforechange:%v,commitafterchange:%v",
-			tc.CreateGitRepo, tc.AddToGitBeforeChange, tc.AddToGitAfterChange),
+		t.Run(fmt.Sprintf("commitbeforechange:%v,commitafterchange:%v",
+			tc.AddToGitBeforeChange, tc.AddToGitAfterChange),
 			func(t *testing.T) {
 				exec.DefaultLogFn = t.Logf
 				log.RedirectToTestingLog(t)
-				info := prepareSymlinkTestDir(t, tc.CreateGitRepo, tc.AddToGitBeforeChange)
+				info := prepareSymlinkTestDir(t, tc.AddToGitBeforeChange)
 				require.NoError(t, os.Chmod(info.SymlinkTargetFilePath, 0755))
 				if tc.AddToGitAfterChange {
 					gittest.CommitFilesToGit(t, info.TempDir)
