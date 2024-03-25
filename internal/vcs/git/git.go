@@ -24,42 +24,19 @@ func CommandIsInstalled() bool {
 	return err == nil
 }
 
-// IsGitDir checks if the passed directory is in a git repository.
-// It returns true if:
-// - .git/ exists or
-// - the "git" command is in $PATH and "git rev-parse --git-dir" returns exit code 0
-// It returns false if:
-//   - .git/ does not exist and the "git" command is not in $PATH or "git
-//     rev-parse --git-dir" exits with code 128
+// IsGitDir checks if the passed directory is part of a git repository.
+// It returns true if dir or any of its parent directory containing a directory
+// named ".git".
 func IsGitDir(dir string) (bool, error) {
-	err := fs.DirsExist(filepath.Join(dir, ".git"))
-	if err == nil {
-		return true, nil
-	}
-
+	_, err := fs.FindDirInParentDirs(dir, ".git")
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return false, nil
 		}
-
 		return false, err
 	}
 
-	result, err := exec.Command("git", "rev-parse", "--git-dir").Directory(dir).RunCombinedOut(context.TODO())
-	if err != nil {
-		return false, err
-	}
-
-	if result.ExitCode == 0 {
-		return true, nil
-	}
-
-	if result.ExitCode == 128 {
-		return false, nil
-	}
-
-	return false, fmt.Errorf("executing %q in %q exited with code $d, expected 0 or 128",
-		result.Command, result.ExitCode)
+	return true, nil
 }
 
 // CommitID return the commit id of HEAD by running git rev-parse in the passed

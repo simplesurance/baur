@@ -92,16 +92,30 @@ func SameFile(a, b string) (bool, error) {
 // If it reaches the root directory without finding the file it returns
 // os.ErrNotExist.
 func FindFileInParentDirs(startPath, filename string) (string, error) {
+	return findInParentDirs(startPath, filename, false)
+}
+
+// FindDirInParentDirs finds a directory in startPath or its parent directories.
+// The function starts looking for a directory called dirname in startPath and then
+// checks recursively its parent directories.
+// It returns the absolute path of the first match.
+// If it reaches the root directory without finding the directory it returns
+// os.ErrNotExist.
+func FindDirInParentDirs(startPath, dirname string) (string, error) {
+	return findInParentDirs(startPath, dirname, false)
+}
+
+func findInParentDirs(startPath, name string, isDir bool) (string, error) {
 	// filepath.Clean() is called to remove excessive PathSeperators from the end.
 	// If this does not happen, the search might be aborted too early because a path
 	// ending in a Separator is interpreted as the root directory.
 	searchDir := filepath.Clean(startPath)
 
 	for {
-		p := filepath.Join(searchDir, filename)
+		p := filepath.Join(searchDir, name)
 
-		_, err := os.Stat(p)
-		if err == nil {
+		fi, err := os.Stat(p)
+		if err == nil && fi.IsDir() == isDir {
 			abs, err := filepath.Abs(p)
 			if err != nil {
 				return "", fmt.Errorf("could not get absolute path of %v: %w", p, err)
