@@ -66,4 +66,8 @@ func Clone(t *testing.T, directory, gitURL, commit string) {
 func CreateRepository(t *testing.T, directory string) {
 	_, err := exec.Command("git", "init", ".").Directory(directory).ExpectSuccess().Run(context.Background())
 	require.NoError(t, err)
+	t.Cleanup(func() {
+		err := os.RemoveAll(filepath.Join(directory, ".git"))
+		require.NoError(t, err, "removing .git directory failed")
+	})
 }

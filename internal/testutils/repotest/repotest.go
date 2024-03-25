@@ -8,10 +8,11 @@ import (
 	"testing"
 
 	"github.com/simplesurance/baur/v3/internal/digest"
-	"github.com/simplesurance/baur/v3/internal/digest/sha384"
+	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
@@ -208,7 +209,8 @@ func (r *Repo) WriteAdditionalFileContents(t *testing.T, appName, fileName, cont
 	t.Helper()
 
 	absPath := filepath.Join(r.Dir, appName, fileName)
-	file := baur.NewInputFile(absPath, filepath.Join(appName, fileName), false, baur.WithHashFn(sha384.File))
+	gobj := gitobjectid.New(r.Dir, t.Logf)
+	file := baur.NewInputFile(absPath, filepath.Join(appName, fileName), false, baur.WithHashFn(gobj.File))
 	fstest.WriteToFile(t, []byte(contents), absPath)
 
 	digest, err := file.CalcDigest()
@@ -329,6 +331,9 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 	if err := os.Chdir(tempDir); err != nil {
 		t.Fatalf("changing directory to %q failed: %q", tempDir, err)
 	}
+
+	gittest.CreateRepository(t, tempDir)
+	gittest.CommitFilesToGit(t, tempDir)
 
 	t.Logf("changed working directory to baur repository: %q", tempDir)
 

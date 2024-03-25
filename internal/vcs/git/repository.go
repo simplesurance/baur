@@ -1,11 +1,16 @@
 package git
 
 import (
+	"errors"
 	"path/filepath"
 	"sync"
 )
 
 const Name = "git"
+
+// ErrRepositoryNotFound is returned when a directory is not part of a git
+// repository.
+var ErrRepositoryNotFound = errors.New("git repository not found")
 
 // Repository reads information from a Git repository.
 type Repository struct {
@@ -17,10 +22,28 @@ type Repository struct {
 	untrackedFiles  map[string]struct{}
 }
 
-// NewRepository creates a new Repository that interacts with the repository at
-// dir. dir must be directory in a Git worktree. This means it must have a
-// .git/ directory or one of the parent directories must contain a .git/
-// directory.
+// NewRepositoryWithCheck returns a new Repository object for the git repository at dir.
+// If dir is not part of a git repository, the "git" command is not installed
+// or can not be located in $PATH an error is returned.
+func NewRepositoryWithCheck(dir string) (*Repository, error) {
+	if !CommandIsInstalled() {
+		return nil, errors.New("git command not found, ensure git is installed and in $PATH")
+	}
+
+	isGitDir, err := IsGitDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isGitDir {
+		return nil, ErrRepositoryNotFound
+	}
+
+	return NewRepository(dir), nil
+}
+
+// NewRepository returns a new Repository object that interacts with the git
+// repository in dir.
 func NewRepository(dir string) *Repository {
 	return &Repository{
 		path: dir,
