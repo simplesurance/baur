@@ -186,6 +186,8 @@ func (c *showCmd) printTask(formatter Formatter, task *baur.Task) {
 		c.strCmd(task.Command),
 	), "", "")
 
+	mustWriteStringSliceRows(formatter, "Environment Variables:", 1, task.EnvironmentVariables)
+
 	if task.HasInputs() {
 		mustWriteRow(formatter, "", "", "", "")
 		mustWriteRow(formatter, "", term.Underline("Inputs:"), "", "")

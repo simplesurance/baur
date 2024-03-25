@@ -8,11 +8,12 @@ import (
 type TaskInclude struct {
 	IncludeID string `toml:"include_id" comment:"identifier of the include"`
 
-	Name     string   `toml:"name" comment:"Task name"`
-	Command  []string `toml:"command" comment:"Command to execute. The first element is the command, the following its arguments.\n If the command element contains no path seperators, its path is looked up via the $PATH environment variable."`
-	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the include file location."`
-	Input    Input    `toml:"Input" comment:"Specification of task inputs like source files, Makefiles, etc"`
-	Output   Output   `toml:"Output" comment:"Specification of task outputs produced by the Task.command"`
+	Name        string      `toml:"name" comment:"Task name"`
+	Command     []string    `toml:"command" comment:"Command to execute. The first element is the command, the following its arguments.\n If the command element contains no path seperators, its path is looked up via the $PATH environment variable."`
+	Environment Environment `toml:"Environment"`
+	Includes    []string    `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format <filepath>#<ID>.\n Paths are relative to the include file location."`
+	Input       Input       `toml:"Input" comment:"Specification of task inputs like source files, Makefiles, etc"`
+	Output      Output      `toml:"Output" comment:"Specification of task outputs produced by the Task.command"`
 
 	cfgFiles map[string]struct{}
 }
@@ -23,6 +24,10 @@ func (t *TaskInclude) addCfgFilepath(path string) {
 
 func (t *TaskInclude) command() []string {
 	return t.Command
+}
+
+func (t *TaskInclude) environment() *Environment {
+	return &t.Environment
 }
 
 func (t *TaskInclude) name() string {
@@ -68,6 +73,7 @@ func (t *TaskInclude) toTask() *Task {
 
 	deepcopy.MustCopy(t.Input, &result.Input)
 	deepcopy.MustCopy(t.Output, &result.Output)
+	deepcopy.MustCopy(t.Environment, &result.Environment)
 
 	return &result
 }

@@ -10,6 +10,7 @@ type taskDef interface {
 	command() []string
 	includes() *[]string
 	input() *Input
+	environment() *Environment
 	name() string
 	output() *Output
 	addCfgFilepath(path string)
@@ -64,6 +65,10 @@ func taskValidate(t taskDef) error {
 
 	if strings.Contains(t.name(), ".") {
 		return newFieldError("dots are not allowed in task names", "name")
+	}
+
+	if err := t.environment().validate(); err != nil {
+		return fieldErrorWrap(err, "Environment")
 	}
 
 	if err := validateIncludes(*t.includes()); err != nil {
