@@ -63,7 +63,7 @@ func TestCancellingRuningCommand(t *testing.T) {
 	_, err := Command("sleep", "5m").Run(ctx)
 	assert.Error(t, err, "command execution did not fail") //nolint:testifylint
 	require.Error(t, ctx.Err(), "context err is nil")
-	assert.ErrorIs(t, err, ctx.Err()) //nolint:testifylint
+	assert.ErrorIs(t, err, ctx.Err())
 }
 
 func TestExecDoesNotFailIfLongLinesAreStreamed(t *testing.T) {

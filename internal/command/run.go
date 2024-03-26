@@ -350,7 +350,7 @@ func (c *runCmd) uploadAndRecord(
 	for _, output := range outputs {
 		err := c.uploader.Upload(
 			output,
-			func(o baur.Output, info baur.UploadInfo) {
+			func(_ baur.Output, info baur.UploadInfo) {
 				log.Debugf("%s: uploading output %s to %s\n",
 					task, output, info)
 			},

@@ -59,7 +59,7 @@ type completeTargetFuncOpts struct {
 func newCompleteTargetFunc(
 	opts completeTargetFuncOpts,
 ) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
-	return func(_ *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 		repo, err := findRepository()
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError

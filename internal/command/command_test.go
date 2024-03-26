@@ -109,9 +109,9 @@ func baurCSVStatus(t *testing.T, inputStr []string, lookupInputStr string) []*cs
 }
 
 func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, expectedStatus baur.TaskStatus, commit string) {
-	taskIds := make([]string, 0, len(statusOut))
+	taskIDs := make([]string, 0, len(statusOut))
 	for _, task := range statusOut {
-		taskIds = append(taskIds, task.taskID)
+		taskIDs = append(taskIDs, task.taskID)
 
 		assert.Equal(t, expectedStatus.String(), task.status)
 
@@ -120,7 +120,7 @@ func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, e
 		}
 	}
 
-	assert.ElementsMatch(t, taskIds, r.TaskIDs(), "baur status is missing some tasks")
+	assert.ElementsMatch(t, taskIDs, r.TaskIDs(), "baur status is missing some tasks")
 }
 
 // TestRunningPendingTasksChangesStatus creates a new baur repository with 2
