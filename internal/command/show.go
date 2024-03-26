@@ -181,10 +181,10 @@ func (c *showCmd) sortConfigFileSlice(in []string) []string {
 func (c *showCmd) printTask(formatter Formatter, task *baur.Task) {
 	mustWriteRow(formatter, term.Underline("Task"))
 	mustWriteRow(formatter, "", "Name:", term.Highlight(task.Name), "", "")
+	mustWriteStringSliceRows(formatter, "Config Files:", 1, c.sortConfigFileSlice(task.CfgFilepaths))
 	mustWriteRow(formatter, "", "Command:", term.Highlight(
 		c.strCmd(task.Command),
 	), "", "")
-	mustWriteStringSliceRows(formatter, "Config Files:", 1, c.sortConfigFileSlice(task.CfgFilepaths))
 
 	if task.HasInputs() {
 		mustWriteRow(formatter, "", "", "", "")
