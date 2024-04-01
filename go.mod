@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgproto3/v2 v2.3.3 // indirect
-	github.com/jackc/pgx/v4 v4.18.2
+	github.com/jackc/pgx/v4 v4.18.3
 	github.com/moby/term v0.0.0-20221120202655-abb19827d345 // indirect
 	github.com/pelletier/go-toml v1.9.5
 	github.com/simplesurance/baur v0.20.0
