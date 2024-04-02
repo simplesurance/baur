@@ -6,7 +6,7 @@ require (
 	github.com/containerd/containerd v1.6.26 // indirect
 	github.com/docker/docker v25.0.5+incompatible // indirect
 	github.com/fatih/color v1.16.0
-	github.com/fsouza/go-dockerclient v1.10.2
+	github.com/fsouza/go-dockerclient v1.11.0
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/google/uuid v1.6.0

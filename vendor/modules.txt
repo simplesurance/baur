@@ -181,7 +181,7 @@ github.com/docker/go-units
 # github.com/fatih/color v1.16.0
 ## explicit; go 1.17
 github.com/fatih/color
-# github.com/fsouza/go-dockerclient v1.10.2
+# github.com/fsouza/go-dockerclient v1.11.0
 ## explicit; go 1.21
 github.com/fsouza/go-dockerclient
 # github.com/gogo/protobuf v1.3.2
