@@ -105,6 +105,11 @@ type runCmd struct {
 	errorHappened                bool
 }
 
+type pendingTask struct {
+	task   *baur.Task
+	inputs *baur.Inputs
+}
+
 func newRunCmd() *runCmd {
 	cmd := runCmd{
 		Command: cobra.Command{
@@ -158,12 +163,28 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	c.storage = mustNewCompatibleStorage(repo)
 	defer c.storage.Close()
 
+	inputResolver := baur.NewInputResolver(
+		mustGetRepoState(c.repoRootPath),
+		c.repoRootPath,
+		baur.AsInputStrings(c.inputStr...),
+		!c.requireCleanGitWorktree,
+	)
+	taskStatusEvaluator := baur.NewTaskStatusEvaluator(
+		c.repoRootPath,
+		c.storage,
+		inputResolver,
+		c.lookupInputStr,
+	)
+
 	if !c.skipUpload {
 		c.uploadRoutinePool = routines.NewPool(1) // run 1 upload in parallel with builds
 	}
 
 	c.taskRunnerRoutinePool = routines.NewPool(c.taskRunnerGoRoutines)
-	c.taskRunner = baur.NewTaskRunner()
+	c.taskRunner = baur.NewTaskRunner(
+		baur.NewTaskInfoCreator(c.storage, taskStatusEvaluator),
+	)
+
 	if c.showOutput && !verboseFlag {
 		c.taskRunner.LogFn = stderr.Printf
 	}
@@ -191,7 +212,8 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 
 	baur.SortTasksByID(tasks)
 
-	pendingTasks, err := c.filterPendingTasks(tasks)
+	// TODO: move taskStatusEvaluator to the cmd struct?
+	pendingTasks, err := c.filterPendingTasks(taskStatusEvaluator, tasks)
 	exitOnErr(err)
 
 	if c.requireCleanGitWorktree && len(pendingTasks) == 1 {
@@ -215,9 +237,10 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 		// copy the iteration variable, to prevent that its value
 		// changes in the closure to 't' of the next iteration before
 		// the closure is executed
-		ptCopy := pt
+		pendingTaskCopy := pt
+
 		c.taskRunnerRoutinePool.Queue(func() {
-			task := ptCopy.task
+			task := pendingTaskCopy.task
 			runResult, err := c.runTask(task)
 			if err != nil {
 				// error is printed in runTask()
@@ -243,7 +266,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 			}
 
 			c.uploadRoutinePool.Queue(func() {
-				err := c.uploadAndRecord(ctx, ptCopy.task, ptCopy.inputs, outputs, runResult)
+				err := c.uploadAndRecord(ctx, pendingTaskCopy, outputs, runResult)
 				if err != nil {
 					// error is printed in uploadAndRecord()
 					c.skipAllScheduledTaskRuns()
@@ -333,19 +356,15 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 	return nil, err
 }
 
-type pendingTask struct {
-	task   *baur.Task
-	inputs *baur.Inputs
-}
-
 func (c *runCmd) uploadAndRecord(
 	ctx context.Context,
-	task *baur.Task,
-	inputs *baur.Inputs,
+	pt *pendingTask,
 	outputs []baur.Output,
 	runResult *baur.RunResult,
 ) error {
 	var uploadResults []*baur.UploadResult
+	task := pt.task
+	inputs := pt.inputs
 
 	for _, output := range outputs {
 		err := c.uploader.Upload(
@@ -447,22 +466,16 @@ func maxTaskIDLen(tasks []*baur.Task) int {
 	return maxLen
 }
 
-func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTask, error) {
+func (c *runCmd) filterPendingTasks(taskStatusEvaluator *baur.TaskStatusEvaluator, tasks []*baur.Task) ([]*pendingTask, error) {
 	const sep = " => "
 
 	taskIDColLen := maxTaskIDLen(tasks) + len(sep)
-	statusEvaluator := baur.NewTaskStatusEvaluator(
-		c.repoRootPath,
-		c.storage,
-		baur.NewInputResolver(mustGetRepoState(c.repoRootPath), c.repoRootPath, !c.requireCleanGitWorktree),
-		c.inputStr, c.lookupInputStr,
-	)
 
 	stdout.Printf("Evaluating status of tasks:\n\n")
 
 	result := make([]*pendingTask, 0, len(tasks))
 	for _, task := range tasks {
-		status, inputs, run, err := statusEvaluator.Status(ctx, task)
+		status, inputs, run, err := taskStatusEvaluator.Status(ctx, task)
 		if err != nil {
 			return nil, fmt.Errorf("%s: evaluating task status failed: %w", task, err)
 		}
@@ -478,10 +491,7 @@ func (c *runCmd) filterPendingTasks(tasks []*baur.Task) ([]*pendingTask, error) 
 			stdout.Printf("%-*s%s%s\n", taskIDColLen, task, sep, term.ColoredTaskStatus(status))
 		}
 
-		result = append(result, &pendingTask{
-			task:   task,
-			inputs: inputs,
-		})
+		result = append(result, &pendingTask{task: task, inputs: inputs})
 	}
 
 	return result, nil

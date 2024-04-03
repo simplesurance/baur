@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/set"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
@@ -75,10 +77,13 @@ func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
 	}
 
 	if specs.all {
-		return a.allTasks(apps), nil
+		return a.allTasks(apps)
 	}
 
-	result = a.allTasks(apps)
+	result, err = a.allTasks(apps)
+	if err != nil {
+		return nil, err
+	}
 
 	tasks, err := a.tasks(specs.taskSpecs)
 	if err != nil {
@@ -177,14 +182,36 @@ func (a *Loader) allApps() ([]*App, error) {
 	return result, nil
 }
 
-func (a *Loader) allTasks(apps []*App) []*Task {
-	result := make([]*Task, 0, len(apps)) // we have at least 1 task per app
+func taskCount(apps []*App) int {
+	var cnt int
+	for _, app := range apps {
+		cnt += len(app.cfg.Tasks)
+	}
+	return cnt
+}
+
+func (a *Loader) allTasks(apps []*App) ([]*Task, error) {
+	taskCnt := taskCount(apps)
+	tasks := make(map[string]*Task, taskCnt)
+	tasksWithTaskInfoInputs := make([]*Task, 0, taskCnt)
 
 	for _, app := range apps {
-		result = append(result, app.Tasks()...)
+		for _, taskCfg := range app.cfg.Tasks {
+			task := NewTask(taskCfg, app.Name, app.repositoryRootPath, app.Path)
+			tasks[task.ID] = task
+			if len(task.UnresolvedInputs.TaskInfos) > 0 {
+				tasksWithTaskInfoInputs = append(tasksWithTaskInfoInputs, task)
+			}
+		}
 	}
 
-	return result
+	for _, task := range tasksWithTaskInfoInputs {
+		if err := task.setTaskInfoDependencies(tasks); err != nil {
+			return nil, err
+		}
+	}
+
+	return maps.Values(tasks), nil
 }
 
 // appDirs load apps from the given directories.
@@ -222,14 +249,21 @@ func (a *Loader) appPath(appConfigPath string) (*App, error) {
 	return a.fromCfg(appCfg)
 }
 
-func appTaskByName(app *App, taskName string) *Task {
-	for _, task := range app.Tasks() {
+func (a *Loader) appTaskByName(app *App, taskName string) (*Task, error) {
+	// TODO: make this more efficient, all tasks of an app are instantiated and then only a single one of those is returned.
+	// Instantiate only needed one instead.
+	tasks, err := a.allTasks([]*App{app})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, task := range tasks {
 		if task.Name == taskName {
-			return task
+			return task, nil
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 // tasks load all tasks for the given taskSpecs.
@@ -263,7 +297,11 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 
 	for _, app := range apps {
 		for _, spec := range taskSpecMap[app.Name] {
-			task := appTaskByName(app, spec)
+			task, err := a.appTaskByName(app, spec)
+			if err != nil {
+				return nil, err
+			}
+
 			if task == nil {
 				return nil, fmt.Errorf("app %q has no task %q", app, spec)
 			}
@@ -274,7 +312,12 @@ func (a *Loader) tasks(taskSpecs []*taskSpec) ([]*Task, error) {
 		// taskSpecs that match all apps are optional,
 		// e.g. it's ok if **not** all apps have a task called "check"
 		for _, spec := range taskSpecMap["*"] {
-			if task := appTaskByName(app, spec); task != nil {
+			task, err := a.appTaskByName(app, spec)
+			if err != nil {
+				return nil, err
+			}
+
+			if task != nil {
 				result = append(result, task)
 			}
 		}

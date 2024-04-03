@@ -132,10 +132,8 @@ func (c *diffInputsCmd) run(_ *cobra.Command, args []string) {
 	c.gitRepo = mustGetRepoState(repo.Path)
 	argDetails := c.getDiffInputArgDetails(repo, args)
 
-	inputs1, run1 := c.getTaskRunInputs(repo, argDetails[0])
-	inputs1.Add(baur.AsInputStrings(c.inputStr...))
-
-	inputs2, run2 := c.getTaskRunInputs(repo, argDetails[1])
+	inputs1, run1 := c.getTaskRunInputs(repo, argDetails[0], true)
+	inputs2, run2 := c.getTaskRunInputs(repo, argDetails[1], false)
 
 	if len(c.inputStr) == 0 && run1 != nil && run2 != nil && run1.ID == run2.ID {
 		exitOnErr(fmt.Errorf("%s and %s refer to the same task-run", args[0], args[1]))
@@ -210,17 +208,21 @@ func parseDiffSpec(s string) (app, task, runID string) {
 	return "", "", s
 }
 
-func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails) (*baur.Inputs, *storage.TaskRunWithID) {
+func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diffInputArgDetails, withInputStrs bool) (*baur.Inputs, *storage.TaskRunWithID) {
 	if argDetails.task != nil {
-		inputResolver := baur.NewInputResolver(c.gitRepo, repo.Path, true)
+		var inputStrs []baur.Input
+		if withInputStrs {
+			inputStrs = baur.AsInputStrings(c.inputStr...)
+		}
+		inputResolver := baur.NewInputResolver(c.gitRepo, repo.Path, inputStrs, true)
 
-		inputFiles, err := inputResolver.Resolve(ctx, argDetails.task)
+		inputs, err := inputResolver.Resolve(ctx, argDetails.task)
 		if err != nil {
 			stderr.TaskPrintf(argDetails.task, err.Error())
 			os.Exit(1)
 		}
 
-		return baur.NewInputs(inputFiles), nil
+		return inputs, nil
 	}
 
 	taskRun := getTaskRun(repo, argDetails)
@@ -231,10 +233,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 	storageInputs, err := psql.Inputs(ctx, taskRun.ID)
 	exitOnErr(err)
 
-	// Convert the inputs from the DB into baur.Input interface implementation
-	baurInputs := toBaurInputs(storageInputs)
-
-	return baur.NewInputs(baurInputs), taskRun
+	return toBaurInputs(storageInputs), taskRun
 }
 
 func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage.TaskRunWithID {

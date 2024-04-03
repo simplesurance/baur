@@ -98,6 +98,14 @@ func inputsToStorageInputs(inputs *Inputs) (*storage.Inputs, error) {
 				Name:   v.Name(),
 				Digest: digest.String(),
 			})
+		case *InputTask:
+			result.TaskInfo = append(result.TaskInfo, &storage.InputTaskInfo{
+				Name:   v.TaskID(),
+				Digest: digest.String(),
+			})
+		default:
+			return nil, fmt.Errorf("unsupported input type %T", v)
+
 		}
 	}
 

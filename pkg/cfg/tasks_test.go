@@ -45,3 +45,81 @@ func TestTaskNameValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestTaskInfosAreCycleFree_SelfRef(t *testing.T) {
+	tasks := Tasks{
+		{
+			Name: "a",
+			Input: Input{
+				TaskInfos: []TaskInfo{
+					{TaskName: "a"},
+				},
+			},
+		},
+	}
+	require.Error(t, tasks.validateTaskInfosAreCycleFree())
+}
+
+func TestTaskInfosAreCycleFree_SimpleLoop(t *testing.T) {
+	tasks := Tasks{
+		{
+			Name: "a",
+			Input: Input{
+				TaskInfos: []TaskInfo{
+					{TaskName: "b"},
+				},
+			},
+		},
+
+		{
+			Name: "b",
+			Input: Input{
+				TaskInfos: []TaskInfo{
+					{TaskName: "a"},
+				},
+			},
+		},
+	}
+	require.Error(t, tasks.validateTaskInfosAreCycleFree())
+}
+
+func TestTaskInfosAreCycleFree_DeepLoop(t *testing.T) {
+	tasks := Tasks{
+		{
+			Name: "a",
+			Input: Input{
+				TaskInfos: []TaskInfo{
+					{TaskName: "b"},
+				},
+			},
+		},
+
+		{
+			Name: "b",
+			Input: Input{
+				TaskInfos: []TaskInfo{
+					{TaskName: "c"},
+				},
+			},
+		},
+		{
+			Name: "c",
+			Input: Input{
+				TaskInfos: []TaskInfo{
+					{TaskName: "d"},
+				},
+			},
+		},
+		{
+			Name: "d",
+			Input: Input{
+				TaskInfos: []TaskInfo{
+					{TaskName: "b"},
+				},
+			},
+		},
+	}
+	err := tasks.validateTaskInfosAreCycleFree()
+	require.Error(t, err)
+	t.Log(err)
+}

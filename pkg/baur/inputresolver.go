@@ -33,7 +33,8 @@ type goSourceResolver interface {
 	) ([]string, error)
 }
 
-// InputResolver resolves input definitions of a task to concrete files.
+// InputResolver resolves input definitions of a task to a concrete set of
+// inputs.
 type InputResolver struct {
 	repoDir                 string
 	globPathResolver        *glob.Resolver
@@ -41,25 +42,25 @@ type InputResolver struct {
 	environmentVariables    map[string]string
 	gitRepo                 GitUntrackedFilesResolver
 	inputFileSingletonCache *InputFileSingletonCache
-	cache                   *inputResolverCache
+	resolverCache           *inputResolverCache
 	gitTrackedDb            *git.TrackedObjects
 	fileHashfn              FileHashFn
+	fixedInputs             []Input
 }
 
 type GitUntrackedFilesResolver interface {
 	WithoutUntracked(paths ...string) ([]string, error)
 }
 
-// NewInputResolver returns an InputResolver that caches resolver
-// results.
-func NewInputResolver(gitRepo GitUntrackedFilesResolver, repoDir string, hashGitUntrackedFiles bool) *InputResolver {
+func NewInputResolver(gitRepo GitUntrackedFilesResolver, repoDir string, fixedInputs []Input, hashGitUntrackedFiles bool) *InputResolver {
 	result := InputResolver{
 		repoDir:                 repoDir,
 		globPathResolver:        &glob.Resolver{},
 		goSourceResolver:        gosource.NewResolver(log.Debugf),
 		gitRepo:                 gitRepo,
-		cache:                   newInputResolverCache(),
+		resolverCache:           newInputResolverCache(),
 		inputFileSingletonCache: NewInputFileSingletonCache(),
+		fixedInputs:             fixedInputs,
 	}
 
 	result.gitTrackedDb = git.NewTrackedObjects(repoDir, log.Debugf)
@@ -74,10 +75,10 @@ func NewInputResolver(gitRepo GitUntrackedFilesResolver, repoDir string, hashGit
 	return &result
 }
 
-// Resolve resolves the input definition of the task to concrete Files.
+// Resolve resolves the input definition of a task. The result is stored in task.inputs.
 // If an input definition does not resolve to >=1 paths, an error is returned.
 // The resolved Files are deduplicated.
-func (i *InputResolver) Resolve(ctx context.Context, task *Task) ([]Input, error) {
+func (i *InputResolver) Resolve(ctx context.Context, task *Task) (*Inputs, error) {
 	goSourcePaths, err := i.resolveGoSrcInputs(ctx, task.Directory, task.UnresolvedInputs.GolangSources)
 	if err != nil {
 		return nil, fmt.Errorf("resolving golang source inputs failed: %w", err)
@@ -89,7 +90,6 @@ func (i *InputResolver) Resolve(ctx context.Context, task *Task) ([]Input, error
 	}
 
 	inputPaths := slices.Concat(globPaths, goSourcePaths, task.CfgFilepaths)
-
 	uniqInputs, err := i.pathsToUniqInputs(inputPaths, fs.AbsPaths(task.Directory, task.UnresolvedInputs.ExcludedFiles.Paths))
 	if err != nil {
 		return nil, err
@@ -100,11 +100,39 @@ func (i *InputResolver) Resolve(ctx context.Context, task *Task) ([]Input, error
 		return nil, fmt.Errorf("resolving environment variable inputs failed: %w", err)
 	}
 
-	stats := i.cache.Statistics()
+	inputTasks, err := i.resolveTaskInfos(ctx, task.TaskInfoDependencies)
+	if err != nil {
+		return nil, err
+	}
+
+	stats := i.resolverCache.Statistics()
 	log.Debugf("inputresolver: cache statistic: %d entries, %d hits, %d miss, ratio %.2f%%\n",
 		stats.Entries, stats.Hits, stats.Miss, stats.HitRatio())
 
-	return append(uniqInputs, envVarMapToInputslice(envVars)...), nil
+	inputs := NewInputs(slices.Concat(
+		uniqInputs,
+		envVarMapToInputslice(envVars),
+		inputTasks,
+		i.fixedInputs,
+	))
+
+	return inputs, nil
+}
+
+func (i *InputResolver) resolveTaskInfos(ctx context.Context, taskInfos []*TaskInfo) ([]Input, error) {
+	result := make([]Input, 0, len(taskInfos))
+
+	// taskInfos must not contain any dependency cycles, this is guaranteed by cfg.Task.validateTaskInfosAreCycleFree
+
+	for _, ti := range taskInfos {
+		inputs, err := i.Resolve(ctx, ti.Task)
+		if err != nil {
+			return nil, fmt.Errorf("resolving inputs for Input.TaskInfo[%s] failed: %w", ti.Task.ID, err)
+		}
+		result = append(result, NewInputTask(ti.Task, inputs))
+	}
+
+	return result, nil
 }
 
 func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]string, error) {
@@ -120,12 +148,12 @@ func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]stri
 		Optional: optional,
 	}
 
-	if result := i.cache.GetFileInputs(&cacheKey); result != nil {
+	if result := i.resolverCache.GetFileInputs(&cacheKey); result != nil {
 		return result, nil
 	}
 
 	if optional {
-		if result := i.cache.GetFileInputs(&inputResolverFileCacheKey{Path: path, Optional: false}); result != nil {
+		if result := i.resolverCache.GetFileInputs(&inputResolverFileCacheKey{Path: path, Optional: false}); result != nil {
 			return result, nil
 		}
 	}
@@ -134,7 +162,7 @@ func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]stri
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			result = []string{}
-			i.cache.AddFileInputs(
+			i.resolverCache.AddFileInputs(
 				&inputResolverFileCacheKey{Path: path, Optional: true},
 				result,
 			)
@@ -147,7 +175,7 @@ func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]stri
 		return result, err
 	}
 
-	i.cache.AddFileInputs(&cacheKey, result)
+	i.resolverCache.AddFileInputs(&cacheKey, result)
 
 	return result, err
 }
@@ -169,7 +197,7 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 				GitTrackedOnly: in.GitTrackedOnly,
 				Optional:       in.Optional,
 			}
-			if files := i.cache.GetFileInputs(&cacheKey); files != nil {
+			if files := i.resolverCache.GetFileInputs(&cacheKey); files != nil {
 				result = append(result, files...)
 				continue
 			}
@@ -191,7 +219,7 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 				return nil, fmt.Errorf("'%s' matched 0 files", path)
 			}
 
-			i.cache.AddFileInputs(&cacheKey, resolvedPaths)
+			i.resolverCache.AddFileInputs(&cacheKey, resolvedPaths)
 			result = append(result, resolvedPaths...)
 		}
 	}
@@ -203,7 +231,7 @@ func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, i
 	var result []string
 
 	for _, gs := range inputs {
-		if files := i.cache.GetGolangSources(appDir, &gs); files != nil {
+		if files := i.resolverCache.GetGolangSources(appDir, &gs); files != nil {
 			result = append(result, files...)
 			continue
 		}
@@ -213,7 +241,7 @@ func (i *InputResolver) resolveGoSrcInputs(ctx context.Context, appDir string, i
 			return nil, err
 		}
 
-		i.cache.AddGolangSources(appDir, &gs, files)
+		i.resolverCache.AddGolangSources(appDir, &gs, files)
 		result = append(result, files...)
 	}
 

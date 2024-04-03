@@ -274,7 +274,7 @@ func TestFilesOptional(t *testing.T) {
 				gittest.CommitFilesToGit(t, tempDir)
 			}
 
-			r := NewInputResolver(git.NewRepository(tempDir), tempDir, true)
+			r := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, true)
 
 			tc.task.Directory = tempDir
 
@@ -293,7 +293,7 @@ func TestFilesOptional(t *testing.T) {
 			for _, f := range tc.filesToCreate {
 				var found bool
 
-				for _, in := range result {
+				for _, in := range result.Inputs() {
 					if in.String() == f {
 						found = true
 						break
@@ -315,7 +315,7 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 	tempDir := t.TempDir()
 	gittest.CreateRepository(t, tempDir)
 
-	r := NewInputResolver(git.NewRepository(tempDir), tempDir, true)
+	r := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, true)
 
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
 
@@ -332,8 +332,8 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 	})
 
 	require.NoError(t, err)
-	require.Len(t, result, 1)
-	assert.Equal(t, fname, result[0].String())
+	require.Len(t, result.Inputs(), 1)
+	assert.Equal(t, fname, result.inputs[0].String())
 }
 
 func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
@@ -360,7 +360,7 @@ func TestResolverIgnoredGitUntrackedFiles(t *testing.T) {
 	const untrackedFilename = "file2.txt"
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(appDir, untrackedFilename))
 
-	r := NewInputResolver(git.NewRepository(gitDir), gitDir, true)
+	r := NewInputResolver(git.NewRepository(gitDir), gitDir, nil, true)
 
 	resolvedFiles, err := r.resolveFileInputs(appDir, []cfg.FileInputs{
 		{
@@ -468,7 +468,7 @@ func TestResolveEnvVarInputs(t *testing.T) {
 				t.Setenv(k, v)
 			}
 
-			resolver := NewInputResolver(&DummyGitUntrackedFilesResolver{}, ".", true)
+			resolver := NewInputResolver(&DummyGitUntrackedFilesResolver{}, ".", nil, true)
 			resolver.setEnvVars()
 			resolvedEnvVars, err := resolver.resolveEnvVarInputs(tc.Inputs)
 			if tc.ExpectedErrStr != "" {
@@ -531,7 +531,7 @@ func TestExcludedFiles(t *testing.T) {
 				fstest.WriteToFile(t, []byte(f), filepath.Join(tempDir, f))
 			}
 
-			resolver := NewInputResolver(git.NewRepository(tempDir), tempDir, true)
+			resolver := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, true)
 			result, err := resolver.Resolve(context.Background(), &Task{
 				Directory:        tempDir,
 				UnresolvedInputs: &tc.Inputs,
@@ -539,7 +539,7 @@ func TestExcludedFiles(t *testing.T) {
 
 			require.NoError(t, err)
 
-			strResult := toStrSlice(result)
+			strResult := toStrSlice(result.Inputs())
 			assert.ElementsMatch(t, strResult, tc.ExpectedResult)
 		})
 	}
@@ -579,7 +579,7 @@ func TestGoResolverFilesAreExcluded(t *testing.T) {
 	fstest.WriteToFile(t, []byte("b"), f2)
 	gittest.CreateRepository(t, baseDir)
 
-	resolver := NewInputResolver(git.NewRepository(baseDir), baseDir, true)
+	resolver := NewInputResolver(git.NewRepository(baseDir), baseDir, nil, true)
 	resolver.goSourceResolver = &goSourceResolverMock{result: []string{f1, f2}}
 
 	result, err := resolver.Resolve(
@@ -596,7 +596,7 @@ func TestGoResolverFilesAreExcluded(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	strResult := toStrSlice(result)
+	strResult := toStrSlice(result.Inputs())
 	assert.ElementsMatch(t, strResult, []string{filepath.Join("atm", "atm.go")})
 }
 
@@ -620,90 +620,90 @@ func TestResolveSymlink(t *testing.T) {
 	testcases := []struct {
 		testdir    string
 		inputPath  string
-		validateFn func(t *testing.T, err error, result []Input)
+		validateFn func(t *testing.T, err error, result *Inputs)
 	}{
 		{
 			testdir:   "directory_broken",
 			inputPath: "symlink",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, result *Inputs) {
 				require.ErrorContains(t, err, "file does not exist")
-				require.Empty(t, result)
+				require.Nil(t, result)
 			},
 		},
 		{
 			testdir:   "directory_broken",
 			inputPath: "**",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, result *Inputs) {
 				require.ErrorIs(t, err, os.ErrNotExist)
-				require.Empty(t, result)
+				require.Nil(t, result)
 			},
 		},
 		{
 			testdir:   "file_broken",
 			inputPath: "symlink",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, result *Inputs) {
 				require.ErrorIs(t, err, os.ErrNotExist)
-				require.Empty(t, result)
+				require.Nil(t, result)
 			},
 		},
 		{
 			testdir:   "file_broken",
 			inputPath: "**",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, result *Inputs) {
 				require.ErrorIs(t, err, os.ErrNotExist)
-				require.Empty(t, result)
+				require.Nil(t, result)
 			},
 		},
 		{
 			testdir:   "file",
 			inputPath: "symlink",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, result *Inputs) {
 				require.NoError(t, err)
 				assert.ElementsMatch(t,
 					[]string{filepath.Join("file", "symlink")},
-					relPathsFromInputs(t, result),
+					relPathsFromInputs(t, result.Inputs()),
 				)
 			},
 		},
 		{
 			testdir:   "file",
 			inputPath: "**",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, result *Inputs) {
 				require.NoError(t, err)
 				assert.ElementsMatch(t,
 					[]string{
 						filepath.Join("file", "thefile"),
 						filepath.Join("file", "symlink"),
 					},
-					relPathsFromInputs(t, result),
+					relPathsFromInputs(t, result.Inputs()),
 				)
 			},
 		},
 		{
 			testdir:   "directory_with_files",
 			inputPath: "**",
-			validateFn: func(t *testing.T, err error, result []Input) {
+			validateFn: func(t *testing.T, err error, result *Inputs) {
 				require.NoError(t, err)
 				assert.ElementsMatch(t,
 					[]string{
 						filepath.Join("directory_with_files", "thedirectory", "arealfile"),
 						filepath.Join("directory_with_files", "symlink", "arealfile"),
 					},
-					relPathsFromInputs(t, result),
+					relPathsFromInputs(t, result.Inputs()),
 				)
 			},
 		},
 		{
 			testdir:   "symlinks/directory_containing_broken_symlink",
 			inputPath: "**",
-			validateFn: func(t *testing.T, err error, _ []Input) {
+			validateFn: func(t *testing.T, err error, _ *Inputs) {
 				require.ErrorContains(t, err, "file does not exist")
 			},
 		},
 		{
 			testdir:   "symlinks",
 			inputPath: "directory_containing_broken_symlin**/**",
-			validateFn: func(t *testing.T, err error, _ []Input) {
+			validateFn: func(t *testing.T, err error, _ *Inputs) {
 				require.ErrorIs(t, err, os.ErrNotExist)
 			},
 		},
@@ -716,7 +716,7 @@ func TestResolveSymlink(t *testing.T) {
 			repoDir := filepath.Join(testdataDir, "symlinks")
 
 			gittest.CreateRepository(t, repoDir)
-			r := NewInputResolver(git.NewRepository(repoDir), repoDir, true)
+			r := NewInputResolver(git.NewRepository(repoDir), repoDir, nil, true)
 
 			result, err := r.Resolve(context.Background(), &Task{
 				Directory: filepath.Join(repoDir, tc.testdir),
@@ -845,17 +845,16 @@ func prepareSymlinkTestDir(t *testing.T, commitFilesToGit bool) *symlinkTestInfo
 func resolveInputs(t *testing.T, task *Task, hashGitUntracked bool) (*Inputs, *digest.Digest) {
 	t.Helper()
 
-	resolver := NewInputResolver(git.NewRepository(task.RepositoryRoot), task.RepositoryRoot, hashGitUntracked)
+	resolver := NewInputResolver(git.NewRepository(task.RepositoryRoot), task.RepositoryRoot, nil, hashGitUntracked)
 	result, err := resolver.Resolve(
 		context.Background(),
 		task,
 	)
 	require.NoError(t, err)
-	inputs := NewInputs(result)
-	digest, err := inputs.Digest()
+	digest, err := result.Digest()
 	require.NoError(t, err)
 	require.NotEmpty(t, digest.String())
-	return inputs, digest
+	return result, digest
 }
 
 func TestSymlinkIsReplacedByTargetFile(t *testing.T) {
@@ -925,7 +924,7 @@ func TestHashGitUntrackedFilesDisabled(t *testing.T) {
 		},
 	}
 
-	r := NewInputResolver(git.NewRepository(tempDir), tempDir, false)
+	r := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, false)
 	_, err := r.Resolve(context.Background(), task)
 	require.ErrorIs(t, err, git.ErrObjectNotFound)
 }
@@ -960,17 +959,17 @@ func TestFileInSymlinkDir(t *testing.T) {
 				},
 			}
 
-			r := NewInputResolver(git.NewRepository(tempDir), tempDir, !hashGitUntracked)
+			r := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, !hashGitUntracked)
 			inputs, err := r.Resolve(context.Background(), task)
 			require.NoError(t, err)
-			require.Len(t, inputs, 1)
-			inf, ok := inputs[0].(*InputFile)
+			require.Len(t, inputs.Inputs(), 1)
+			inf, ok := inputs.Inputs()[0].(*InputFile)
 			require.True(t, ok)
 			assert.Equal(t, filepath.Join(slink, fname), inf.absPath)
 			assert.Equal(t, filepath.Join(dirSlink, fname), inf.repoRelPath)
 			assert.Equal(t, filepath.Join(subdir, fname), inf.repoRelRealPath, "unexpected real path")
 
-			_, err = NewInputs(inputs).Digest()
+			_, err = inputs.Digest()
 			require.NoError(t, err)
 		})
 	}

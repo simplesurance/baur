@@ -2,7 +2,6 @@ package command
 
 import (
 	"os"
-	"sort"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -56,7 +55,7 @@ func newLsInputsCmd() *lsInputsCmd {
 }
 
 func (c *lsInputsCmd) run(_ *cobra.Command, args []string) {
-	var inputs []baur.Input
+	var inputs *baur.Inputs
 
 	if taskID, err := strconv.Atoi(args[0]); err == nil {
 		if len(c.inputStr) != 0 {
@@ -67,17 +66,13 @@ func (c *lsInputsCmd) run(_ *cobra.Command, args []string) {
 		inputs = c.mustGetTaskRunInputs(taskID)
 	} else {
 		inputs = c.mustGetTaskInputs(args[0])
-		inputs = append(inputs, baur.AsInputStrings(c.inputStr...)...)
 	}
 
-	sort.Slice(inputs, func(i, j int) bool {
-		return inputs[i].String() < inputs[j].String()
-	})
-
-	c.mustPrintTaskInputs(baur.NewInputs(inputs))
+	inputs.Sort()
+	c.mustPrintTaskInputs(inputs)
 }
 
-func (c *lsInputsCmd) mustGetTaskRunInputs(taskRunID int) []baur.Input {
+func (c *lsInputsCmd) mustGetTaskRunInputs(taskRunID int) *baur.Inputs {
 	repo := mustFindRepository()
 
 	storageClt := mustNewCompatibleStorage(repo)
@@ -89,11 +84,16 @@ func (c *lsInputsCmd) mustGetTaskRunInputs(taskRunID int) []baur.Input {
 	return toBaurInputs(inputs)
 }
 
-func (c *lsInputsCmd) mustGetTaskInputs(taskSpec string) []baur.Input {
+func (c *lsInputsCmd) mustGetTaskInputs(taskSpec string) *baur.Inputs {
 	repo := mustFindRepository()
 	vcsState := mustGetRepoState(repo.Path)
 	task := mustArgToTask(repo, vcsState, taskSpec)
-	inputResolver := baur.NewInputResolver(vcsState, repo.Path, true)
+	inputResolver := baur.NewInputResolver(
+		vcsState,
+		repo.Path,
+		baur.AsInputStrings(c.inputStr...),
+		true,
+	)
 
 	inputs, err := inputResolver.Resolve(ctx, task)
 	exitOnErr(err)

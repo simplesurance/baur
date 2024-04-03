@@ -128,8 +128,8 @@ func (c *showCmd) showApp(appName string) {
 
 	repo := mustFindRepository()
 	app := mustArgToApp(repo, appName)
+	tasks := mustArgToTasks(repo, mustGetRepoState(repo.Path), []string{appName})
 
-	tasks := app.Tasks()
 	baur.SortTasksByID(tasks)
 
 	mustWriteRow(formatter, "Application Name:", term.Highlight(app.Name), "", "")
@@ -232,10 +232,28 @@ func (c *showCmd) printTask(formatter Formatter, task *baur.Task) {
 			}
 		}
 
-		if len(task.UnresolvedInputs.ExcludedFiles.Paths) > 0 &&
+		if len(task.UnresolvedInputs.TaskInfos) > 0 &&
 			(len(task.UnresolvedInputs.GolangSources) > 0 ||
 				len(task.UnresolvedInputs.EnvironmentVariables) > 0 ||
 				len(task.UnresolvedInputs.Files) > 0) {
+			mustWriteRow(formatter, "", "", "", "")
+		}
+
+		for i, ti := range task.UnresolvedInputs.TaskInfos {
+			mustWriteRow(formatter, "", "", "", "")
+			mustWriteRow(formatter, "", "", "Type:", term.Highlight("Task Infos"))
+			mustWriteRow(formatter, "", "", "Task Name", term.Highlight(ti.TaskName))
+			mustWriteRow(formatter, "", "", "Environment Variable:", term.Highlight(ti.EnvVarName))
+			if i+1 < len(task.UnresolvedInputs.TaskInfos) {
+				mustWriteRow(formatter, "", "", "")
+			}
+		}
+
+		if len(task.UnresolvedInputs.ExcludedFiles.Paths) > 0 &&
+			(len(task.UnresolvedInputs.GolangSources) > 0 ||
+				len(task.UnresolvedInputs.EnvironmentVariables) > 0 ||
+				len(task.UnresolvedInputs.Files) > 0 ||
+				len(task.UnresolvedInputs.TaskInfos) > 0) {
 			mustWriteRow(formatter, "", "", "", "")
 		}
 
@@ -244,7 +262,6 @@ func (c *showCmd) printTask(formatter Formatter, task *baur.Task) {
 			mustWriteRow(formatter, "", "", "Type:", term.Highlight("Excluded Files"))
 			mustWriteStringSliceRows(formatter, "Paths:", 2, task.UnresolvedInputs.ExcludedFiles.Paths)
 		}
-
 	}
 
 	if task.HasOutputs() {

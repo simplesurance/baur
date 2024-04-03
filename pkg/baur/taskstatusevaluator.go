@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/simplesurance/baur/v3/pkg/storage"
 )
@@ -16,76 +17,90 @@ type TaskStatusEvaluator struct {
 	inputResolver *InputResolver
 	store         storage.Storer
 
-	inputStr       []string
 	lookupInputStr string
 }
 
-// NewTaskStatusEvaluator returns a new TaskSNewTaskStatusEvaluator.
 func NewTaskStatusEvaluator(
 	repositoryDir string,
 	store storage.Storer,
 	inputResolver *InputResolver,
-	inputStr []string,
 	lookupInputStr string,
 ) *TaskStatusEvaluator {
 	return &TaskStatusEvaluator{
 		repositoryDir:  repositoryDir,
 		inputResolver:  inputResolver,
 		store:          store,
-		inputStr:       inputStr,
 		lookupInputStr: lookupInputStr,
 	}
+}
+
+func replaceInputStrings(inputs *Inputs, replacement []Input) *Inputs {
+	result := slices.Clone(inputs.Inputs())
+	result = slices.DeleteFunc(result, func(input Input) bool {
+		_, ok := input.(*InputString)
+		return ok
+	})
+	return NewInputs(append(result, replacement...))
 }
 
 // Status resolves the inputs of the task, calculates the total input digest
 // and checks in the storage if a run record for the task and total input
 // digest already exist.
-// If TaskStatusExecutionPending is returned, the returned TaskRunWithID is nil.
+// If a run exist it returns it and TaskStatusExecutionPending.
+// If no run exist it returns a nil storage.TaskRunWithID and TaskStatusExecutionPending.
+//
+// The method caches results of successful (err==nil) calls per Task. Running
+// it multiple times for the same task returns the same result.
 func (t *TaskStatusEvaluator) Status(ctx context.Context, task *Task) (TaskStatus, *Inputs, *storage.TaskRunWithID, error) {
-	var taskStatus TaskStatus
-	var run *storage.TaskRunWithID
+	if len(t.lookupInputStr) != 0 && len(task.UnresolvedInputs.TaskInfos) > 0 {
+		return TaskStatusUndefined, nil, nil,
+			fmt.Errorf("task %q defines TaskInfo Inputs, using them when specifying '--lookup-input-str' is unsupported", task.ID)
+	}
 
-	inputFiles, err := t.inputResolver.Resolve(ctx, task)
+	inputs, err := t.inputResolver.Resolve(ctx, task)
 	if err != nil {
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	inputs := NewInputs(append(AsInputStrings(t.inputStr...), inputFiles...))
-	taskStatus, run, err = t.getTaskStatus(ctx, inputs, task)
-	if err != nil {
+	run, err := t.getTaskStatus(ctx, task, inputs)
+	if err == nil {
+		return TaskStatusRunExist, inputs, run, nil
+	}
+
+	if !errors.Is(err, storage.ErrNotExist) {
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	if t.lookupInputStr == "" || taskStatus != TaskStatusExecutionPending {
-		return taskStatus, inputs, run, err
+	if t.lookupInputStr == "" {
+		return TaskStatusExecutionPending, inputs, run, nil
 	}
 
-	inputsLookupStr := NewInputs(append(AsInputStrings(t.lookupInputStr), inputFiles...))
-	taskStatus, run, err = t.getTaskStatus(ctx, inputsLookupStr, task)
+	inputsWithLookupStr := replaceInputStrings(inputs, AsInputStrings(t.lookupInputStr))
+	run, err = t.getTaskStatus(ctx, task, inputsWithLookupStr)
 	if err != nil {
+		if errors.Is(err, storage.ErrNotExist) {
+			// inputs instead of inputsLookupInputStr must be returned, if the task
+			// must be run it should be recorded with the inputStr not with the
+			// lookupInputStr
+			return TaskStatusExecutionPending, inputs, run, nil
+		}
+
 		return TaskStatusUndefined, nil, nil, err
 	}
 
-	// inputs instead of inputsLookupInputStr must be returned, if the task
-	// must be run it should be recorded with the inputStr not with the
-	// lookupInputStr
-	return taskStatus, inputs, run, err
+	return TaskStatusRunExist, inputsWithLookupStr, run, nil
 }
 
-func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, inputs *Inputs, task *Task) (TaskStatus, *storage.TaskRunWithID, error) {
+func (t *TaskStatusEvaluator) getTaskStatus(ctx context.Context, task *Task, inputs *Inputs) (*storage.TaskRunWithID, error) {
 	totalInputDigest, err := inputs.Digest()
 	if err != nil {
-		return TaskStatusUndefined, nil, fmt.Errorf("calculating total input digest failed: %w", err)
+		return nil, fmt.Errorf("calculating total input digest failed: %w", err)
 	}
 
 	run, err := t.store.LatestTaskRunByDigest(ctx, task.AppName, task.Name, totalInputDigest.String())
 	if err != nil {
-		if errors.Is(err, storage.ErrNotExist) {
-			return TaskStatusExecutionPending, nil, nil
-		}
-
-		return TaskStatusUndefined, nil, fmt.Errorf("querying storage for task run status failed: %w", err)
+		return nil, fmt.Errorf("querying storage for task run status failed: %w", err)
 	}
 
-	return TaskStatusRunExist, run, nil
+	return run, nil
 }

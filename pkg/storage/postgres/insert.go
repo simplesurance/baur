@@ -1,8 +1,10 @@
 package postgres
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -179,6 +181,17 @@ func clonedSortedInputStrings(inputs []*storage.InputString) []*storage.InputStr
 	return inputs
 }
 
+func clonedSortedInputTasks(result []*storage.InputTaskInfo) []*storage.InputTaskInfo {
+	result = slices.Clone(result)
+	slices.SortFunc(result, func(a, b *storage.InputTaskInfo) int {
+		if res := cmp.Compare(a.Name, b.Name); res != 0 {
+			return res
+		}
+		return cmp.Compare(a.Digest, b.Digest)
+	})
+	return result
+}
+
 func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputFile) ([]int, error) {
 	const stmt1 = `
            INSERT INTO input_file (path, digest)
@@ -238,6 +251,44 @@ func insertInputStringsIfNotExist(ctx context.Context, db dbConn, inputs []*stor
 	queryArgs := make([]any, 0, len(inputs)*2)
 	for _, in := range inputs {
 		queryArgs = append(queryArgs, in.String, in.Digest)
+	}
+
+	query := stmt1 + stmtVals + " " + stmt2
+
+	rows, err := db.Query(ctx, query, queryArgs...)
+	if err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	ids := make([]int, 0, len(inputs))
+	if err := scanIDs(rows, &ids); err != nil {
+		return nil, newQueryError(query, err, queryArgs...)
+	}
+
+	return ids, nil
+}
+
+func insertInputTaskIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputTaskInfo) ([]int, error) {
+	const stmt1 = `
+           INSERT INTO input_task (name, digest)
+	   VALUES
+`
+	const stmt2 = `
+	       ON CONFLICT ON CONSTRAINT input_task_name_digest_uniq
+	       DO UPDATE SET id=input_task.id
+	RETURNING id
+	`
+
+	// inputs are sorted to prevent an deadlock when running multiple
+	// transaction in parallel doing inserts, see
+	// https://github.com/simplesurance/baur/issues/343
+	inputs = clonedSortedInputTasks(inputs)
+
+	stmtVals := queryValueStr(len(inputs), 2)
+
+	queryArgs := make([]any, 0, len(inputs)*2)
+	for _, in := range inputs {
+		queryArgs = append(queryArgs, in.Name, in.Digest)
 	}
 
 	query := stmt1 + stmtVals + " " + stmt2
@@ -339,6 +390,50 @@ func insertTaskRunInputFilesIfNotExist(ctx context.Context, db dbConn, taskRunID
 	}
 
 	return nil
+}
+
+func insertTaskRunInputTasksIfNotExist(ctx context.Context, db dbConn, taskRunID int, inputs []*storage.InputTaskInfo) error {
+	const stmt1 = `
+	INSERT INTO task_run_task_input (task_run_id, input_task_id)
+	VALUES
+	`
+
+	if len(inputs) == 0 {
+		return nil
+	}
+
+	inputIDs, err := insertInputTaskIfNotExist(ctx, db, inputs)
+	if err != nil {
+		return err
+	}
+
+	var stmtVals strings.Builder
+	argNr := 2
+	for i := 0; i < len(inputIDs); i++ {
+		fmt.Fprintf(&stmtVals, "($1, $%d)", argNr)
+		argNr++
+
+		if i < len(inputIDs)-1 {
+			stmtVals.WriteString(", ")
+		}
+	}
+
+	queryArgs := make([]any, 1, len(inputIDs)+1)
+	queryArgs[0] = taskRunID
+
+	for _, inputID := range inputIDs {
+		queryArgs = append(queryArgs, inputID)
+	}
+
+	query := stmt1 + stmtVals.String()
+
+	_, err = db.Exec(ctx, query, queryArgs...)
+	if err != nil {
+		return newQueryError(query, err, queryArgs...)
+	}
+
+	return nil
+
 }
 
 func clonedSortedInputEnvVars(inputs []*storage.InputEnvVar) []*storage.InputEnvVar {
@@ -598,6 +693,11 @@ func (c *Client) saveTaskRun(ctx context.Context, tx pgx.Tx, taskRun *storage.Ta
 	}
 
 	err = insertTaskRunInputEnvVarsIfNotExist(ctx, tx, taskRunID, taskRun.Inputs.EnvironmentVariables)
+	if err != nil {
+		return -1, err
+	}
+
+	err = insertTaskRunInputTasksIfNotExist(ctx, tx, taskRunID, taskRun.Inputs.TaskInfo)
 	if err != nil {
 		return -1, err
 	}

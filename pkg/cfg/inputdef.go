@@ -5,4 +5,5 @@ type inputDef interface {
 	fileInputs() []FileInputs
 	golangSourcesInputs() []GolangSources
 	excludedFiles() *FileExcludeList
+	taskInfos() []TaskInfo
 }

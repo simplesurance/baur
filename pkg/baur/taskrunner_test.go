@@ -7,7 +7,7 @@ import (
 )
 
 func TestRunningTaskFailsWhenGitWorktreeIsDirty(t *testing.T) {
-	tr := NewTaskRunner()
+	tr := NewTaskRunner(nil)
 	tr.GitUntrackedFilesFn = func(_ string) ([]string, error) {
 		return []string{"1"}, nil
 	}

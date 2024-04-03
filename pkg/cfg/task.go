@@ -1,6 +1,6 @@
 package cfg
 
-// Task is a task section
+// cfg Task is a task section
 type Task struct {
 	Name     string   `toml:"name" comment:"Task name"`
 	Command  []string `toml:"command" comment:"Command to execute.\n The first element is the command, the following its arguments."`

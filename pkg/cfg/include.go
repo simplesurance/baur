@@ -147,6 +147,12 @@ func ExampleInclude() *Include {
 				Input: Input{
 					Files:         []FileInputs{{}},
 					GolangSources: []GolangSources{{}},
+					TaskInfos: []TaskInfo{
+						{
+							TaskName:   "build",
+							EnvVarName: "BUILD_INFO_PATH",
+						},
+					},
 				},
 				Output: Output{
 					File: []FileOutput{{}},
