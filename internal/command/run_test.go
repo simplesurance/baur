@@ -80,9 +80,9 @@ date +%s >> "$runtime_logfile"
 
 	doInitDb(t)
 
-	runCmdTest := newRunCmd()
-	runCmdTest.SetArgs([]string{"-p", fmt.Sprint(parallelTaskCnt)})
-	err = runCmdTest.Execute()
+	runCmd := newRunCmd()
+	runCmd.SetArgs([]string{"-p", fmt.Sprint(parallelTaskCnt)})
+	err = runCmd.Execute()
 	require.NoError(t, err)
 
 	// check if all tasks were running during same timeperiod,

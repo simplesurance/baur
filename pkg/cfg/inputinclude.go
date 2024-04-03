@@ -12,6 +12,7 @@ type InputInclude struct {
 	Files                []FileInputs
 	GolangSources        []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
 	ExcludedFiles        FileExcludeList
+	TaskInfos            []TaskInfo `comment:"Information about task of the same App"`
 
 	filepath string
 }
@@ -32,11 +33,16 @@ func (in *InputInclude) excludedFiles() *FileExcludeList {
 	return &in.ExcludedFiles
 }
 
+func (in *InputInclude) taskInfos() []TaskInfo {
+	return in.TaskInfos
+}
+
 func (in *InputInclude) IsEmpty() bool {
 	return len(in.Files) == 0 &&
 		len(in.GolangSources) == 0 &&
 		len(in.ExcludedFiles.Paths) == 0 &&
-		len(in.EnvironmentVariables) == 0
+		len(in.EnvironmentVariables) == 0 &&
+		len(in.TaskInfos) == 0
 }
 
 // validate checks if the stored information is valid.

@@ -1,7 +1,9 @@
 package baur
 
 import (
+	"cmp"
 	"fmt"
+	"slices"
 
 	"github.com/simplesurance/baur/v3/internal/digest"
 	"github.com/simplesurance/baur/v3/internal/digest/sha384"
@@ -61,4 +63,11 @@ func (in *Inputs) Digest() (*digest.Digest, error) {
 	in.digest = totalDigest
 
 	return in.digest, nil
+}
+
+// Sort order the inputs alphabetically by their string representation.
+func (in *Inputs) Sort() {
+	slices.SortFunc(in.inputs, func(a, b Input) int {
+		return cmp.Compare(a.String(), b.String())
+	})
 }

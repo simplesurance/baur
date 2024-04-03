@@ -48,3 +48,11 @@ func (f *fieldError) Unwrap() error {
 
 	return f.err
 }
+
+func elementPathWithID(elementPath, id string) string {
+	if len(id) == 0 {
+		return elementPath
+	}
+
+	return elementPath + "[" + id + "]"
+}

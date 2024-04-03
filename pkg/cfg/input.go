@@ -5,6 +5,7 @@ type Input struct {
 	EnvironmentVariables []EnvVarsInputs
 	Files                []FileInputs
 	GolangSources        []GolangSources `comment:"Inputs specified by resolving dependencies of Golang source files or packages."`
+	TaskInfos            []TaskInfo      `comment:"Information about another baur task."`
 	ExcludedFiles        FileExcludeList
 }
 
@@ -12,7 +13,8 @@ func (in *Input) IsEmpty() bool {
 	return len(in.Files) == 0 &&
 		len(in.GolangSources) == 0 &&
 		len(in.EnvironmentVariables) == 0 &&
-		len(in.ExcludedFiles.Paths) == 0
+		len(in.ExcludedFiles.Paths) == 0 &&
+		len(in.TaskInfos) == 0
 }
 
 func (in *Input) fileInputs() []FileInputs {
@@ -31,12 +33,17 @@ func (in *Input) excludedFiles() *FileExcludeList {
 	return &in.ExcludedFiles
 }
 
+func (in *Input) taskInfos() []TaskInfo {
+	return in.TaskInfos
+}
+
 // merge appends the information in other to in.
 func (in *Input) merge(other inputDef) {
 	in.Files = append(in.Files, other.fileInputs()...)
 	in.GolangSources = append(in.GolangSources, other.golangSourcesInputs()...)
 	in.EnvironmentVariables = append(in.EnvironmentVariables, other.envVariables()...)
 	in.ExcludedFiles.Paths = append(in.ExcludedFiles.Paths, other.excludedFiles().Paths...)
+	in.TaskInfos = append(in.TaskInfos, other.taskInfos()...)
 }
 
 func (in *Input) resolve(resolver Resolver) error {
@@ -83,6 +90,10 @@ func inputValidate(i inputDef) error {
 
 	if err := i.excludedFiles().Validate(); err != nil {
 		return fieldErrorWrap(err, "ExcludedFiles")
+	}
+
+	if err := validateTaskInfos(i.taskInfos()); err != nil {
+		return fieldErrorWrap(err, "TaskInfos")
 	}
 
 	return nil

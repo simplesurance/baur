@@ -133,7 +133,7 @@ func (c *Client) inputFiles(ctx context.Context, taskRunID int) ([]*storage.Inpu
 	       input_file.digest
 	  FROM input_file
 	  JOIN task_run_file_input ON input_file.id = task_run_file_input.input_file_id
-	  WHERE task_run_file_input.task_run_id = $1
+         WHERE task_run_file_input.task_run_id = $1
 	  `
 
 	var result []*storage.InputFile
@@ -171,7 +171,7 @@ func (c *Client) inputEnvVars(ctx context.Context, taskRunID int) ([]*storage.In
 	       input_env_var.digest
 	  FROM input_env_var
 	  JOIN task_run_env_var_input ON input_env_var.id = task_run_env_var_input.input_env_var_id
-	  WHERE task_run_env_var_input.task_run_id = $1
+         WHERE task_run_env_var_input.task_run_id = $1
 	  `
 
 	var result []*storage.InputEnvVar
@@ -203,6 +203,43 @@ func (c *Client) inputEnvVars(ctx context.Context, taskRunID int) ([]*storage.In
 	return result, nil
 }
 
+func (c *Client) inputTasks(ctx context.Context, taskRunID int) ([]*storage.InputTaskInfo, error) {
+	const query = `
+	SELECT input_task.name,
+	       input_task.digest
+	 FROM  input_task
+	 JOIN  task_run_task_input ON input_task.id = task_run_task_input.input_task_id
+        WHERE  task_run_task_input.task_run_id = $1`
+
+	var result []*storage.InputTaskInfo
+
+	rows, err := c.db.Query(ctx, query, taskRunID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, storage.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	for rows.Next() {
+		var input storage.InputTaskInfo
+
+		if err := rows.Scan(&input.Name, &input.Digest); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+		}
+
+		result = append(result, &input)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("query %s with arg: %d failed: %w", query, taskRunID, err)
+	}
+
+	return result, nil
+}
+
 func (c *Client) Inputs(ctx context.Context, taskRunID int) (*storage.Inputs, error) {
 	var result storage.Inputs
 	var err error
@@ -218,6 +255,11 @@ func (c *Client) Inputs(ctx context.Context, taskRunID int) (*storage.Inputs, er
 	}
 
 	result.EnvironmentVariables, err = c.inputEnvVars(ctx, taskRunID)
+	if err != nil {
+		return nil, err
+	}
+
+	result.TaskInfo, err = c.inputTasks(ctx, taskRunID)
 	if err != nil {
 		return nil, err
 	}

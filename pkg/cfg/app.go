@@ -48,6 +48,12 @@ func ExampleApp(name string) *App {
 							BuildFlags:  []string{"-tags=linux"},
 						},
 					},
+					TaskInfos: []TaskInfo{
+						{
+							TaskName:   "check",
+							EnvVarName: "CHECK_TASK_INFO_FILEPATH",
+						},
+					},
 				},
 				Output: Output{
 					File: []FileOutput{
@@ -75,6 +81,17 @@ func ExampleApp(name string) *App {
 									Tag:        "{{ ENV BRANCH_NAME }}-{{ gitCommit }}",
 								},
 							},
+						},
+					},
+				},
+			},
+			{
+				Name:    "check",
+				Command: []string{"make", "check"},
+				Input: Input{
+					Files: []FileInputs{
+						{
+							Paths: []string{"Makefile"},
 						},
 					},
 				},

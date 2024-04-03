@@ -44,19 +44,6 @@ func (a *App) String() string {
 	return a.Name
 }
 
-// Tasks instantiates Task objects for each defined task in the app's
-// configuration.
-func (a *App) Tasks() []*Task {
-	result := make([]*Task, 0, len(a.cfg.Tasks))
-
-	for _, taskCfg := range a.cfg.Tasks {
-		task := NewTask(taskCfg, a.Name, a.repositoryRootPath, a.Path)
-		result = append(result, task)
-	}
-
-	return result
-}
-
 // SortAppsByName sorts the slice by application names.
 func SortAppsByName(apps []*App) {
 	sort.Slice(apps, func(i int, j int) bool {

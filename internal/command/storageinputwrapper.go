@@ -44,8 +44,25 @@ func (i *storageInputEnvVar) Digest() (*digest.Digest, error) {
 	return digest.FromString(i.InputEnvVar.Digest)
 }
 
-func toBaurInputs(inputs *storage.Inputs) []baur.Input {
-	result := make([]baur.Input, 0, len(inputs.Files)+len(inputs.Strings))
+type storageTaskInfo struct {
+	*storage.InputTaskInfo
+}
+
+func (i *storageTaskInfo) String() string {
+	return "task: " + i.Name
+}
+
+func (i *storageTaskInfo) Digest() (*digest.Digest, error) {
+	return digest.FromString(i.InputTaskInfo.Digest)
+}
+
+func toBaurInputs(inputs *storage.Inputs) *baur.Inputs {
+	result := make([]baur.Input, 0,
+		len(inputs.Files)+
+			len(inputs.Strings)+
+			len(inputs.EnvironmentVariables)+
+			len(inputs.TaskInfo),
+	)
 
 	for _, in := range inputs.Files {
 		result = append(result, &storageInputFile{InputFile: in})
@@ -59,5 +76,9 @@ func toBaurInputs(inputs *storage.Inputs) []baur.Input {
 		result = append(result, &storageInputEnvVar{InputEnvVar: in})
 	}
 
-	return result
+	for _, in := range inputs.TaskInfo {
+		result = append(result, &storageTaskInfo{InputTaskInfo: in})
+	}
+
+	return baur.NewInputs(result)
 }

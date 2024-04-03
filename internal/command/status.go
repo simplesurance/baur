@@ -210,8 +210,13 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 	statusMgr := baur.NewTaskStatusEvaluator(
 		repo.Path,
 		storageClt,
-		baur.NewInputResolver(mustGetRepoState(repo.Path), repo.Path, !c.requireCleanGitWorktree),
-		c.inputStr, c.lookupInputStr,
+		baur.NewInputResolver(
+			mustGetRepoState(repo.Path),
+			repo.Path,
+			baur.AsInputStrings(c.inputStr...),
+			!c.requireCleanGitWorktree,
+		),
+		c.lookupInputStr,
 	)
 
 	baur.SortTasksByID(tasks)
