@@ -35,6 +35,7 @@ func (in *InputInclude) excludedFiles() *FileExcludeList {
 func (in *InputInclude) IsEmpty() bool {
 	return len(in.Files) == 0 &&
 		len(in.GolangSources) == 0 &&
+		len(in.ExcludedFiles.Paths) == 0 &&
 		len(in.EnvironmentVariables) == 0
 }
 
