@@ -5,9 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/exp/maps"
-
 	"github.com/simplesurance/baur/v3/internal/fs"
+	"github.com/simplesurance/baur/v3/internal/set"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 	"github.com/simplesurance/baur/v3/pkg/cfg/resolver"
 )
@@ -119,14 +118,10 @@ func (a *Loader) appNames(names ...string) ([]*App, error) {
 		return nil, nil
 	}
 
-	namesMap := make(map[string]struct{}, len(names))
+	namesMap := set.From(names)
 	result := make([]*App, 0, len(names))
 
 	a.logger.Debugf("loader: loading the following apps by name: %+v", names)
-
-	for _, name := range names {
-		namesMap[name] = struct{}{}
-	}
 
 	for _, path := range a.appConfigPaths {
 		if len(namesMap) == 0 {
@@ -143,7 +138,7 @@ func (a *Loader) appNames(names ...string) ([]*App, error) {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}
 
-		if _, exist := namesMap[appCfg.Name]; !exist {
+		if !namesMap.Contains(appCfg.Name) {
 			continue
 		}
 
@@ -157,11 +152,7 @@ func (a *Loader) appNames(names ...string) ([]*App, error) {
 		delete(namesMap, appCfg.Name)
 	}
 
-	notFoundApps := make([]string, 0, len(namesMap))
-	for name := range namesMap {
-		notFoundApps = append(notFoundApps, name)
-	}
-
+	notFoundApps := namesMap.Slice()
 	if len(notFoundApps) != 0 {
 		return nil, fmt.Errorf("could not find the following apps: %s", strings.Join(notFoundApps, ", "))
 	}
@@ -353,7 +344,7 @@ func isAppDirectory(dir string) bool {
 }
 
 func findAppConfigs(repoDir string, searchDirs []string, searchDepth int, logger Logger) ([]string, error) {
-	appDirs := map[string]struct{}{}
+	appDirs := set.Set[string]{}
 	visitedSearchDirs := make(map[string]struct{}, len(searchDirs))
 
 	for _, searchDir := range searchDirs {
@@ -379,54 +370,22 @@ func findAppConfigs(repoDir string, searchDirs []string, searchDepth int, logger
 		}
 
 		for _, path := range cfgPaths {
-			if _, exists := appDirs[path]; exists {
+			if appDirs.Contains(path) {
 				logger.Debugf("loader: multiple entries in application_dirs list in %q discover the same app cfg %q,"+
 					"remove duplicate entries to improve performance", RepositoryCfgFile, path)
 				continue
 			}
-			appDirs[path] = struct{}{}
+			appDirs.Add(path)
 		}
 	}
 
-	return maps.Keys(appDirs), nil
+	return appDirs.Slice(), nil
 }
 
 func dedupApps(apps []*App) []*App {
-	dedupMap := make(map[string]*App, len(apps))
-
-	for _, app := range apps {
-		if _, exist := dedupMap[app.Path]; exist {
-			continue
-		}
-
-		dedupMap[app.Path] = app
-	}
-
-	result := make([]*App, 0, len(dedupMap))
-
-	for _, app := range dedupMap {
-		result = append(result, app)
-	}
-
-	return result
+	return set.From(apps).Slice()
 }
 
 func dedupTasks(tasks []*Task) []*Task {
-	dedupMap := make(map[string]*Task, len(tasks))
-
-	for _, task := range tasks {
-		if _, exist := dedupMap[task.ID()]; exist {
-			continue
-		}
-
-		dedupMap[task.ID()] = task
-	}
-
-	result := make([]*Task, 0, len(dedupMap))
-
-	for _, task := range dedupMap {
-		result = append(result, task)
-	}
-
-	return result
+	return set.From(tasks).Slice()
 }
