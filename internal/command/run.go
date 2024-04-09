@@ -227,7 +227,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 
 			outputs, err := baur.OutputsFromTask(c.dockerClient, task)
 			if err != nil {
-				stderr.ErrPrintln(err, task.ID())
+				stderr.ErrPrintln(err, task.ID)
 				c.skipAllScheduledTaskRuns()
 				return
 			}
@@ -409,14 +409,14 @@ func declaredOutputsExist(task *baur.Task, outputs []baur.Output) bool {
 	for _, output := range outputs {
 		exists, err := output.Exists()
 		if err != nil {
-			stderr.ErrPrintf(err, task.ID())
+			stderr.ErrPrintf(err, task.ID)
 			return false
 		}
 
 		if exists {
 			size, err := output.SizeBytes()
 			if err != nil {
-				stderr.ErrPrintln(err, task.ID())
+				stderr.ErrPrintln(err, task.ID)
 				return false
 			}
 
@@ -437,7 +437,7 @@ func maxTaskIDLen(tasks []*baur.Task) int {
 	var maxLen int
 
 	for _, task := range tasks {
-		taskIDlen := len(task.ID())
+		taskIDlen := len(task.ID)
 
 		if taskIDlen > maxLen {
 			maxLen = taskIDlen
