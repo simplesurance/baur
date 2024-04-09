@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/simplesurance/baur/v3/internal/digest"
@@ -87,12 +88,9 @@ func (i *InputResolver) Resolve(ctx context.Context, task *Task) ([]Input, error
 		return nil, fmt.Errorf("resolving file inputs failed: %w", err)
 	}
 
-	allInputsPaths := make([]string, 0, len(goSourcePaths)+len(globPaths)+len(task.CfgFilepaths))
-	allInputsPaths = append(allInputsPaths, globPaths...)
-	allInputsPaths = append(allInputsPaths, goSourcePaths...)
-	allInputsPaths = append(allInputsPaths, task.CfgFilepaths...)
+	inputPaths := slices.Concat(globPaths, goSourcePaths, task.CfgFilepaths)
 
-	uniqInputs, err := i.pathsToUniqInputs(allInputsPaths, fs.AbsPaths(task.Directory, task.UnresolvedInputs.ExcludedFiles.Paths))
+	uniqInputs, err := i.pathsToUniqInputs(inputPaths, fs.AbsPaths(task.Directory, task.UnresolvedInputs.ExcludedFiles.Paths))
 	if err != nil {
 		return nil, err
 	}
