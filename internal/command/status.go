@@ -277,7 +277,7 @@ func (c *statusCmd) assembleRow(repositoryDir string, task *baur.Task, taskRun *
 			row = append(row, task.AppName)
 
 		case statusTaskIDParam:
-			row = append(row, task.ID())
+			row = append(row, task.ID)
 
 		case statusPathParam:
 			if c.absPaths {

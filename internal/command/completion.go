@@ -82,9 +82,9 @@ func newCompleteTargetFunc(
 
 		resultSet := make(map[string]struct{}, len(tasks)*3)
 		for _, t := range tasks {
-			resultSet[t.ID()] = struct{}{}
+			resultSet[t.ID] = struct{}{}
 			if !opts.withoutWildcards {
-				resultSet["*."+t.ID()] = struct{}{}
+				resultSet["*."+t.ID] = struct{}{}
 			}
 
 			if !opts.withoutAppNames {

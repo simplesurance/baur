@@ -11,6 +11,10 @@ import (
 // A task has a set of Inputs that produce a set of outputs by executing it's
 // Command.
 type Task struct {
+	// ID is the unique identifier of the task, in the format.
+	// <APP-NAME>.<TASK-NAME>.
+	ID string
+
 	RepositoryRoot string
 	Directory      string
 
@@ -26,6 +30,7 @@ type Task struct {
 // NewTask returns a new Task.
 func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string) *Task {
 	return &Task{
+		ID:               fmt.Sprintf("%s.%s", appName, cfg.Name),
 		RepositoryRoot:   repositoryRootdir,
 		Directory:        workingDir,
 		Outputs:          &cfg.Output,
@@ -37,14 +42,9 @@ func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string) *Task
 	}
 }
 
-// ID returns APP-NAME.TASK-NAME.
-func (t *Task) ID() string {
-	return fmt.Sprintf("%s.%s", t.AppName, t.Name)
-}
-
 // String returns ID()
 func (t *Task) String() string {
-	return t.ID()
+	return t.ID
 }
 
 // HasInputs returns true if Inputs are defined for the task
@@ -60,6 +60,6 @@ func (t *Task) HasOutputs() bool {
 // SortTasksByID sorts the tasks slice by task IDs.
 func SortTasksByID(tasks []*Task) {
 	sort.Slice(tasks, func(i int, j int) bool {
-		return tasks[i].ID() < tasks[j].ID()
+		return tasks[i].ID < tasks[j].ID
 	})
 }
