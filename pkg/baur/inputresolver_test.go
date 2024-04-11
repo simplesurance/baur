@@ -978,32 +978,3 @@ func TestFileInSymlinkDir(t *testing.T) {
 	testFn(true)
 	testFn(false)
 }
-
-func TestCommandEnvVarsAreTracked(t *testing.T) {
-	log.RedirectToTestingLog(t)
-	ir := NewInputResolver(&DummyGitUntrackedFilesResolver{}, ".", true)
-	inputs, err := ir.Resolve(context.Background(), &Task{
-		EnvironmentVariables: []string{"V1=A", "V2=B"},
-		UnresolvedInputs:     &cfg.Input{},
-	})
-	require.NoError(t, err)
-	require.Len(t, inputs, 2)
-	require.IsType(t, &InputEnvVar{}, inputs[0])
-	require.IsType(t, &InputEnvVar{}, inputs[1])
-	e1 := inputs[0].(*InputEnvVar)
-	e2 := inputs[1].(*InputEnvVar)
-	var f1, f2 *InputEnvVar
-
-	if e1.Name() == "V1" {
-		f1 = e1
-		f2 = e2
-	} else {
-		f1 = e2
-		f2 = e1
-	}
-
-	assert.Equal(t, "V1", f1.Name())
-	assert.Equal(t, "A", f1.value)
-	assert.Equal(t, "V2", f2.Name())
-	assert.Equal(t, "B", f2.value)
-}

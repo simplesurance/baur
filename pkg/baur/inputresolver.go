@@ -97,20 +97,16 @@ func (i *InputResolver) Resolve(ctx context.Context, task *Task) ([]Input, error
 		return nil, err
 	}
 
-	envVarInputs, err := i.resolveEnvVarInputs(task.UnresolvedInputs.EnvironmentVariables)
+	envVars, err := i.resolveEnvVarInputs(task.UnresolvedInputs.EnvironmentVariables)
 	if err != nil {
 		return nil, fmt.Errorf("resolving environment variable inputs failed: %w", err)
-	}
-
-	if err := envVarSliceMapSet(envVarInputs, task.EnvironmentVariables); err != nil {
-		return nil, fmt.Errorf("converting Environment.variables to map failed: %w", err)
 	}
 
 	stats := i.cache.Statistics()
 	log.Debugf("inputresolver: cache statistic: %d entries, %d hits, %d miss, ratio %.2f%%\n",
 		stats.Entries, stats.Hits, stats.Miss, stats.HitRatio())
 
-	return append(uniqInputs, envVarMapToInputslice(envVarInputs)...), nil
+	return append(uniqInputs, envVarMapToInputslice(envVars)...), nil
 }
 
 func (i *InputResolver) resolveCacheFileGlob(path string, optional bool) ([]string, error) {
@@ -401,19 +397,6 @@ func (i *InputResolver) queryGitTrackedDb(ctx context.Context, absPath string) (
 	return nil, "", fmt.Errorf("got unsupport git.TrackedObject mode: %o", obj.Mode)
 }
 
-func envVarSliceMapSet(m map[string]string, envVars []string) error {
-	for _, kv := range envVars {
-		k, v, found := strings.Cut(kv, "=")
-		if !found {
-			return fmt.Errorf("%q does not contain a '=' character", kv)
-		}
-
-		m[k] = v
-	}
-
-	return nil
-}
-
 func (i *InputResolver) setEnvVars() {
 	if i.environmentVariables != nil {
 		return
@@ -422,12 +405,16 @@ func (i *InputResolver) setEnvVars() {
 	// os.Environ() does not return env variables that are declared but undefined.
 	// environment variables that have an empty string assigned are returned.
 	environ := os.Environ()
-
 	i.environmentVariables = make(map[string]string, len(environ))
-	err := envVarSliceMapSet(i.environmentVariables, environ)
-	if err != nil {
-		// impossible scenario
-		panic("BUG: os.Environ(): " + err.Error())
+
+	for _, env := range environ {
+		k, v, found := strings.Cut(env, "=")
+		if !found {
+			// impossible scenario
+			panic(fmt.Sprintf("element %q returned by os.Environ() does not contain a '=' character", env))
+		}
+
+		i.environmentVariables[k] = v
 	}
 }
 
@@ -458,13 +445,12 @@ func (i *InputResolver) getEnvVar(namePattern string) (map[string]string, error)
 }
 
 func (i *InputResolver) resolveEnvVarInputs(inputs []cfg.EnvVarsInputs) (map[string]string, error) {
-	resolvedEnvVars := map[string]string{}
-
 	if len(inputs) == 0 {
-		return resolvedEnvVars, nil
+		return nil, nil
 	}
 
 	i.setEnvVars()
+	resolvedEnvVars := map[string]string{}
 
 	for _, e := range inputs {
 		for _, pattern := range e.Names {

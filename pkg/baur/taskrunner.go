@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sync/atomic"
 	"time"
 
@@ -63,7 +62,6 @@ func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
 		Directory(task.Directory).
 		LogPrefix(color.YellowString(fmt.Sprintf("%s: ", task))).
 		LogFn(t.LogFn).
-		Env(append(os.Environ(), task.EnvironmentVariables...)).
 		Run(context.TODO())
 	if err != nil {
 		return nil, err
