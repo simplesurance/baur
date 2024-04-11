@@ -16,26 +16,24 @@ type Task struct {
 
 	AppName string
 
-	Name                 string
-	Command              []string
-	EnvironmentVariables []string
-	UnresolvedInputs     *cfg.Input
-	Outputs              *cfg.Output
-	CfgFilepaths         []string
+	Name             string
+	Command          []string
+	UnresolvedInputs *cfg.Input
+	Outputs          *cfg.Output
+	CfgFilepaths     []string
 }
 
 // NewTask returns a new Task.
 func NewTask(cfg *cfg.Task, appName, repositoryRootdir, workingDir string) *Task {
 	return &Task{
-		RepositoryRoot:       repositoryRootdir,
-		Directory:            workingDir,
-		Outputs:              &cfg.Output,
-		CfgFilepaths:         cfg.Filepaths(),
-		Command:              cfg.Command,
-		EnvironmentVariables: cfg.Environment.Variables,
-		Name:                 cfg.Name,
-		AppName:              appName,
-		UnresolvedInputs:     &cfg.Input,
+		RepositoryRoot:   repositoryRootdir,
+		Directory:        workingDir,
+		Outputs:          &cfg.Output,
+		CfgFilepaths:     cfg.Filepaths(),
+		Command:          cfg.Command,
+		Name:             cfg.Name,
+		AppName:          appName,
+		UnresolvedInputs: &cfg.Input,
 	}
 }
 

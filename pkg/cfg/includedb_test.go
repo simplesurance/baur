@@ -129,9 +129,6 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 			Name:      "build",
 			Command:   []string{"make"},
 			Includes:  []string{inclFilePath + "#inputs", inclFilePath + "#outputs"},
-			Environment: Environment{
-				Variables: []string{"K1=V1"},
-			},
 		},
 	}
 
@@ -154,7 +151,6 @@ func TestLoadTaskIncludeWithIncludesInSameFile(t *testing.T) {
 	assert.Equal(t, include.Task[0].IncludeID, loadedIncl.IncludeID)
 	assert.Equal(t, include.Task[0].Command, loadedIncl.Command)
 	assert.Equal(t, include.Task[0].Includes, loadedIncl.Includes)
-	assert.Equal(t, include.Task[0].Environment, loadedIncl.Environment)
 
 	assert.ElementsMatch(t, loadedIncl.Input.Files, include.Input[0].Files)
 	assert.Equal(t, include.Input[0].GolangSources, loadedIncl.Input.GolangSources)

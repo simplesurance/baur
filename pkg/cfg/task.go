@@ -2,12 +2,11 @@ package cfg
 
 // Task is a task section
 type Task struct {
-	Name        string      `toml:"name" comment:"Task name"`
-	Command     []string    `toml:"command" comment:"Command to execute.\n The first element is the command, the following its arguments."`
-	Includes    []string    `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format FILEPATH#INCLUDE_ID>.\n Paths are relative to the application directory."`
-	Environment Environment `toml:"Environment"`
-	Input       Input       `toml:"Input" comment:"Inputs are tracked, when they change the task is rerun."`
-	Output      Output      `toml:"Output" comment:"Artifacts produced by the Task.command and their upload destinations."`
+	Name     string   `toml:"name" comment:"Task name"`
+	Command  []string `toml:"command" comment:"Command to execute.\n The first element is the command, the following its arguments."`
+	Includes []string `toml:"includes" comment:"Input or Output includes that the task inherits.\n Includes are specified in the format FILEPATH#INCLUDE_ID>.\n Paths are relative to the application directory."`
+	Input    Input    `toml:"Input" comment:"Inputs are tracked, when they change the task is rerun."`
+	Output   Output   `toml:"Output" comment:"Artifacts produced by the Task.command and their upload destinations."`
 
 	// multiple include sections of the same file can be included, use a map
 	// instead of a slice to act as a Set datastructure
@@ -37,11 +36,6 @@ func (t *Task) Filepaths() []string {
 func (t *Task) command() []string {
 	return t.Command
 }
-
-func (t *Task) environment() *Environment {
-	return &t.Environment
-}
-
 func (t *Task) name() string {
 	return t.Name
 }
