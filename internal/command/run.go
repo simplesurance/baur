@@ -324,12 +324,12 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 		return nil, err
 	}
 
-	stderr.Printf("%s: executing %q %s: %s\n",
+	stderr.Printf("%s: executing command %s: %s\n",
 		term.Highlight(task),
-		term.Highlight(result.Command),
 		statusStrFailed,
 		err,
 	)
+
 	return nil, err
 }
 
