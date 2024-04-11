@@ -32,10 +32,10 @@ type UploadInfoDocker struct {
 
 func (d *UploadInfoDocker) String() string {
 	if d.Registry == "" {
-		return fmt.Sprintf("%s/%s", d.Repository, d.Tag)
+		return fmt.Sprintf("%s:%s", d.Repository, d.Tag)
 	}
 
-	return fmt.Sprintf("%s/%s/%s", d.Registry, d.Repository, d.Tag)
+	return fmt.Sprintf("%s/%s:%s", d.Registry, d.Repository, d.Tag)
 }
 
 type UploadInfoFileCopy struct {
