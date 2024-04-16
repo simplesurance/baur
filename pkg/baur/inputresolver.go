@@ -11,10 +11,12 @@ import (
 
 	"github.com/simplesurance/baur/v3/internal/digest"
 	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
+	"github.com/simplesurance/baur/v3/internal/digest/sha384"
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/resolve/glob"
 	"github.com/simplesurance/baur/v3/internal/resolve/gosource"
+	"github.com/simplesurance/baur/v3/internal/vcs"
 	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
@@ -38,27 +40,29 @@ type InputResolver struct {
 	globPathResolver        *glob.Resolver
 	goSourceResolver        goSourceResolver
 	environmentVariables    map[string]string
-	gitRepo                 GitUntrackedFilesResolver
+	vcsState                vcs.StateFetcher
 	inputFileSingletonCache *InputFileSingletonCache
 	cache                   *inputResolverCache
 	gitTrackedDb            *git.TrackedObjects
 	fileHashfn              FileHashFn
 }
 
-type GitUntrackedFilesResolver interface {
-	WithoutUntracked(paths ...string) ([]string, error)
-}
-
 // NewInputResolver returns an InputResolver that caches resolver
 // results.
-func NewInputResolver(gitRepo GitUntrackedFilesResolver, repoDir string, hashGitUntrackedFiles bool) *InputResolver {
+func NewInputResolver(vcsState vcs.StateFetcher, repoDir string, hashGitUntrackedFiles bool) *InputResolver {
 	result := InputResolver{
 		repoDir:                 repoDir,
 		globPathResolver:        &glob.Resolver{},
 		goSourceResolver:        gosource.NewResolver(log.Debugf),
-		gitRepo:                 gitRepo,
+		vcsState:                vcsState,
 		cache:                   newInputResolverCache(),
 		inputFileSingletonCache: NewInputFileSingletonCache(),
+	}
+
+	if _, gitUnavail := vcsState.(*vcs.NoVCsState); gitUnavail {
+		result.fileHashfn = sha384.File
+		log.Debugf("inputresolver: using sha384 file hasher\n")
+		return &result
 	}
 
 	result.gitTrackedDb = git.NewTrackedObjects(repoDir, log.Debugf)
@@ -182,7 +186,7 @@ func (i *InputResolver) resolveFileInputs(appDir string, inputs []cfg.FileInputs
 			}
 
 			if len(resolvedPaths) > 0 && in.GitTrackedOnly {
-				trackedOnlyPaths, err := i.gitRepo.WithoutUntracked(resolvedPaths...)
+				trackedOnlyPaths, err := i.vcsState.WithoutUntracked(resolvedPaths...)
 				if err != nil {
 					return nil, fmt.Errorf("removing untracked git files for input %q failed: %w", path, err)
 				}

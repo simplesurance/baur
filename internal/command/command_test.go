@@ -114,10 +114,7 @@ func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, e
 		taskIDs = append(taskIDs, task.taskID)
 
 		assert.Equal(t, expectedStatus.String(), task.status)
-
-		if commit != "" {
-			assert.Equal(t, commit, task.commit)
-		}
+		assert.Equal(t, commit, task.commit)
 	}
 
 	assert.ElementsMatch(t, taskIDs, r.TaskIDs(), "baur status is missing some tasks")
@@ -131,30 +128,52 @@ func assertStatusTasks(t *testing.T, r *repotest.Repo, statusOut []*csvStatus, e
 // The test is running in 2 variants where the baur git repository is part of a
 // git repo and where it is not.
 func TestRunningPendingTasksChangesStatus(t *testing.T) {
-	commit := ""
+	testcases := []struct {
+		testname          string
+		withGitRepository bool
+	}{
+		{
+			testname:          "withoutGit",
+			withGitRepository: false,
+		},
+		{
+			testname:          "withGit",
+			withGitRepository: true,
+		},
+	}
 
-	initTest(t)
+	for _, tc := range testcases {
+		t.Run(tc.testname, func(t *testing.T) {
+			commit := ""
 
-	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
-	r.CreateSimpleApp(t)
+			initTest(t)
 
-	runInitDb(t)
+			r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+			r.CreateSimpleApp(t)
 
-	gittest.CommitFilesToGit(t, ".")
+			runInitDb(t)
 
-	res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().RunCombinedOut(context.Background())
-	require.NoError(t, err)
+			if tc.withGitRepository {
+				gittest.CreateRepository(t, ".")
 
-	commit = strings.TrimSpace(res.StrOutput())
+				gittest.CommitFilesToGit(t, ".")
 
-	statusOut := baurCSVStatus(t, nil, "")
-	assertStatusTasks(t, r, statusOut, baur.TaskStatusExecutionPending, "")
+				res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().RunCombinedOut(context.Background())
+				require.NoError(t, err)
 
-	runCmd := newRunCmd()
-	runCmd.Command.Run(&runCmd.Command, nil)
+				commit = strings.TrimSpace(res.StrOutput())
+			}
 
-	statusOut = baurCSVStatus(t, nil, "")
-	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
+			statusOut := baurCSVStatus(t, nil, "")
+			assertStatusTasks(t, r, statusOut, baur.TaskStatusExecutionPending, "")
+
+			runCmd := newRunCmd()
+			runCmd.Command.Run(&runCmd.Command, nil)
+
+			statusOut = baurCSVStatus(t, nil, "")
+			assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
+		})
+	}
 }
 
 // TestRunningPendingTasksWithInputStringChangesStatus creates a new baur repository with a
@@ -168,6 +187,7 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 
 	runInitDb(t)
 
+	gittest.CreateRepository(t, ".")
 	gittest.CommitFilesToGit(t, ".")
 
 	res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().RunCombinedOut(context.Background())
@@ -281,12 +301,8 @@ func TestAppWithoutTasks(t *testing.T) {
 func TestVarInInclude(t *testing.T) {
 	initTest(t)
 
-	gittest.CreateRepository(t, testdataDir)
-
 	err := os.Chdir(filepath.Join(testdataDir, "var_in_include"))
 	require.NoError(t, err)
-
-	gittest.CommitFilesToGit(t, testdataDir)
 
 	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
 	require.NoError(t, err)

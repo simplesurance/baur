@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/simplesurance/baur/v3/internal/command/flag"
-	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,8 +18,6 @@ func TestLsAppsJSON(t *testing.T) {
 	repoDir := filepath.Join(testdataDir, "multitasks")
 	err := os.Chdir(repoDir)
 	require.NoError(t, err)
-
-	gittest.CreateRepository(t, repoDir)
 
 	lsAppsCmd := newLsAppsCmd()
 	lsAppsCmd.format = &flag.Format{Val: flag.FormatJSON}

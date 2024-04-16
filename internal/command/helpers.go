@@ -13,6 +13,7 @@ import (
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/prettyprint"
+	"github.com/simplesurance/baur/v3/internal/vcs"
 	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
@@ -83,8 +84,8 @@ func mustFindRepository() *baur.Repository {
 	return repo
 }
 
-func mustArgToTask(repo *baur.Repository, gitRepo *git.Repository, arg string) *baur.Task {
-	tasks := mustArgToTasks(repo, gitRepo, []string{arg})
+func mustArgToTask(repo *baur.Repository, vcs vcs.StateFetcher, arg string) *baur.Task {
+	tasks := mustArgToTasks(repo, vcs, []string{arg})
 	if len(tasks) > 1 {
 		stderr.Printf("argument %q matches multiple tasks, must match only 1 task\n", arg)
 		exitFunc(1)
@@ -165,20 +166,14 @@ func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
 	return clt
 }
 
-func mustGetRepoState(dir string) *git.Repository {
-	repo, err := git.NewRepositoryWithCheck(dir)
-	if err != nil {
-		if errors.Is(err, git.ErrRepositoryNotFound) {
-			fatalf("git repository not found, the baur repository (%s) must be part of a git repository", dir)
-		}
+func mustGetRepoState(dir string) vcs.StateFetcher {
+	s, err := vcs.GetState(dir, log.Debugf)
+	exitOnErr(err, "failed to evaluate if baur repository is in a VCS repository")
 
-		exitOnErr(err)
-	}
-
-	return repo
+	return s
 }
 
-func mustArgToTasks(repo *baur.Repository, vcs *git.Repository, args []string) []*baur.Task {
+func mustArgToTasks(repo *baur.Repository, vcs vcs.StateFetcher, args []string) []*baur.Task {
 	appLoader, err := baur.NewLoader(repo.Cfg, vcs.CommitID, log.StdLogger)
 	exitOnErr(err)
 
@@ -283,16 +278,16 @@ func subStr(input string, start int, length int) string {
 	return string(asRunes[start : start+length])
 }
 
-func mustUntrackedFilesNotExist(requireCleanGitWorktree bool, gitRepo *git.Repository) {
+func mustUntrackedFilesNotExist(requireCleanGitWorktree bool, vcsState vcs.StateFetcher) {
 	if !requireCleanGitWorktree {
 		return
 	}
 
-	if gitRepo.Name() != git.Name {
+	if vcsState.Name() != git.Name {
 		fatalf("--%s was specified but baur repository is not a git repository", flagNameRequireCleanGitWorktree)
 	}
 
-	untracked, err := gitRepo.UntrackedFiles()
+	untracked, err := vcsState.UntrackedFiles()
 	exitOnErr(err)
 	if len(untracked) != 0 {
 		fatal(untrackedFilesExistErrMsg(untracked))

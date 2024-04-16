@@ -18,6 +18,7 @@ import (
 	"github.com/simplesurance/baur/v3/internal/upload/docker"
 	"github.com/simplesurance/baur/v3/internal/upload/filecopy"
 	"github.com/simplesurance/baur/v3/internal/upload/s3"
+	"github.com/simplesurance/baur/v3/internal/vcs"
 	"github.com/simplesurance/baur/v3/internal/vcs/git"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -95,7 +96,7 @@ type runCmd struct {
 	repoRootPath string
 	dockerClient *docker.Client
 	uploader     *baur.Uploader
-	gitRepo      *git.Repository
+	vcsState     vcs.StateFetcher
 
 	uploadRoutinePool     *routines.Pool
 	taskRunnerRoutinePool *routines.Pool
@@ -151,9 +152,9 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	repo := mustFindRepository()
 	c.repoRootPath = repo.Path
 
-	c.gitRepo = mustGetRepoState(repo.Path)
+	c.vcsState = mustGetRepoState(repo.Path)
 
-	mustUntrackedFilesNotExist(c.requireCleanGitWorktree, c.gitRepo)
+	mustUntrackedFilesNotExist(c.requireCleanGitWorktree, c.vcsState)
 
 	c.storage = mustNewCompatibleStorage(repo)
 	defer c.storage.Close()
@@ -183,7 +184,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 		stdout.Printf("--skip-upload was passed, outputs won't be uploaded and task runs not recorded\n\n")
 	}
 
-	loader, err := baur.NewLoader(repo.Cfg, c.gitRepo.CommitID, log.StdLogger)
+	loader, err := baur.NewLoader(repo.Cfg, c.vcsState.CommitID, log.StdLogger)
 	exitOnErr(err)
 
 	tasks, err := loader.LoadTasks(args...)
@@ -383,7 +384,7 @@ func (c *runCmd) uploadAndRecord(
 		}
 	}
 
-	id, err := baur.StoreRun(ctx, c.storage, c.gitRepo, task, inputs, runResult, uploadResults)
+	id, err := baur.StoreRun(ctx, c.storage, c.vcsState, task, inputs, runResult, uploadResults)
 	if err != nil {
 		stderr.Printf("%s: recording build result in database %s, %s\n",
 			term.Highlight(task),
