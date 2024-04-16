@@ -4,6 +4,8 @@ import (
 	"errors"
 	"path/filepath"
 	"sync"
+
+	"github.com/simplesurance/baur/v3/internal/set"
 )
 
 const Name = "git"
@@ -19,7 +21,7 @@ type Repository struct {
 	lock            sync.Mutex
 	commitID        *string
 	worktreeIsDirty *bool
-	untrackedFiles  map[string]struct{}
+	untrackedFiles  set.Set[string]
 }
 
 // NewRepositoryWithCheck returns a new Repository object for the git repository at dir.
@@ -109,7 +111,7 @@ func (g *Repository) WithoutUntracked(paths ...string) ([]string, error) {
 			relPath = p
 		}
 
-		if _, isUntracked := g.untrackedFiles[relPath]; isUntracked {
+		if g.untrackedFiles.Contains(relPath) {
 			continue
 		}
 
@@ -128,13 +130,7 @@ func (g *Repository) initUntrackedFiles() error {
 		if err != nil {
 			return err
 		}
-
-		m := make(map[string]struct{}, len(files))
-
-		for _, p := range files {
-			m[p] = struct{}{}
-		}
-		g.untrackedFiles = m
+		g.untrackedFiles = set.From(files)
 	}
 
 	return nil

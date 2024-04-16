@@ -5,6 +5,8 @@ import (
 	"errors"
 	"path/filepath"
 	"sync"
+
+	"github.com/simplesurance/baur/v3/internal/set"
 )
 
 var ErrObjectNotFound = errors.New("git object id not found, file might not exist, untracked or modified")
@@ -61,7 +63,7 @@ func (h *TrackedObjects) createDb(ch <-chan *Object, finishedCh chan struct{}) {
 	const objectTypeFileOrSymlink = ObjectTypeFile | ObjectTypeSymlink
 
 	m := map[string]*TrackedObject{}
-	outdated := map[string]struct{}{}
+	outdated := set.Set[string]{}
 
 	defer close(finishedCh)
 
@@ -72,7 +74,7 @@ func (h *TrackedObjects) createDb(ch <-chan *Object, finishedCh chan struct{}) {
 
 		absPath := filepath.Join(h.repositoryDir, obj.RelPath)
 		if obj.Status == ObjectStatusCached {
-			if _, exists := outdated[absPath]; exists {
+			if outdated.Contains(absPath) {
 				continue
 			}
 			m[absPath] = &TrackedObject{
@@ -83,7 +85,7 @@ func (h *TrackedObjects) createDb(ch <-chan *Object, finishedCh chan struct{}) {
 			continue
 		}
 
-		outdated[absPath] = struct{}{}
+		outdated.Add(absPath)
 		delete(m, absPath)
 	}
 
