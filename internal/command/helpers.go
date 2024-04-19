@@ -158,6 +158,12 @@ func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
 	exitOnErr(err, "creating postgresql storage client failed")
 
 	if err := clt.IsCompatible(ctx); err != nil {
+		if errors.Is(err, storage.ErrNotExist) {
+			fatal("baur postgresql database not found\n" +
+				" - ensure that the postgresql URL is correct,\n" +
+				" - run 'baur init db' to create the database and schema")
+
+		}
 		clt.Close()
 		exitOnErr(err)
 	}
