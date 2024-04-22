@@ -217,7 +217,7 @@ func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storag
 	return ids, nil
 }
 
-func insertInputStringFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputString) ([]int, error) {
+func insertInputStringsIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputString) ([]int, error) {
 	const stmt1 = `
            INSERT INTO input_string (string, digest)
 	   VALUES
@@ -265,7 +265,7 @@ func insertTaskRunInputStringsIfNotExist(ctx context.Context, db dbConn, taskRun
 		return nil
 	}
 
-	inputStringIDs, err := insertInputStringFilesIfNotExist(ctx, db, inputStrings)
+	inputStringIDs, err := insertInputStringsIfNotExist(ctx, db, inputStrings)
 	if err != nil {
 		return err
 	}
