@@ -286,7 +286,7 @@ func TestEnvVarInput_Required(t *testing.T) {
 			stdout, _ = interceptCmdOutput(t)
 			statusCmd := newStatusCmd()
 			statusCmd.SetArgs([]string{
-				"--csv", "-f", "run-id", fmt.Sprintf("%s.%s", appName, taskName)},
+				"--csv", "-q", "-f", "run-id", fmt.Sprintf("%s.%s", appName, taskName)},
 			)
 			require.NoError(t, statusCmd.Execute())
 			runID := strings.TrimSpace(stdout.String())

@@ -379,6 +379,7 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	stdoutBuf, _ := interceptCmdOutput(t)
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.csv = true
+	diffInputsCmd.quiet = true
 	diffInputsCmd.SetArgs([]string{fmt.Sprintf("%s^^", appOneWithBuildTask), fmt.Sprintf("%s^", appOneWithBuildTask)})
 	execCmd(t, diffInputsCmd, -1)
 
@@ -405,6 +406,7 @@ func TestInputStringsAreAppliedToFirstArg(t *testing.T) {
 	stdoutBuf, _ := interceptCmdOutput(t)
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.csv = true
+	diffInputsCmd.quiet = true
 	diffInputsCmd.inputStr = []string{"hello"}
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appTwoWithBuildTask})
 	execCmd(t, diffInputsCmd, 2)

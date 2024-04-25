@@ -95,7 +95,8 @@ func newDiffInputsCmd() *diffInputsCmd {
 		"show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"do not list the inputs that differ")
+		"In plain format, listing the inputs that differ is suppressed.\n"+
+			"In CSV format the headers are suppressed.")
 
 	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
 		"include a string as input of the task or run specified by the first argument,\n"+
@@ -338,23 +339,27 @@ func getTaskRunByID(psql storage.Storer, id int) *storage.TaskRunWithID {
 }
 
 func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
+	var formatter Formatter
+	var headers []string
+
 	if !c.quiet {
-		var formatter Formatter
+		headers = []string{"State", "Path", "Digest1", "Digest2"}
+	}
 
-		if c.csv {
-			formatter = csv.New(nil, stdout)
-		} else {
-			headers := []string{"State", "Path", "Digest1", "Digest2"}
-			formatter = table.New(headers, stdout)
-		}
+	if c.csv {
+		formatter = csv.New(headers, stdout)
+	} else {
+		formatter = table.New(headers, stdout)
+	}
 
+	if c.csv || !c.quiet {
 		for _, diff := range diffs {
 			mustWriteRow(formatter, diff.State, diff.Path, diff.Digest1, diff.Digest2)
 		}
-
-		err := formatter.Flush()
-		exitOnErr(err)
 	}
+
+	err := formatter.Flush()
+	exitOnErr(err)
 
 	if c.csv {
 		return

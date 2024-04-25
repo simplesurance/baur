@@ -139,7 +139,7 @@ func (c *lsOutputsCmd) createHeader() []string {
 		}
 	}
 
-	if c.format.Val == flag.FormatCSV || c.quiet {
+	if c.quiet {
 		return nil
 	}
 

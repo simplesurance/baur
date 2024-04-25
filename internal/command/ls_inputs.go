@@ -104,7 +104,7 @@ func (c *lsInputsCmd) mustGetTaskInputs(taskSpec string) *baur.Inputs {
 func (c *lsInputsCmd) mustPrintTaskInputs(inputs *baur.Inputs) {
 	var formatter Formatter
 	var headers []string
-	writeHeaders := !c.quiet && !c.csv
+	writeHeaders := !c.quiet
 
 	if writeHeaders {
 		headers = []string{"Input"}
