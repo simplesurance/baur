@@ -10,3 +10,7 @@ CREATE TABLE task_run_task_input (
 	input_task_id integer NOT NULL REFERENCES input_task(id) ON DELETE CASCADE,
 	CONSTRAINT task_run_task_input_task_run_id_input_task_id_uniq UNIQUE (task_run_id, input_task_id)
 );
+
+DROP INDEX task_run_file_input_task_run_id_idx;
+DROP INDEX idx_task_run_string_input;
+DROP INDEX idx_task_run_output_task_run_id;
