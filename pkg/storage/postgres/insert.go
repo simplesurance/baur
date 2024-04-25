@@ -332,7 +332,7 @@ func insertTaskRunInputStringsIfNotExist(ctx context.Context, db dbConn, taskRun
 		}
 	}
 
-	queryArgs := make([]any, 1, (len(inputStringIDs)*2)+2)
+	queryArgs := make([]any, 1, (len(inputStringIDs)*2)+1)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputStringIDs {
@@ -375,7 +375,7 @@ func insertTaskRunInputFilesIfNotExist(ctx context.Context, db dbConn, taskRunID
 		}
 	}
 
-	queryArgs := make([]any, 1, (len(inputIDs)*2)+2)
+	queryArgs := make([]any, 1, len(inputIDs)+1)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputIDs {
@@ -517,7 +517,7 @@ func insertTaskRunInputEnvVarsIfNotExist(ctx context.Context, db dbConn, taskRun
 		}
 	}
 
-	queryArgs := make([]any, 1, (len(inputIDs)*2)+2)
+	queryArgs := make([]any, 1, len(inputIDs)+1)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputIDs {
