@@ -129,7 +129,7 @@ func (c *statusCmd) statusCreateHeader() []string {
 		return c.jsonFieldNames()
 	}
 
-	if c.format.Val == flag.FormatCSV || c.quiet {
+	if c.quiet {
 		return nil
 	}
 

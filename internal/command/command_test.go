@@ -76,6 +76,7 @@ func baurCSVStatusCmd(t *testing.T, cmd *statusCmd) []*csvStatus {
 	stdoutBuf, _ := interceptCmdOutput(t)
 
 	cmd.format = &flag.Format{Val: flag.FormatCSV}
+	cmd.quiet = true
 	err := cmd.Execute()
 	require.NoError(t, err)
 
@@ -102,6 +103,7 @@ func baurCSVStatus(t *testing.T, inputStr []string, lookupInputStr string) []*cs
 
 	statusCmd := newStatusCmd()
 	statusCmd.csv = true
+	statusCmd.quiet = true
 	statusCmd.inputStr = inputStr
 	statusCmd.lookupInputStr = lookupInputStr
 

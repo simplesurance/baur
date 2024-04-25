@@ -57,6 +57,7 @@ func TestUpgrade(t *testing.T) {
 	stdoutBuf.Truncate(0)
 	statusCmd := newStatusCmd()
 	statusCmd.format = &flag.Format{Val: flag.FormatCSV}
+	statusCmd.quiet = true
 	statusCmd.fields = &flag.Fields{Fields: []string{statusTaskIDParam}}
 	statusCmd.Run(&statusCmd.Command, nil)
 

@@ -145,7 +145,7 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 		formatter = table.New(nil, stdout)
 	}
 
-	if !c.csv && !c.quiet {
+	if !c.quiet {
 		printHeader(formatter)
 	}
 
