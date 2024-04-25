@@ -81,7 +81,7 @@ func newLsRunsCmd() *lsRunsCmd {
 		"List runs in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Only print task run IDs")
+		"Suppress printing a header")
 
 	cmd.Flags().VarP(cmd.sort, "sort", "s",
 		cmd.sort.Usage(term.Highlight))

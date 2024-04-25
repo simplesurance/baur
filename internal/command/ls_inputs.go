@@ -43,7 +43,7 @@ func newLsInputsCmd() *lsInputsCmd {
 		"show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"only show filepaths")
+		"Suppress printing headers and the total input digest")
 
 	cmd.Flags().BoolVar(&cmd.showDigest, "digests", false,
 		"show digests")
@@ -121,7 +121,7 @@ func (c *lsInputsCmd) mustPrintTaskInputs(inputs *baur.Inputs) {
 	}
 
 	for _, input := range inputs.Inputs() {
-		if !c.showDigest || c.quiet {
+		if !c.showDigest {
 			mustWriteRow(formatter, input)
 			continue
 		}
