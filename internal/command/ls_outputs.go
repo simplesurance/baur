@@ -45,7 +45,7 @@ func newLsOutputsCmd() *lsOutputsCmd {
 	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Only show URIs")
+		"Only show the URIs of the outputs in plain and csv format")
 
 	cmd.PreRun = func(*cobra.Command, []string) {
 		if cmd.csv {
