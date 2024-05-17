@@ -4,6 +4,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 )
 
@@ -144,4 +145,9 @@ type Storer interface {
 	// the method returns ErrNotExist.
 	Inputs(ctx context.Context, taskRunID int) (*Inputs, error)
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
+
+	// CreateRelease creates a new release called releaseName, that consists of the the passed task runs.
+	// Metadata is arbitrary data stored together with the release, it is
+	// optional and can be nil.
+	CreateRelease(_ context.Context, releaseName string, taskRunIDs []int, metadata io.Reader) error
 }

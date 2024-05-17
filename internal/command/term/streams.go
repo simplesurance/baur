@@ -68,6 +68,11 @@ func (s *Stream) PrintErrln(msg ...any) {
 	s.Println(ErrorPrefix, fmt.Sprint(msg...))
 }
 
+// PrintErrf prints as message that is prefixed with "ERROR: "
+func (s *Stream) PrintErrf(format string, a ...any) {
+	s.Println(ErrorPrefix, fmt.Sprintf(format, a...))
+}
+
 // PrintSep prints a separator line
 func (s *Stream) PrintSep() {
 	fmt.Fprintln(s.stream, separator)

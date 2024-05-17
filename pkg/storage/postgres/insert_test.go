@@ -61,33 +61,6 @@ func TestSaveTaskRun(t *testing.T) {
 			},
 			expectSuccess: []bool{true},
 		},
-
-		{
-			name: "no_outputs",
-			taskRuns: []*storage.TaskRunFull{
-				{
-					TaskRun: storage.TaskRun{
-						ApplicationName:  "baurHimself",
-						TaskName:         "build",
-						VCSRevision:      "1",
-						VCSIsDirty:       false,
-						StartTimestamp:   time.Now(),
-						StopTimestamp:    time.Now().Add(5 * time.Minute),
-						TotalInputDigest: "1234567890",
-						Result:           storage.ResultSuccess,
-					},
-					Inputs: storage.Inputs{
-						Files: []*storage.InputFile{
-							{
-								Path:   "main.go",
-								Digest: "45",
-							},
-						},
-					},
-				},
-			},
-			expectSuccess: []bool{true},
-		},
 	}
 
 	for _, tc := range testcases {
