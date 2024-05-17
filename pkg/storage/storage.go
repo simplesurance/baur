@@ -4,6 +4,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 )
 
@@ -100,6 +101,12 @@ type TaskRunWithID struct {
 	TaskRun
 }
 
+type Release struct {
+	Name       string
+	TaskRunIDs []int
+	Metadata   io.Reader
+}
+
 const (
 	NoLimit uint = 0
 )
@@ -144,4 +151,6 @@ type Storer interface {
 	// the method returns ErrNotExist.
 	Inputs(ctx context.Context, taskRunID int) (*Inputs, error)
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
+
+	CreateRelease(context.Context, *Release) error
 }

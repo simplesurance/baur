@@ -3,11 +3,14 @@ package postgres
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"sort"
 	"strings"
 
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 
 	"github.com/simplesurance/baur/v3/pkg/storage"
@@ -61,6 +64,29 @@ func queryValueStr(pairsCount, argsPerPair int) string {
 		}
 
 		res.WriteRune(')')
+
+		if i < pairsCount-1 {
+			res.WriteString(", ")
+		}
+	}
+
+	return res.String()
+}
+
+// queryValuePairFirstConstStr returns the argument for an SQL VALUES statement
+// It creates pairsCount "($1, $n), ($1, $n+1), ($1 $n+...)" string pairs.
+// The first argument is constant and refers the first query argument.
+func queryValuePairFirstConstStr(pairsCount int) string {
+	var res strings.Builder
+
+	// not exact, does not take number of digits required for pairsCount
+	// into account
+	res.Grow((6 * pairsCount) + 2*pairsCount)
+
+	argNr := 2
+	for i := 0; i < pairsCount; i++ {
+		fmt.Fprintf(&res, "($1, $%d)", argNr)
+		argNr++
 
 		if i < pairsCount-1 {
 			res.WriteString(", ")
@@ -321,25 +347,16 @@ func insertTaskRunInputStringsIfNotExist(ctx context.Context, db dbConn, taskRun
 		return err
 	}
 
-	var stmtVals strings.Builder
-	argNr := 2
-	for i := 0; i < len(inputStringIDs); i++ {
-		fmt.Fprintf(&stmtVals, "($1, $%d)", argNr)
-		argNr++
+	stmtVals := queryValuePairFirstConstStr(len(inputStringIDs))
+	query := stmt1 + stmtVals
 
-		if i < len(inputStringIDs)-1 {
-			stmtVals.WriteString(", ")
-		}
-	}
-
+	// FIXME: *2 is wrong here
 	queryArgs := make([]any, 1, (len(inputStringIDs)*2)+1)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputStringIDs {
 		queryArgs = append(queryArgs, inputID)
 	}
-
-	query := stmt1 + stmtVals.String()
 
 	_, err = db.Exec(ctx, query, queryArgs...)
 	if err != nil {
@@ -717,4 +734,78 @@ func (c *Client) SaveTaskRun(ctx context.Context, taskRun *storage.TaskRunFull) 
 		id, err = c.saveTaskRun(ctx, tx, taskRun)
 		return err
 	})
+}
+
+func (c *Client) CreateRelease(ctx context.Context, release *storage.Release) error {
+	return c.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+		releaseID, err := c.insertRelease(ctx, tx, release.Name, release.Metadata)
+		if err != nil {
+			return err
+		}
+
+		return c.insertReleaseTaskRun(ctx, tx, releaseID, release.TaskRunIDs)
+	})
+}
+
+func (*Client) insertRelease(ctx context.Context, tx pgx.Tx, name string, metadata io.Reader) (int, error) {
+	const query = `
+		INSERT INTO release (name, user_data)
+	        VALUES($1, $2)
+	     RETURNING id
+	`
+
+	var data []byte
+	var err error
+	var releaseID int
+
+	if metadata != nil {
+		data, err = io.ReadAll(metadata)
+		if err != nil {
+			return -1, fmt.Errorf("reading metadata failed: %w", err)
+		}
+	}
+
+	err = tx.QueryRow(ctx, query, name, data).Scan(&releaseID)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" && pgErr.ConstraintName == "release_name_uniq" {
+				return -1, storage.ErrExists
+			}
+		}
+
+		if metadata == nil {
+			return -1, newQueryError(query, err, name)
+		}
+
+		return -1, newQueryError(query, err, []any{name, "<RELEASE-METADATA-NOT-SHOWN>"}...)
+	}
+
+	return releaseID, nil
+}
+
+func (*Client) insertReleaseTaskRun(ctx context.Context, tx pgx.Tx, releaseID int, taskRunIDs []int) error {
+	const stmt1 = `
+		INSERT INTO release_task_run (release_id, task_run_id)
+		VALUES`
+
+	if len(taskRunIDs) == 0 {
+		return errors.New("postgres: insertReleaseTaskRun: taskRunIDs is empty")
+	}
+
+	stmtVals := queryValuePairFirstConstStr(len(taskRunIDs))
+
+	queryArgs := make([]any, 1, len(taskRunIDs)+1)
+	queryArgs[0] = releaseID
+	for _, inputID := range taskRunIDs {
+		queryArgs = append(queryArgs, inputID)
+	}
+
+	query := stmt1 + stmtVals
+	_, err := tx.Exec(ctx, query, queryArgs...)
+	if err != nil {
+		return newQueryError(query, err, queryArgs...)
+	}
+
+	return nil
 }

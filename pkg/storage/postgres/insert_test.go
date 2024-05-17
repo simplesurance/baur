@@ -4,6 +4,8 @@
 package postgres
 
 import (
+	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -61,33 +63,6 @@ func TestSaveTaskRun(t *testing.T) {
 			},
 			expectSuccess: []bool{true},
 		},
-
-		{
-			name: "no_outputs",
-			taskRuns: []*storage.TaskRunFull{
-				{
-					TaskRun: storage.TaskRun{
-						ApplicationName:  "baurHimself",
-						TaskName:         "build",
-						VCSRevision:      "1",
-						VCSIsDirty:       false,
-						StartTimestamp:   time.Now(),
-						StopTimestamp:    time.Now().Add(5 * time.Minute),
-						TotalInputDigest: "1234567890",
-						Result:           storage.ResultSuccess,
-					},
-					Inputs: storage.Inputs{
-						Files: []*storage.InputFile{
-							{
-								Path:   "main.go",
-								Digest: "45",
-							},
-						},
-					},
-				},
-			},
-			expectSuccess: []bool{true},
-		},
 	}
 
 	for _, tc := range testcases {
@@ -118,4 +93,64 @@ func TestSaveTaskRun(t *testing.T) {
 			}
 		})
 	}
+}
+
+func newTaskRunWithoutOutputs() *storage.TaskRunFull {
+	return &storage.TaskRunFull{
+		TaskRun: storage.TaskRun{
+			ApplicationName:  "baurHimself",
+			TaskName:         "build",
+			VCSRevision:      "1",
+			VCSIsDirty:       false,
+			StartTimestamp:   time.Now(),
+			StopTimestamp:    time.Now().Add(5 * time.Minute),
+			TotalInputDigest: "1234567890",
+			Result:           storage.ResultSuccess,
+		},
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
+			},
+		},
+	}
+}
+
+func TestCreateReleaseReturnExistsErr(t *testing.T) {
+	ctx := context.Background()
+	client, cleanupFn := newTestClient(t)
+	defer cleanupFn()
+
+	require.NoError(t, client.Init(ctx))
+
+	runID, err := client.SaveTaskRun(ctx, newTaskRunWithoutOutputs())
+	require.NoError(t, err)
+
+	release := storage.Release{Name: "1", TaskRunIDs: []int{runID}}
+
+	err = client.CreateRelease(ctx, &release)
+	require.NoError(t, err)
+
+	err = client.CreateRelease(ctx, &release)
+	require.ErrorIs(t, err, storage.ErrExists)
+}
+
+func TestCreateReleaseUserData(t *testing.T) {
+	client, cleanupFn := newTestClient(t)
+	defer cleanupFn()
+
+	require.NoError(t, client.Init(ctx))
+
+	runID, err := client.SaveTaskRun(ctx, newTaskRunWithoutOutputs())
+	require.NoError(t, err)
+
+	data := ` DATA€€¹³¹²æſ¢„ĸłʒ³\²😊æſðł¢„ł„¢łðđ	`
+
+	err = client.CreateRelease(
+		context.Background(),
+		&storage.Release{Name: "1", Metadata: strings.NewReader(data), TaskRunIDs: []int{runID}},
+	)
+	require.NoError(t, err)
 }
