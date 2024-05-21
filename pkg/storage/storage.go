@@ -168,4 +168,8 @@ type Storer interface {
 	// [ReleaseTaskRunsResult.UploadMethod] fields are unset.
 	// If the release does not exist, ErrNotExist is returned.
 	ReleaseTaskRuns(ctx context.Context, releaseName string) ([]*ReleaseTaskRunsResult, error)
+	// ReleaseMetadata returns the metadata of a release.
+	// If the release does not exist ErrNotExist is returned.
+	// If the release has no metadata the returned []byte  is empty.
+	ReleaseMetadata(ctx context.Context, releaseName string) ([]byte, error)
 }
