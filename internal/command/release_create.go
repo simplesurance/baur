@@ -15,20 +15,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	exitCodeAlreadyExist     = 2
-	exitCodeTaskRunIsPending = 3
-)
+const releaseCreateExample = `
+baur release create stable		      create a release named 'stable',
+					      including all tasks
+baur release create --include '*.build' v3    create a release named 'v3',
+					      including only tasks called
+					      'build'`
 
-const createReleaseExample = `
-baur create release stable		      create a release named 'stable',
-					      including the state of all tasks
-					      in the repository
-baur create release --include '*.build' v3    create a release named 'v3',
-					      including only all tasks called
-					      build' `
-
-var createReleaseLongHelp = fmt.Sprintf(`
+var releaseCreateLongHelp = fmt.Sprintf(`
 Creates a named snapshot of the status of tasks.
 The snapshot includes information about the tasks and all their outputs.
 
@@ -48,36 +42,36 @@ Exit Codes:
 	term.Highlight("baur run --help"),
 	exitCodeAlreadyExist, exitCodeTaskRunIsPending)
 
-type createReleaseCmd struct {
+type releaseCreateCmd struct {
 	cobra.Command
 	requireCleanGitWorktree bool
 
 	metadataFile string
-	targets      []string
+	includes     []string
 }
 
 func init() {
-	createCmd.AddCommand(&newCreateReleaseCmd().Command)
+	releaseCMd.AddCommand(&newReleaseCreateCmd().Command)
 }
 
-func newCreateReleaseCmd() *createReleaseCmd {
-	cmd := createReleaseCmd{
+func newReleaseCreateCmd() *releaseCreateCmd {
+	cmd := releaseCreateCmd{
 		Command: cobra.Command{
-			Use:               "release NAME",
+			Use:               "create NAME",
 			Short:             "create a release",
-			Long:              strings.TrimSpace(createReleaseLongHelp),
+			Long:              strings.TrimSpace(releaseCreateLongHelp),
 			Args:              cobra.ExactArgs(1),
-			Example:           strings.TrimSpace(createReleaseExample),
-			ValidArgsFunction: nil, // TODO: implement completion
+			Example:           strings.TrimSpace(releaseCreateExample),
+			ValidArgsFunction: nil, // FIXME: implement completion
 		},
 	}
 
 	cmd.Flags().BoolVarP(&cmd.requireCleanGitWorktree, flagNameRequireCleanGitWorktree, "c", false,
 		"fail if the git repository contains modified or untracked files")
-	cmd.Flags().StringVarP(&cmd.metadataFile, "file", "f", "",
-		"path to a file containing additional data that is stored with the release.",
+	cmd.Flags().StringVarP(&cmd.metadataFile, "metadata", "m", "",
+		"path to a file containing additional data that is stored with the release",
 	)
-	cmd.Flags().StringSliceVar(&cmd.targets, "include", []string{"*"},
+	cmd.Flags().StringSliceVar(&cmd.includes, "include", nil,
 		"tasks to include in the release, by default all are included,\n"+
 			"supports the same TARGET syntax then 'baur run'")
 
@@ -86,7 +80,7 @@ func newCreateReleaseCmd() *createReleaseCmd {
 	return &cmd
 }
 
-func (c *createReleaseCmd) run(cmd *cobra.Command, args []string) {
+func (c *releaseCreateCmd) run(cmd *cobra.Command, args []string) {
 	ctx := cmd.Context()
 	releaseName := args[0]
 
@@ -105,10 +99,17 @@ func (c *createReleaseCmd) run(cmd *cobra.Command, args []string) {
 	exitOnErr(err)
 
 	stdout.Println("loading application configs...")
-	tasks, err := loader.LoadTasks(args[1:]...)
+	tasks, err := loader.LoadTasks(c.includes...)
 	exitOnErr(err)
 
-	storageClt := mustNewCompatibleStorage(repo)
+	if len(tasks) == 0 {
+		if len(c.includes) != 0 {
+			fatalf("could not find any tasks matching %s", strings.Join(c.includes, ","))
+		}
+		fatalf("could not find any tasks in the baur repository")
+	}
+
+	storageClt := mustNewCompatibleStorageRepo(repo)
 	runIDs := c.fetchTaskIDs(ctx, repo, storageClt, tasks)
 
 	release := storage.Release{Name: releaseName, TaskRunIDs: runIDs}
@@ -137,7 +138,7 @@ func (c *createReleaseCmd) run(cmd *cobra.Command, args []string) {
 
 }
 
-func (c *createReleaseCmd) fetchTaskIDs(
+func (c *releaseCreateCmd) fetchTaskIDs(
 	ctx context.Context,
 	repo *baur.Repository,
 	storageClt storage.Storer,
