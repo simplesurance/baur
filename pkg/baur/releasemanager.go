@@ -202,3 +202,59 @@ func validateWantedTaskIDsHaveOutputs(
 
 	return errors.New(errStr)
 }
+
+func (m *ReleaseManager) GetRelease(ctx context.Context, name string) (*Release, error) {
+	metadata, err := m.storage.ReleaseMetadata(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	taskRuns, err := m.storage.ReleaseTaskRuns(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	result := releaseFromStorage(taskRuns)
+	result.ReleaseName = name
+	result.Metadata = metadata
+
+	return result, nil
+}
+
+func releaseFromStorage(taskRuns []*storage.ReleaseTaskRunsResult) *Release {
+	result := Release{Applications: map[string]*ReleaseApp{}}
+
+	for _, tr := range taskRuns {
+		app, exists := result.Applications[tr.AppName]
+		if !exists {
+			app = &ReleaseApp{TaskRuns: map[string]*ReleaseTaskRun{}}
+			result.Applications[tr.AppName] = app
+		}
+
+		taskRun, exists := app.TaskRuns[tr.TaskName]
+		if !exists {
+			taskRun = &ReleaseTaskRun{
+				RunID:   tr.RunID,
+				Outputs: map[int]*ReleaseOutput{},
+			}
+			app.TaskRuns[tr.TaskName] = taskRun
+		}
+
+		if tr.URI == "" {
+			// no output exists, tr.OutputID will have the default value(0)
+			continue
+		}
+
+		output, exist := taskRun.Outputs[tr.OutputID]
+		if !exist {
+			output = &ReleaseOutput{}
+			taskRun.Outputs[tr.OutputID] = output
+		}
+		output.Uploads = append(output.Uploads, &ReleaseUpload{
+			UploadMethod: string(tr.UploadMethod),
+			URI:          tr.URI,
+		})
+	}
+
+	return &result
+}

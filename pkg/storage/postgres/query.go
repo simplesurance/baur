@@ -552,3 +552,22 @@ func (c *Client) ReleaseTaskRuns(ctx context.Context, releaseName string) ([]*st
 
 	return result, nil
 }
+
+func (c *Client) ReleaseMetadata(ctx context.Context, releaseName string) ([]byte, error) {
+	const query = `
+	SELECT metadata
+	  FROM release
+	 WHERE release.name = $1
+	 `
+	var metadata []byte
+
+	err := c.db.QueryRow(ctx, query, releaseName).Scan(&metadata)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, storage.ErrNotExist
+		}
+		return nil, newQueryError(query, err, releaseName)
+	}
+
+	return metadata, nil
+}
