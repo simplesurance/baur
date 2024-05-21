@@ -111,13 +111,8 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 func newStorageClient(psqlURI string) (storage.Storer, error) {
 	uri := psqlURI
 
-	if envURI := os.Getenv(envVarPSQLURL); len(envURI) != 0 {
-		log.Debugf("using postgresql connection URL from $%s environment variable",
-			envVarPSQLURL)
-
+	if envURI := getPSQLURIEnv(); envURI != "" {
 		uri = envURI
-	} else {
-		log.Debugf("environment variable $%s not set", envVarPSQLURL)
 	}
 
 	var logger postgres.Logger
@@ -144,11 +139,23 @@ func mustGetPSQLURI(cfg *cfg.Repository) string {
 }
 
 func getPSQLURI(cfg *cfg.Repository) string {
-	if url := os.Getenv(envVarPSQLURL); url != "" {
-		return url
+	if uri := getPSQLURIEnv(); uri != "" {
+		return uri
 	}
 
 	return cfg.Database.PGSQLURL
+}
+
+func getPSQLURIEnv() string {
+	if envURI := os.Getenv(envVarPSQLURL); len(envURI) != 0 {
+		log.Debugf("using postgresql connection URL from $%s environment variable",
+			envVarPSQLURL)
+
+		return envURI
+	}
+
+	log.Debugf("environment variable $%s not set", envVarPSQLURL)
+	return ""
 }
 
 // mustNewCompatibleStorage initializes a new postgresql storage client.
