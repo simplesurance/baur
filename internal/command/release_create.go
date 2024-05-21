@@ -51,7 +51,7 @@ type releaseCreateCmd struct {
 }
 
 func init() {
-	releaseCMd.AddCommand(&newReleaseCreateCmd().Command)
+	releaseCmd.AddCommand(&newReleaseCreateCmd().Command)
 }
 
 func newReleaseCreateCmd() *releaseCreateCmd {

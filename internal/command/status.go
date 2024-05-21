@@ -198,7 +198,7 @@ func (c *statusCmd) run(_ *cobra.Command, args []string) {
 	storageQueryNeeded := c.storageQueryIsNeeded()
 
 	if storageQueryNeeded {
-		storageClt = mustNewCompatibleStorage(repo)
+		storageClt = mustNewCompatibleStorageRepo(repo)
 		defer storageClt.Close()
 	}
 

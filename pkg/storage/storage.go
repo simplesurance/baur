@@ -104,7 +104,7 @@ type TaskRunWithID struct {
 type Release struct {
 	Name       string
 	TaskRunIDs []int
-	Metadata   io.Reader
+	Metadata   io.ReadSeeker
 }
 
 const (
@@ -153,4 +153,7 @@ type Storer interface {
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
 
 	CreateRelease(context.Context, *Release) error
+	// Release retrieves the with the name releaseName.
+	// If it does not exist, [ErrNotExist] is returned.
+	Release(ctx context.Context, releaseName string) (*Release, error)
 }

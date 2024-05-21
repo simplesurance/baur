@@ -25,6 +25,12 @@ type Formatter interface {
 	Flush() error
 }
 
+var ErrPSQLURIMissing = errors.New(
+	"PostgreSQL connection information is missing.\n" +
+		"- set postgres_url in your repository config or\n" +
+		"- set the $" + envVarPSQLURL + "environment variable",
+)
+
 var targetHelp = fmt.Sprintf(`%s is in the format %s
 Examples:
 - 'shop' matches all tasks of the app named shop
@@ -129,10 +135,7 @@ func newStorageClient(psqlURI string) (storage.Storer, error) {
 func mustGetPSQLURI(cfg *cfg.Repository) string {
 	uri := getPSQLURI(cfg)
 	if uri == "" {
-		stderr.Printf("PostgreSQL connection information is missing.\n"+
-			"- set postgres_url in your repository config or\n"+
-			"- set the $%s environment variable", envVarPSQLURL)
-		exitFunc(1)
+		exitOnErr(ErrPSQLURIMissing)
 	}
 
 	return uri
@@ -158,10 +161,12 @@ func getPSQLURIEnv() string {
 	return ""
 }
 
-// mustNewCompatibleStorage initializes a new postgresql storage client.
-// The function ensures that the storage is compatible.
-func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
-	clt, err := newStorageClient(mustGetPSQLURI(r.Cfg))
+func mustNewCompatibleStorageRepo(r *baur.Repository) storage.Storer {
+	return mustNewCompatibleStorage(mustGetPSQLURI(r.Cfg))
+}
+
+func mustNewCompatibleStorage(uri string) storage.Storer {
+	clt, err := newStorageClient(uri)
 	exitOnErr(err, "creating postgresql storage client failed")
 
 	if err := clt.IsCompatible(ctx); err != nil {

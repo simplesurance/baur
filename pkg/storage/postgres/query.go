@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -464,4 +465,62 @@ func (c *Client) TaskRuns(
 	}
 
 	return nil
+}
+
+func (c *Client) Release(ctx context.Context, releaseName string) (*storage.Release, error) {
+	const query = `
+	SELECT id, user_data
+	  FROM release
+	 WHERE release.name = $1
+	 `
+	var releaseID int
+	var metadata []byte
+
+	err := c.db.QueryRow(ctx, query, releaseName).Scan(&releaseID, &metadata)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, storage.ErrNotExist
+		}
+		return nil, newQueryError(query, err, releaseName)
+	}
+
+	taskRunIDs, err := c.releaseTaskRunIDs(ctx, releaseID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.Release{
+		Name:       releaseName,
+		TaskRunIDs: taskRunIDs,
+		Metadata:   bytes.NewReader(metadata),
+	}, nil
+}
+
+func (c *Client) releaseTaskRunIDs(ctx context.Context, releaseID int) ([]int, error) {
+	const query = `
+	SELECT task_run_id
+	  FROM release_task_run
+	 WHERE release_id = $1
+	  `
+	var result []int
+
+	rows, err := c.db.Query(ctx, query, releaseID)
+	if err != nil {
+		return nil, newQueryError(query, err, releaseID)
+	}
+
+	for rows.Next() {
+		var id int
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, newQueryError(query, err, releaseID)
+		}
+		result = append(result, id)
+	}
+
+	if rows.Err() != nil {
+		return nil, newQueryError(query, err, releaseID)
+	}
+
+	return result, nil
 }

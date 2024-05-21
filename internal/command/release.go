@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var releaseCMd = &cobra.Command{
+var releaseCmd = &cobra.Command{
 	Use:   "release",
-	Short: "manage releases",
+	Short: "create and show releases",
 }
 
 func init() {
-	rootCmd.AddCommand(releaseCMd)
+	rootCmd.AddCommand(releaseCmd)
 }
