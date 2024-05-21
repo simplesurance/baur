@@ -2,21 +2,29 @@ package command
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
+	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/storage"
 )
 
-var upgradeDbLongHelp = `
+var upgradeDbLongHelp = fmt.Sprintf(`
 Upgrade the database schema.
 
 If the database schema is from an older baur version, the schema is updated.
 This changes the database structure and makes the database incompatible with
 older baur version.
-This is not reversible.
-`
+It is not reversible.
+
+The Postgres URL is read from the repository configuration file.
+Alternatively the URL can be passed as argument or
+by setting the '%s' environment variable.`,
+	term.Highlight(envVarPSQLURL))
 
 func init() {
 	upgradeCmd.AddCommand(&newUpgradeDatabaseCmd().Command)
@@ -29,9 +37,10 @@ type upgradeDbCmd struct {
 func newUpgradeDatabaseCmd() *upgradeDbCmd {
 	cmd := upgradeDbCmd{
 		Command: cobra.Command{
-			Use:               "db",
+			Use:               "db [POSTGRES_URL]",
 			Short:             "upgrade the database schema",
-			Long:              upgradeDbLongHelp,
+			Long:              strings.TrimSpace(upgradeDbLongHelp),
+			Args:              cobra.MaximumNArgs(1),
 			ValidArgsFunction: cobra.NoFileCompletions,
 		},
 	}
@@ -41,10 +50,29 @@ func newUpgradeDatabaseCmd() *upgradeDbCmd {
 	return &cmd
 }
 
-func (*upgradeDbCmd) run(_ *cobra.Command, _ []string) {
-	repo := mustFindRepository()
+func (*upgradeDbCmd) run(_ *cobra.Command, args []string) {
+	var dbURL string
 
-	clt, err := newStorageClient(mustGetPSQLURI(repo.Cfg))
+	if len(args) == 1 {
+		dbURL = args[0]
+	} else {
+		repo, err := findRepository()
+		if err != nil {
+			if os.IsNotExist(err) {
+				stderr.Printf("could not find '%s' repository config file.\n"+
+					"Run '%s' first or pass the Postgres URL as argument.\n",
+					term.Highlight(baur.RepositoryCfgFile), term.Highlight(cmdInitRepo))
+				exitFunc(1)
+			}
+
+			stderr.Println(err)
+			exitFunc(1)
+		}
+
+		dbURL = mustGetPSQLURI(repo.Cfg)
+	}
+
+	clt, err := newStorageClient(dbURL)
 	exitOnErr(err, "establishing database connection failed")
 	defer clt.Close()
 
