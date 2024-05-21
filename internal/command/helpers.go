@@ -255,7 +255,7 @@ func fatal(msg ...any) {
 }
 
 func fatalf(format string, v ...any) {
-	stderr.Printf(format, v...)
+	stderr.PrintErrf(format, v...)
 	exitFunc(exitCodeError)
 }
 
