@@ -350,8 +350,7 @@ func insertTaskRunInputStringsIfNotExist(ctx context.Context, db dbConn, taskRun
 	stmtVals := queryValuePairFirstConstStr(len(inputStringIDs))
 	query := stmt1 + stmtVals
 
-	// FIXME: *2 is wrong here
-	queryArgs := make([]any, 1, (len(inputStringIDs)*2)+1)
+	queryArgs := make([]any, 1, len(inputStringIDs)+1)
 	queryArgs[0] = taskRunID
 
 	for _, inputID := range inputStringIDs {
