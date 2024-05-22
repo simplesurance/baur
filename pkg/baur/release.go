@@ -71,6 +71,7 @@ func ReleaseFromStorage(ctx context.Context, clt storage.Storer, releaseName str
 				tr.Outputs = append(tr.Outputs, &ReleaseOutput{URI: upload.URI})
 			}
 		}
+		taskRuns = append(taskRuns, &tr)
 	}
 
 	return &Release{
