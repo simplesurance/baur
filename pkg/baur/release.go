@@ -21,14 +21,15 @@ type Release struct {
 }
 
 type ReleaseTaskRun struct {
-	ID              int
+	RunID           int
 	ApplicationName string
 	TaskName        string
 	Outputs         []*ReleaseOutput
 }
 
 type ReleaseOutput struct {
-	URI string
+	Type string
+	URI  string
 }
 
 // ReleaseFromStorage retrieves information about the release named releaseName
@@ -51,7 +52,7 @@ func ReleaseFromStorage(ctx context.Context, clt storage.Storer, releaseName str
 		}
 
 		tr := ReleaseTaskRun{
-			ID:              storageTr.ID,
+			RunID:           storageTr.ID,
 			ApplicationName: storageTr.ApplicationName,
 			TaskName:        storageTr.TaskName,
 		}
@@ -68,7 +69,13 @@ func ReleaseFromStorage(ctx context.Context, clt storage.Storer, releaseName str
 		for _, output := range outputs {
 			tr.Outputs = make([]*ReleaseOutput, 0, len(output.Uploads))
 			for _, upload := range output.Uploads {
-				tr.Outputs = append(tr.Outputs, &ReleaseOutput{URI: upload.URI})
+				tr.Outputs = append(
+					tr.Outputs,
+					&ReleaseOutput{
+						URI:  upload.URI,
+						Type: string(output.Type),
+					},
+				)
 			}
 		}
 		taskRuns = append(taskRuns, &tr)
