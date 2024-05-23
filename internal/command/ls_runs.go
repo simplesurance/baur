@@ -135,7 +135,7 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 	c.app, c.task = parseSpec(args[0])
 
 	repo := mustFindRepository()
-	psql := mustNewCompatibleStorage(repo)
+	psql := mustNewCompatibleStorageRepo(repo)
 	defer psql.Close()
 
 	var formatter Formatter

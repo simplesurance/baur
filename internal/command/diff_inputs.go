@@ -226,7 +226,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 
 	taskRun := getTaskRun(repo, argDetails)
 
-	psql := mustNewCompatibleStorage(repo)
+	psql := mustNewCompatibleStorageRepo(repo)
 	defer psql.Close()
 
 	storageInputs, err := psql.Inputs(ctx, taskRun.ID)
@@ -236,7 +236,7 @@ func (c *diffInputsCmd) getTaskRunInputs(repo *baur.Repository, argDetails *diff
 }
 
 func getTaskRun(repo *baur.Repository, argDetails *diffInputArgDetails) *storage.TaskRunWithID {
-	psql := mustNewCompatibleStorage(repo)
+	psql := mustNewCompatibleStorageRepo(repo)
 	defer psql.Close()
 
 	if strings.Contains(argDetails.runID, "^") {

@@ -64,7 +64,7 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 	}
 
 	repo := mustFindRepository()
-	pgClient := mustNewCompatibleStorage(repo)
+	pgClient := mustNewCompatibleStorageRepo(repo)
 	defer pgClient.Close()
 
 	_, err = pgClient.TaskRun(ctx, taskRunID)

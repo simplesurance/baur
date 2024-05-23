@@ -465,3 +465,19 @@ func (c *Client) TaskRuns(
 
 	return nil
 }
+
+func (c *Client) ReleaseExists(ctx context.Context, name string) (bool, error) {
+	const query = `
+	SELECT COUNT(id)
+	  FROM release
+	 WHERE name = $1
+	 LIMIT 1
+	 `
+	var count int
+	err := c.db.QueryRow(ctx, query, name).Scan(&count)
+	if err != nil {
+		return false, newQueryError(query, err, name)
+	}
+
+	return count == 1, nil
+}

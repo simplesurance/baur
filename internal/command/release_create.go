@@ -143,7 +143,7 @@ func (c *releaseCreateCmd) run(cmd *cobra.Command, args []string) {
 		fatal("could not find any tasks in the baur repository")
 	}
 
-	storageClt := mustNewCompatibleStorage(repo)
+	storageClt := mustNewCompatibleStorageRepo(repo)
 	runIDs := c.mustFetchTaskIDs(ctx, repo, storageClt, tasks)
 
 	var metadataReader io.Reader

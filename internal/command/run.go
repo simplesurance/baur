@@ -160,7 +160,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 
 	mustUntrackedFilesNotExist(c.requireCleanGitWorktree, c.gitRepo)
 
-	c.storage = mustNewCompatibleStorage(repo)
+	c.storage = mustNewCompatibleStorageRepo(repo)
 	defer c.storage.Close()
 
 	inputResolver := baur.NewInputResolver(

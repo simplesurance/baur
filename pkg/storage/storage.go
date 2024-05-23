@@ -150,4 +150,5 @@ type Storer interface {
 	// Metadata is arbitrary data stored together with the release, it is
 	// optional and can be nil.
 	CreateRelease(_ context.Context, releaseName string, taskRunIDs []int, metadata io.Reader) error
+	ReleaseExists(_ context.Context, name string) (bool, error)
 }
