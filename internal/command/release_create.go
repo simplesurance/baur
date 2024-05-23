@@ -170,7 +170,7 @@ func (c *releaseCreateCmd) fetchTaskIDs(
 	)
 
 	runIDs := make([]int, 0, len(tasks))
-	stdout.Printf("evaluating task statuses")
+	stdout.Println("evaluating task statuses")
 	for _, task := range tasks {
 		status, _, taskRun, err := statusMgr.Status(ctx, task)
 		if err != nil {
@@ -184,7 +184,7 @@ func (c *releaseCreateCmd) fetchTaskIDs(
 			exitFunc(exitCodeTaskRunIsPending)
 		}
 
-		stdout.Printf(".")
+		stdout.Println(".")
 		runIDs = append(runIDs, taskRun.ID)
 
 	}
