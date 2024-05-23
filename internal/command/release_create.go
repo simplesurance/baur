@@ -170,25 +170,25 @@ func (c *releaseCreateCmd) fetchTaskIDs(
 	)
 
 	runIDs := make([]int, 0, len(tasks))
-	stdout.Println("evaluating task statuses")
+	stdout.Printf("evaluating task statuses")
 	for _, task := range tasks {
 		status, _, taskRun, err := statusMgr.Status(ctx, task)
 		if err != nil {
-			stdout.Println("")
+			stdout.Println()
 			exitOnErrf(err, "%s: evaluating task status failed", task)
 		}
 		if status != baur.TaskStatusRunExist {
-			stdout.Println("")
+			stdout.Println()
 			stderr.PrintErrf("%s: task status is %s, expecting %s\n",
 				task.ID, status, baur.TaskStatusRunExist)
 			exitFunc(exitCodeTaskRunIsPending)
 		}
 
-		stdout.Println(".")
+		stdout.Printf(".")
 		runIDs = append(runIDs, taskRun.ID)
 
 	}
-	stdout.Println("")
+	stdout.Println()
 
 	return runIDs
 }
