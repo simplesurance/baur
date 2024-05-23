@@ -17,7 +17,7 @@ type Release struct {
 	// MetadataReader can be read to retrieve the stored Metadata. The
 	// reader is responsible for seeking it to the start before reading.
 	MetadataReader io.ReadSeeker `json:"-"`
-	TaskRuns       []*ReleaseTaskRun
+	TaskRuns       map[string]*ReleaseTaskRun
 }
 
 type ReleaseTaskRun struct {
@@ -42,10 +42,11 @@ func ReleaseFromStorage(ctx context.Context, clt storage.Storer, releaseName str
 		return nil, err
 	}
 
-	taskRuns := make([]*ReleaseTaskRun, 0, len(release.TaskRunIDs))
+	taskRuns := make(map[string]*ReleaseTaskRun, len(release.TaskRunIDs))
 	for _, runID := range release.TaskRunIDs {
-		// TODO: optimize the storage queries to only return the
-		// information that we use here
+		// FIXME: optimize the storage queries to only return the
+		// information that we use here, with less queries
+		// It currently is too slow!
 		storageTr, err := clt.TaskRun(ctx, runID)
 		if err != nil {
 			return nil, err
@@ -58,9 +59,14 @@ func ReleaseFromStorage(ctx context.Context, clt storage.Storer, releaseName str
 		}
 
 		outputs, err := clt.Outputs(ctx, storageTr.ID)
+		// always create the slice, also if outputs is empty, this
+		// ensures that in the JSON representation it is an empty list
+		// instead of null:
+		tr.Outputs = make([]*ReleaseOutput, 0, len(outputs))
+
 		if err != nil {
 			if errors.Is(err, storage.ErrNotExist) {
-				taskRuns = append(taskRuns, &tr)
+				taskRuns[taskID(storageTr.ApplicationName, storageTr.TaskName)] = &tr
 				continue
 			}
 			return nil, err
@@ -78,7 +84,7 @@ func ReleaseFromStorage(ctx context.Context, clt storage.Storer, releaseName str
 				)
 			}
 		}
-		taskRuns = append(taskRuns, &tr)
+		taskRuns[taskID(storageTr.ApplicationName, storageTr.TaskName)] = &tr
 	}
 
 	return &Release{
