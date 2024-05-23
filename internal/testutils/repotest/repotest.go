@@ -222,6 +222,7 @@ func (r *Repo) WriteAdditionalFileContents(t *testing.T, appName, fileName, cont
 }
 
 type Repo struct {
+	Cfg                 *cfg.Repository
 	AppCfgs             []*cfg.App
 	Dir                 string
 	FilecopyArtifactDir string
@@ -338,6 +339,7 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 	t.Logf("changed working directory to baur repository: %q", tempDir)
 
 	return &Repo{
+		Cfg:                 &cfgR,
 		Dir:                 tempDir,
 		FilecopyArtifactDir: artifactDir,
 	}

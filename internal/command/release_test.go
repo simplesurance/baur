@@ -1,24 +1,30 @@
-//go:build dbtest
-// +build dbtest
-
 package command
 
 import (
 	"testing"
 
+	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateRelease(t *testing.T) {
+func TestRelease(t *testing.T) {
 	initTest(t)
 
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 	r.CreateSimpleApp(t)
 	runInitDb(t)
 
-	t.Run("failsWhenTaskRunsArePending", func(t *testing.T) {
+	t.Run("ExistsNonExistingRelease", func(t *testing.T) {
+		initTest(t)
+
+		releaseExistsCmd := newReleaseExistsCmd()
+		releaseExistsCmd.SetArgs([]string{"abc"})
+		execCheck(t, releaseExistsCmd, exitCodeNotExist)
+	})
+
+	t.Run("CreatefailsWhenTaskRunsArePending", func(t *testing.T) {
 		initTest(t)
 		releaseCmd := newReleaseCreateCmd()
 		releaseCmd.SetArgs([]string{"all"})
@@ -32,15 +38,19 @@ func TestCreateRelease(t *testing.T) {
 	// TODO: extend the testcases to verify the data of the created
 	// release, when "release show" was implemented
 
-	t.Run("allTasks", func(t *testing.T) {
+	t.Run("CreateAllTasksAndExistsSucceeds", func(t *testing.T) {
 		initTest(t)
 		releaseCmd := newReleaseCreateCmd()
 
 		releaseCmd.SetArgs([]string{"all"})
 		require.NotPanics(t, func() { require.NoError(t, releaseCmd.Execute()) })
+
+		releaseExistsCmd := newReleaseExistsCmd()
+		releaseExistsCmd.SetArgs([]string{"all"})
+		require.NotPanics(t, func() { require.NoError(t, releaseExistsCmd.Execute()) })
 	})
 
-	t.Run("releaseAlreadyExistsErr", func(t *testing.T) {
+	t.Run("CreateFailsWithAlreadyExists", func(t *testing.T) {
 		initTest(t)
 
 		releaseCmd := newReleaseCreateCmd()
@@ -49,7 +59,7 @@ func TestCreateRelease(t *testing.T) {
 		execCheck(t, releaseCmd, exitCodeAlreadyExist)
 	})
 
-	t.Run("metadataAndMultipleIncludes", func(t *testing.T) {
+	t.Run("CreateWithMetadataAndMultipleIncludes", func(t *testing.T) {
 		initTest(t)
 		releaseCmd := newReleaseCreateCmd()
 
@@ -60,4 +70,15 @@ func TestCreateRelease(t *testing.T) {
 		require.NotPanics(t, func() { require.NoError(t, releaseCmd.Execute()) })
 	})
 
+	t.Run("ExistsWithPsqlURIviaEnv", func(t *testing.T) {
+		initTest(t)
+
+		ostest.Chdir(t, t.TempDir())
+
+		t.Setenv(envVarPSQLURL, r.Cfg.Database.PGSQLURL)
+
+		releaseExistsCmd := newReleaseExistsCmd()
+		releaseExistsCmd.SetArgs([]string{"buildCheck"})
+		require.NotPanics(t, func() { require.NoError(t, releaseExistsCmd.Execute()) })
+	})
 }

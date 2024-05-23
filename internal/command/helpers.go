@@ -25,6 +25,12 @@ type Formatter interface {
 	Flush() error
 }
 
+var ErrPSQLURIMissing = errors.New(
+	"PostgreSQL connection information is missing.\n" +
+		"- set postgres_url in your repository config or\n" +
+		"- set the " + envVarPSQLURL + "environment variable",
+)
+
 var targetHelp = fmt.Sprintf(`%s is in the format %s
 Examples:
 - 'shop' matches all tasks of the app named shop
@@ -111,13 +117,8 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 func newStorageClient(psqlURI string) (storage.Storer, error) {
 	uri := psqlURI
 
-	if envURI := os.Getenv(envVarPSQLURL); len(envURI) != 0 {
-		log.Debugf("using postgresql connection URL from $%s environment variable",
-			envVarPSQLURL)
-
+	if envURI := getPSQLURIEnv(); envURI != "" {
 		uri = envURI
-	} else {
-		log.Debugf("environment variable $%s not set", envVarPSQLURL)
 	}
 
 	var logger postgres.Logger
@@ -129,32 +130,71 @@ func newStorageClient(psqlURI string) (storage.Storer, error) {
 }
 
 // mustGetPSQLURI returns if it's set the URI from the environment variable
-// envVarPSQLURL, otherwise if it's set the psql uri from the repository config,
-// if it's also not empty prints an error and exits.
+// [envVarPSQLURL], otherwise the psql uri from the repository
+// config, if both are empty, an error is printed and the application
+// terminated.
 func mustGetPSQLURI(cfg *cfg.Repository) string {
-	uri := getPSQLURI(cfg)
-	if uri == "" {
-		stderr.Printf("PostgreSQL connection information is missing.\n"+
-			"- set postgres_url in your repository config or\n"+
-			"- set the $%s environment variable", envVarPSQLURL)
-		exitFunc(exitCodeError)
-	}
-
-	return uri
-}
-
-func getPSQLURI(cfg *cfg.Repository) string {
-	if url := os.Getenv(envVarPSQLURL); url != "" {
+	if url := getPSQLURIEnv(); url != "" {
 		return url
 	}
 
-	return cfg.Database.PGSQLURL
+	if cfg.Database.PGSQLURL != "" {
+		return cfg.Database.PGSQLURL
+	}
+
+	stderr.ErrPrintln(ErrPSQLURIMissing)
+	exitFunc(exitCodeError)
+	return ""
 }
 
-// mustNewCompatibleStorage initializes a new postgresql storage client.
-// The function ensures that the storage is compatible.
-func mustNewCompatibleStorage(r *baur.Repository) storage.Storer {
-	clt, err := newStorageClient(mustGetPSQLURI(r.Cfg))
+func getPSQLURIEnv() string {
+	if envURI := os.Getenv(envVarPSQLURL); len(envURI) != 0 {
+		log.Debugf("using postgresql connection URL from $%s environment variable",
+			envVarPSQLURL)
+
+		return envURI
+	}
+
+	log.Debugf("environment variable $%s not set", envVarPSQLURL)
+	return ""
+}
+
+// postgresqlURL returns the value of the environment variable [envVarPSQLURL],
+// if is set.
+// Otherwise it searches for a baur repository and returns the postgresql url
+// from the repository config.
+// If the repository object is needed, use [mustNewCompatibleStorageRepo]
+// instead, to prevent that the repository is discovered + it's config parsed
+// multiple times.
+func postgresqlURL() (string, error) {
+	if url := getPSQLURIEnv(); url != "" {
+		return url, nil
+	}
+
+	repo, err := findRepository()
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("can not locate postgresql database\n"+
+				"- the environment variable $%s is not set\n"+
+				"- a baur repository was not found: %s", envVarPSQLURL, err,
+			)
+		}
+		return "", err
+	}
+
+	if repo.Cfg.Database.PGSQLURL == "" {
+		return "", ErrPSQLURIMissing
+	}
+
+	return repo.Cfg.Database.PGSQLURL, nil
+}
+
+func mustNewCompatibleStorageRepo(r *baur.Repository) storage.Storer {
+	return mustNewCompatibleStorage(mustGetPSQLURI(r.Cfg))
+}
+
+func mustNewCompatibleStorage(uri string) storage.Storer {
+	clt, err := newStorageClient(uri)
 	exitOnErr(err, "creating postgresql storage client failed")
 
 	if err := clt.IsCompatible(ctx); err != nil {
