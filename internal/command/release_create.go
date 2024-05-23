@@ -66,14 +66,24 @@ func newReleaseCreateCmd() *releaseCreateCmd {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&cmd.requireCleanGitWorktree, flagNameRequireCleanGitWorktree, "c", false,
-		"fail if the git repository contains modified or untracked files")
-	cmd.Flags().StringVarP(&cmd.metadataFile, "metadata", "m", "",
+	cmd.Flags().BoolVarP(
+		&cmd.requireCleanGitWorktree,
+		flagNameRequireCleanGitWorktree, "c",
+		false,
+		"fail if the git repository contains modified or untracked files",
+	)
+	cmd.Flags().StringVarP(
+		&cmd.metadataFile,
+		"metadata", "m",
+		"",
 		"path to a file containing additional data that is stored with the release",
 	)
-	cmd.Flags().StringSliceVar(&cmd.includes, "include", nil,
+	cmd.Flags().StringSliceVar(
+		&cmd.includes,
+		"include", nil,
 		"tasks to include in the release, by default all are included,\n"+
-			"supports the same TARGET syntax then 'baur run'")
+			"supports the same TARGET syntax then 'baur run'",
+	)
 
 	cmd.Run = cmd.run
 

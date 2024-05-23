@@ -60,7 +60,7 @@ func newReleaseShowCmd() *releaseShowCmd {
 
 func (c *releaseShowCmd) run(cmd *cobra.Command, args []string) {
 	ctx := cmd.Context()
-	psqlURL, err := c.postgresqlURL()
+	psqlURL, err := postgresqlURL()
 	exitOnErr(err)
 
 	storageClt := mustNewCompatibleStorage(psqlURL)
@@ -91,27 +91,4 @@ func (c *releaseShowCmd) run(cmd *cobra.Command, args []string) {
 
 	err = release.ToJSON(os.Stdout, true)
 	exitOnErr(err)
-}
-
-func (*releaseShowCmd) postgresqlURL() (string, error) {
-	if url := os.Getenv(envVarPSQLURL); url != "" {
-		return url, nil
-	}
-
-	repo, err := findRepository()
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Errorf("can not locate postgresql database\n"+
-				"- the environment variable $%s is not set\n"+
-				"- a baur repository was not found: %s", envVarPSQLURL, err,
-			)
-		}
-		return "", err
-	}
-
-	if repo.Cfg.Database.PGSQLURL == "" {
-		return "", ErrPSQLURIMissing
-	}
-
-	return repo.Cfg.Database.PGSQLURL, nil
 }

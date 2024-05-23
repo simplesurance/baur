@@ -161,6 +161,36 @@ func getPSQLURIEnv() string {
 	return ""
 }
 
+// postgresqlURL returns the value of the environment variable [envVarPSQLURL],
+// if is set.
+// Otherwise it searches for a baur repository and returns the postgresql url
+// from the repository config.
+// If the repository object is needed, use [mustNewCompatibleStorage]
+// instead, to prevent that the repository is discovered + it's config parsed
+// multiple times.
+func postgresqlURL() (string, error) {
+	if url := os.Getenv(envVarPSQLURL); url != "" {
+		return url, nil
+	}
+
+	repo, err := findRepository()
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("can not locate postgresql database\n"+
+				"- the environment variable $%s is not set\n"+
+				"- a baur repository was not found: %s", envVarPSQLURL, err,
+			)
+		}
+		return "", err
+	}
+
+	if repo.Cfg.Database.PGSQLURL == "" {
+		return "", ErrPSQLURIMissing
+	}
+
+	return repo.Cfg.Database.PGSQLURL, nil
+}
+
 func mustNewCompatibleStorageRepo(r *baur.Repository) storage.Storer {
 	return mustNewCompatibleStorage(mustGetPSQLURI(r.Cfg))
 }
