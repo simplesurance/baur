@@ -81,8 +81,11 @@ func newReleaseCreateCmd() *releaseCreateCmd {
 	cmd.Flags().StringSliceVar(
 		&cmd.includes,
 		"include", nil,
-		"tasks to include in the release, by default all are included,\n"+
-			"supports the same TARGET syntax then 'baur run'",
+		"tasks to include in the release\n"+
+			"supports the same TARGET syntax then 'baur run',\n"+
+			"multiple targets can be separted by a comma,\n"+
+			"the flag can be specified multiple times,\n"+
+			"(default: *)",
 	)
 
 	cmd.Run = cmd.run
