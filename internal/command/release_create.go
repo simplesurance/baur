@@ -54,9 +54,8 @@ Exit Codes:
 type releaseCreateCmd struct {
 	cobra.Command
 	requireCleanGitWorktree bool
-
-	metadataFile string
-	includes     []string
+	metadataFile            string
+	includes                []string
 }
 
 func init() {

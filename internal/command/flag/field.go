@@ -11,7 +11,6 @@ import (
 const FieldSep = ","
 
 // Fields is a flag that accept a comma-separated list of field names.
-// fields by passing them in a format like "-f id,duration,path".
 // The passed values are case-insensitive.
 type Fields struct {
 	supportedFields map[string]struct{}

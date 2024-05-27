@@ -69,6 +69,18 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      s3:
+        image: adobe/s3mock:3.9.1
+        env:
+          debug: true
+          initialBuckets: mock
+        options: >-
+          --health-cmd "wget --spider localhost:9090"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 127.0.0.1:9090:9090
     steps:
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -88,9 +100,9 @@ jobs:
           key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
       - name: Run Tests with Race Detector
         run: |
-          go test -tags=dbtest -race -timeout 5m ./...
+          go test -tags=dbtest,s3test -race -timeout 5m ./...
       - name: Run Tests without Race Detector and CGO
         env:
           CGO_ENABLED: 0
         run: |
-          go test -tags=dbtest -timeout 5m ./...
+          go test -tags=dbtest,s3test -timeout 5m ./...

@@ -101,6 +101,16 @@ type TaskRunWithID struct {
 	TaskRun
 }
 
+type ReleaseTaskRunsResult struct {
+	AppName      string
+	TaskName     string
+	RunID        int
+	OutputID     int
+	OutputName   string
+	URI          string
+	UploadMethod UploadMethod
+}
+
 const (
 	NoLimit uint = 0
 )
@@ -151,4 +161,11 @@ type Storer interface {
 	// optional and can be nil.
 	CreateRelease(_ context.Context, releaseName string, taskRunIDs []int, metadata io.Reader) error
 	ReleaseExists(_ context.Context, name string) (bool, error)
+	// ReleaseTaskRuns the task runs and their outputs for the release
+	// named releaseName.
+	// If a task has no outputs the [ReleaseTaskRunsResult.OutputID]
+	// [ReleaseTaskRunsResult.OutputName], [ReleaseTaskRunsResult.URI],
+	// [ReleaseTaskRunsResult.UploadMethod] fields are unset.
+	// If the release does not exist, ErrNotExist is returned.
+	ReleaseTaskRuns(ctx context.Context, releaseName string) ([]*ReleaseTaskRunsResult, error)
 }

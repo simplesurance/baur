@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -480,4 +481,74 @@ func (c *Client) ReleaseExists(ctx context.Context, name string) (bool, error) {
 	}
 
 	return count == 1, nil
+}
+
+func (c *Client) ReleaseTaskRuns(ctx context.Context, releaseName string) ([]*storage.ReleaseTaskRunsResult, error) {
+	const query = `
+		WITH fr AS (
+		    SELECT id
+		    FROM release
+		    WHERE name = $1
+		)
+		SELECT application.name,
+		       task.name,
+		       task_run.id,
+		       output.id, output.name,
+		       upload.uri, upload.method
+		FROM fr
+		JOIN release_task_run ON release_task_run.release_id = fr.id
+		JOIN task_run ON task_run.id = release_task_run.task_run_id
+		JOIN task ON task.id = task_run.task_id
+		JOIN application ON application.id = task.application_id
+	   LEFT	JOIN task_run_output ON task_run_output.task_run_id = release_task_run.task_run_id
+	   LEFT JOIN output ON output.id = task_run_output.output_id
+	   LEFT JOIN upload ON upload.id = task_run_output.upload_id
+	    ORDER BY application.name, task.name, output.name, upload.uri
+		`
+	rows, err := c.db.Query(ctx, query, releaseName)
+	if err != nil {
+		return nil, newQueryError(query, err, releaseName)
+	}
+
+	var result []*storage.ReleaseTaskRunsResult
+
+	for rows.Next() {
+		var r storage.ReleaseTaskRunsResult
+		var outputID sql.NullInt32
+		var outputName sql.NullString
+		var uri sql.NullString
+		var uploadMethod sql.NullString
+
+		err := rows.Scan(
+			&r.AppName,
+			&r.TaskName,
+			&r.RunID,
+			&outputID,
+			&outputName,
+			&uri,
+			&uploadMethod,
+		)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, storage.ErrNotExist
+			}
+			return nil, newQueryError(query, err, releaseName)
+		}
+
+		r.OutputID = int(outputID.Int32)
+		r.OutputName = outputName.String
+		r.URI = uri.String
+		r.UploadMethod = storage.UploadMethod(uploadMethod.String)
+		result = append(result, &r)
+	}
+
+	if rows.Err() != nil {
+		return nil, newQueryError(query, err, releaseName)
+	}
+
+	if len(result) == 0 {
+		return nil, storage.ErrNotExist
+	}
+
+	return result, nil
 }
