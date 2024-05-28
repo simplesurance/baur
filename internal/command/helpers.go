@@ -87,7 +87,7 @@ func mustArgToTask(repo *baur.Repository, gitRepo *git.Repository, arg string) *
 	tasks := mustArgToTasks(repo, gitRepo, []string{arg})
 	if len(tasks) > 1 {
 		stderr.Printf("argument %q matches multiple tasks, must match only 1 task\n", arg)
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	// mustArgToApps ensures that >=1 apps are returned
@@ -98,7 +98,7 @@ func mustArgToApp(repo *baur.Repository, arg string) *baur.App {
 	apps := mustArgToApps(repo, []string{arg})
 	if len(apps) > 1 {
 		stderr.Printf("argument %q matches multiple apps, must match only 1 app\n", arg)
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	// mustArgToApps ensures that >=1 apps are returned
@@ -137,7 +137,7 @@ func mustGetPSQLURI(cfg *cfg.Repository) string {
 		stderr.Printf("PostgreSQL connection information is missing.\n"+
 			"- set postgres_url in your repository config or\n"+
 			"- set the $%s environment variable", envVarPSQLURL)
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	return uri
@@ -246,17 +246,17 @@ func exitOnErrf(err error, format string, v ...any) {
 	}
 
 	stderr.ErrPrintf(err, format, v...)
-	exitFunc(1)
+	exitFunc(exitCodeError)
 }
 
 func fatal(msg ...any) {
 	stderr.PrintErrln(msg...)
-	exitFunc(1)
+	exitFunc(exitCodeError)
 }
 
 func fatalf(format string, v ...any) {
 	stderr.Printf(format, v...)
-	exitFunc(1)
+	exitFunc(exitCodeError)
 }
 
 func exitOnErr(err error, msg ...any) {
@@ -265,7 +265,7 @@ func exitOnErr(err error, msg ...any) {
 	}
 
 	stderr.ErrPrintln(err, msg...)
-	exitFunc(1)
+	exitFunc(exitCodeError)
 }
 
 func mustTaskRepoRelPath(repositoryDir string, task *baur.Task) string {

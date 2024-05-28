@@ -49,11 +49,11 @@ func initRepo(_ *cobra.Command, args []string) {
 	if err != nil {
 		if os.IsExist(err) {
 			stderr.Printf("%s already exist\n", repoCfgPath)
-			exitFunc(1)
+			exitFunc(exitCodeError)
 		}
 
 		stderr.Println(err)
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	stdout.Printf("Repository configuration was written to %s\n",

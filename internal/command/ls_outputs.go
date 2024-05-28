@@ -60,7 +60,7 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 	taskRunID, err := strconv.Atoi(args[0])
 	if err != nil {
 		stderr.Printf("'%s' is not a numeric task run ID\n", args[0])
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	repo := mustFindRepository()
@@ -71,7 +71,7 @@ func (c *lsOutputsCmd) run(_ *cobra.Command, args []string) {
 	if err != nil {
 		if errors.Is(err, storage.ErrNotExist) {
 			stderr.Printf("task run with ID %d does not exist", taskRunID)
-			exitFunc(1)
+			exitFunc(exitCodeError)
 		}
 	}
 

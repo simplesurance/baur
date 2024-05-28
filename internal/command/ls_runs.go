@@ -117,7 +117,7 @@ func parseSpec(s string) (app, task string) {
 
 	default:
 		stderr.Printf("invalid argument: %q\n", s)
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	// is never executed because of the default case
@@ -170,10 +170,10 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 	if err != nil {
 		if errors.Is(err, storage.ErrNotExist) {
 			stderr.Println("no matching task runs exist")
-			exitFunc(1)
+			exitFunc(exitCodeError)
 		}
 		stderr.Println(err)
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	exitOnErr(formatter.Flush())
