@@ -37,7 +37,7 @@ type upgradeDbCmd struct {
 func newUpgradeDatabaseCmd() *upgradeDbCmd {
 	cmd := upgradeDbCmd{
 		Command: cobra.Command{
-			Use:               "db [POSTGRES_URL]",
+			Use:               "db [POSTGRES-URL]",
 			Short:             "upgrade the database schema",
 			Long:              strings.TrimSpace(upgradeDbLongHelp),
 			Args:              cobra.MaximumNArgs(1),
