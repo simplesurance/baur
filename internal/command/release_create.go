@@ -59,7 +59,7 @@ type releaseCreateCmd struct {
 }
 
 func init() {
-	releaseCMd.AddCommand(&newReleaseCreateCmd().Command)
+	releaseCmd.AddCommand(&newReleaseCreateCmd().Command)
 }
 
 func newReleaseCreateCmd() *releaseCreateCmd {
@@ -180,11 +180,11 @@ func (c *releaseCreateCmd) mustFetchTaskIDs(
 	for _, task := range tasks {
 		status, _, taskRun, err := statusMgr.Status(ctx, task)
 		if err != nil {
-			stdout.Println("")
+			stdout.Println()
 			exitOnErrf(err, "%s: evaluating task status failed", task)
 		}
 		if status != baur.TaskStatusRunExist {
-			stdout.Println("")
+			stdout.Println()
 			stderr.PrintErrf("%s: task status is %s, expecting %s\n",
 				task.ID, status, baur.TaskStatusRunExist)
 			exitFunc(exitCodeTaskRunIsPending)
@@ -194,7 +194,7 @@ func (c *releaseCreateCmd) mustFetchTaskIDs(
 		runIDs = append(runIDs, taskRun.ID)
 
 	}
-	stdout.Println("")
+	stdout.Println()
 
 	return runIDs
 }
