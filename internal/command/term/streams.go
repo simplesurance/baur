@@ -3,6 +3,7 @@ package term
 import (
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/fatih/color"
@@ -60,7 +61,7 @@ func (s *Stream) ErrPrintln(err error, msg ...any) {
 // ErrPrintf prints an error with an optional printf-style message.
 // The method prints the error in the format: errorPrefix msg: err
 func (s *Stream) ErrPrintf(err error, format string, a ...any) {
-	s.ErrPrintln(err, fmt.Sprintf(format, a...))
+	s.ErrPrintln(err, fmt.Sprintf(strings.TrimSuffix(format, "\n"), a...))
 }
 
 // PrintErrln prints as message that is prefixed with "ERROR: "
@@ -70,7 +71,7 @@ func (s *Stream) PrintErrln(msg ...any) {
 
 // PrintErrf prints as message that is prefixed with "ERROR: "
 func (s *Stream) PrintErrf(format string, a ...any) {
-	s.Println(ErrorPrefix, fmt.Sprintf(format, a...))
+	s.Printf(ErrorPrefix+" "+format, a...)
 }
 
 // PrintSep prints a separator line
