@@ -159,7 +159,7 @@ func TestUnknownAppOrTaskReturnsExitCode1(t *testing.T) {
 
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{tc.appTask, appOneWithBuildTask})
-			execCmd(t, diffInputsCmd, 1)
+			execCheck(t, diffInputsCmd, 1)
 		})
 	}
 }
@@ -172,7 +172,7 @@ func TestCurrentInputsAgainstSameTaskCurrentInputsReturnsExitCode1(t *testing.T)
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appOneWithBuildTask})
 	_, stderrBuf := interceptCmdOutput(t)
-	execCmd(t, diffInputsCmd, 1)
+	execCheck(t, diffInputsCmd, 1)
 	assert.Contains(t, stderrBuf.String(), fmt.Sprintf("%s and %s refer to the same task-run", appOneWithBuildTask, appOneWithBuildTask))
 }
 
@@ -204,7 +204,7 @@ func TestNonExistentRunReturnsExitCode1(t *testing.T) {
 
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{appOneWithBuildTask, tc.run})
-			execCmd(t, diffInputsCmd, 1)
+			execCheck(t, diffInputsCmd, 1)
 		})
 	}
 }
@@ -237,7 +237,7 @@ func TestCurrentInputsAgainstPreviousRunThatHasSameInputsReturnsExitCode0(t *tes
 
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{appOneWithBuildTask, tc.previousRun})
-			execCmd(t, diffInputsCmd, 0)
+			execCheck(t, diffInputsCmd, 0)
 		})
 	}
 }
@@ -271,7 +271,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasSameInputsReturnsExitCode0(t
 
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{"2", tc.previousRun})
-			execCmd(t, diffInputsCmd, 0)
+			execCheck(t, diffInputsCmd, 0)
 		})
 	}
 }
@@ -305,7 +305,7 @@ func TestCurrentInputsAgainstPreviousRunThatHasDifferentInputsReturnsExitCode2(t
 
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{appOneWithBuildTask, tc.previousRun})
-			execCmd(t, diffInputsCmd, 2)
+			execCheck(t, diffInputsCmd, 2)
 		})
 	}
 }
@@ -340,7 +340,7 @@ func TestPreviousRunAgainstAnotherPreviousRunThatHasDifferentInputsReturnsExitCo
 
 			diffInputsCmd := newDiffInputsCmd()
 			diffInputsCmd.SetArgs([]string{"2", tc.previousRun})
-			execCmd(t, diffInputsCmd, 2)
+			execCheck(t, diffInputsCmd, 2)
 		})
 	}
 }
@@ -356,7 +356,7 @@ func TestDifferentAppsReturnExitCode2(t *testing.T) {
 
 	diffInputsCmd := newDiffInputsCmd()
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appTwoWithBuildTask})
-	execCmd(t, diffInputsCmd, 2)
+	execCheck(t, diffInputsCmd, 2)
 }
 
 func TestDifferencesOutputWithCorrectState(t *testing.T) {
@@ -381,7 +381,7 @@ func TestDifferencesOutputWithCorrectState(t *testing.T) {
 	diffInputsCmd.csv = true
 	diffInputsCmd.quiet = true
 	diffInputsCmd.SetArgs([]string{fmt.Sprintf("%s^^", appOneWithBuildTask), fmt.Sprintf("%s^", appOneWithBuildTask)})
-	execCmd(t, diffInputsCmd, -1)
+	execCheck(t, diffInputsCmd, -1)
 
 	expectedOutput := [][]string{
 		{"D", filepath.FromSlash("app-one/diff_test.txt"), originalDigest.String(), newDigest.String()},
@@ -409,7 +409,7 @@ func TestInputStringsAreAppliedToFirstArg(t *testing.T) {
 	diffInputsCmd.quiet = true
 	diffInputsCmd.inputStr = []string{"hello"}
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, appTwoWithBuildTask})
-	execCmd(t, diffInputsCmd, 2)
+	execCheck(t, diffInputsCmd, 2)
 	assert.Contains(t, stdoutBuf.String(), "-,string:hello,")
 
 	runCmd := newRunCmd()
@@ -418,44 +418,13 @@ func TestInputStringsAreAppliedToFirstArg(t *testing.T) {
 
 	// inputs are the same, diffInputsCmd.inputStr is set to hello and added to first target
 	diffInputsCmd.SetArgs([]string{appOneWithBuildTask, "1"})
-	execCmd(t, diffInputsCmd, 0)
+	execCheck(t, diffInputsCmd, 0)
 
 	// inputs differ, diffInputsCmd.inputStr is set to hello and added to
 	// first target which is the stored run, app in repo is missing
 	// input-string
 	stdoutBuf, _ = interceptCmdOutput(t)
 	diffInputsCmd.SetArgs([]string{"1", appOneWithBuildTask})
-	execCmd(t, diffInputsCmd, 2)
+	execCheck(t, diffInputsCmd, 2)
 	assert.Contains(t, stdoutBuf.String(), "-,string:hello,")
-}
-
-func execCmd(t *testing.T, cmd *diffInputsCmd, expectedExitCode int) {
-	t.Helper()
-
-	defer func() {
-		t.Helper()
-
-		r := recover()
-		if r == nil {
-			return
-		}
-
-		if info, ok := r.(*exitInfo); ok {
-			if expectedExitCode == -1 {
-				return
-			}
-
-			// exitCode is validated via assertExitCode()
-			if info.Code != expectedExitCode {
-				t.Fatalf("command exited with code %d, expected: %d", info.Code, expectedExitCode)
-			}
-
-			return
-		}
-
-		panic(r)
-	}()
-
-	err := cmd.Execute()
-	require.NoError(t, err)
 }

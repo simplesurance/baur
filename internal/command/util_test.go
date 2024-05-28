@@ -12,6 +12,8 @@ import (
 	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/internal/testutils/logwriter"
+
+	"github.com/stretchr/testify/require"
 )
 
 var testdataDir string
@@ -92,6 +94,7 @@ func redirectOutputToLogger(t *testing.T) {
 // resultExitCode.
 // If the executed command does not exit with code 0, it will not panic.
 // The previous exitFunc will be restored when the test finished.
+// TODO: remove it and replace usages with execCheck
 func interceptExitCode(t *testing.T, resultExitCode *int) {
 	oldExitFunc := exitFunc
 	exitFunc = func(code int) {
@@ -101,4 +104,45 @@ func interceptExitCode(t *testing.T, resultExitCode *int) {
 	t.Cleanup(func() {
 		exitFunc = oldExitFunc
 	})
+}
+
+type cmdExecuter interface {
+	Execute() error
+}
+
+func execCheck(t *testing.T, cmd cmdExecuter, expectedExitCode int) {
+	t.Helper()
+
+	defer func() {
+		t.Helper()
+
+		r := recover()
+		if r == nil {
+			return
+		}
+
+		if info, ok := r.(*exitInfo); ok {
+			if expectedExitCode == -1 {
+				return
+			}
+
+			// exitCode is validated via assertExitCode()
+			if info.Code != expectedExitCode {
+				t.Fatalf("command exited with code %d, expected: %d", info.Code, expectedExitCode)
+			}
+
+			return
+		}
+
+		panic(r)
+	}()
+
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	require.Equalf(
+		t,
+		0, expectedExitCode,
+		"command did not panic, expecting it to panic and fail with exitCode: %d", expectedExitCode,
+	)
 }
