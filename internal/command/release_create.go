@@ -85,7 +85,7 @@ func newReleaseCreateCmd() *releaseCreateCmd {
 	const includeFlagName = "include"
 	cmd.Flags().StringArrayVar(&cmd.includes, includeFlagName, nil,
 		"Target to be included in the release, by default all are included.\n"+
-			"It supports the same TARGET syntax then 'baur run',\n"+
+			"It supports the same TARGET syntax as 'baur run',\n"+
 			"the flag can be specified multiple times")
 	_ = cmd.RegisterFlagCompletionFunc(
 		includeFlagName,
@@ -145,7 +145,7 @@ func (c *releaseCreateCmd) run(cmd *cobra.Command, args []string) {
 
 	err = storageClt.CreateRelease(ctx, releaseName, runIDs, metadataReader)
 	if errors.Is(err, storage.ErrExists) {
-		stderr.PrintErrf("release with name %q already exist, release names must be unique\n", releaseName)
+		stderr.PrintErrf("release with name %q already exists, release names must be unique\n", releaseName)
 		exitFunc(exitCodeAlreadyExist)
 	}
 	exitOnErr(err, "storing release information in database failed")
