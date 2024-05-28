@@ -51,11 +51,11 @@ func initApp(_ *cobra.Command, args []string) {
 	if err != nil {
 		if os.IsExist(err) {
 			stderr.Printf("%s already exist\n", baur.AppCfgFile)
-			exitFunc(1)
+			exitFunc(exitCodeError)
 		}
 
 		stderr.Println(err)
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	stdout.Printf("Application configuration file was written to %s\n",

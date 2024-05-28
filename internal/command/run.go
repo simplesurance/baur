@@ -148,7 +148,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 
 	if c.taskRunnerGoRoutines == 0 {
 		stderr.Printf("--parallel-runs must be greater than 0\n")
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 
 	startTime := time.Now()
@@ -290,7 +290,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	)
 
 	if c.errorHappened {
-		exitFunc(1)
+		exitFunc(exitCodeError)
 	}
 }
 

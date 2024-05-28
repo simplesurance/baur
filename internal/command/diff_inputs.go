@@ -148,8 +148,6 @@ func (c *diffInputsCmd) run(_ *cobra.Command, args []string) {
 	if len(diffs) > 0 {
 		exitFunc(2)
 	}
-
-	exitFunc(0)
 }
 
 func (c *diffInputsCmd) getDiffInputArgDetails(repo *baur.Repository, args []string) []*diffInputArgDetails {

@@ -62,11 +62,11 @@ func (*upgradeDbCmd) run(_ *cobra.Command, args []string) {
 				stderr.Printf("could not find '%s' repository config file.\n"+
 					"Run '%s' first or pass the Postgres URL as argument.\n",
 					term.Highlight(baur.RepositoryCfgFile), term.Highlight(cmdInitRepo))
-				exitFunc(1)
+				exitFunc(exitCodeError)
 			}
 
 			stderr.Println(err)
-			exitFunc(1)
+			exitFunc(exitCodeError)
 		}
 
 		dbURL = mustGetPSQLURI(repo.Cfg)
