@@ -115,7 +115,7 @@ func newRunCmd() *runCmd {
 		Command: cobra.Command{
 			Use:               "run [TARGET|APP_DIR]...",
 			Short:             "run tasks",
-			Long:              runLongHelp,
+			Long:              strings.TrimSpace(runLongHelp),
 			Example:           strings.TrimSpace(runExample),
 			ValidArgsFunction: newCompleteTargetFunc(completeTargetFuncOpts{}),
 		},
