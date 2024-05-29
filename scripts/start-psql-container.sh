@@ -4,12 +4,6 @@ set -eu -o pipefail
 
 PSQL_PORT=5434
 
-if ! command -v; then
-	echo "docker is not installed"
-	exit 1
-fi
-
-
 docker run \
 	-d \
 	--rm \
