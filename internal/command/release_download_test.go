@@ -1,4 +1,4 @@
-//go:build s3test
+//go:build s3test && dbtest
 
 package command
 

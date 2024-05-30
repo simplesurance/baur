@@ -15,7 +15,7 @@ func StrID(id string) error {
 		}
 
 		if !unicode.IsPrint(r) {
-			return fmt.Errorf("contains non-printable character: %x", r)
+			return fmt.Errorf("contains non-printable character: %+q", r)
 		}
 	}
 
