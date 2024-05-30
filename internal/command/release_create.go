@@ -7,10 +7,10 @@ import (
 	"io"
 	"os"
 	"strings"
-	"unicode"
 
 	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/internal/validation"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 	"github.com/simplesurance/baur/v3/pkg/storage"
 
@@ -98,24 +98,12 @@ func newReleaseCreateCmd() *releaseCreateCmd {
 	return &cmd
 }
 
-func mustValidateReleaseName(releaseName string) {
-	for pos, r := range releaseName {
-		if (pos == 0 || pos == len(releaseName)-1) && unicode.IsSpace(r) {
-			fatalf("release name must not contain leading or trailing whitespaces, got: %q\n",
-				releaseName)
-		}
-
-		if !unicode.IsPrint(r) {
-			fatalf("release name contains non-printable character: %q\n", r)
-		}
-	}
-}
-
 func (c *releaseCreateCmd) run(cmd *cobra.Command, args []string) {
 	ctx := cmd.Context()
 	releaseName := args[0]
 
-	mustValidateReleaseName(releaseName)
+	err := validation.StrID(releaseName)
+	exitOnErrf(err, "invalid release name: %q", releaseName)
 
 	stdout.Printf("creating release: %s\n", term.Highlight(releaseName))
 

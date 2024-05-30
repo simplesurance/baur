@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/simplesurance/baur/v3/internal/validation"
 )
 
 var forbiddenNameRunes = [...]rune{
@@ -23,5 +25,5 @@ func validateTaskOrAppName(name string) error {
 		}
 	}
 
-	return nil
+	return validation.StrID(name)
 }
