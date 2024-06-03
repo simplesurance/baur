@@ -51,8 +51,8 @@ func newReleaseShowCmd() *releaseShowCmd {
 
 	cmd.Flags().StringVarP(
 		&cmd.metadataFilePath, "metadata", "m", "",
-		"write the stored metadata to the given file path\n"+
-			"instead of including it in the JSON output",
+		"write the stored metadata to the given file path,\n"+
+			" instead of including it in the JSON output",
 	)
 
 	cmd.Run = cmd.run

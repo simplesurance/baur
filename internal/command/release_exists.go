@@ -12,8 +12,8 @@ import (
 var releaseExistsLongHelp = fmt.Sprintf(`
 Check if a release with a given name exists.
 
-The command can be run without access to the baur repository, by specifying
-the PostgreSQL URI via the environment variable %s.
+The command can be run without access to the baur repository by specifying the
+PostgreSQL URI via the environment variable %s.
 
 Exit Codes:
   %d - Success, release exists

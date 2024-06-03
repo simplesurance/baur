@@ -22,8 +22,8 @@ belong to the release.
 Only outputs that have been uploaded to S3 are downloaded, others are ignored.
 The downloaded outputs are stored at the path: %s.
 
-The command can be run without access to the baur repository, by specifying
-the PostgreSQL URI via the environment variable %s.
+The command can be run without access to the baur repository by specifying the
+PostgreSQL URI via the environment variable %s.
 
 When task IDS are specified via %s, the command fails if any of them is not
 part of the release or does not have >1 output uploaded to S3.

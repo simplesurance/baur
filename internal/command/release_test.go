@@ -130,10 +130,11 @@ func TestRelease(t *testing.T) {
 		showStdout, _ := interceptCmdOutput(t)
 		showCmd.SetArgs([]string{"buildCheck"})
 		require.NotPanics(t, func() { require.NoError(t, showCmd.Execute()) })
+
 		var release baur.Release
 		err := json.Unmarshal(showStdout.Bytes(), &release)
 		require.NoError(t, err, showStdout.String())
-		require.Equal(t, metadataSrc, release.Metadata)
+		require.Equal(t, string(metadataSrc), string(release.Metadata))
 	})
 
 	t.Run("ExistsWithBaurCfg", func(t *testing.T) {
