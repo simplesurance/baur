@@ -65,14 +65,12 @@ func init() {
 func newReleaseCreateCmd() *releaseCreateCmd {
 	cmd := releaseCreateCmd{
 		Command: cobra.Command{
-			Use:     "create NAME",
-			Short:   "create a release",
-			Long:    strings.TrimSpace(releaseCreateLongHelp),
-			Args:    cobra.ExactArgs(1),
-			Example: strings.TrimSpace(releaseCreateExample),
-			ValidArgsFunction: func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-				return nil, cobra.ShellCompDirectiveNoFileComp
-			},
+			Use:               "create NAME",
+			Short:             "create a release",
+			Long:              strings.TrimSpace(releaseCreateLongHelp),
+			Args:              cobra.ExactArgs(1),
+			Example:           strings.TrimSpace(releaseCreateExample),
+			ValidArgsFunction: cobra.NoFileCompletions,
 		},
 	}
 
