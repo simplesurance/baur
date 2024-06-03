@@ -1,7 +1,7 @@
 CREATE TABLE release (
 	id serial PRIMARY KEY,
 	name text NOT NULL,
-	user_data bytea,
+	metadata bytea,
 	CONSTRAINT release_name_uniq UNIQUE (name)
 );
 

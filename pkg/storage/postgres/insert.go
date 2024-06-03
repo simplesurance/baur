@@ -748,7 +748,7 @@ func (c *Client) CreateRelease(ctx context.Context, releaseName string, taskRunI
 
 func (*Client) insertRelease(ctx context.Context, tx pgx.Tx, name string, metadata io.Reader) (int, error) {
 	const query = `
-		INSERT INTO release (name, user_data)
+		INSERT INTO release (name, metadata)
 	        VALUES($1, $2)
 	     RETURNING id
 	`
