@@ -191,13 +191,13 @@ func validateWantedTaskIDsHaveOutputs(
 
 	var errStr string
 	if len(missingTaskIDs) > 0 {
-		errStr = "The following task IDs are not part of the release: " + strings.Join(missingTaskIDs, ",")
+		errStr = "The following task IDs are not part of the release: " + strings.Join(missingTaskIDs, ", ")
 	}
 	if len(tasksMissingS3Uploads) > 0 {
 		if errStr != "" {
 			errStr += "\n"
 		}
-		errStr += "The following tasks do not have an S3 output: " + strings.Join(tasksMissingS3Uploads, ",")
+		errStr += "The following tasks do not have an S3 output: " + strings.Join(tasksMissingS3Uploads, ", ")
 	}
 
 	return errors.New(errStr)
