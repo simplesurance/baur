@@ -426,9 +426,33 @@ func findAppConfigs(repoDir string, searchDirs []string, searchDepth int, logger
 }
 
 func dedupApps(apps []*App) []*App {
-	return set.From(apps).Slice()
+	dedupMap := make(map[string]*App, len(apps))
+
+	for _, app := range apps {
+		dedupMap[app.Path] = app
+	}
+
+	result := make([]*App, 0, len(dedupMap))
+
+	for _, app := range dedupMap {
+		result = append(result, app)
+	}
+
+	return result
 }
 
 func dedupTasks(tasks []*Task) []*Task {
-	return set.From(tasks).Slice()
+	dedupMap := make(map[string]*Task, len(tasks))
+
+	for _, task := range tasks {
+		dedupMap[task.ID] = task
+	}
+
+	result := make([]*Task, 0, len(dedupMap))
+
+	for _, task := range dedupMap {
+		result = append(result, task)
+	}
+
+	return result
 }
