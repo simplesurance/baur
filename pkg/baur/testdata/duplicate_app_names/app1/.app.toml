@@ -1,0 +1,9 @@
+name = "app1"
+
+[[Task]]
+  name = "check"
+  command = [ "./check.sh" ]
+
+  [Task.Input]
+    [[Task.Input.Files]]
+      paths = ["**"]

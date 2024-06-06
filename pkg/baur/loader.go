@@ -133,7 +133,7 @@ func (a *Loader) appNames(names ...string) ([]*App, error) {
 			return result, nil
 		}
 
-		path, err := filepath.Abs(path)
+		path, err := fs.RealPath(path)
 		if err != nil {
 			return nil, err
 		}
@@ -168,18 +168,25 @@ func (a *Loader) appNames(names ...string) ([]*App, error) {
 func (a *Loader) allApps() ([]*App, error) {
 	a.logger.Debugf("loader: loading all apps")
 
-	result := make([]*App, 0, len(a.appConfigPaths))
-
+	apps := make(map[string]*App, len(a.appConfigPaths))
 	for _, path := range a.appConfigPaths {
 		app, err := a.appPath(path)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}
 
-		result = append(result, app)
+		if a, exists := apps[app.Name]; exists {
+			return nil, &ErrDuplicateAppNames{
+				AppName:  app.Name,
+				AppPath1: a.cfg.FilePath(),
+				AppPath2: app.cfg.FilePath(),
+			}
+
+		}
+		apps[app.Name] = app
 	}
 
-	return result, nil
+	return maps.Values(apps), nil
 }
 
 func taskCount(apps []*App) int {
@@ -349,7 +356,7 @@ func (a *Loader) apps(specs *specs) ([]*App, error) {
 
 	result = append(result, apps...)
 
-	return dedupApps(result), nil
+	return dedupApps(result)
 }
 
 func (a *Loader) fromCfg(appCfg *cfg.App) (*App, error) {
@@ -425,11 +432,25 @@ func findAppConfigs(repoDir string, searchDirs []string, searchDepth int, logger
 	return appDirs.Slice(), nil
 }
 
-func dedupApps(apps []*App) []*App {
+// dedupApps deduplicate the apps list by application names.
+// If apps contain multiple Apps with the same name but different config file
+// paths an error is returned.
+func dedupApps(apps []*App) ([]*App, error) {
 	dedupMap := make(map[string]*App, len(apps))
 
 	for _, app := range apps {
-		dedupMap[app.Path] = app
+		if a, exist := dedupMap[app.Name]; exist {
+			if a.cfg.FilePath() != app.cfg.FilePath() {
+				return nil, &ErrDuplicateAppNames{
+					AppName:  app.Name,
+					AppPath1: a.cfg.FilePath(),
+					AppPath2: app.cfg.FilePath(),
+				}
+			}
+			continue
+		}
+
+		dedupMap[app.Name] = app
 	}
 
 	result := make([]*App, 0, len(dedupMap))
@@ -438,7 +459,7 @@ func dedupApps(apps []*App) []*App {
 		result = append(result, app)
 	}
 
-	return result
+	return result, nil
 }
 
 func dedupTasks(tasks []*Task) []*Task {
