@@ -81,9 +81,10 @@ func newReleaseCreateCmd() *releaseCreateCmd {
 	)
 
 	const includeFlagName = "include"
-	cmd.Flags().StringArrayVar(&cmd.includes, includeFlagName, nil,
+	cmd.Flags().StringSliceVar(&cmd.includes, includeFlagName, nil,
 		"tasks matching a TARGET string to include in the release,\n"+
 			"TARGET has the same syntax as used in 'baur run',\n"+
+			"TARGETS can be separated by commas,"+
 			"the flag can be specified multiple times",
 	)
 	_ = cmd.RegisterFlagCompletionFunc(

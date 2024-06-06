@@ -106,6 +106,16 @@ func TestRelease(t *testing.T) {
 		execCheck(t, releaseCmd, exitCodeAlreadyExist)
 	})
 
+	t.Run("CreateWithCommaSeparatedIncludes", func(t *testing.T) {
+		initTest(t)
+		releaseCmd := newReleaseCreateCmd()
+
+		releaseCmd.SetArgs([]string{
+			"--include", "*.build", "--include", "*.check,simpleApp.build", t.Name(),
+		})
+		require.NotPanics(t, func() { require.NoError(t, releaseCmd.Execute()) })
+	})
+
 	t.Run("CreateAndShowWithMetadataAndMultipleIncludes", func(t *testing.T) {
 		initTest(t)
 		releaseCmd := newReleaseCreateCmd()
