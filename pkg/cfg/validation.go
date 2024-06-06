@@ -10,6 +10,7 @@ import (
 
 var forbiddenNameRunes = [...]rune{
 	'.',
+	',',
 	'*',
 	'#',
 }
