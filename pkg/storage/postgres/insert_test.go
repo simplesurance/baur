@@ -81,8 +81,8 @@ func TestSaveTaskRun(t *testing.T) {
 				id, err := client.SaveTaskRun(ctx, taskRun)
 
 				if expectedResult {
-					assert.NoError(t, err) //nolint: testifylint
-					assert.Greater(t, id, 0)
+					assert.NoError(t, err)   //nolint: testifylint
+					assert.Greater(t, id, 0) //nolint: testifylint
 
 					return
 				}

@@ -201,7 +201,7 @@ func TestOutputs(t *testing.T) {
 
 	id, err := client.SaveTaskRun(ctx, &run)
 	require.NoError(t, err)
-	assert.Greater(t, id, 0)
+	assert.Greater(t, id, 0) //nolint: testifylint
 
 	outputs, err := client.Outputs(ctx, id)
 	require.NoError(t, err)
@@ -269,7 +269,7 @@ func TestInputs(t *testing.T) {
 
 	id, err := client.SaveTaskRun(ctx, &run)
 	require.NoError(t, err)
-	assert.Greater(t, id, 0)
+	assert.Greater(t, id, 0) //nolint: testifylint
 
 	inputs, err := client.Inputs(ctx, id)
 	require.NoError(t, err)
@@ -343,7 +343,7 @@ func TestTaskRun(t *testing.T) {
 
 	id, err := client.SaveTaskRun(ctx, &run)
 	require.NoError(t, err)
-	assert.Greater(t, id, 0)
+	assert.Greater(t, id, 0) //nolint: testifylint
 
 	taskRun, err := client.TaskRun(ctx, id)
 	require.NoError(t, err)
@@ -418,7 +418,7 @@ func TestTaskRuns(t *testing.T) {
 
 	id, err := client.SaveTaskRun(ctx, &run)
 	require.NoError(t, err)
-	assert.Greater(t, id, 0)
+	assert.Greater(t, id, 0) //nolint: testifylint
 
 	run1 := run
 	run1.StartTimestamp = run1.StartTimestamp.Add(time.Second)
@@ -427,7 +427,7 @@ func TestTaskRuns(t *testing.T) {
 
 	id1, err := client.SaveTaskRun(ctx, &run1)
 	require.NoError(t, err)
-	assert.Greater(t, id1, 0)
+	assert.Greater(t, id1, 0) //nolint: testifylint
 	assert.NotEqual(t, id, id1)
 
 	testcases := []*struct {
@@ -600,7 +600,7 @@ func TestTaskRunQueryRunWithoutOutputWithoutVCS(t *testing.T) {
 
 	id, err := client.SaveTaskRun(ctx, &run)
 	require.NoError(t, err)
-	assert.Greater(t, id, 0)
+	assert.Greater(t, id, 0) //nolint: testifylint
 
 	tr, err := client.TaskRun(ctx, id)
 	require.NoError(t, err)
