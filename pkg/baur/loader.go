@@ -453,13 +453,7 @@ func dedupApps(apps []*App) ([]*App, error) {
 		dedupMap[app.Name] = app
 	}
 
-	result := make([]*App, 0, len(dedupMap))
-
-	for _, app := range dedupMap {
-		result = append(result, app)
-	}
-
-	return result, nil
+	return maps.Values(dedupMap), nil
 }
 
 func dedupTasks(tasks []*Task) []*Task {
@@ -469,11 +463,5 @@ func dedupTasks(tasks []*Task) []*Task {
 		dedupMap[task.ID] = task
 	}
 
-	result := make([]*Task, 0, len(dedupMap))
-
-	for _, task := range dedupMap {
-		result = append(result, task)
-	}
-
-	return result
+	return maps.Values(dedupMap)
 }
