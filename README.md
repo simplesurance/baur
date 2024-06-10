@@ -48,7 +48,7 @@ On following runs, baur only runs tasks for which the inputs changed.
   baur can be used as management tool in monorepositories to query basic
   information about applications and upload destinations for specific builds.
 
-* **CI Optimized** \
+* **Optimized for CI** \
   baur is made to be run in CI environments and supports to output information
   in the easily-parseable CSV and JSON formats.
 
@@ -57,7 +57,7 @@ On following runs, baur only runs tasks for which the inputs changed.
   defined in include configuration files.
 
 * **Templating** \
-  [Templating](https://github.com/simplesurance/baur/wiki/v2-Configuration#templating-in-configuration-files)
+  [Templating](https://github.com/simplesurance/baur/wiki/v4-Documentation#templating-in-configuration-files)
   can be used in configuration files.
 
 ## Quickstart
