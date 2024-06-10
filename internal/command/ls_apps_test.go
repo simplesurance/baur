@@ -2,11 +2,11 @@ package command
 
 import (
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,8 +16,7 @@ func TestLsAppsJSON(t *testing.T) {
 	initTest(t)
 
 	repoDir := filepath.Join(testdataDir, "multitasks")
-	err := os.Chdir(repoDir)
-	require.NoError(t, err)
+	ostest.Chdir(t, repoDir)
 
 	gittest.CreateRepository(t, repoDir)
 

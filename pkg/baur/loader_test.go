@@ -1,13 +1,13 @@
 package baur
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v3/internal/log"
+	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
@@ -15,8 +15,7 @@ func TestFindAppConfigsRemovesDups(t *testing.T) {
 	log.RedirectToTestingLog(t)
 
 	repoDir := filepath.Join(testdataDir, "app_matches_multiple_app_dirs")
-	err := os.Chdir(repoDir)
-	require.NoError(t, err)
+	ostest.Chdir(t, repoDir)
 
 	searchDirs := []string{".", "app1", "app1/.", "app1/..", "app1/../app1/."}
 

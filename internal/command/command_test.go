@@ -6,7 +6,6 @@ package command
 import (
 	"context"
 	"encoding/csv"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -18,6 +17,7 @@ import (
 	"github.com/simplesurance/baur/v3/internal/exec"
 	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
 	"github.com/simplesurance/baur/v3/pkg/baur"
 )
@@ -285,8 +285,7 @@ func TestVarInInclude(t *testing.T) {
 
 	gittest.CreateRepository(t, testdataDir)
 
-	err := os.Chdir(filepath.Join(testdataDir, "var_in_include"))
-	require.NoError(t, err)
+	ostest.Chdir(t, filepath.Join(testdataDir, "var_in_include"))
 
 	gittest.CommitFilesToGit(t, testdataDir)
 
