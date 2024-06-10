@@ -11,14 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v3/internal/digest"
-	"github.com/simplesurance/baur/v3/internal/exec"
-	"github.com/simplesurance/baur/v3/internal/fs"
-	"github.com/simplesurance/baur/v3/internal/log"
-	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v3/internal/vcs/git"
-	"github.com/simplesurance/baur/v3/pkg/cfg"
+	"github.com/simplesurance/baur/v4/internal/digest"
+	"github.com/simplesurance/baur/v4/internal/exec"
+	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v4/internal/log"
+	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v4/internal/vcs/git"
+	"github.com/simplesurance/baur/v4/pkg/cfg"
 )
 
 type DummyGitUntrackedFilesResolver struct{}

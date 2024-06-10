@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
+	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v4/internal/testutils/ostest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

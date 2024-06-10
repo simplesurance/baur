@@ -2,7 +2,7 @@
 package v5
 
 import (
-	"github.com/simplesurance/baur/v3/pkg/cfg"
+	"github.com/simplesurance/baur/v4/pkg/cfg"
 )
 
 func UpgradeRepositoryConfig(old *cfg.Repository) *cfg.Repository {

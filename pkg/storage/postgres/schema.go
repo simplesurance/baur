@@ -13,7 +13,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 
-	"github.com/simplesurance/baur/v3/pkg/storage"
+	"github.com/simplesurance/baur/v4/pkg/storage"
 )
 
 // schemaVer is the database schema version required by this package.

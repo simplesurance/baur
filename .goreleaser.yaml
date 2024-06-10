@@ -16,7 +16,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - "-X github.com/simplesurance/baur/v3/internal/version.GitCommit={{ .FullCommit }}"
+      - "-X github.com/simplesurance/baur/v4/internal/version.GitCommit={{ .FullCommit }}"
     goos:
       - linux
       - windows

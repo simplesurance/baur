@@ -7,10 +7,10 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"github.com/simplesurance/baur/v3/internal/fs"
-	"github.com/simplesurance/baur/v3/internal/set"
-	"github.com/simplesurance/baur/v3/pkg/cfg"
-	"github.com/simplesurance/baur/v3/pkg/cfg/resolver"
+	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v4/internal/set"
+	"github.com/simplesurance/baur/v4/pkg/cfg"
+	"github.com/simplesurance/baur/v4/pkg/cfg/resolver"
 )
 
 type Logger interface {

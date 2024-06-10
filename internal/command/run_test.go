@@ -14,10 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v3/pkg/cfg"
+	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v4/pkg/cfg"
 )
 
 func TestRunSimultaneously(t *testing.T) {

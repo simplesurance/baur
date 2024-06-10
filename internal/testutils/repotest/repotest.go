@@ -7,15 +7,15 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/simplesurance/baur/v3/internal/digest"
-	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
-	"github.com/simplesurance/baur/v3/internal/fs"
-	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
-	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
-	"github.com/simplesurance/baur/v3/pkg/baur"
-	"github.com/simplesurance/baur/v3/pkg/cfg"
+	"github.com/simplesurance/baur/v4/internal/digest"
+	"github.com/simplesurance/baur/v4/internal/digest/gitobjectid"
+	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v4/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v4/internal/testutils/ostest"
+	"github.com/simplesurance/baur/v4/pkg/baur"
+	"github.com/simplesurance/baur/v4/pkg/cfg"
 )
 
 func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {

@@ -1,6 +1,6 @@
 package baur
 
-import "github.com/simplesurance/baur/v3/internal/digest"
+import "github.com/simplesurance/baur/v4/internal/digest"
 
 // InputTask is a baur task whose information are used as input of another
 // task.

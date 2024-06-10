@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/simplesurance/baur/v3/pkg/storage"
+	"github.com/simplesurance/baur/v4/pkg/storage"
 )
 
 // TaskStatusEvaluator determines if a task already run with the same set of

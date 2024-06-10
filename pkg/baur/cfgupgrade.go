@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/simplesurance/baur/v3/internal/fs"
-	"github.com/simplesurance/baur/v3/internal/log"
-	"github.com/simplesurance/baur/v3/pkg/cfg"
-	v5 "github.com/simplesurance/baur/v3/pkg/cfg/upgrade/v5"
+	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v4/internal/log"
+	"github.com/simplesurance/baur/v4/pkg/cfg"
+	v5 "github.com/simplesurance/baur/v4/pkg/cfg/upgrade/v5"
 )
 
 // CfgUpgrader converts baur configurations files from a previous format to the

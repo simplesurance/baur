@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/pkg/baur"
-	"github.com/simplesurance/baur/v3/pkg/storage"
+	"github.com/simplesurance/baur/v4/internal/command/term"
+	"github.com/simplesurance/baur/v4/pkg/baur"
+	"github.com/simplesurance/baur/v4/pkg/storage"
 )
 
 const initDbExample = `

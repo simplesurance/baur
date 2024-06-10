@@ -3,7 +3,7 @@ package cfg
 import (
 	"errors"
 
-	"github.com/simplesurance/baur/v3/internal/deepcopy"
+	"github.com/simplesurance/baur/v4/internal/deepcopy"
 )
 
 // OutputInclude is a reusable Output definition

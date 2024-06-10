@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v4/internal/testutils/dbtest"
 )
 
 var ctx = context.Background()

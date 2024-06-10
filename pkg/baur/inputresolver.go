@@ -10,14 +10,14 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/simplesurance/baur/v3/internal/digest"
-	"github.com/simplesurance/baur/v3/internal/digest/gitobjectid"
-	"github.com/simplesurance/baur/v3/internal/fs"
-	"github.com/simplesurance/baur/v3/internal/log"
-	"github.com/simplesurance/baur/v3/internal/resolve/glob"
-	"github.com/simplesurance/baur/v3/internal/resolve/gosource"
-	"github.com/simplesurance/baur/v3/internal/vcs/git"
-	"github.com/simplesurance/baur/v3/pkg/cfg"
+	"github.com/simplesurance/baur/v4/internal/digest"
+	"github.com/simplesurance/baur/v4/internal/digest/gitobjectid"
+	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v4/internal/log"
+	"github.com/simplesurance/baur/v4/internal/resolve/glob"
+	"github.com/simplesurance/baur/v4/internal/resolve/gosource"
+	"github.com/simplesurance/baur/v4/internal/vcs/git"
+	"github.com/simplesurance/baur/v4/pkg/cfg"
 )
 
 // goSourceResolver returns a list source files required to compile a golang

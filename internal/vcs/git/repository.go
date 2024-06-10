@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/simplesurance/baur/v3/internal/set"
+	"github.com/simplesurance/baur/v4/internal/set"
 )
 
 const Name = "git"

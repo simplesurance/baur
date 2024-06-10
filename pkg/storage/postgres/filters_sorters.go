@@ -3,7 +3,7 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v3/pkg/storage"
+	"github.com/simplesurance/baur/v4/pkg/storage"
 )
 
 // query assembles an SQL-Query described by storage Filters and Sorters

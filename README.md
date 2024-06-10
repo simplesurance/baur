@@ -78,7 +78,7 @@ After downloading the release archive, extract the `baur` binary
 You can build and install the latest version from the main branch by running:
 
 ```sh
-go install github.com/simplesurance/baur/v3/...@main
+go install github.com/simplesurance/baur/v4/...@main
 ```
 
 ### Setup

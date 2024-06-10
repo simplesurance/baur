@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v3/internal/command/term"
+	"github.com/simplesurance/baur/v4/internal/command/term"
 )
 
 const (

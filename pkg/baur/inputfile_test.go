@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v3/internal/digest/sha384"
-	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v4/internal/digest/sha384"
+	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
 )
 
 func TestDigestDoesNotDependOnRepoPath(t *testing.T) {

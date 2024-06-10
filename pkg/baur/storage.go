@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/simplesurance/baur/v3/internal/vcs/git"
-	"github.com/simplesurance/baur/v3/pkg/storage"
+	"github.com/simplesurance/baur/v4/internal/vcs/git"
+	"github.com/simplesurance/baur/v4/pkg/storage"
 )
 
 // StoreRun stores the result of a task run in a baur storage.

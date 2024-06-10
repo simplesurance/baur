@@ -3,8 +3,8 @@ package gitobjectid
 import (
 	"context"
 
-	"github.com/simplesurance/baur/v3/internal/digest"
-	"github.com/simplesurance/baur/v3/internal/vcs/git"
+	"github.com/simplesurance/baur/v4/internal/digest"
+	"github.com/simplesurance/baur/v4/internal/vcs/git"
 )
 
 type PrintfFn func(format string, a ...any)

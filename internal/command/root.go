@@ -10,10 +10,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v3/internal/command/term"
-	"github.com/simplesurance/baur/v3/internal/exec"
-	"github.com/simplesurance/baur/v3/internal/log"
-	"github.com/simplesurance/baur/v3/internal/version"
+	"github.com/simplesurance/baur/v4/internal/command/term"
+	"github.com/simplesurance/baur/v4/internal/exec"
+	"github.com/simplesurance/baur/v4/internal/log"
+	"github.com/simplesurance/baur/v4/internal/version"
 )
 
 var rootCmd = &cobra.Command{
