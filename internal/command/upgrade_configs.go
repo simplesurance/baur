@@ -20,7 +20,7 @@ func newUpgradeConfigsCmd() *upgradeConfigsCmd {
 	cmd := upgradeConfigsCmd{
 		Command: cobra.Command{
 			Use:               "configs",
-			Short:             "migrate baur configs to the newest version",
+			Short:             "upgrade baur configs from config version 4 to 5",
 			ValidArgsFunction: cobra.NoFileCompletions,
 		},
 	}
