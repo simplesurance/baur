@@ -28,7 +28,7 @@ type lsAppsCmd struct {
 	quiet    bool
 	absPaths bool
 	fields   *flag.Fields
-	format   *flag.Format
+	format   *flag.OneOf
 }
 
 func newLsAppsCmd() *lsAppsCmd {
@@ -55,7 +55,7 @@ func newLsAppsCmd() *lsAppsCmd {
 
 	cmd.Run = cmd.run
 
-	cmd.Flags().Var(cmd.format, "format", cmd.format.Usage(term.Highlight))
+	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
 	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,

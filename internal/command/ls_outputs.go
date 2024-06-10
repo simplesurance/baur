@@ -17,7 +17,7 @@ type lsOutputsCmd struct {
 
 	quiet  bool
 	csv    bool
-	format *flag.Format
+	format *flag.OneOf
 }
 
 func init() {
@@ -37,7 +37,7 @@ func newLsOutputsCmd() *lsOutputsCmd {
 
 	cmd.Run = cmd.run
 
-	cmd.Flags().Var(cmd.format, "format", cmd.format.Usage(term.Highlight))
+	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
 	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,

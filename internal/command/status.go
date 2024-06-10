@@ -49,7 +49,7 @@ type statusCmd struct {
 	buildStatus             flag.TaskStatus
 	fields                  *flag.Fields
 	requireCleanGitWorktree bool
-	format                  *flag.Format
+	format                  *flag.OneOf
 }
 
 func newStatusCmd() *statusCmd {
@@ -83,7 +83,7 @@ func newStatusCmd() *statusCmd {
 	}
 	cmd.Run = cmd.run
 
-	cmd.Flags().Var(cmd.format, "format", cmd.format.Usage(term.Highlight))
+	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
 	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
