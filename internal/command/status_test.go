@@ -17,6 +17,7 @@ import (
 	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
 )
 
@@ -24,8 +25,7 @@ func TestStatusTaskSpecArgParsing(t *testing.T) {
 	initTest(t)
 
 	repoDir := filepath.Join(testdataDir, "multitasks")
-	err := os.Chdir(repoDir)
-	require.NoError(t, err)
+	ostest.Chdir(t, repoDir)
 
 	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
 	require.NoError(t, err)
@@ -138,13 +138,7 @@ func TestStatusTaskSpecArgParsing(t *testing.T) {
 				"app3.test",
 			},
 			preRun: func(t *testing.T) {
-				cwd, err := os.Getwd()
-				require.NoError(t, err)
-
-				require.NoError(t, os.Chdir("app3"))
-				t.Cleanup(func() {
-					require.NoError(t, os.Chdir(cwd))
-				})
+				ostest.Chdir(t, "app3")
 			},
 		},
 		{
@@ -163,13 +157,7 @@ func TestStatusTaskSpecArgParsing(t *testing.T) {
 					require.NoError(t, os.RemoveAll(childDir))
 				})
 
-				cwd, err := os.Getwd()
-				require.NoError(t, err)
-
-				require.NoError(t, os.Chdir(childDir))
-				t.Cleanup(func() {
-					require.NoError(t, os.Chdir(cwd))
-				})
+				ostest.Chdir(t, childDir)
 			},
 		},
 
@@ -252,8 +240,7 @@ func TestStatusJson(t *testing.T) {
 	initTest(t)
 
 	repoDir := filepath.Join(testdataDir, "multitasks")
-	err := os.Chdir(repoDir)
-	require.NoError(t, err)
+	ostest.Chdir(t, repoDir)
 
 	dbURL, err := dbtest.CreateDB(dbtest.UniqueDBName())
 	require.NoError(t, err)

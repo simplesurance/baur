@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/simplesurance/baur/v3/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v3/internal/testutils/repotest"
 )
 
@@ -47,8 +48,7 @@ func TestShowArgs(t *testing.T) {
 		initTest(t)
 		appDir := filepath.Dir(app.FilePath())
 
-		err := os.Chdir(appDir)
-		require.NoError(t, err)
+		ostest.Chdir(t, appDir)
 
 		showCmd.Command.Run(&showCmd.Command, []string{"."})
 	})
@@ -59,7 +59,7 @@ func TestShowWithRepositoryArg(t *testing.T) {
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 	app := r.CreateSimpleApp(t)
 
-	require.NoError(t, os.Chdir(os.TempDir()))
+	ostest.Chdir(t, os.TempDir())
 	oldRepoPath := repositoryPath
 	t.Cleanup(func() {
 		repositoryPath = oldRepoPath
