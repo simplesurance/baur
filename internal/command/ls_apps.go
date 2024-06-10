@@ -59,16 +59,16 @@ func newLsAppsCmd() *lsAppsCmd {
 	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"List applications in RFC4180 CSV format")
+		"list applications in RFC4180 CSV format")
 	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
 
 	cmd.MarkFlagsMutuallyExclusive("format", "csv")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Suppress printing a header and progress dots")
+		"suppress printing a header and progress dots")
 
 	cmd.Flags().BoolVar(&cmd.absPaths, "abs-path", false,
-		"Show absolute instead of relative paths")
+		"show absolute instead of relative paths")
 
 	cmd.Flags().VarP(cmd.fields, "fields", "f",
 		cmd.fields.Usage(term.Highlight))

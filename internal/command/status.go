@@ -87,16 +87,16 @@ func newStatusCmd() *statusCmd {
 	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"Output status in RFC4180 CSV format")
+		"output status in RFC4180 CSV format")
 	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
 
 	cmd.MarkFlagsMutuallyExclusive("format", "csv")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Suppress printing a header and progress dots")
+		"suppress printing a header and progress dots")
 
 	cmd.Flags().BoolVar(&cmd.absPaths, "abs-path", false,
-		"Show absolute instead of relative paths")
+		"show absolute instead of relative paths")
 
 	cmd.Flags().VarP(&cmd.buildStatus, "status", "s",
 		cmd.buildStatus.Usage(term.Highlight))

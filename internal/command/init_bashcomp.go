@@ -54,7 +54,8 @@ func newInitBashCompCmd() *initBashCompCmd {
 
 	cmd.Run = cmd.run
 
-	cmd.Flags().BoolVar(&cmd.stdout, "stdout", false, "write completion script to stdout")
+	cmd.Flags().BoolVar(&cmd.stdout, "stdout", false,
+		"write completion script to stdout")
 
 	return &cmd
 }

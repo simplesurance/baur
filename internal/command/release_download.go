@@ -67,9 +67,7 @@ func newReleaseDownloadCmd() *releaseDownloadCmd {
 		},
 	}
 
-	cmd.Flags().StringSliceVar(
-		&cmd.taskIDs,
-		"tasks", nil,
+	cmd.Flags().StringSliceVar(&cmd.taskIDs, "tasks", nil,
 		"comma-separated list of Task IDs (APP-NAME.TASK-NAME) for which the outputs are downloaded\n"+
 			"(default: all)",
 	)

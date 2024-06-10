@@ -47,10 +47,7 @@ func newReleaseExistsCmd() *releaseExistsCmd {
 	}
 
 	cmd.Run = cmd.run
-	cmd.Flags().BoolVarP(
-		&cmd.quiet,
-		"quiet", "q",
-		false,
+	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"suppress printing a result message",
 	)
 

@@ -95,8 +95,8 @@ func newDiffInputsCmd() *diffInputsCmd {
 		"show output in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"In plain format, listing the inputs that differ is suppressed.\n"+
-			"In CSV format the headers are suppressed.")
+		"in plain format: listing the inputs that differ is suppressed.\n"+
+			"in CSV format: headers are not printed.")
 
 	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
 		"include a string as input of the task or run specified by the first argument,\n"+

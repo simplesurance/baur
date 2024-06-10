@@ -112,8 +112,8 @@ func (f *Fields) Usage(highlightFn func(a ...any) string) string {
 		fields[i] = highlightFn(f)
 	}
 
-	return fmt.Sprintf(`Specify the printed fields and their order:
-Format: %s
+	return fmt.Sprintf(`specifies the printed fields and their order:
+format: %s
 where %s is one of: %s
 `,
 		highlightFn(f.Type()),

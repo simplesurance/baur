@@ -78,28 +78,28 @@ func newLsRunsCmd() *lsRunsCmd {
 	cmd.Run = cmd.run
 
 	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"List runs in RFC4180 CSV format")
+		"list runs in RFC4180 CSV format")
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"Suppress printing a header")
+		"suppress printing a header")
 
 	cmd.Flags().VarP(cmd.sort, "sort", "s",
 		cmd.sort.Usage(term.Highlight))
 
 	cmd.Flags().UintVarP(&cmd.limit, "limit", "l", storage.NoLimit,
-		fmt.Sprintf("Limit the number of runs shown, %s shows all runs", term.Highlight("0")))
+		fmt.Sprintf("limit the number of runs shown, %s shows all runs", term.Highlight("0")))
 
 	cmd.Flags().VarP(&cmd.after, "after", "a",
-		fmt.Sprintf("Only show runs that were started after this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
+		fmt.Sprintf("only show runs that were started after this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
 
 	cmd.Flags().VarP(&cmd.before, "before", "b",
-		fmt.Sprintf("Only show runs that were started before this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
+		fmt.Sprintf("only show runs that were started before this datetime.\nFormat: %s", term.Highlight(flag.DateTimeFormatDescr)))
 
 	cmd.Flags().StringVar(&cmd.input, "has-input", "",
 		fmt.Sprintf(
-			`Only show runs that have the given input.
-File inputs are specified by their repository relative path.
-String inputs are specified with a '%s' prefix, e.g. string:my_input_str.`,
+			"only show runs that have the given input,\n"+
+				"file inputs are specified by their repository relative path,\n"+
+				"string inputs are specified with a '%s' prefix (e.g. string:my_input_str.)",
 			term.Highlight("string:")),
 	)
 
