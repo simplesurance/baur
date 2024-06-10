@@ -1,6 +1,6 @@
 
 # Version of baur configuration format
-config_version = 6
+config_version = 7
 
 [Database]
 

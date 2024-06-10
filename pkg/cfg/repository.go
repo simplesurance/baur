@@ -13,7 +13,7 @@ const (
 	// Version identifies the format of the configuration files that the
 	// package can parse. Whenever an incompatible change is made, the
 	// Version number is increased.
-	Version int = 6
+	Version int = 7
 )
 
 // Repository contains the repository configuration.
