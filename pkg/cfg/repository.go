@@ -89,7 +89,8 @@ func (r *Repository) Validate() error {
 	if r.ConfigVersion != Version {
 		return fmt.Errorf("incompatible configuration files\n"+
 			"config_version value is %d, expecting version: %d\n"+
-			"Update your baur configuration files or downgrade baur.", r.ConfigVersion, Version)
+			"Update your baur configuration files or downgrade baur.",
+			r.ConfigVersion, Version)
 	}
 
 	err := r.Discover.validate()

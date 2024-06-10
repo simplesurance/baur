@@ -1,4 +1,4 @@
-// Package v5 provides helpers to convert baur configs in v5 format (baur 2.x) to v6 (baur 3.0)
+// Package v5 provides helpers to convert baur configs in v5 format (baur 2.x) to v7 (baur 4.x)
 package v5
 
 import (

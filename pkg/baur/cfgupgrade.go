@@ -42,20 +42,20 @@ func (u *CfgUpgrader) Upgrade() error {
 		return fmt.Errorf("loading repository config %q succeeded but 'config_version' parameter is missing or 0", repoCfgPath)
 	}
 
-	if repoCfg.ConfigVersion != 5 {
-		return fmt.Errorf("%q specifies 'config_version=%d', upgrading is only supported from version 5", repoCfgPath, repoCfg.ConfigVersion)
+	if repoCfg.ConfigVersion != 5 && repoCfg.ConfigVersion != 6 {
+		return fmt.Errorf("%q specifies 'config_version=%d', upgrading is only supported from version 5 and 6", repoCfgPath, repoCfg.ConfigVersion)
 	}
 
-	if err := u.upgradeV5(repoCfgPath); err != nil {
-		return fmt.Errorf("upgrading configuration files from version %d to %d failed: %w", repoCfg.ConfigVersion, 6, err)
+	// the repository config of version 5, 6 and 7 are the same 7 only the
+	// ConfigVersion value changes
+	if err := u.upgradeCfgVersion(repoCfgPath); err != nil {
+		return fmt.Errorf("upgrading configuration files from version %d to %d failed: %w", repoCfg.ConfigVersion, cfg.Version, err)
 	}
 
 	return nil
 }
 
-func (u *CfgUpgrader) upgradeV5(repoCfgPath string) error {
-	// the repository config of version 5, 6 and 7 are the same 7 only the
-	// ConfigVersion value changes
+func (u *CfgUpgrader) upgradeCfgVersion(repoCfgPath string) error {
 	oldRepoCfg, err := cfg.RepositoryFromFile(repoCfgPath)
 	if err != nil {
 		return fmt.Errorf("loading repository config %q failed: %w", repoCfgPath, err)
@@ -70,7 +70,7 @@ func (u *CfgUpgrader) upgradeV5(repoCfgPath string) error {
 		return fmt.Errorf("writing new repository config file to disk failed: %w", err)
 	}
 
-	log.Debugf("%s: was updated from v5 to v6", repoCfgPath)
+	log.Debugf("%s: was updated from v%d to v%d", repoCfgPath, oldRepoCfg.ConfigVersion, newRepoCfg.ConfigVersion)
 
 	return nil
 }
