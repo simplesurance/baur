@@ -2,12 +2,10 @@
 package v5
 
 import (
-	cfg_v5 "github.com/simplesurance/baur/v2/pkg/cfg"
-
 	"github.com/simplesurance/baur/v3/pkg/cfg"
 )
 
-func UpgradeRepositoryConfig(old *cfg_v5.Repository) *cfg.Repository {
+func UpgradeRepositoryConfig(old *cfg.Repository) *cfg.Repository {
 	return &cfg.Repository{
 		ConfigVersion: cfg.Version,
 		Database: cfg.Database{

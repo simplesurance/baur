@@ -15,7 +15,6 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/moby/term v0.0.0-20221120202655-abb19827d345 // indirect
 	github.com/pelletier/go-toml v1.9.5
-	github.com/simplesurance/baur v0.20.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.20.0 // indirect
@@ -79,7 +78,6 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rs/xid v1.2.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sync v0.7.0 // indirect

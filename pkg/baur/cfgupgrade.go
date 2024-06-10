@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	cfg_v5 "github.com/simplesurance/baur/v2/pkg/cfg"
-
 	"github.com/simplesurance/baur/v3/internal/fs"
 	"github.com/simplesurance/baur/v3/internal/log"
 	"github.com/simplesurance/baur/v3/pkg/cfg"
@@ -56,7 +54,9 @@ func (u *CfgUpgrader) Upgrade() error {
 }
 
 func (u *CfgUpgrader) upgradeV5(repoCfgPath string) error {
-	oldRepoCfg, err := cfg_v5.RepositoryFromFile(repoCfgPath)
+	// the repository config of version 5, 6 and 7 are the same 7 only the
+	// ConfigVersion value changes
+	oldRepoCfg, err := cfg.RepositoryFromFile(repoCfgPath)
 	if err != nil {
 		return fmt.Errorf("loading repository config %q failed: %w", repoCfgPath, err)
 	}
