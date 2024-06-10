@@ -286,14 +286,14 @@ func TestEnvVarInput_Required(t *testing.T) {
 			stdout, _ = interceptCmdOutput(t)
 			statusCmd := newStatusCmd()
 			statusCmd.SetArgs([]string{
-				"--csv", "-q", "-f", "run-id", fmt.Sprintf("%s.%s", appName, taskName)},
+				"--format=csv", "-q", "-f", "run-id", fmt.Sprintf("%s.%s", appName, taskName)},
 			)
 			require.NoError(t, statusCmd.Execute())
 			runID := strings.TrimSpace(stdout.String())
 
 			stdout, stderr := interceptCmdOutput(t)
 			lsInputsCmd := newLsInputsCmd()
-			lsInputsCmd.SetArgs([]string{"--csv", runID})
+			lsInputsCmd.SetArgs([]string{"--format=csv", runID})
 			require.NoError(t, lsInputsCmd.Execute())
 			assert.Contains(t, stdout.String(), "$"+envVarName, "env var is missing in 'ls inputs' output")
 

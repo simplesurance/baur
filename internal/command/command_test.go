@@ -29,7 +29,7 @@ func runInitDb(t *testing.T) {
 	initDb(initDbCmd, nil)
 }
 
-// baurCSVLsApps runs "baur ls apps --csv" and returns a slice where each
+// baurCSVLsApps runs "baur ls apps --format=csv" and returns a slice where each
 // element is a slice of csv fields per line
 func baurCSVLsApps(t *testing.T) [][]string {
 	t.Helper()
@@ -47,7 +47,7 @@ func baurCSVLsApps(t *testing.T) [][]string {
 	return statusOut
 }
 
-// baurCSVLsInputs runs "baur ls inputs --csv" and returns the list of files as
+// baurCSVLsInputs runs "baur ls inputs --format=csv" and returns the list of files as
 // string slice. args is passed as argument to the "baur ls inputs" command.
 func baurCSVLsInputs(t *testing.T, args ...string) []string {
 	t.Helper()
@@ -55,7 +55,7 @@ func baurCSVLsInputs(t *testing.T, args ...string) []string {
 	stdoutBuf, _ := interceptCmdOutput(t)
 
 	lsInputsCmd := newLsInputsCmd()
-	lsInputsCmd.csv = true
+	lsInputsCmd.format.Val = "csv"
 
 	lsInputsCmd.Command.Run(&lsInputsCmd.Command, args)
 
@@ -75,7 +75,7 @@ func baurCSVStatusCmd(t *testing.T, cmd *statusCmd) []*csvStatus {
 
 	stdoutBuf, _ := interceptCmdOutput(t)
 
-	cmd.format = &flag.Format{Val: flag.FormatCSV}
+	cmd.format.Val = "csv"
 	cmd.quiet = true
 	err := cmd.Execute()
 	require.NoError(t, err)
@@ -97,12 +97,12 @@ func baurCSVStatusCmd(t *testing.T, cmd *statusCmd) []*csvStatus {
 	return result
 }
 
-// baurCSVStatus runs "baur status --csv" and returns the result.
+// baurCSVStatus runs "baur status --format=csv" and returns the result.
 func baurCSVStatus(t *testing.T, inputStr []string, lookupInputStr string) []*csvStatus {
 	t.Helper()
 
 	statusCmd := newStatusCmd()
-	statusCmd.csv = true
+	statusCmd.format.Val = "csv"
 	statusCmd.quiet = true
 	statusCmd.inputStr = inputStr
 	statusCmd.lookupInputStr = lookupInputStr

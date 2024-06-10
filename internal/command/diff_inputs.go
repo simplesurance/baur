@@ -10,6 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur/v3/internal/command/flag"
+	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
 	"github.com/simplesurance/baur/v3/internal/vcs/git"
@@ -32,9 +34,9 @@ func init() {
 type diffInputsCmd struct {
 	cobra.Command
 
-	csv      bool
 	quiet    bool
 	inputStr []string
+	format   *flag.OneOf
 
 	gitRepo *git.Repository
 }
@@ -87,16 +89,22 @@ func newDiffInputsCmd() *diffInputsCmd {
 				withoutPaths:     true,
 			}),
 		},
+		format: flag.NewOneOfFlag(
+			flag.FormatFlagName,
+			flag.FormatPlain,
+			"output format",
+			flag.FormatCSV, flag.FormatPlain,
+		),
 	}
 
 	cmd.Run = cmd.run
 
-	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"show output in RFC4180 CSV format")
+	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
+	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
-		"in plain format: listing the inputs that differ is suppressed.\n"+
-			"in CSV format: headers are not printed.")
+		"with --format=plain: listing the inputs that differ is suppressed.\n"+
+			"with --format=csv: headers are not printed.")
 
 	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
 		"include a string as input of the task or run specified by the first argument,\n"+
@@ -344,13 +352,15 @@ func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
 		headers = []string{"State", "Path", "Digest1", "Digest2"}
 	}
 
-	if c.csv {
+	csvFormat := c.format.Value() == flag.FormatCSV
+
+	if csvFormat {
 		formatter = csv.New(headers, stdout)
 	} else {
 		formatter = table.New(headers, stdout)
 	}
 
-	if c.csv || !c.quiet {
+	if csvFormat || !c.quiet {
 		for _, diff := range diffs {
 			mustWriteRow(formatter, diff.State, diff.Path, diff.Digest1, diff.Digest2)
 		}
@@ -359,7 +369,7 @@ func (c *diffInputsCmd) printOutput(diffs []*baur.InputDiff) {
 	err := formatter.Flush()
 	exitOnErr(err)
 
-	if c.csv {
+	if csvFormat {
 		return
 	}
 

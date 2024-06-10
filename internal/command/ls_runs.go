@@ -24,16 +24,16 @@ Arguments:
 `
 
 const lsRunsExample = `
-baur ls runs -s duration-desc calc		 list task runs of the calc
-						 application, sorted by
-						 run duration
-baur ls runs --csv --after=2018.09.27-11:30 '*'	 list all task runs in csv format that
-						 were started after 2018.09.27 11:30
-baur ls runs --limit=1 calc			 list a single task run of the calc
-						 application
-baur ls runs --has-input=string:master calc	 list task runs of the calc
-						 application that have a
-						 'string:master' input`
+baur ls runs -s duration-desc calc	list task runs of the calc
+					application, sorted by run duration
+baur ls runs --format=csv --after=2018.09.27-11:30 '*'
+					list all task runs in csv format that
+					were started after 2018.09.27 11:30
+baur ls runs --limit=1 calc		list a single task run of the calc
+					application
+baur ls runs --has-input=string:master calc
+					list task runs of the calc application
+					that have a 'string:master' input`
 
 func init() {
 	lsCmd.AddCommand(&newLsRunsCmd().Command)
@@ -42,7 +42,7 @@ func init() {
 type lsRunsCmd struct {
 	cobra.Command
 
-	csv    bool
+	format *flag.OneOf
 	after  flag.DateTimeFlagValue
 	before flag.DateTimeFlagValue
 	input  string
@@ -73,12 +73,18 @@ func newLsRunsCmd() *lsRunsCmd {
 			"time":     storage.FieldStartTime,
 			"duration": storage.FieldDuration,
 		}),
+		format: flag.NewOneOfFlag(
+			flag.FormatFlagName,
+			flag.FormatPlain,
+			"output format",
+			flag.FormatCSV, flag.FormatPlain,
+		),
 	}
 
 	cmd.Run = cmd.run
 
-	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"list runs in RFC4180 CSV format")
+	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
+	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"suppress printing a header")
@@ -139,7 +145,7 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 	defer psql.Close()
 
 	var formatter Formatter
-	if c.csv {
+	if c.format.Val == flag.FormatCSV {
 		formatter = csv.New(nil, stdout)
 	} else {
 		formatter = table.New(nil, stdout)
@@ -205,7 +211,7 @@ func (c *lsRunsCmd) printTaskRun(formatter Formatter, taskRun *storage.TaskRunWi
 		taskRun.StartTimestamp.Format(flag.DateTimeFormatTz),
 		term.FormatDuration(
 			taskRun.StopTimestamp.Sub(taskRun.StartTimestamp),
-			term.FormatBaseWithoutUnitName(c.csv),
+			term.FormatBaseWithoutUnitName(c.format.Val == flag.FormatCSV),
 		),
 		taskRun.TotalInputDigest,
 	)

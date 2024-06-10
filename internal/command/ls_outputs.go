@@ -16,7 +16,6 @@ type lsOutputsCmd struct {
 	cobra.Command
 
 	quiet  bool
-	csv    bool
 	format *flag.OneOf
 }
 
@@ -40,18 +39,8 @@ func newLsOutputsCmd() *lsOutputsCmd {
 	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
 	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
-	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"show output in RFC4180 CSV format")
-	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
-
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"only show the URIs of the outputs in plain and csv format")
-
-	cmd.PreRun = func(*cobra.Command, []string) {
-		if cmd.csv {
-			cmd.format.Val = flag.FormatCSV
-		}
-	}
 
 	return &cmd
 }

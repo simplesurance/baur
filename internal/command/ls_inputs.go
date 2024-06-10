@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/command/term"
 	"github.com/simplesurance/baur/v3/internal/format/csv"
 	"github.com/simplesurance/baur/v3/internal/format/table"
@@ -19,7 +20,7 @@ func init() {
 type lsInputsCmd struct {
 	cobra.Command
 
-	csv        bool
+	format     *flag.OneOf
 	quiet      bool
 	showDigest bool
 	inputStr   []string
@@ -35,12 +36,18 @@ func newLsInputsCmd() *lsInputsCmd {
 				withoutWildcards: true,
 			}),
 		},
+		format: flag.NewOneOfFlag(
+			flag.FormatFlagName,
+			flag.FormatPlain,
+			"output format",
+			flag.FormatCSV, flag.FormatPlain,
+		),
 	}
 
 	cmd.Run = cmd.run
 
-	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"show output in RFC4180 CSV format")
+	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
+	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"Suppress printing headers and the total input digest")
@@ -114,7 +121,9 @@ func (c *lsInputsCmd) mustPrintTaskInputs(inputs *baur.Inputs) {
 		}
 	}
 
-	if c.csv {
+	isCSV := c.format.Val == flag.FormatCSV
+
+	if isCSV {
 		formatter = csv.New(headers, stdout)
 	} else {
 		formatter = table.New(headers, stdout)
@@ -135,7 +144,7 @@ func (c *lsInputsCmd) mustPrintTaskInputs(inputs *baur.Inputs) {
 	err := formatter.Flush()
 	exitOnErr(err)
 
-	if c.showDigest && !c.quiet && !c.csv {
+	if c.showDigest && !c.quiet && !isCSV {
 		totalDigest, err := inputs.Digest()
 		exitOnErr(err, "calculating total input digest failed")
 

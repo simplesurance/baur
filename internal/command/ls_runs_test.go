@@ -29,7 +29,7 @@ func TestLsRunsHasInput(t *testing.T) {
 
 	stdoutBuf, _ := interceptCmdOutput(t)
 	lsRunsCmd := newLsRunsCmd()
-	lsRunsCmd.csv = true
+	lsRunsCmd.format.Val = "csv"
 
 	relAppCfgPath, err := filepath.Rel(r.Dir, app.FilePath())
 	require.NoError(t, err)

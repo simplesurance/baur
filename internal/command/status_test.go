@@ -14,7 +14,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v3/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
@@ -265,7 +264,7 @@ func TestStatusJson(t *testing.T) {
 	t.Run("default fields", func(t *testing.T) {
 		initTest(t)
 		statusCmd := newStatusCmd()
-		statusCmd.format = &flag.Format{Val: flag.FormatJSON}
+		statusCmd.format.Val = "json"
 		stdoutBuf, _ := interceptCmdOutput(t)
 		require.NoError(t, statusCmd.Execute())
 
@@ -284,7 +283,7 @@ func TestStatusJson(t *testing.T) {
 	t.Run("custom fields", func(t *testing.T) {
 		initTest(t)
 		statusCmd := newStatusCmd()
-		statusCmd.format = &flag.Format{Val: flag.FormatJSON}
+		statusCmd.format.Val = "json"
 		require.NoError(t, statusCmd.fields.Set("app-name,git-commit"))
 		statusCmd.SetArgs([]string{"app3.check"})
 		stdoutBuf, _ := interceptCmdOutput(t)

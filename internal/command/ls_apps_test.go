@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v3/internal/command/flag"
 	"github.com/simplesurance/baur/v3/internal/testutils/gittest"
 
 	"github.com/stretchr/testify/assert"
@@ -23,7 +22,7 @@ func TestLsAppsJSON(t *testing.T) {
 	gittest.CreateRepository(t, repoDir)
 
 	lsAppsCmd := newLsAppsCmd()
-	lsAppsCmd.format = &flag.Format{Val: flag.FormatJSON}
+	lsAppsCmd.format.Val = "json"
 	stdoutBuf, _ := interceptCmdOutput(t)
 	require.NoError(t, lsAppsCmd.Execute())
 

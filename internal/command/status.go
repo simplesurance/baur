@@ -41,7 +41,6 @@ func init() {
 type statusCmd struct {
 	cobra.Command
 
-	csv                     bool
 	quiet                   bool
 	absPaths                bool
 	inputStr                []string
@@ -86,12 +85,6 @@ func newStatusCmd() *statusCmd {
 	cmd.Flags().Var(cmd.format, flag.FormatFlagName, cmd.format.Usage(term.Highlight))
 	_ = cmd.format.RegisterFlagCompletion(&cmd.Command)
 
-	cmd.Flags().BoolVar(&cmd.csv, "csv", false,
-		"output status in RFC4180 CSV format")
-	_ = cmd.Flags().MarkDeprecated("csv", "use --format=csv instead")
-
-	cmd.MarkFlagsMutuallyExclusive("format", "csv")
-
 	cmd.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,
 		"suppress printing a header and progress dots")
 
@@ -112,12 +105,6 @@ func newStatusCmd() *statusCmd {
 
 	cmd.Flags().BoolVarP(&cmd.requireCleanGitWorktree, flagNameRequireCleanGitWorktree, "c", false,
 		"fail if the git repository contains modified or untracked files")
-
-	cmd.PreRun = func(*cobra.Command, []string) {
-		if cmd.csv {
-			cmd.format.Val = flag.FormatCSV
-		}
-	}
 
 	return &cmd
 }

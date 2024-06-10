@@ -27,7 +27,7 @@ func TestLsInputsTaskAndRunInputsAreTheSame(t *testing.T) {
 	stdout, _ := interceptCmdOutput(t)
 
 	lsInputsCmd := newLsInputsCmd()
-	lsInputsCmd.SetArgs([]string{"--csv", "--digests", taskSpec})
+	lsInputsCmd.SetArgs([]string{"--format=csv", "--digests", taskSpec})
 	err := lsInputsCmd.Execute()
 	require.NoError(t, err)
 
@@ -37,7 +37,7 @@ func TestLsInputsTaskAndRunInputsAreTheSame(t *testing.T) {
 	runCmd.run(&runCmd.Command, []string{taskSpec})
 
 	stdout.Reset()
-	lsInputsCmd.SetArgs([]string{"--csv", "--digests", "1"})
+	lsInputsCmd.SetArgs([]string{"--format=csv", "--digests", "1"})
 	err = lsInputsCmd.Execute()
 	require.NoError(t, err)
 
