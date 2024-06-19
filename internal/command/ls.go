@@ -6,7 +6,7 @@ import (
 
 var lsCmd = &cobra.Command{
 	Use:   "ls",
-	Short: "list apps, builds, inputs",
+	Short: "list apps, runs, inputs",
 }
 
 func init() {
