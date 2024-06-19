@@ -31,9 +31,9 @@ func (v *DateTimeFlagValue) Set(timeStr string) error {
 	var t time.Time
 	var err error
 
-	t, err = time.Parse(DateTimeFormat, timeStr)
+	t, err = time.ParseInLocation(DateTimeFormat, timeStr, time.Local)
 	if err != nil {
-		t, err = time.Parse(DateTimeFormatTz, timeStr)
+		t, err = time.ParseInLocation(DateTimeFormatTz, timeStr, time.Local)
 		if err != nil {
 			return err
 		}
