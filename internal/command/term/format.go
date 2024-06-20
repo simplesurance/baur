@@ -53,13 +53,13 @@ func FormatDuration(d time.Duration, opts ...FormatOption) string {
 		return fmt.Sprintf("%.3f", d.Seconds())
 	}
 
-	if d.Minutes() > 1 {
-		return d.Round(time.Second).String()
+	if d.Minutes() >= 1 {
+		return d.Truncate(time.Second).String()
 	}
 
-	if d.Milliseconds() > 1 {
-		return d.Round(time.Millisecond).String()
+	if d.Seconds() >= 1 {
+		return d.Truncate(time.Millisecond).String()
 	}
 
-	return d.String()
+	return d.Truncate(time.Microsecond).String()
 }
