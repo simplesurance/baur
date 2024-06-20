@@ -160,7 +160,7 @@ func getPSQLURIEnv() string {
 }
 
 // postgresqlURL returns the value of the environment variable [envVarPSQLURL],
-// if is set.
+// if set.
 // Otherwise it searches for a baur repository and returns the postgresql url
 // from the repository config.
 // If the repository object is needed, use [mustNewCompatibleStorageRepo]

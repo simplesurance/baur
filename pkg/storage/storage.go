@@ -115,6 +115,16 @@ const (
 	NoLimit uint = 0
 )
 
+type TaskRunsDeleteResult struct {
+	DeletedTaskRuns int64
+	DeletedTasks    int64
+	DeletedApps     int64
+	DeletedOutputs  int64
+	DeletedUploads  int64
+	DeletedInputs   int64
+	DeletedVCS      int64
+}
+
 // Storer is an interface for storing and retrieving baur task runs
 type Storer interface {
 	Close() error
@@ -150,6 +160,7 @@ type Storer interface {
 		limit uint,
 		callback func(*TaskRunWithID) error,
 	) error
+	TaskRunsDelete(ctx context.Context, before time.Time, pretend bool) (*TaskRunsDeleteResult, error)
 
 	// Inputs returns the inputs of a task run. If no records were found,
 	// the method returns ErrNotExist.
