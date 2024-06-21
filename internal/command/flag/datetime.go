@@ -19,7 +19,6 @@ const (
 // DateTimeFlagValue is the DateTime pflag flag
 type DateTimeFlagValue struct {
 	time.Time
-	IsSet bool
 }
 
 // String returns the default value in the usage output
@@ -41,7 +40,6 @@ func (v *DateTimeFlagValue) Set(timeStr string) error {
 	}
 
 	v.Time = t
-	v.IsSet = true
 
 	return nil
 }
