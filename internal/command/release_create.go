@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/simplesurance/baur/v4/internal/command/term"
 	"github.com/simplesurance/baur/v4/internal/log"
@@ -141,7 +142,7 @@ func (c *releaseCreateCmd) run(cmd *cobra.Command, args []string) {
 		metadataReader = fd
 	}
 
-	err = storageClt.CreateRelease(ctx, releaseName, runIDs, metadataReader)
+	err = storageClt.CreateRelease(ctx, releaseName, time.Now(), runIDs, metadataReader)
 	if errors.Is(err, storage.ErrExists) {
 		stderr.PrintErrf("release with name %q already exists, release names must be unique\n", releaseName)
 		exitFunc(exitCodeAlreadyExist)

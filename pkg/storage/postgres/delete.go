@@ -10,6 +10,44 @@ import (
 	"github.com/simplesurance/baur/v4/pkg/storage"
 )
 
+func (c *Client) ReleasesDelete(ctx context.Context, before time.Time, pretend bool) (*storage.ReleasesDeleteResult, error) {
+	var result storage.ReleasesDeleteResult
+
+	err := c.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+		var err error
+		if pretend {
+			defer tx.Rollback(ctx) //nolint: errcheck
+		}
+
+		result.DeletedReleases, err = c.deleteOldReleases(ctx, tx, before)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil && !(pretend && errors.Is(err, pgx.ErrTxClosed)) {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (*Client) deleteOldReleases(ctx context.Context, tx pgx.Tx, before time.Time) (int64, error) {
+	const query = `
+	      DELETE FROM release
+	       WHERE created_at < $1
+	`
+
+	t, err := tx.Exec(ctx, query, before)
+	if err != nil {
+		return 0, newQueryError(query, err, before)
+	}
+
+	return t.RowsAffected(), nil
+}
+
 func (c *Client) TaskRunsDelete(ctx context.Context, before time.Time, pretend bool) (*storage.TaskRunsDeleteResult, error) {
 	var result storage.TaskRunsDeleteResult
 
@@ -19,7 +57,7 @@ func (c *Client) TaskRunsDelete(ctx context.Context, before time.Time, pretend b
 			defer tx.Rollback(ctx) //nolint: errcheck
 		}
 
-		result.DeletedTaskRuns, err = c.deleteUnusedTaskRuns(ctx, tx, before)
+		result.DeletedTaskRuns, err = c.deleteOldTaskRuns(ctx, tx, before)
 		if err != nil {
 			return err
 		}
@@ -64,7 +102,7 @@ func (c *Client) TaskRunsDelete(ctx context.Context, before time.Time, pretend b
 	return &result, nil
 }
 
-func (*Client) deleteUnusedTaskRuns(ctx context.Context, tx pgx.Tx, before time.Time) (int64, error) {
+func (*Client) deleteOldTaskRuns(ctx context.Context, tx pgx.Tx, before time.Time) (int64, error) {
 	const query = `
 	      DELETE FROM task_run
 	       WHERE start_timestamp < $1

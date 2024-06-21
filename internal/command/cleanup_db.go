@@ -1,31 +1,37 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/simplesurance/baur/v4/internal/command/flag"
 	"github.com/simplesurance/baur/v4/internal/command/term"
+	"github.com/simplesurance/baur/v4/pkg/storage"
 
 	"github.com/spf13/cobra"
 )
 
 type cleanupDbCmd struct {
 	cobra.Command
-	taskRunsBefore flag.DateTimeFlagValue
-	force          bool
-	pretend        bool
+	before  flag.DateTimeFlagValue
+	force   bool
+	pretend bool
 }
 
 const timeFormat = "02 Jan 06 15:04:05 MST"
 const cleanupDbGracetime = time.Second * 5
 
+const deleteTargetTaskRuns = "taskruns"
+const deleteTargetReleases = "releases"
+
 var cleanupDbLongHelp = fmt.Sprintf(`
 Delete old data from the baur database.
-The command deletes information about tasks runs that started to run before
-a given date from the database. It also removes records that became
-dangling because all task runs referencing them were deleted.
+The command deletes information about releases or tasks runs that have been
+created before a given date from the database.
+It also removes records that became dangling because all task runs referencing
+them were deleted.
 Task runs that are referenced by a release are not deleted.
 
 The command can be run without access to the baur repository by specifying the
@@ -35,7 +41,8 @@ PostgreSQL URI via the environment variable %s.
 )
 
 const cleanupDbCmdExample = `
-baur cleanup db --pretend --task-runs-before=2023.06.01-13:30
+baur cleanup db --force --before=2023.06.01-13:30 releases
+baur cleanup db --pretend --before=2023.06.01-13:30 taskruns
 `
 
 func init() {
@@ -45,20 +52,20 @@ func init() {
 func newCleanupDbCmd() *cleanupDbCmd {
 	cmd := cleanupDbCmd{
 		Command: cobra.Command{
-			Args:    cobra.NoArgs,
-			Use:     "db --task-runs-before=DATETIME",
-			Long:    strings.TrimSpace(cleanupDbLongHelp),
-			Example: strings.TrimSpace(cleanupDbCmdExample),
+			Args:      cobra.ExactArgs(1),
+			Use:       "db --before=DATETIME releases|taskruns",
+			Long:      strings.TrimSpace(cleanupDbLongHelp),
+			Example:   strings.TrimSpace(cleanupDbCmdExample),
+			ValidArgs: []string{"releases", "taskruns"},
 		},
 	}
 
-	cmd.Flags().Var(&cmd.taskRunsBefore, "task-runs-before",
+	cmd.Flags().Var(&cmd.before, "before",
 		fmt.Sprintf(
-			"delete tasks that ran before DATETIME\nFormat: %s",
+			"delete records that have been created before DATETIME\nFormat: %s",
 			term.Highlight(flag.DateTimeFormatDescr),
 		),
 	)
-
 	cmd.Flags().BoolVarP(&cmd.pretend, "pretend", "p", false,
 		"do not delete anything, only pretend how many records would be deleted",
 	)
@@ -70,7 +77,7 @@ func newCleanupDbCmd() *cleanupDbCmd {
 		),
 	)
 
-	if err := cmd.MarkFlagRequired("task-runs-before"); err != nil {
+	if err := cmd.MarkFlagRequired("before"); err != nil {
 		panic(err)
 	}
 
@@ -79,19 +86,43 @@ func newCleanupDbCmd() *cleanupDbCmd {
 	return &cmd
 }
 
-func (c *cleanupDbCmd) run(cmd *cobra.Command, _ []string) {
+func (c *cleanupDbCmd) run(cmd *cobra.Command, args []string) {
 	var op string
+	var target string
+	var subject string
+
+	psqlURL, err := postgresqlURL()
+	exitOnErr(err)
+
+	storageClt := mustNewCompatibleStorage(psqlURL)
+
+	switch args[0] {
+	case deleteTargetTaskRuns:
+		target = deleteTargetTaskRuns
+		subject = "task runs"
+	case deleteTargetReleases:
+		target = deleteTargetReleases
+		subject = "releases"
+	default:
+		fatalf("internal error: impossible cmdline arguments: %v\n", args)
+	}
+
 	if c.pretend {
 		op = term.Highlight("pretending to delete")
 	} else {
 		op = term.Highlight("deleting")
 	}
+
 	stdout.Printf(
-		"%s tasks runs older then %s and dangling records,\n"+
-			"tasks runs referenced by releases are kept\n",
-		op,
-		term.Highlight(c.taskRunsBefore.Format(timeFormat)),
+		"%s %s older then %s",
+		op, subject,
+		term.Highlight(c.before.Format(timeFormat)),
 	)
+	if target == deleteTargetTaskRuns {
+		stdout.Printf(" and dangling records,\ntasks runs referenced by releases are kept\n")
+	} else {
+		stdout.Println()
+	}
 
 	if !c.force {
 		stdout.Printf("starting in %s seconds, press %s to abort\n",
@@ -100,13 +131,42 @@ func (c *cleanupDbCmd) run(cmd *cobra.Command, _ []string) {
 		stdout.Println("starting deleting...")
 	}
 
-	psqlURL, err := postgresqlURL()
-	exitOnErr(err)
+	if target == deleteTargetReleases {
+		exitOnErr(c.deleteReleases(cmd.Context(), storageClt))
+		return
+	}
 
-	storageClt := mustNewCompatibleStorage(psqlURL)
+	if target == deleteTargetTaskRuns {
+		exitOnErr(c.deleteTaskRuns(cmd.Context(), storageClt))
+		return
+	}
+}
+
+func (c *cleanupDbCmd) deleteReleases(ctx context.Context, storageClt storage.Storer) error {
 	startTime := time.Now()
-	result, err := storageClt.TaskRunsDelete(cmd.Context(), c.taskRunsBefore.Time, c.pretend)
-	exitOnErr(err)
+	result, err := storageClt.ReleasesDelete(ctx, c.before.Time, c.pretend)
+	if err != nil {
+		return err
+	}
+
+	stdout.Printf(
+		"\n"+
+			"deletion %s in %s, deleted records:\n"+
+			"%-16s %s\n",
+		term.GreenHighlight("successful"),
+		term.FormatDuration(time.Since(startTime)),
+		"Releases:", term.Highlight(result.DeletedReleases),
+	)
+
+	return nil
+}
+
+func (c *cleanupDbCmd) deleteTaskRuns(ctx context.Context, storageClt storage.Storer) error {
+	startTime := time.Now()
+	result, err := storageClt.TaskRunsDelete(ctx, c.before.Time, c.pretend)
+	if err != nil {
+		return err
+	}
 
 	stdout.Printf(
 		"\n"+
@@ -128,4 +188,6 @@ func (c *cleanupDbCmd) run(cmd *cobra.Command, _ []string) {
 		"Uploads:", term.Highlight(result.DeletedUploads),
 		"VCSs:", term.Highlight(result.DeletedVCS),
 	)
+
+	return nil
 }

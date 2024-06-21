@@ -124,6 +124,9 @@ type TaskRunsDeleteResult struct {
 	DeletedInputs   int64
 	DeletedVCS      int64
 }
+type ReleasesDeleteResult struct {
+	DeletedReleases int64
+}
 
 // Storer is an interface for storing and retrieving baur task runs
 type Storer interface {
@@ -168,10 +171,9 @@ type Storer interface {
 	Outputs(ctx context.Context, taskRunID int) ([]*Output, error)
 
 	// CreateRelease creates a new release called releaseName, that
-	// consists of the passed task runs.
-	// Metadata is arbitrary data stored together with the release, it is
-	// optional and can be nil.
-	CreateRelease(_ context.Context, releaseName string, taskRunIDs []int, metadata io.Reader) error
+	// consists of the passed task runs. Metadata is arbitrary data stored
+	// together with the release, it is optional and can be nil.
+	CreateRelease(_ context.Context, releaseName string, createdAt time.Time, taskRunIDs []int, metadata io.Reader) error
 	ReleaseExists(_ context.Context, name string) (bool, error)
 	// ReleaseTaskRuns the task runs and their outputs for the release
 	// named releaseName.
@@ -184,4 +186,5 @@ type Storer interface {
 	// If the release does not exist ErrNotExist is returned.
 	// If the release has no metadata the returned []byte is empty.
 	ReleaseMetadata(ctx context.Context, releaseName string) ([]byte, error)
+	ReleasesDelete(ctx context.Context, before time.Time, pretend bool) (*ReleasesDeleteResult, error)
 }
