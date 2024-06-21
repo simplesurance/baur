@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -735,9 +736,9 @@ func (c *Client) SaveTaskRun(ctx context.Context, taskRun *storage.TaskRunFull) 
 	})
 }
 
-func (c *Client) CreateRelease(ctx context.Context, releaseName string, taskRunIDs []int, metadata io.Reader) error {
+func (c *Client) CreateRelease(ctx context.Context, releaseName string, createdAt time.Time, taskRunIDs []int, metadata io.Reader) error {
 	return c.db.BeginFunc(ctx, func(tx pgx.Tx) error {
-		releaseID, err := c.insertRelease(ctx, tx, releaseName, metadata)
+		releaseID, err := c.insertRelease(ctx, tx, releaseName, createdAt, metadata)
 		if err != nil {
 			return err
 		}
@@ -746,10 +747,10 @@ func (c *Client) CreateRelease(ctx context.Context, releaseName string, taskRunI
 	})
 }
 
-func (*Client) insertRelease(ctx context.Context, tx pgx.Tx, name string, metadata io.Reader) (int, error) {
+func (*Client) insertRelease(ctx context.Context, tx pgx.Tx, name string, createdAt time.Time, metadata io.Reader) (int, error) {
 	const query = `
-		INSERT INTO release (name, metadata)
-	        VALUES($1, $2)
+		INSERT INTO release (name, created_at, metadata)
+	        VALUES($1, $2, $3)
 	     RETURNING id
 	`
 
@@ -764,7 +765,7 @@ func (*Client) insertRelease(ctx context.Context, tx pgx.Tx, name string, metada
 		}
 	}
 
-	err = tx.QueryRow(ctx, query, name, data).Scan(&releaseID)
+	err = tx.QueryRow(ctx, query, name, createdAt, data).Scan(&releaseID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
