@@ -735,7 +735,10 @@ type CopyObjectInput struct {
 }
 
 func (in *CopyObjectInput) bindEndpointParams(p *EndpointParameters) {
+
 	p.Bucket = in.Bucket
+	p.CopySource = in.CopySource
+	p.Key = in.Key
 	p.DisableS3ExpressSessionAuth = ptr.Bool(true)
 }
 
@@ -868,6 +871,15 @@ func (c *Client) addOperationCopyObjectMiddlewares(stack *middleware.Stack, opti
 		return err
 	}
 	if err = addPutBucketContextMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
+	if err = addIsExpressUserAgent(stack); err != nil {
 		return err
 	}
 	if err = addOpCopyObjectValidationMiddleware(stack); err != nil {
