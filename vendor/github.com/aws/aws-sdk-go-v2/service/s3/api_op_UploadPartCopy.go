@@ -403,6 +403,7 @@ type UploadPartCopyInput struct {
 }
 
 func (in *UploadPartCopyInput) bindEndpointParams(p *EndpointParameters) {
+
 	p.Bucket = in.Bucket
 	p.DisableS3ExpressSessionAuth = ptr.Bool(true)
 }
@@ -520,6 +521,15 @@ func (c *Client) addOperationUploadPartCopyMiddlewares(stack *middleware.Stack, 
 		return err
 	}
 	if err = addPutBucketContextMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
+	if err = addIsExpressUserAgent(stack); err != nil {
 		return err
 	}
 	if err = addOpUploadPartCopyValidationMiddleware(stack); err != nil {
