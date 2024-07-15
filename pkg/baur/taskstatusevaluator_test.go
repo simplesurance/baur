@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/pkg/cfg"
+	"github.com/simplesurance/baur/v5/pkg/cfg"
 )
 
 func TestStatusEvaluatorFailsWhenTaskInfoAndLookupStrIsUsed(t *testing.T) {

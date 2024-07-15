@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/pkg/storage"
+	"github.com/simplesurance/baur/v5/pkg/storage"
 )
 
 func TestIsCompatible_AfterInit(t *testing.T) {

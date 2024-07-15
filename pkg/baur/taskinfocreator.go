@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/simplesurance/baur/v4/pkg/cfg"
-	"github.com/simplesurance/baur/v4/pkg/storage"
+	"github.com/simplesurance/baur/v5/pkg/cfg"
+	"github.com/simplesurance/baur/v5/pkg/storage"
 )
 
 /* The implementation has the followig caveats:

@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
 )
 
 func TestModifiedFilesMissing(t *testing.T) {

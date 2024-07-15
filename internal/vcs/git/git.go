@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/simplesurance/baur/v4/internal/exec"
-	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v5/internal/exec"
+	"github.com/simplesurance/baur/v5/internal/fs"
 )
 
 // CommandIsInstalled returns true if an executable called "git" is found in

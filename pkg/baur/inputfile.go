@@ -3,8 +3,8 @@ package baur
 import (
 	"errors"
 
-	"github.com/simplesurance/baur/v4/internal/digest"
-	"github.com/simplesurance/baur/v4/internal/digest/sha384"
+	"github.com/simplesurance/baur/v5/internal/digest"
+	"github.com/simplesurance/baur/v5/internal/digest/sha384"
 )
 
 type InputFileOpt func(*InputFile)

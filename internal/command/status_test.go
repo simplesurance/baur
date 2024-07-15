@@ -14,11 +14,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/testutils/dbtest"
-	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v4/internal/testutils/ostest"
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
 )
 
 func TestStatusTaskSpecArgParsing(t *testing.T) {

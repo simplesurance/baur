@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/simplesurance/baur/v4/internal/command/term"
-	"github.com/simplesurance/baur/v4/internal/log"
-	"github.com/simplesurance/baur/v4/internal/validation"
-	"github.com/simplesurance/baur/v4/pkg/baur"
-	"github.com/simplesurance/baur/v4/pkg/storage"
+	"github.com/simplesurance/baur/v5/internal/command/term"
+	"github.com/simplesurance/baur/v5/internal/log"
+	"github.com/simplesurance/baur/v5/internal/validation"
+	"github.com/simplesurance/baur/v5/pkg/baur"
+	"github.com/simplesurance/baur/v5/pkg/storage"
 
 	"github.com/spf13/cobra"
 )

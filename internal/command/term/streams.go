@@ -8,7 +8,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/simplesurance/baur/v4/pkg/baur"
+	"github.com/simplesurance/baur/v5/pkg/baur"
 )
 
 const separator = "------------------------------------------------------------------------------"

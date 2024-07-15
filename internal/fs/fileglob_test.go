@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v4/internal/testutils/strtest"
+	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v5/internal/testutils/strtest"
 )
 
 func createFiles(t *testing.T, basedir string, paths []string) {

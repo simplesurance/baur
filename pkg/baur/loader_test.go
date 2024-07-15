@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/log"
-	"github.com/simplesurance/baur/v4/internal/testutils/ostest"
-	"github.com/simplesurance/baur/v4/pkg/cfg"
+	"github.com/simplesurance/baur/v5/internal/log"
+	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
+	"github.com/simplesurance/baur/v5/pkg/cfg"
 )
 
 func TestFindAppConfigsRemovesDups(t *testing.T) {

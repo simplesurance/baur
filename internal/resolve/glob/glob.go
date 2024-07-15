@@ -3,7 +3,7 @@ package glob
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v5/internal/fs"
 )
 
 // Resolver resolves a glob path to files. The functionality is the same then

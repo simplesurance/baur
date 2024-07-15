@@ -10,7 +10,7 @@ import (
 
 	oldpostgres "github.com/simplesurance/baur/v2/pkg/storage/postgres"
 
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
 )
 
 func TestUpgradeDb_DatabaseNotExist(t *testing.T) {

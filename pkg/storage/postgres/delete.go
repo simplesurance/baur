@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 
-	"github.com/simplesurance/baur/v4/pkg/storage"
+	"github.com/simplesurance/baur/v5/pkg/storage"
 )
 
 func (c *Client) ReleasesDelete(ctx context.Context, before time.Time, pretend bool) (*storage.ReleasesDeleteResult, error) {

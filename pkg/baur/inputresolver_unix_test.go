@@ -9,9 +9,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/exec"
-	"github.com/simplesurance/baur/v4/internal/log"
-	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v5/internal/exec"
+	"github.com/simplesurance/baur/v5/internal/log"
+	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
 )
 
 func TestSymlinkTargetFilePermissionsChange(t *testing.T) {

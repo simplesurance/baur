@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/exec"
+	"github.com/simplesurance/baur/v5/internal/exec"
 )
 
 // CommitFilesToGit adds and commit all files in directory (incl.

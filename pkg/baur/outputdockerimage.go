@@ -3,8 +3,8 @@ package baur
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v4/internal/digest"
-	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v5/internal/digest"
+	"github.com/simplesurance/baur/v5/internal/fs"
 )
 
 // DockerInfoClient is an interface fo retrieving information about a docker image.

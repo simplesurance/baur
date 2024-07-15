@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/simplesurance/baur/v4/internal/set"
+	"github.com/simplesurance/baur/v5/internal/set"
 
 	"github.com/spf13/cobra"
 )

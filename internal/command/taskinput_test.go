@@ -13,12 +13,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/fs"
-	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v4/pkg/baur"
-	"github.com/simplesurance/baur/v4/pkg/cfg"
+	"github.com/simplesurance/baur/v5/internal/fs"
+	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/pkg/baur"
+	"github.com/simplesurance/baur/v5/pkg/cfg"
 )
 
 func writeTaskInfoCheckScript(t *testing.T, uuid, scriptPath, taskInfoCpDest string) {

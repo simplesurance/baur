@@ -3,8 +3,8 @@ package baur
 import (
 	"fmt"
 
-	"github.com/simplesurance/baur/v4/internal/digest"
-	"github.com/simplesurance/baur/v4/internal/digest/sha384"
+	"github.com/simplesurance/baur/v5/internal/digest"
+	"github.com/simplesurance/baur/v5/internal/digest/sha384"
 )
 
 // InputEnvVar represents an environment variable that is tracked as baur

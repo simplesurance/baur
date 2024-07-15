@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/simplesurance/baur/v4/internal/command/term"
-	"github.com/simplesurance/baur/v4/internal/fs"
+	"github.com/simplesurance/baur/v5/internal/command/term"
+	"github.com/simplesurance/baur/v5/internal/fs"
 )
 
 const (

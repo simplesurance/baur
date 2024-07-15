@@ -13,13 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/command/flag"
-	"github.com/simplesurance/baur/v4/internal/exec"
-	"github.com/simplesurance/baur/v4/internal/testutils/dbtest"
-	"github.com/simplesurance/baur/v4/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v4/internal/testutils/ostest"
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v4/pkg/baur"
+	"github.com/simplesurance/baur/v5/internal/command/flag"
+	"github.com/simplesurance/baur/v5/internal/exec"
+	"github.com/simplesurance/baur/v5/internal/testutils/dbtest"
+	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
+	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/pkg/baur"
 )
 
 func runInitDb(t *testing.T) {

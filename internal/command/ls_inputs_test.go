@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v4/pkg/baur"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/pkg/baur"
 )
 
 func TestLsInputsTaskAndRunInputsAreTheSame(t *testing.T) {

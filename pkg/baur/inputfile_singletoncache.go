@@ -1,7 +1,7 @@
 package baur
 
 import (
-	"github.com/simplesurance/baur/v4/internal/digest"
+	"github.com/simplesurance/baur/v5/internal/digest"
 )
 
 const inputFileSingletonCacheInitialSize = 250

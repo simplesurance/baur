@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
 )
 
 var appOneName = "app-one"

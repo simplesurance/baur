@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/simplesurance/baur/v4/internal/fs"
-	"github.com/simplesurance/baur/v4/internal/output/s3"
-	"github.com/simplesurance/baur/v4/internal/set"
-	"github.com/simplesurance/baur/v4/pkg/storage"
+	"github.com/simplesurance/baur/v5/internal/fs"
+	"github.com/simplesurance/baur/v5/internal/output/s3"
+	"github.com/simplesurance/baur/v5/internal/set"
+	"github.com/simplesurance/baur/v5/pkg/storage"
 )
 
 type S3Downloader interface {

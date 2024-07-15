@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v4/internal/prettyprint"
-	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v4/internal/testutils/ostest"
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v4/pkg/baur"
+	"github.com/simplesurance/baur/v5/internal/prettyprint"
+	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/pkg/baur"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

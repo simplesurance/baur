@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v4/internal/command/term"
-	"github.com/simplesurance/baur/v4/internal/exec"
-	"github.com/simplesurance/baur/v4/internal/log"
-	"github.com/simplesurance/baur/v4/internal/testutils/logwriter"
+	"github.com/simplesurance/baur/v5/internal/command/term"
+	"github.com/simplesurance/baur/v5/internal/exec"
+	"github.com/simplesurance/baur/v5/internal/log"
+	"github.com/simplesurance/baur/v5/internal/testutils/logwriter"
 
 	"github.com/stretchr/testify/require"
 )

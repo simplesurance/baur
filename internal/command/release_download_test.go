@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplesurance/baur/v4/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v4/internal/testutils/repotest"
-	"github.com/simplesurance/baur/v4/internal/testutils/s3test"
-	"github.com/simplesurance/baur/v4/pkg/baur"
-	"github.com/simplesurance/baur/v4/pkg/cfg"
+	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
+	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
+	"github.com/simplesurance/baur/v5/internal/testutils/s3test"
+	"github.com/simplesurance/baur/v5/pkg/baur"
+	"github.com/simplesurance/baur/v5/pkg/cfg"
 
 	"github.com/stretchr/testify/require"
 )

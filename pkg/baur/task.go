@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/simplesurance/baur/v4/pkg/cfg"
+	"github.com/simplesurance/baur/v5/pkg/cfg"
 )
 
 // Task is a an execution step belonging to an app.

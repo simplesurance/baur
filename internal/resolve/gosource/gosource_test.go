@@ -10,10 +10,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/simplesurance/baur/v4/internal/log"
-	"github.com/simplesurance/baur/v4/internal/prettyprint"
-	"github.com/simplesurance/baur/v4/internal/testutils/ostest"
-	"github.com/simplesurance/baur/v4/internal/testutils/strtest"
+	"github.com/simplesurance/baur/v5/internal/log"
+	"github.com/simplesurance/baur/v5/internal/prettyprint"
+	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
+	"github.com/simplesurance/baur/v5/internal/testutils/strtest"
 )
 
 type testCfg struct {

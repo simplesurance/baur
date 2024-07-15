@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/simplesurance/baur/v4/internal/validation"
+	"github.com/simplesurance/baur/v5/internal/validation"
 )
 
 var forbiddenNameRunes = [...]rune{

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/simplesurance/baur/v4/internal/digest"
-	"github.com/simplesurance/baur/v4/internal/digest/sha384"
+	"github.com/simplesurance/baur/v5/internal/digest"
+	"github.com/simplesurance/baur/v5/internal/digest/sha384"
 )
 
 func TestDigestOnEmptyHashErrors(t *testing.T) {
