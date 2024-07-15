@@ -1,6 +1,8 @@
 ---
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 
+version: 2
+
 release:
   draft: true
   prerelease: auto
@@ -25,6 +27,7 @@ builds:
       - amd64
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
+
 archives:
   - format: tar.xz
     name_template: "{{ .ProjectName }}-{{ .Os }}_{{ .Arch }}-{{ .Version }}"
@@ -39,6 +42,7 @@ archives:
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
   algorithm: sha256
+
 signs:
   - artifacts: checksum
     args:
@@ -50,8 +54,8 @@ signs:
       - "${artifact}"
 snapshot:
   name_template: "{{ incpatch .Version }}-dev"
+
 changelog:
-  skip: false
   sort: asc
   filters:
     exclude:
