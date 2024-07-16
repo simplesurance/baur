@@ -3,13 +3,11 @@ package command
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/simplesurance/baur/v5/internal/command/term"
-	"github.com/simplesurance/baur/v5/pkg/baur"
 	"github.com/simplesurance/baur/v5/pkg/storage"
 )
 
@@ -45,20 +43,9 @@ func initDb(_ *cobra.Command, args []string) {
 	if len(args) == 1 {
 		dbURL = args[0]
 	} else {
-		repo, err := findRepository()
-		if err != nil {
-			if os.IsNotExist(err) {
-				stderr.Printf("could not find '%s' repository config file.\n"+
-					"Run '%s' first or pass the Postgres URL as argument.\n",
-					term.Highlight(baur.RepositoryCfgFile), term.Highlight(cmdInitRepo))
-				exitFunc(exitCodeError)
-			}
-
-			stderr.Println(err)
-			exitFunc(exitCodeError)
-		}
-
-		dbURL = mustGetPSQLURI(repo.Cfg)
+		var err error
+		dbURL, err = postgresqlURL()
+		exitOnErr(err)
 	}
 
 	storageClt, err := newStorageClient(dbURL)
