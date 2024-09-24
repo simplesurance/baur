@@ -106,9 +106,10 @@ func (*Client) deleteOldTaskRuns(ctx context.Context, tx pgx.Tx, before time.Tim
 	const query = `
 	      DELETE FROM task_run
 	       WHERE start_timestamp < $1
-	        AND task_run.id NOT IN (
-			SELECT task_run_id FROM release_task_run
-		)
+	         AND NOT EXISTS (
+			SELECT 1 FROM release_task_run
+			 WHERE task_run.id = release_task_run.task_run_id
+	       )
 	`
 
 	t, err := tx.Exec(ctx, query, before)
