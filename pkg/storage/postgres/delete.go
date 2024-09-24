@@ -186,9 +186,9 @@ func (*Client) deleteUnusedUploads(ctx context.Context, tx pgx.Tx) (int64, error
 func (*Client) deleteUnusedVCS(ctx context.Context, tx pgx.Tx) (int64, error) {
 	const query = `
 		DELETE FROM vcs
-	 	 WHERE id NOT IN (
-			 SELECT task_run.vcs_id
-			   FROM task_run
+	 	 WHERE NOT EXISTS (
+			 SELECT 1 FROM task_run
+			  WHERE vcs.id = task_run.vcs_id
 		 )
 		`
 	t, err := tx.Exec(ctx, query)
