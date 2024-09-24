@@ -5,15 +5,15 @@ run:
 linters:
   disable-all: true
   enable:
+    - copyloopvar
     - errcheck
     - errorlint
-    - exportloopref
     - gocritic
+    - godox
     - goimports
     - goprintffuncname
     - gosimple
     - govet
-    - godox
     - ineffassign
     - misspell
     - nolintlint
