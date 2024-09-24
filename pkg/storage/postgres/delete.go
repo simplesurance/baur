@@ -123,8 +123,9 @@ func (*Client) deleteOldTaskRuns(ctx context.Context, tx pgx.Tx, before time.Tim
 func (*Client) deleteUnusedTasks(ctx context.Context, tx pgx.Tx) (int64, error) {
 	const query = `
 		DELETE FROM task
-	 	 WHERE id NOT IN (
-			 SELECT task_run.task_id FROM task_run
+	 	 WHERE NOT EXISTS (
+			SELECT 1 FROM task_run
+			 WHERE task.id = task_run.task_id
 		 )
 		`
 	t, err := tx.Exec(ctx, query)
