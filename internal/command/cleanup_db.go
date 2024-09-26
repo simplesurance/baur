@@ -118,7 +118,7 @@ func (c *cleanupDbCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	stdout.Printf(
-		"%s %s older then %s",
+		"%s %s older than %s",
 		op, subject,
 		term.Highlight(c.before.Format(timeFormat)),
 	)
