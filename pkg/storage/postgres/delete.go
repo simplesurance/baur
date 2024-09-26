@@ -203,9 +203,9 @@ func (*Client) deleteUnusedInputs(ctx context.Context, tx pgx.Tx) (int64, error)
 	var cnt int64
 	const qInputFiles = `
 		DELETE FROM input_file
-	 	 WHERE id NOT IN (
-			 SELECT task_run_file_input.input_file_id
-			   FROM task_run_file_input
+	 	 WHERE NOT EXISTS (
+			SELECT 1 FROM task_run_file_input
+			 WHERE input_file.id = task_run_file_input.input_file_id
 		 )
 		`
 	t, err := tx.Exec(ctx, qInputFiles)
