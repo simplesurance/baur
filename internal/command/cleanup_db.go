@@ -20,11 +20,15 @@ type cleanupDbCmd struct {
 	pretend bool
 }
 
-const timeFormat = "02 Jan 06 15:04:05 MST"
-const cleanupDbGracetime = time.Second * 5
+const (
+	timeFormat         = "02 Jan 06 15:04:05 MST"
+	cleanupDbGracetime = time.Second * 5
+)
 
-const deleteTargetTaskRuns = "taskruns"
-const deleteTargetReleases = "releases"
+const (
+	deleteTargetTaskRuns = "taskruns"
+	deleteTargetReleases = "releases"
+)
 
 var cleanupDbLongHelp = fmt.Sprintf(`
 Delete old data from the baur database.
@@ -162,10 +166,18 @@ func (c *cleanupDbCmd) deleteReleases(ctx context.Context, storageClt storage.St
 }
 
 func (c *cleanupDbCmd) deleteTaskRuns(ctx context.Context, storageClt storage.Storer) error {
+	var stateStr string
+
 	startTime := time.Now()
 	result, err := storageClt.TaskRunsDelete(ctx, c.before.Time, c.pretend)
-	if err != nil {
+	if err != nil && result == nil {
 		return err
+	}
+
+	if err == nil {
+		stateStr = term.GreenHighlight("successful")
+	} else {
+		stateStr = term.RedHighlight("failed")
 	}
 
 	stdout.Printf(
@@ -178,7 +190,7 @@ func (c *cleanupDbCmd) deleteTaskRuns(ctx context.Context, storageClt storage.St
 			"%-16s %s\n"+
 			"%-16s %s\n"+
 			"%-16s %s\n",
-		term.GreenHighlight("successful"),
+		stateStr,
 		term.FormatDuration(time.Since(startTime)),
 		"Task Runs:", term.Highlight(result.DeletedTaskRuns),
 		"Tasks:", term.Highlight(result.DeletedTasks),
@@ -189,5 +201,5 @@ func (c *cleanupDbCmd) deleteTaskRuns(ctx context.Context, storageClt storage.St
 		"VCSs:", term.Highlight(result.DeletedVCS),
 	)
 
-	return nil
+	return err
 }

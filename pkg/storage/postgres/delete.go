@@ -49,60 +49,63 @@ func (*Client) deleteOldReleases(ctx context.Context, tx pgx.Tx, before time.Tim
 }
 
 func (c *Client) TaskRunsDelete(ctx context.Context, before time.Time, pretend bool) (*storage.TaskRunsDeleteResult, error) {
+	var result *storage.TaskRunsDeleteResult
+
+	if pretend {
+		err := c.db.BeginFunc(ctx, func(tx pgx.Tx) (err error) {
+			result, err = c.taskRunsDelete(ctx, before, tx)
+			defer tx.Rollback(ctx) //nolint: errcheck
+			return err
+		})
+		if err != nil && !errors.Is(err, pgx.ErrTxClosed) {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	return c.taskRunsDelete(ctx, before, c.db)
+}
+
+func (c *Client) taskRunsDelete(ctx context.Context, before time.Time, con dbConn) (*storage.TaskRunsDeleteResult, error) {
+	var err error
 	var result storage.TaskRunsDeleteResult
 
-	err := c.db.BeginFunc(ctx, func(tx pgx.Tx) error {
-		var err error
-		if pretend {
-			defer tx.Rollback(ctx) //nolint: errcheck
-		}
-
-		result.DeletedTaskRuns, err = c.deleteOldTaskRuns(ctx, tx, before)
-		if err != nil {
-			return err
-		}
-
-		result.DeletedTasks, err = c.deleteUnusedTasks(ctx, tx)
-		if err != nil {
-			return err
-		}
-
-		result.DeletedApps, err = c.deleteUnusedApps(ctx, tx)
-		if err != nil {
-			return err
-		}
-
-		result.DeletedOutputs, err = c.deleteUnusedOutputs(ctx, tx)
-		if err != nil {
-			return err
-		}
-
-		result.DeletedUploads, err = c.deleteUnusedUploads(ctx, tx)
-		if err != nil {
-			return err
-		}
-
-		result.DeletedInputs, err = c.deleteUnusedInputs(ctx, tx)
-		if err != nil {
-			return err
-		}
-
-		result.DeletedVCS, err = c.deleteUnusedVCS(ctx, tx)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil && !(pretend && errors.Is(err, pgx.ErrTxClosed)) {
+	result.DeletedTaskRuns, err = c.deleteOldTaskRuns(ctx, con, before)
+	if err != nil {
 		return nil, err
 	}
 
-	return &result, nil
+	result.DeletedTasks, err = c.deleteUnusedTasks(ctx, con)
+	if err != nil {
+		return &result, err
+	}
+
+	result.DeletedApps, err = c.deleteUnusedApps(ctx, con)
+	if err != nil {
+		return &result, err
+	}
+
+	result.DeletedOutputs, err = c.deleteUnusedOutputs(ctx, con)
+	if err != nil {
+		return &result, err
+	}
+
+	result.DeletedUploads, err = c.deleteUnusedUploads(ctx, con)
+	if err != nil {
+		return &result, err
+	}
+
+	result.DeletedInputs, err = c.deleteUnusedInputs(ctx, con)
+	if err != nil {
+		return &result, err
+	}
+
+	result.DeletedVCS, err = c.deleteUnusedVCS(ctx, con)
+	return &result, err
 }
 
-func (*Client) deleteOldTaskRuns(ctx context.Context, tx pgx.Tx, before time.Time) (int64, error) {
+func (*Client) deleteOldTaskRuns(ctx context.Context, con dbConn, before time.Time) (int64, error) {
 	const query = `
 	      DELETE FROM task_run
 	       WHERE start_timestamp < $1
@@ -112,7 +115,7 @@ func (*Client) deleteOldTaskRuns(ctx context.Context, tx pgx.Tx, before time.Tim
 	       )
 	`
 
-	t, err := tx.Exec(ctx, query, before)
+	t, err := con.Exec(ctx, query, before)
 	if err != nil {
 		return 0, newQueryError(query, err, before)
 	}
@@ -120,7 +123,7 @@ func (*Client) deleteOldTaskRuns(ctx context.Context, tx pgx.Tx, before time.Tim
 	return t.RowsAffected(), nil
 }
 
-func (*Client) deleteUnusedTasks(ctx context.Context, tx pgx.Tx) (int64, error) {
+func (*Client) deleteUnusedTasks(ctx context.Context, con dbConn) (int64, error) {
 	const query = `
 		DELETE FROM task
 	 	 WHERE NOT EXISTS (
@@ -128,7 +131,7 @@ func (*Client) deleteUnusedTasks(ctx context.Context, tx pgx.Tx) (int64, error) 
 			 WHERE task.id = task_run.task_id
 		 )
 		`
-	t, err := tx.Exec(ctx, query)
+	t, err := con.Exec(ctx, query)
 	if err != nil {
 		return 0, newQueryError(query, err)
 	}
@@ -136,14 +139,14 @@ func (*Client) deleteUnusedTasks(ctx context.Context, tx pgx.Tx) (int64, error) 
 	return t.RowsAffected(), nil
 }
 
-func (*Client) deleteUnusedApps(ctx context.Context, tx pgx.Tx) (int64, error) {
+func (*Client) deleteUnusedApps(ctx context.Context, con dbConn) (int64, error) {
 	const query = `
 		DELETE FROM application
 	 	 WHERE id NOT IN (
 			 SELECT task.application_id FROM task
 		 )
 		`
-	t, err := tx.Exec(ctx, query)
+	t, err := con.Exec(ctx, query)
 	if err != nil {
 		return 0, newQueryError(query, err)
 	}
@@ -151,7 +154,7 @@ func (*Client) deleteUnusedApps(ctx context.Context, tx pgx.Tx) (int64, error) {
 	return t.RowsAffected(), nil
 }
 
-func (*Client) deleteUnusedOutputs(ctx context.Context, tx pgx.Tx) (int64, error) {
+func (*Client) deleteUnusedOutputs(ctx context.Context, con dbConn) (int64, error) {
 	const query = `
 		DELETE FROM output
 	 	 WHERE id NOT IN (
@@ -159,7 +162,7 @@ func (*Client) deleteUnusedOutputs(ctx context.Context, tx pgx.Tx) (int64, error
 			   FROM task_run_output
 		 )
 		`
-	t, err := tx.Exec(ctx, query)
+	t, err := con.Exec(ctx, query)
 	if err != nil {
 		return 0, newQueryError(query, err)
 	}
@@ -167,7 +170,7 @@ func (*Client) deleteUnusedOutputs(ctx context.Context, tx pgx.Tx) (int64, error
 	return t.RowsAffected(), nil
 }
 
-func (*Client) deleteUnusedUploads(ctx context.Context, tx pgx.Tx) (int64, error) {
+func (*Client) deleteUnusedUploads(ctx context.Context, con dbConn) (int64, error) {
 	const query = `
 		DELETE FROM upload
 	 	 WHERE id NOT IN (
@@ -175,7 +178,7 @@ func (*Client) deleteUnusedUploads(ctx context.Context, tx pgx.Tx) (int64, error
 			   FROM task_run_output
 		 )
 		`
-	t, err := tx.Exec(ctx, query)
+	t, err := con.Exec(ctx, query)
 	if err != nil {
 		return 0, newQueryError(query, err)
 	}
@@ -183,7 +186,7 @@ func (*Client) deleteUnusedUploads(ctx context.Context, tx pgx.Tx) (int64, error
 	return t.RowsAffected(), nil
 }
 
-func (*Client) deleteUnusedVCS(ctx context.Context, tx pgx.Tx) (int64, error) {
+func (*Client) deleteUnusedVCS(ctx context.Context, con dbConn) (int64, error) {
 	const query = `
 		DELETE FROM vcs
 	 	 WHERE NOT EXISTS (
@@ -191,7 +194,7 @@ func (*Client) deleteUnusedVCS(ctx context.Context, tx pgx.Tx) (int64, error) {
 			  WHERE vcs.id = task_run.vcs_id
 		 )
 		`
-	t, err := tx.Exec(ctx, query)
+	t, err := con.Exec(ctx, query)
 	if err != nil {
 		return 0, newQueryError(query, err)
 	}
@@ -199,7 +202,7 @@ func (*Client) deleteUnusedVCS(ctx context.Context, tx pgx.Tx) (int64, error) {
 	return t.RowsAffected(), nil
 }
 
-func (*Client) deleteUnusedInputs(ctx context.Context, tx pgx.Tx) (int64, error) {
+func (*Client) deleteUnusedInputs(ctx context.Context, con dbConn) (int64, error) {
 	var cnt int64
 	const qInputFiles = `
 		DELETE FROM input_file
@@ -208,7 +211,7 @@ func (*Client) deleteUnusedInputs(ctx context.Context, tx pgx.Tx) (int64, error)
 			 WHERE input_file.id = task_run_file_input.input_file_id
 		 )
 		`
-	t, err := tx.Exec(ctx, qInputFiles)
+	t, err := con.Exec(ctx, qInputFiles)
 	if err != nil {
 		return 0, newQueryError(qInputFiles, err)
 	}
@@ -221,7 +224,7 @@ func (*Client) deleteUnusedInputs(ctx context.Context, tx pgx.Tx) (int64, error)
 			   FROM task_run_string_input
 		 )
 		`
-	t, err = tx.Exec(ctx, qInputStrings)
+	t, err = con.Exec(ctx, qInputStrings)
 	if err != nil {
 		return 0, newQueryError(qInputFiles, err)
 	}
@@ -234,7 +237,7 @@ func (*Client) deleteUnusedInputs(ctx context.Context, tx pgx.Tx) (int64, error)
 			   FROM task_run_task_input
 		 )
 		`
-	t, err = tx.Exec(ctx, qInputTasks)
+	t, err = con.Exec(ctx, qInputTasks)
 	if err != nil {
 		return 0, newQueryError(qInputFiles, err)
 	}
