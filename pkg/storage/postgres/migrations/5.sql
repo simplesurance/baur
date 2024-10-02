@@ -1,0 +1,1 @@
+CREATE INDEX idx_task_run_file_input_input_file_id on task_run_file_input(input_file_id);
