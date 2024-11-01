@@ -1,3 +1,43 @@
+# v1.17.35 (2024-10-28)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.34 (2024-10-25)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.33 (2024-10-16)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.32 (2024-10-11)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.31 (2024-10-09)
+
+* **Bug Fix**: Fixup some integration tests.
+
+# v1.17.30 (2024-10-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.29 (2024-10-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.28 (2024-10-04)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.27 (2024-10-03)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.26 (2024-10-02)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.17.25 (2024-09-27)
 
 * **Dependency Update**: Updated to the latest SDK module versions
