@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	github.com/docker/docker v27.1.2+incompatible // indirect
-	github.com/fatih/color v1.17.0
+	github.com/fatih/color v1.18.0
 	github.com/fsouza/go-dockerclient v1.12.0
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
@@ -18,7 +18,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.24.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
