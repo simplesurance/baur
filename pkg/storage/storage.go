@@ -135,9 +135,10 @@ type Storer interface {
 	// SchemaVersion returns the version of the schema that the storage is
 	// using.
 	SchemaVersion(ctx context.Context) (int32, error)
-	// RequiredSchemaVersion returns the schema version that the Storer
-	// implementation requires.
-	RequiredSchemaVersion() int32
+	// MaxSchemaVersion returns the max. supported database schema version.
+	// It is also the version to that [Upgrade] can migrate the current
+	// schema.
+	MaxSchemaVersion() int32
 	// IsCompatible verifies that the storage is compatible with the baur version
 	IsCompatible(context.Context) error
 	// Upgrade upgrades the schema to RequiredSchemaVersion().

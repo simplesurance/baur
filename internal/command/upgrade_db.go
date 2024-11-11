@@ -84,17 +84,17 @@ func (*upgradeDbCmd) run(_ *cobra.Command, args []string) {
 	}
 	exitOnErr(err, "querying database schema version failed")
 
-	if curVer == clt.RequiredSchemaVersion() {
+	if curVer == clt.MaxSchemaVersion() {
 		stdout.Println("database schema is already up to date, nothing to do")
 		return
 	}
 
-	if curVer > clt.RequiredSchemaVersion() {
+	if curVer > clt.MaxSchemaVersion() {
 		fatal("database schema is from a newer baur version, please update baur")
 	}
 
 	err = clt.Upgrade(ctx)
 	exitOnErr(err, "upgrading database schema failed")
 
-	stdout.Printf("database schema successfully upgraded from version %d to %d\n", curVer, clt.RequiredSchemaVersion())
+	stdout.Printf("database schema successfully upgraded from version %d to %d\n", curVer, clt.MaxSchemaVersion())
 }

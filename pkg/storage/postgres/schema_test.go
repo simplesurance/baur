@@ -39,6 +39,30 @@ func TestIsCompatible_OldBaurSchemaExist(t *testing.T) {
 	require.Contains(t, err.Error(), "incompatible database schema")
 }
 
+func TestIsCompatible_MinVer(t *testing.T) {
+	client, cleanupFn := newTestClient(t)
+	t.Cleanup(cleanupFn)
+
+	require.NoError(t, client.Init(ctx))
+
+	_, err := client.db.Exec(ctx, "UPDATE migrations set schema_version = $1", minSchemaVer)
+	require.NoError(t, err)
+
+	require.NoError(t, client.IsCompatible(ctx))
+}
+
+func TestIsCompatible_MaxVer(t *testing.T) {
+	client, cleanupFn := newTestClient(t)
+	t.Cleanup(cleanupFn)
+
+	require.NoError(t, client.Init(ctx))
+
+	_, err := client.db.Exec(ctx, "UPDATE migrations set schema_version = $1", maxSchemaVer)
+	require.NoError(t, err)
+
+	require.NoError(t, client.IsCompatible(ctx))
+}
+
 func TestIsCompatible_SchemaVersionDoesNotMatch(t *testing.T) {
 	client, cleanupFn := newTestClient(t)
 	defer cleanupFn()

@@ -16,8 +16,12 @@ import (
 	"github.com/simplesurance/baur/v5/pkg/storage"
 )
 
-// schemaVer is the database schema version required by this package.
-const schemaVer int32 = 4
+const (
+	// minSchemaVer is the minimum required database schema version
+	minSchemaVer int32 = 4
+	// maxSchemaVer is the highest database schema version that is compatible
+	maxSchemaVer int32 = 5
+)
 
 // migration represents a database schema migration.
 type migration struct {
@@ -220,8 +224,12 @@ func (c *Client) ensureSchemaIsCompatible(ctx context.Context) error {
 		return nil
 	}
 
-	if ver != schemaVer {
-		return fmt.Errorf("database schema version is not compatible with baur version, schema version: %d, expected version: %d", ver, schemaVer)
+	if ver < minSchemaVer || ver > maxSchemaVer {
+		if minSchemaVer == maxSchemaVer {
+			return fmt.Errorf("database schema version is not compatible with baur version, schema version: %d, expecting version: %d", ver, minSchemaVer)
+		}
+
+		return fmt.Errorf("database schema version is not compatible with baur version, schema version: %d, expecting schema version >=%d and <=%d", ver, minSchemaVer, maxSchemaVer)
 	}
 
 	return nil
@@ -282,6 +290,6 @@ func (c *Client) SchemaVersion(ctx context.Context) (int32, error) {
 	return c.schemaVersion(ctx)
 }
 
-func (c *Client) RequiredSchemaVersion() int32 {
-	return schemaVer
+func (c *Client) MaxSchemaVersion() int32 {
+	return maxSchemaVer
 }
