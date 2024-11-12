@@ -52,7 +52,6 @@ func TestShowArgs(t *testing.T) {
 
 		showCmd.Command.Run(&showCmd.Command, []string{"."})
 	})
-
 }
 
 func TestShowWithRepositoryArg(t *testing.T) {

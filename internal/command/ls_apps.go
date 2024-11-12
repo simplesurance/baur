@@ -80,7 +80,6 @@ func newLsAppsCmd() *lsAppsCmd {
 	}
 
 	return &cmd
-
 }
 
 func (c *lsAppsCmd) createHeader() []string {

@@ -142,6 +142,7 @@ func (c *statusCmd) statusCreateHeader() []string {
 
 	return headers
 }
+
 func (c *statusCmd) jsonFieldNames() []string {
 	headers := make([]string, 0, len(c.fields.Fields))
 
@@ -299,7 +300,6 @@ func (c *statusCmd) assembleRow(repositoryDir string, task *baur.Task, taskRun *
 				row = append(row, nil)
 			}
 		}
-
 	}
 	return row
 }

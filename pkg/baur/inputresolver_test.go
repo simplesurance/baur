@@ -298,7 +298,6 @@ func TestFilesOptional(t *testing.T) {
 						found = true
 						break
 					}
-
 				}
 
 				assert.True(t, found, "%s missing in result", f)
@@ -478,7 +477,6 @@ func TestResolveEnvVarInputs(t *testing.T) {
 			require.EqualValues(t, tc.ExpectedResolvedEnvVars, resolvedEnvVars)
 		})
 	}
-
 }
 
 func TestExcludedFiles(t *testing.T) {

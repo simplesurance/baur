@@ -15,13 +15,15 @@ import (
 	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
 )
 
-var appOneName = "app-one"
-var appTwoName = "app-two"
-var buildTaskName = "build"
-var testTaskName = "test"
-var appOneWithBuildTask = fmt.Sprintf("%s.%s", appOneName, buildTaskName)
-var appOneWithTestTask = fmt.Sprintf("%s.%s", appOneName, testTaskName)
-var appTwoWithBuildTask = fmt.Sprintf("%s.%s", appTwoName, buildTaskName)
+var (
+	appOneName          = "app-one"
+	appTwoName          = "app-two"
+	buildTaskName       = "build"
+	testTaskName        = "test"
+	appOneWithBuildTask = fmt.Sprintf("%s.%s", appOneName, buildTaskName)
+	appOneWithTestTask  = fmt.Sprintf("%s.%s", appOneName, testTaskName)
+	appTwoWithBuildTask = fmt.Sprintf("%s.%s", appTwoName, buildTaskName)
+)
 
 func doInitDb(t *testing.T) {
 	t.Helper()

@@ -28,6 +28,7 @@ func evalOptions(opts []FormatOption) *fmtSettings {
 
 	return &s
 }
+
 func FormatSize(bytes uint64, opts ...FormatOption) string {
 	if evalOptions(opts).baseUnitWithoutUnitName {
 		return fmt.Sprint(bytes)

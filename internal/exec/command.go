@@ -15,8 +15,10 @@ import (
 	"github.com/fatih/color"
 )
 
-const maxErrOutputBytesPerStream = 16 * 1024
-const outputStreamLineReaderBufSiz = 512 * 1024
+const (
+	maxErrOutputBytesPerStream   = 16 * 1024
+	outputStreamLineReaderBufSiz = 512 * 1024
+)
 
 type PrintfFn func(format string, a ...any)
 

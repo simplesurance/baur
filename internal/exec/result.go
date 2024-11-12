@@ -13,7 +13,7 @@ type ExitCodeError struct {
 
 type SprintFn func(...any) string
 
-func (e *ExitCodeError) ColoredError(highlightFn SprintFn, errorFn SprintFn, withCmdOutput bool) string {
+func (e *ExitCodeError) ColoredError(highlightFn, errorFn SprintFn, withCmdOutput bool) string {
 	var result strings.Builder
 	var stdoutExists bool
 
@@ -58,7 +58,6 @@ func (e *ExitCodeError) ColoredError(highlightFn SprintFn, errorFn SprintFn, wit
 // Error returns the error description.
 func (e *ExitCodeError) Error() string {
 	return e.ColoredError(fmt.Sprint, fmt.Sprint, true)
-
 }
 
 // Result describes the result of a run Cmd.

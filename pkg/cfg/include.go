@@ -108,7 +108,6 @@ func (incl *Include) validateUniqIncludeIDs() error {
 	}
 
 	return nil
-
 }
 
 // ExampleInclude returns an Include struct with exemplary values.

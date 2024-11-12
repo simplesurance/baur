@@ -19,7 +19,6 @@ func TestCombinedStdoutOutput(t *testing.T) {
 	var err error
 	if runtime.GOOS == "windows" {
 		res, err = Command("bash", "-c", fmt.Sprintf("echo -n '%s'", echoStr)).RunCombinedOut(ctx)
-
 	} else {
 		res, err = Command("echo", "-n", echoStr).RunCombinedOut(ctx)
 	}
@@ -71,5 +70,4 @@ func TestOutputStream(t *testing.T) {
 		LogFn(func(f string, a ...any) { fmt.Fprintf(&buf, f, a...) }).ExpectSuccess().Run(ctx)
 	require.NoError(t, err)
 	require.Contains(t, buf.String(), echoStr)
-
 }

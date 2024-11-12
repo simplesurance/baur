@@ -36,6 +36,7 @@ func (t *Task) Filepaths() []string {
 func (t *Task) command() []string {
 	return t.Command
 }
+
 func (t *Task) name() string {
 	return t.Name
 }

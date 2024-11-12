@@ -30,7 +30,7 @@ func TestRunSimultaneously(t *testing.T) {
 	// checkScript is exected by the tasks, it logs the start and end
 	// timestamp of the script to file.
 	// The test checks if all task start/endtimestamps are in the same period.
-	var checkScript = []byte(`#!/usr/bin/env bash
+	checkScript := []byte(`#!/usr/bin/env bash
 set -veu -o pipefail
 
 runtime_logfile="$1"
@@ -48,7 +48,7 @@ date +%s >> "$runtime_logfile"
 		err := os.WriteFile(
 			filepath.Join(r.Dir, fmt.Sprintf("checkscript%d.sh", i)),
 			checkScript,
-			0755,
+			0o755,
 		)
 		require.NoError(t, err)
 
@@ -129,13 +129,12 @@ func TestRunShowOutput(t *testing.T) {
 		scriptPath, []byte(`#/usr/bin/env bash
 echo "greetings from script.sh"
 	`),
-		0755)
+		0o755)
 	require.NoError(t, err)
 
 	appCfg := cfg.App{
 		Name: "testapp",
 		Tasks: cfg.Tasks{{
-
 			Name:    "build",
 			Command: []string{"bash", scriptPath},
 			Input: cfg.Input{
@@ -172,13 +171,12 @@ func TestRunShowOutputOnErrorOutputIsPrintedOnce(t *testing.T) {
 echo "I will fail!"
 exit 1
 	`),
-		0755)
+		0o755)
 	require.NoError(t, err)
 
 	appCfg := cfg.App{
 		Name: "testapp",
 		Tasks: cfg.Tasks{{
-
 			Name:    "build",
 			Command: []string{"bash", scriptPath},
 			Input: cfg.Input{
@@ -221,7 +219,7 @@ func createEnvVarTestApp(t *testing.T, appName, taskName string, envVarsCfg []cf
 		scriptPath, []byte(`#/usr/bin/env bash
 exit 0
 	`),
-		0755)
+		0o755)
 	require.NoError(t, err)
 	doInitDb(t)
 
@@ -286,7 +284,8 @@ func TestEnvVarInput_Required(t *testing.T) {
 			stdout, _ = interceptCmdOutput(t)
 			statusCmd := newStatusCmd()
 			statusCmd.SetArgs([]string{
-				"--format=csv", "-q", "-f", "run-id", fmt.Sprintf("%s.%s", appName, taskName)},
+				"--format=csv", "-q", "-f", "run-id", fmt.Sprintf("%s.%s", appName, taskName),
+			},
 			)
 			require.NoError(t, statusCmd.Execute())
 			runID := strings.TrimSpace(stdout.String())

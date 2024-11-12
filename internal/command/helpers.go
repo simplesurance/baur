@@ -202,7 +202,6 @@ func mustNewCompatibleStorage(uri string) storage.Storer {
 			fatal("baur postgresql database not found\n" +
 				" - ensure that the postgresql URL is correct,\n" +
 				" - run 'baur init db' to create the database and schema")
-
 		}
 		clt.Close()
 		exitOnErr(err)
@@ -315,7 +314,7 @@ func mustTaskRepoRelPath(repositoryDir string, task *baur.Task) string {
 	return path
 }
 
-func subStr(input string, start int, length int) string {
+func subStr(input string, start, length int) string {
 	asRunes := []rune(input)
 
 	if start >= len(asRunes) {

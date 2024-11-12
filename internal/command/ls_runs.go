@@ -172,7 +172,6 @@ func (c *lsRunsCmd) run(_ *cobra.Command, args []string) {
 			return nil
 		},
 	)
-
 	if err != nil {
 		if errors.Is(err, storage.ErrNotExist) {
 			stderr.Println("no matching task runs exist")
@@ -253,7 +252,6 @@ func (c *lsRunsCmd) getFilters() []*storage.Filter {
 	}
 
 	if c.input != "" {
-
 		if strings.HasPrefix(c.input, "string:") {
 			filters = append(filters, &storage.Filter{
 				Field:    storage.FieldInputString,
@@ -267,7 +265,6 @@ func (c *lsRunsCmd) getFilters() []*storage.Filter {
 				Value:    c.input,
 			})
 		}
-
 	}
 
 	return filters

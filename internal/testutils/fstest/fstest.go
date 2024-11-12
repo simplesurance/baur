@@ -14,7 +14,7 @@ import (
 // If an error happens, t.Fatal() is called.
 func WriteExecutable(t *testing.T, data []byte, path string) {
 	t.Helper()
-	writeToFile(t, data, path, 0755)
+	writeToFile(t, data, path, 0o755)
 }
 
 // WriteToFile writes data to a file.
@@ -22,7 +22,7 @@ func WriteExecutable(t *testing.T, data []byte, path string) {
 // If an error happens, t.Fatal() is called.
 func WriteToFile(t *testing.T, data []byte, path string) {
 	t.Helper()
-	writeToFile(t, data, path, 0644)
+	writeToFile(t, data, path, 0o644)
 }
 
 func writeToFile(t *testing.T, data []byte, path string, perm fs.FileMode) {
@@ -37,7 +37,7 @@ func writeToFile(t *testing.T, data []byte, path string, perm fs.FileMode) {
 }
 
 func MkdirAll(t *testing.T, path string) {
-	err := os.MkdirAll(path, 0775)
+	err := os.MkdirAll(path, 0o775)
 	if err != nil {
 		t.Fatal(err)
 	}

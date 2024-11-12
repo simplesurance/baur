@@ -166,7 +166,6 @@ func Test_Resolve(t *testing.T) {
 
 		checkFilesInResolvedFiles(t, tempdir, resolvedFiles, tc)
 	}
-
 }
 
 func TestGlobMatch(t *testing.T) {

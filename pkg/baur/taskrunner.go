@@ -61,7 +61,6 @@ func (t *TaskRunner) deleteTmpFiles(paths []string) {
 			t.LogFn("deleting temporary task info file %q failed: %s\n", path, err)
 		}
 	}
-
 }
 
 func (t *TaskRunner) createTaskInfoEnv(ctx context.Context, task *Task) ([]string, func(), error) {

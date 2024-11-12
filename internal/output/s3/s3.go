@@ -89,7 +89,7 @@ func (c *Client) Upload(filepath, bucket, key string) (string, error) {
 }
 
 func (c *Client) Download(ctx context.Context, bucket, key, filepath string) error {
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o640)
 	if err != nil {
 		return err
 	}

@@ -568,7 +568,6 @@ func TestTaskRuns(t *testing.T) {
 			assert.ElementsMatch(t, testcase.expectedTaskRuns, result)
 		})
 	}
-
 }
 
 func TestTaskRunQueryRunWithoutOutputWithoutVCS(t *testing.T) {

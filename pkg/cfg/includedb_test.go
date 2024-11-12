@@ -14,8 +14,7 @@ import (
 	"github.com/simplesurance/baur/v5/pkg/cfg/resolver"
 )
 
-type mockResolver struct {
-}
+type mockResolver struct{}
 
 func (m *mockResolver) Resolve(in string) (string, error) {
 	return in, nil
@@ -191,8 +190,8 @@ func TestLoadTaskIncludeWithIncludesInDifferentFiles(t *testing.T) {
 
 	tmpdir := t.TempDir()
 
-	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDir), 0775))
-	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, outputInclDir), 0775))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDir), 0o775))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, outputInclDir), 0o775))
 
 	absInputInclFilepath := filepath.Join(tmpdir, inputInclFilename)
 	cfgToFile(t, inputIncl, absInputInclFilepath)
@@ -244,7 +243,7 @@ func TestIncludePathsAreRelativeToCfg(t *testing.T) {
 
 	tmpdir := t.TempDir()
 
-	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDirName), 0775))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, inputInclDirName), 0o775))
 
 	cfgToFile(t, inputIncl, filepath.Join(tmpdir, "subdir", inputInclFilename))
 	cfgToFile(t, taskIncl, filepath.Join(tmpdir, taskInclFilename))
@@ -323,7 +322,6 @@ func TestEnsureInputIncludeIDsMustBeUnique(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unique")
 	require.Nil(t, loadedIncl)
-
 }
 
 func TestEnsureOutputIncludeIDsMustBeUnique(t *testing.T) {
@@ -530,7 +528,6 @@ func TestTaskInclude(t *testing.T) {
 					assert.Contains(t, loadedTask.Output.File, fileOutput)
 				}
 			}
-
 		})
 	}
 }
@@ -677,9 +674,10 @@ func TestVarsInIncludeFiles(t *testing.T) {
 				File: []FileOutput{
 					{
 						Path: "{{ .AppName }}",
-						FileCopy: []FileCopy{{
-							Path: "/tmp/f",
-						},
+						FileCopy: []FileCopy{
+							{
+								Path: "/tmp/f",
+							},
 						},
 					},
 				},

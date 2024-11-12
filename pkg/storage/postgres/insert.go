@@ -450,7 +450,6 @@ func insertTaskRunInputTasksIfNotExist(ctx context.Context, db dbConn, taskRunID
 	}
 
 	return nil
-
 }
 
 func clonedSortedInputEnvVars(inputs []*storage.InputEnvVar) []*storage.InputEnvVar {

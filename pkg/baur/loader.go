@@ -181,7 +181,6 @@ func (a *Loader) allApps() ([]*App, error) {
 				AppPath1: a.cfg.FilePath(),
 				AppPath2: app.cfg.FilePath(),
 			}
-
 		}
 		apps[app.Name] = app
 	}
