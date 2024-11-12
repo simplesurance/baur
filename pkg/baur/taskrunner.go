@@ -90,6 +90,9 @@ func (t *TaskRunner) createTaskInfoEnv(ctx context.Context, task *Task) ([]strin
 // Run executes the command of a task and returns the execution result.
 // The output of the commands are logged with debug log level.
 func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
+	if t.SkipRunsIsEnabled() {
+		return nil, ErrTaskRunSkipped
+	}
 	if t.GitUntrackedFilesFn != nil {
 		untracked, err := t.GitUntrackedFilesFn(task.RepositoryRoot)
 		if err != nil {

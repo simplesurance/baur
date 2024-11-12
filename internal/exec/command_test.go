@@ -25,7 +25,7 @@ func TestCombinedStdoutOutput(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, 0, res.ExitCode, "exit code is not 0")
-	assert.True(t, res.success, "result.succces is not true")
+	assert.True(t, res.Success, "result.succces is not true")
 	assert.Nil(t, res.ExpectSuccess(), "expect success returns an error") //nolint:testifylint
 	assert.Equal(t, echoStr, res.StrOutput())
 }

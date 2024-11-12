@@ -66,7 +66,7 @@ type Result struct {
 	Dir      string
 	ExitCode int
 	ee       *exec.ExitError
-	success  bool
+	Success  bool
 
 	stdout *prefixSuffixSaver
 	stderr *prefixSuffixSaver
@@ -75,7 +75,7 @@ type Result struct {
 // ExpectSuccess the command did not execute successful
 // (e.g. exit code != 0 on unix), a ExitCodeError is returned.
 func (r *Result) ExpectSuccess() error {
-	if !r.success {
+	if !r.Success {
 		return &ExitCodeError{Result: r}
 	}
 

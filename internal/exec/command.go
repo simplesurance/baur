@@ -245,14 +245,14 @@ func (c *Cmd) Run(ctx context.Context) (*Result, error) {
 		Command:  cmd.String(),
 		Dir:      cmd.Dir,
 		ExitCode: cmd.ProcessState.ExitCode(),
-		success:  cmd.ProcessState.Success(),
+		Success:  cmd.ProcessState.Success(),
 		stdout:   &stdoutPss,
 		stderr:   &stderrPss,
 		ee:       ee,
 	}
 	c.logf("command terminated with exit code: %d\n", result.ExitCode)
 
-	if c.expectSuccess && !result.success {
+	if c.expectSuccess && !result.Success {
 		return nil, &ExitCodeError{Result: &result}
 	}
 
