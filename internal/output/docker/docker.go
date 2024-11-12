@@ -12,8 +12,10 @@ import (
 )
 
 // DefaultRegistry is the registry for that authentication data is used
-const DefaultRegistry = "https://index.docker.io/v1/"
-const dockerRegistryDefaultPort = "5000"
+const (
+	DefaultRegistry           = "https://index.docker.io/v1/"
+	dockerRegistryDefaultPort = "5000"
+)
 
 // Client is a docker client
 type Client struct {

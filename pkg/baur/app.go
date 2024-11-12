@@ -46,7 +46,7 @@ func (a *App) String() string {
 
 // SortAppsByName sorts the slice by application names.
 func SortAppsByName(apps []*App) {
-	sort.Slice(apps, func(i int, j int) bool {
+	sort.Slice(apps, func(i, j int) bool {
 		return apps[i].Name < apps[j].Name
 	})
 }

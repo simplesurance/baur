@@ -51,7 +51,7 @@ func toFile(data any, filepath string, opts ...toFileOpt) error {
 		return err
 	}
 
-	f, err := os.OpenFile(filepath, fileOpenFlags(settings.overwrite), 0640)
+	f, err := os.OpenFile(filepath, fileOpenFlags(settings.overwrite), 0o640)
 	if err != nil {
 		return err
 	}

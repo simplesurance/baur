@@ -19,5 +19,4 @@ func TestFromString(t *testing.T) {
 	if d.String() != shash {
 		t.Errorf("String() returned %q expected %q", d.String(), shash)
 	}
-
 }

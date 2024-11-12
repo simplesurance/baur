@@ -22,17 +22,21 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: initSb,
 }
 
-var verboseFlag bool
-var cpuProfilingFlag bool
-var noColorFlag bool
-var repositoryPath string
+var (
+	verboseFlag      bool
+	cpuProfilingFlag bool
+	noColorFlag      bool
+	repositoryPath   string
+)
 
 var defCPUProfFile = filepath.Join(os.TempDir(), "baur-cpu.prof")
 
 var ctx = context.Background()
 
-var stdout = term.NewStream(os.Stdout)
-var stderr = term.NewStream(os.Stderr)
+var (
+	stdout = term.NewStream(os.Stdout)
+	stderr = term.NewStream(os.Stderr)
+)
 
 var exitFunc = func(code int) { os.Exit(code) }
 

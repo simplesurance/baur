@@ -26,7 +26,6 @@ func TestScheduleAndWait(t *testing.T) {
 	for i := range workDone {
 		assert.Equal(t, int32(1), atomic.LoadInt32(&workDone[i]), "work %d not done", i)
 	}
-
 }
 
 func TestQueuePanicsAfterWait(t *testing.T) {

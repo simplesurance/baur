@@ -29,7 +29,7 @@ func (r *Repo) CreateAppWithoutTasks(t *testing.T) *cfg.App {
 
 	appDir := filepath.Join(r.Dir, appName)
 
-	if err := os.Mkdir(appDir, 0775); err != nil {
+	if err := os.Mkdir(appDir, 0o775); err != nil {
 		t.Fatal(err)
 	}
 
@@ -107,7 +107,7 @@ func (r *Repo) CreateSimpleApp(t *testing.T) *cfg.App {
 
 	appDir := filepath.Join(r.Dir, appName)
 
-	if err := os.Mkdir(appDir, 0775); err != nil {
+	if err := os.Mkdir(appDir, 0o775); err != nil {
 		t.Fatal(err)
 	}
 
@@ -190,7 +190,7 @@ func (r *Repo) CreateAppWithNoOutputs(t *testing.T, appName string) *cfg.App {
 
 	appDir := filepath.Join(r.Dir, appName)
 
-	if err := os.Mkdir(appDir, 0775); err != nil {
+	if err := os.Mkdir(appDir, 0o775); err != nil {
 		t.Fatal(err)
 	}
 

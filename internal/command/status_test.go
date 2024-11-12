@@ -151,7 +151,7 @@ func TestStatusTaskSpecArgParsing(t *testing.T) {
 			},
 			preRun: func(t *testing.T) {
 				childDir := filepath.Join(repoDir, "app3", uuid.New().String())
-				require.NoError(t, os.Mkdir(childDir, 0700))
+				require.NoError(t, os.Mkdir(childDir, 0o700))
 
 				t.Cleanup(func() {
 					require.NoError(t, os.RemoveAll(childDir))

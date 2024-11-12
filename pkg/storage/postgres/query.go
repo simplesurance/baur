@@ -28,7 +28,6 @@ func (c *Client) TaskRun(ctx context.Context, id int) (*storage.TaskRunWithID, e
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +124,6 @@ func (c *Client) inputStrings(ctx context.Context, taskRunID int) ([]*storage.In
 	}
 
 	return result, nil
-
 }
 
 func (c *Client) inputFiles(ctx context.Context, taskRunID int) ([]*storage.InputFile, error) {
@@ -444,7 +442,6 @@ func (c *Client) TaskRuns(
 			&taskRun.StopTimestamp,
 			&taskRun.Result,
 		)
-
 		if err != nil {
 			rows.Close()
 			return fmt.Errorf("query %s with args: %s failed: %w", query, strArgList(args), err)

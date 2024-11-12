@@ -83,7 +83,7 @@ func (t *Task) HasOutputs() bool {
 
 // SortTasksByID sorts the tasks slice by task IDs.
 func SortTasksByID(tasks []*Task) {
-	sort.Slice(tasks, func(i int, j int) bool {
+	sort.Slice(tasks, func(i, j int) bool {
 		return tasks[i].ID < tasks[j].ID
 	})
 }

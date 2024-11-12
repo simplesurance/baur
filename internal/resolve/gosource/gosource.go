@@ -13,8 +13,10 @@ import (
 	"github.com/simplesurance/baur/v5/internal/fs"
 )
 
-const globQueryPrefix = "fileglob="
-const fileQueryPrefix = "file="
+const (
+	globQueryPrefix = "fileglob="
+	fileQueryPrefix = "file="
+)
 
 var defLogFn = func(string, ...any) {}
 

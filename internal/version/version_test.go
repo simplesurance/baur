@@ -11,7 +11,6 @@ func TestSemVerFromString(t *testing.T) {
 		want    *SemVer
 		wantErr bool
 	}{
-
 		{
 			arg:     "",
 			wantErr: true,

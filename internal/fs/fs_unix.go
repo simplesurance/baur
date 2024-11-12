@@ -20,5 +20,5 @@ func FileHasOwnerExecPerm(p string) (bool, error) {
 
 // OwnerHasExecPerm returns true if the executable mode bit in m is set.
 func OwnerHasExecPerm(m fs.FileMode) bool {
-	return m&0100 == 0100
+	return m&0o100 == 0o100
 }

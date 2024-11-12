@@ -22,7 +22,7 @@ func TestSymlinkTargetFilePermissionsChange(t *testing.T) {
 				exec.DefaultLogFn = t.Logf
 				log.RedirectToTestingLog(t)
 				info := prepareSymlinkTestDir(t, tc.AddToGitBeforeChange)
-				require.NoError(t, os.Chmod(info.SymlinkTargetFilePath, 0755))
+				require.NoError(t, os.Chmod(info.SymlinkTargetFilePath, 0o755))
 				if tc.AddToGitAfterChange {
 					gittest.CommitFilesToGit(t, info.TempDir)
 				}

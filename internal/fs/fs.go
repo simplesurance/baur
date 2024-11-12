@@ -208,7 +208,7 @@ func FileSize(path string) (int64, error) {
 
 // Mkdir creates recursively directories
 func Mkdir(path string) error {
-	return os.MkdirAll(path, os.FileMode(0755))
+	return os.MkdirAll(path, os.FileMode(0o755))
 }
 
 // AbsPaths ensures that all elements in paths are absolute paths.
@@ -225,7 +225,7 @@ func AbsPaths(rootPath string, paths []string) []string {
 
 // AbsPath ensures that path is an absolute path.
 // If it isn't, it is joined with rootPath.
-func AbsPath(rootPath string, path string) string {
+func AbsPath(rootPath, path string) string {
 	if filepath.IsAbs(path) {
 		return path
 	}

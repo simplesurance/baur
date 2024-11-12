@@ -61,7 +61,6 @@ func TestUpgrade(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, repoCfg.Database, repoCfgLoaded.Database)
 			require.EqualValues(t, repoCfg.Discover, repoCfgLoaded.Discover)
-
 		})
 	}
 }

@@ -20,7 +20,7 @@ type DockerImgUploader interface {
 
 // FileCopyUploader is an interface for copying files from one directory to another.
 type FileCopyUploader interface {
-	Upload(src string, dst string) (string, error)
+	Upload(src, dst string) (string, error)
 }
 
 // Uploader uploads outputs, produced by task run, to remote locations.

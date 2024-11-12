@@ -27,7 +27,6 @@ var ErrIncludeIDNotFound = errors.New("id not found in include file")
 func NewIncludeDB(logf LogFn) *IncludeDB {
 	if logf == nil {
 		logf = func(_ string, _ ...any) {}
-
 	}
 	return &IncludeDB{
 		inputs:  map[string]map[string]*InputInclude{},
@@ -138,7 +137,6 @@ func (db *IncludeDB) loadOutputInclude(resolver Resolver, workingDir, includeSpe
 	}
 
 	return include, nil
-
 }
 
 // parseIncludeSpec splits the includeSpecifier to an absolute path and an include ID.

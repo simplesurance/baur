@@ -9,7 +9,6 @@ func (f *FileExcludeList) Validate() error {
 	for _, path := range f.Paths {
 		if len(path) == 0 {
 			return newFieldError("can not be empty", "path")
-
 		}
 	}
 
