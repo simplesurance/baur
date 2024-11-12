@@ -370,7 +370,7 @@ func TestRunFailsWhenGitWorktreeIsDirty(t *testing.T) {
 	require.Contains(t, stderrBuf.String(), "expecting only tracked unmodified files")
 }
 
-func TestRunAbortsAfterError(t *testing.T) {
+func TestRunFalFastAbortsAfterError(t *testing.T) {
 	initTest(t)
 	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
 
@@ -404,6 +404,7 @@ func TestRunAbortsAfterError(t *testing.T) {
 	doInitDb(t)
 
 	runCmdTest := newRunCmd()
+	runCmdTest.SetArgs([]string{"--fail-fast"})
 	_, stderr := interceptCmdOutput(t)
 
 	oldExitFunc := exitFunc
@@ -421,4 +422,58 @@ func TestRunAbortsAfterError(t *testing.T) {
 
 	assert.Contains(t, stderr.String(), "terminating, skipping execution of queued task runs")
 	assert.Contains(t, stderr.String(), "testapp.xbuild: execution skipped")
+}
+
+func TestRunFailFastDisabledContinuesAfterError(t *testing.T) {
+	initTest(t)
+	r := repotest.CreateBaurRepository(t, repotest.WithNewDB())
+
+	appCfg := cfg.App{
+		Name: "testapp",
+		Tasks: cfg.Tasks{
+			{
+				Name:    "build",
+				Command: []string{"bash", "-c", "exit 1"},
+				Input: cfg.Input{
+					Files: []cfg.FileInputs{
+						{Paths: []string{".app.toml"}},
+					},
+				},
+			},
+			{
+				Name:    "xbuild",
+				Command: []string{"bash", "-c", "exit 0"},
+				Input: cfg.Input{
+					Files: []cfg.FileInputs{
+						{Paths: []string{".app.toml"}},
+					},
+				},
+			},
+		},
+	}
+
+	err := appCfg.ToFile(filepath.Join(r.Dir, ".app.toml"))
+	require.NoError(t, err)
+
+	doInitDb(t)
+
+	runCmdTest := newRunCmd()
+	runCmdTest.SetArgs([]string{"--fail-fast=false"})
+	stdout, stderr := interceptCmdOutput(t)
+
+	oldExitFunc := exitFunc
+	var exitCode int
+	exitFunc = func(code int) {
+		exitCode = code
+	}
+	t.Cleanup(func() {
+		exitFunc = oldExitFunc
+	})
+
+	err = runCmdTest.Execute()
+	require.NoError(t, err)
+	assert.Equal(t, 1, exitCode)
+
+	assert.Regexp(t, "^testapp.build.*failed: exit status 1", stderr.String())
+	assert.Contains(t, stdout.String(), "testapp.xbuild: run stored in database")
 }

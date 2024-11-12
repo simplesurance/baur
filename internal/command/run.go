@@ -84,6 +84,7 @@ type runCmd struct {
 	// Cmdline parameters
 	skipUpload              bool
 	force                   bool
+	failFast                bool
 	inputStr                []string
 	lookupInputStr          string
 	taskRunnerGoRoutines    uint
@@ -127,6 +128,8 @@ func newRunCmd() *runCmd {
 		"skip uploading task outputs and recording the run")
 	cmd.Flags().BoolVarP(&cmd.force, "force", "f", false,
 		"enforce running tasks independent of their status")
+	cmd.Flags().BoolVar(&cmd.failFast, "fail-fast", false,
+		"skip execution of queued tasks and terminate when a task run fails")
 	cmd.Flags().StringArrayVar(&cmd.inputStr, "input-str", nil,
 		"include a string as input, can be specified multiple times")
 	cmd.Flags().StringVar(&cmd.lookupInputStr, "lookup-input-str", "",
@@ -183,6 +186,7 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	c.taskRunnerRoutinePool = routines.NewPool(c.taskRunnerGoRoutines)
 	c.taskRunner = baur.NewTaskRunner(
 		baur.NewTaskInfoCreator(c.storage, taskStatusEvaluator),
+		c.failFast,
 	)
 
 	if c.showOutput && !verboseFlag {
@@ -297,13 +301,15 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 func (c *runCmd) skipAllScheduledTaskRuns() {
 	c.skipAllScheduledTaskRunsOnce.Do(func() {
 		c.taskRunner.SkipRuns(true)
-
 		c.errorHappened = true
+		if c.failFast {
+			stderr.Printf("%s, %s execution of queued task runs\n",
+				term.RedHighlight("terminating"),
+				term.YellowHighlight("skipping"),
+			)
 
-		stderr.Printf("%s, %s execution of queued task runs\n",
-			term.RedHighlight("terminating"),
-			term.YellowHighlight("skipping"),
-		)
+			return
+		}
 	})
 }
 

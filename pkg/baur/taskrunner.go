@@ -31,16 +31,18 @@ type TaskInfoRetriever interface {
 
 // TaskRunner executes the command of a task.
 type TaskRunner struct {
+	skipAfterError      bool
 	skipEnabled         uint32 // must be accessed via atomic operations
 	LogFn               exec.PrintfFn
 	GitUntrackedFilesFn func(dir string) ([]string, error)
 	taskInfoCreator     *TaskInfoCreator
 }
 
-func NewTaskRunner(taskInfoCreator *TaskInfoCreator) *TaskRunner {
+func NewTaskRunner(taskInfoCreator *TaskInfoCreator, skipAfterError bool) *TaskRunner {
 	return &TaskRunner{
 		LogFn:           exec.DefaultLogFn,
 		taskInfoCreator: taskInfoCreator,
+		skipAfterError:  skipAfterError,
 	}
 }
 
@@ -90,7 +92,7 @@ func (t *TaskRunner) createTaskInfoEnv(ctx context.Context, task *Task) ([]strin
 // Run executes the command of a task and returns the execution result.
 // The output of the commands are logged with debug log level.
 func (t *TaskRunner) Run(task *Task) (*RunResult, error) {
-	if t.SkipRunsIsEnabled() {
+	if t.skipAfterError && t.SkipRunsIsEnabled() {
 		return nil, ErrTaskRunSkipped
 	}
 	if t.GitUntrackedFilesFn != nil {
