@@ -3,6 +3,8 @@ package cfg
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml"
 )
@@ -105,6 +107,13 @@ func (r *Repository) Validate() error {
 func (d *Discover) validate() error {
 	if len(d.Dirs) == 0 {
 		return newFieldError("can not be empty", "application_dirs")
+	}
+
+	for _, dir := range d.Dirs {
+		cleanDir := filepath.Clean(dir)
+		if cleanDir == ".." || strings.HasPrefix(cleanDir, "../") {
+			return newFieldError("contains an invalid path: parent directory access ('..') is not allowed", "application_dirs")
+		}
 	}
 
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {
