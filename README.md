@@ -44,6 +44,11 @@ the database.
 On following runs, baur only runs tasks for which no run with the same digest
 exist.
 
+Information about successful task runs are stored in the database and can be
+queried, including the URIs of uploaded outputs. \
+A set of references of successful task runs can be stored together with
+user-defined data (e.g. a changelog) in the database and queried.
+
 ## Quickstart
 
 ### Installation
