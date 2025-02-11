@@ -42,8 +42,7 @@ Each task specifies:
 baur calculates a digest of all task inputs and stores it for successful runs in
 the database.
 On following runs, baur only runs tasks for which no run with the same digest
-exist.
-
+exist. \
 A set of references of successful task runs can be stored together with custom
 data (e.g. a changelog) in the database as release and queried.
 
