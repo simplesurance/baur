@@ -34,7 +34,16 @@ func (c *upgradeConfigsCmd) run(_ *cobra.Command, _ []string) {
 	cwd, err := os.Getwd()
 	exitOnErr(err)
 
-	err = baur.NewCfgUpgrader(cwd).Upgrade()
+	upgrader := baur.NewCfgUpgrader(cwd)
+
+	uptodate, err := upgrader.IsUpToDate()
+	exitOnErr(err)
+	if uptodate {
+		stdout.Println("configuration files are up to date, nothing to do")
+		return
+	}
+
+	err = upgrader.Upgrade()
 	exitOnErr(err)
 
 	stdout.Println("configuration files upgraded successfully")

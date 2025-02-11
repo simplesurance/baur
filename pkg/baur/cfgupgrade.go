@@ -55,6 +55,17 @@ func (u *CfgUpgrader) Upgrade() error {
 	return nil
 }
 
+// IsUpToDate returns true if the configuration are up to date.
+func (u *CfgUpgrader) IsUpToDate() (bool, error) {
+	p := filepath.Join(u.repoRootDir, RepositoryCfgFile)
+	repoCfg, err := cfg.RepositoryFromFile(p)
+	if err != nil {
+		return false, fmt.Errorf("loading repository config %q failed: %w", p, err)
+	}
+
+	return repoCfg.ConfigVersion == cfg.Version, nil
+}
+
 func (u *CfgUpgrader) upgradeCfgVersion(repoCfgPath string) error {
 	oldRepoCfg, err := cfg.RepositoryFromFile(repoCfgPath)
 	if err != nil {
