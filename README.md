@@ -6,8 +6,14 @@
 
 baur is an incremental task runner for [monolithic Git
 repositories](https://en.wikipedia.org/wiki/Monorepo). \
+It can only run tasks if no previous execution with identical
+user-defined inputs (e.g. source files) exists.
+
 It can be used in CI environments to build, check and test only applications
-that changed in a commit.
+that are affected by changes.
+
+Task outputs like build artifacts can be stored locally and remote.\
+Information about task executions are stored in PostgreSQL and can be queried. 
 
 Practical usage examples of baur can be found in the [example
 repository](https://github.com/simplesurance/baur-example).
@@ -16,49 +22,27 @@ repository](https://github.com/simplesurance/baur-example).
 
 ### How it works
 
-Per application tasks are defined in a [TOML](https://github.com/toml-lang/toml)
-configuration file. Each task specifies:
+Task are defined per application in [TOML](https://github.com/toml-lang/toml)
+configuration files.\
+Definitions can be shared between applications by defining them in include
+files. \
+Each task specifies:
 
-* a command to run,
-* which inputs (files) affect the result of the task run
-* and optionally outputs that are created when the command is run and where
-  those artifacts are uploaded to.
+- A command to execute,
+- Inputs that determine if a task needs to be run:
+  - Files
+  - Environment variables
+  - Golang source files, (imported packages are automatically recursively
+    resolved to files)
+  - Results from other task runs
+- Optionally outputs and their upload destinations: 
+  - Files (upload to S3 or copy in local filesystem),
+  - Docker Images
 
-When baur runs a task, it calculates a digest for the task inputs and stores it
-in a PostgreSQL database. \
-On following runs, baur only runs tasks for which the inputs changed.
-
-### Key Features
-
-* **Running Tasks only for Changed Applications** \
-  Tasks define which inputs affect the result of the task execution. \
-  baur can only runs tasks that have not been run before for the current set of
-  inputs.
-  \
-  Inputs can be defined as
-  [glob file patterns](https://en.wikipedia.org/wiki/Glob_(programming)),
-  environment variables, as strings on the commandline, or as Go package
-  queries.
-
-* **Artifact Upload** \
-  Artifacts can be uploaded to **S3** buckets, to **Docker** registries or
-  simply copied to another directory in the **filesystem**.
-
-* **Application Management** \
-  baur can be used as management tool in monorepositories to query basic
-  information about applications and upload destinations for specific builds.
-
-* **Optimized for CI** \
-  baur is made to be run in CI environments and supports to output information
-  in the easily-parseable CSV and JSON formats.
-
-* **Configuration File Includes** \
-  Tasks, Inputs and Output definitions that are shared between tasks can be
-  defined in include configuration files.
-
-* **Templating** \
-  [Templating](https://github.com/simplesurance/baur/wiki/v4-Documentation#templating-in-configuration-files)
-  can be used in configuration files.
+baur calculates a digest of all task inputs and stores it for successful runs in
+the database.
+On following runs, baur only runs tasks for which no run with the same digest
+exist.
 
 ## Quickstart
 
@@ -142,7 +126,7 @@ idea before in the [Ideas forum](https://github.com/simplesurance/baur/discussio
 
 ## Contact
 
-* Questions? -  [Q&A Forum](https://github.com/simplesurance/baur/discussions/categories/q-a)
+* Questions? - [Q&A Forum](https://github.com/simplesurance/baur/discussions/categories/q-a)
 * Suggestion for a cool feature or other improvements? - [Ideas Forum](https://github.com/simplesurance/baur/discussions/categories/ideas)
 
 ## Links
