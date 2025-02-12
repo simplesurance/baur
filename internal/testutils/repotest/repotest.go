@@ -290,7 +290,7 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 
 	t.Logf("database url: %q", dbURL)
 
-	tempDir, err := os.MkdirTemp("", "baur-filesrc-test")
+	tempDir, err := os.MkdirTemp("", "baur-filesrc-test") //nolint:usetesting // can be replaced by t.TempDir()
 	if err != nil {
 		t.Fatal(err)
 	}
