@@ -19,7 +19,7 @@ if [ -z "$ver" ]; then
 fi
 
 if [ "${head_tag#v}" != "$ver" ]; then
-	fatal "git tag (without 'v' postfix) and string in ver file do not match: '${head_tag}' vs. '${ver}'"
+	fatal "git tag (without 'v' prefix) and string in ver file do not match: '${head_tag}' vs. '${ver}'"
 fi
 
 echo "success: git tag exists and matches with string in ver file: $ver"
