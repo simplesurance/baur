@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v5/internal/log"
-	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v5/pkg/cfg"
 )
 
@@ -15,7 +14,7 @@ func TestFindAppConfigsRemovesDups(t *testing.T) {
 	log.RedirectToTestingLog(t)
 
 	repoDir := filepath.Join(testdataDir, "app_matches_multiple_app_dirs")
-	ostest.Chdir(t, repoDir)
+	t.Chdir(repoDir)
 
 	searchDirs := []string{".", "app1", "app1/.", "app1/..", "app1/../app1/."}
 

@@ -16,7 +16,6 @@ import (
 	"github.com/simplesurance/baur/v5/internal/exec"
 	"github.com/simplesurance/baur/v5/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
 	"github.com/simplesurance/baur/v5/pkg/baur"
 )
@@ -284,7 +283,7 @@ func TestVarInInclude(t *testing.T) {
 
 	gittest.CreateRepository(t, testdataDir)
 
-	ostest.Chdir(t, filepath.Join(testdataDir, "var_in_include"))
+	t.Chdir(filepath.Join(testdataDir, "var_in_include"))
 
 	gittest.CommitFilesToGit(t, testdataDir)
 

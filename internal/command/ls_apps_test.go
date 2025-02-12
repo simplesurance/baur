@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +15,7 @@ func TestLsAppsJSON(t *testing.T) {
 	initTest(t)
 
 	repoDir := filepath.Join(testdataDir, "multitasks")
-	ostest.Chdir(t, repoDir)
+	t.Chdir(repoDir)
 
 	gittest.CreateRepository(t, repoDir)
 

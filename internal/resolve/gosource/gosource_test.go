@@ -11,7 +11,6 @@ import (
 
 	"github.com/simplesurance/baur/v5/internal/log"
 	"github.com/simplesurance/baur/v5/internal/prettyprint"
-	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v5/internal/testutils/strtest"
 )
 
@@ -55,7 +54,7 @@ func TestResolve(t *testing.T) {
 			require.NotEmpty(t, testCfg.Cfg.Queries)
 			require.NotEmpty(t, testCfg.ExpectedResults)
 
-			ostest.Chdir(t, filepath.FromSlash(strings.ReplaceAll(testCfg.Cfg.WorkingDir, "$TESTDIR", dir)))
+			t.Chdir(filepath.FromSlash(strings.ReplaceAll(testCfg.Cfg.WorkingDir, "$TESTDIR", dir)))
 
 			for i := range testCfg.Cfg.Environment {
 				testCfg.Cfg.Environment[i] = strings.ReplaceAll(testCfg.Cfg.Environment[i], "$TESTDIR", dir)

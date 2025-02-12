@@ -9,7 +9,6 @@ import (
 
 	"github.com/simplesurance/baur/v5/internal/prettyprint"
 	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
 	"github.com/simplesurance/baur/v5/pkg/baur"
 
@@ -158,7 +157,7 @@ func TestRelease(t *testing.T) {
 	t.Run("ExistsWithPsqlURIviaEnv", func(t *testing.T) {
 		initTest(t)
 
-		ostest.Chdir(t, t.TempDir())
+		t.Chdir(t.TempDir())
 
 		t.Setenv(envVarPSQLURL, r.Cfg.Database.PGSQLURL)
 

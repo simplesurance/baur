@@ -9,7 +9,6 @@ import (
 
 	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v5/internal/testutils/repotest"
 	"github.com/simplesurance/baur/v5/pkg/baur"
 	"github.com/simplesurance/baur/v5/pkg/cfg"
@@ -24,7 +23,7 @@ func TestUpgrade(t *testing.T) {
 			initTest(t)
 			repoDir := fstest.TempDir(t)
 			gittest.CreateRepository(t, repoDir)
-			ostest.Chdir(t, repoDir)
+			t.Chdir(repoDir)
 			fstest.MkdirAll(t, filepath.Join(repoDir, "a"))
 
 			repoCfg := cfg.Repository{

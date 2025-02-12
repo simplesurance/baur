@@ -13,7 +13,6 @@ import (
 	"github.com/simplesurance/baur/v5/internal/testutils/dbtest"
 	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
 	"github.com/simplesurance/baur/v5/internal/testutils/gittest"
-	"github.com/simplesurance/baur/v5/internal/testutils/ostest"
 	"github.com/simplesurance/baur/v5/pkg/baur"
 	"github.com/simplesurance/baur/v5/pkg/cfg"
 )
@@ -330,7 +329,7 @@ func CreateBaurRepository(t *testing.T, opts ...Opt) *Repo {
 		t.Fatalf("could not write repository cfg file: %s", err)
 	}
 
-	ostest.Chdir(t, tempDir)
+	t.Chdir(tempDir)
 
 	gittest.CreateRepository(t, tempDir)
 	gittest.CommitFilesToGit(t, tempDir)
