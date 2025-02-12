@@ -24,10 +24,10 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - tenv
     - testifylint
     - typecheck
     - unconvert
+    - usetesting
     - unused
     - usestdlibvars
 
