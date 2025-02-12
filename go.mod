@@ -1,6 +1,6 @@
 module github.com/simplesurance/baur/v5
 
-go 1.23.6
+go 1.24.0
 
 require (
 	github.com/docker/docker v27.1.2+incompatible // indirect
