@@ -4,7 +4,6 @@
 package command
 
 import (
-	"context"
 	"encoding/csv"
 	"path/filepath"
 	"strings"
@@ -144,7 +143,7 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 
 	gittest.CommitFilesToGit(t, ".")
 
-	res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().RunCombinedOut(context.Background())
+	res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().RunCombinedOut(t.Context())
 	require.NoError(t, err)
 
 	commit = strings.TrimSpace(res.StrOutput())
@@ -172,7 +171,7 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 
 	gittest.CommitFilesToGit(t, ".")
 
-	res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().RunCombinedOut(context.Background())
+	res, err := exec.Command("git", "rev-parse", "HEAD").ExpectSuccess().RunCombinedOut(t.Context())
 	require.NoError(t, err)
 
 	commit := strings.TrimSpace(res.StrOutput())

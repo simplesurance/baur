@@ -13,7 +13,7 @@ func Test_ExampleRepository_IsValid(t *testing.T) {
 }
 
 func Test_ExampleRepository_WrittenAndReadCfgIsValid(t *testing.T) {
-	tmpfileFD, err := os.CreateTemp("", "baur")
+	tmpfileFD, err := os.CreateTemp(t.TempDir(), "baur")
 	if err != nil {
 		t.Fatal("opening tmpfile failed: ", err)
 	}

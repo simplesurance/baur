@@ -91,7 +91,7 @@ func TestAddFile(t *testing.T) {
 		testStrSHA384 = "sha384:63e291131dbf905a7fea3ffa4dbd8a49bee10055242e6ff1eea3c3862aefc33a4eb9580dd0c706d48b9ee861abfdacdf"
 	)
 
-	file, err := os.CreateTemp("", "")
+	file, err := os.CreateTemp(t.TempDir(), "")
 	if err != nil {
 		t.Fatal("creating tempfile failed:", err.Error())
 	}
@@ -121,7 +121,7 @@ func TestAddFile(t *testing.T) {
 }
 
 func TestHashingNonExistingFileFails(t *testing.T) {
-	file, err := os.CreateTemp("", "")
+	file, err := os.CreateTemp(t.TempDir(), "")
 	if err != nil {
 		t.Fatal("creating tempfile failed:", err.Error())
 	}

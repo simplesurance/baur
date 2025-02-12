@@ -13,7 +13,7 @@ import (
 )
 
 func TestCombinedStderrOutput(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	const echoStr = "hello world!"
 
 	res, err := Command("sh", "-c", fmt.Sprintf("echo -n '%s' 1>&2", echoStr)).RunCombinedOut(ctx)
@@ -24,7 +24,7 @@ func TestCombinedStderrOutput(t *testing.T) {
 }
 
 func TestStdoutAndStderrIsRecordedOnErr(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	const stdoutOutput = "hello stdout"
 	const stderrOutput = "hello stderr"
 
@@ -41,7 +41,7 @@ func TestStdoutAndStderrIsRecordedOnErr(t *testing.T) {
 
 func TestLongStdoutOutputIsTruncated(t *testing.T) {
 	const outBytes = 100 * 1024 * 1024
-	ctx := context.Background()
+	ctx := t.Context()
 
 	res, err := Command(
 		"dd", "if=/dev/urandom", "bs=1024", fmt.Sprintf("count=%d", outBytes/1024),
@@ -57,7 +57,7 @@ func TestLongStdoutOutputIsTruncated(t *testing.T) {
 }
 
 func TestCancellingRuningCommand(t *testing.T) {
-	ctx, cancelFn := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancelFn := context.WithTimeout(t.Context(), time.Second)
 	t.Cleanup(cancelFn)
 
 	_, err := Command("sleep", "5m").Run(ctx)
@@ -70,12 +70,12 @@ func TestExecDoesNotFailIfLongLinesAreStreamed(t *testing.T) {
 	_, err := Command("bash", "-c",
 		fmt.Sprintf("tr -d '\n' </dev/urandom | head -c %d",
 			2*outputStreamLineReaderBufSiz)).LogFn(t.Logf).
-		ExpectSuccess().Run(context.Background())
+		ExpectSuccess().Run(t.Context())
 	require.NoError(t, err)
 }
 
 func TestStdoutStderrStream(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	buf := bytes.Buffer{}
 	mu := sync.Mutex{}
 
@@ -93,7 +93,7 @@ func TestStdoutStderrStream(t *testing.T) {
 }
 
 func TestStdoutStderrPrefixSaver(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// The condition is racy, run the test multiple time to make it it likely to trigger the bug.
 	for i := 0; i < 100; i++ {

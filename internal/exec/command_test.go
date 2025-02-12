@@ -2,7 +2,6 @@ package exec
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"runtime"
 	"testing"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestCombinedStdoutOutput(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	const echoStr = "hello World!"
 
 	var res *ResultOut
@@ -31,7 +30,7 @@ func TestCombinedStdoutOutput(t *testing.T) {
 }
 
 func TestCommandFails(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	var res *ResultOut
 	var err error
 	if runtime.GOOS == "windows" {
@@ -47,7 +46,7 @@ func TestCommandFails(t *testing.T) {
 }
 
 func TestExpectSuccess(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	var res *Result
 	var err error
 	if runtime.GOOS == "windows" {
@@ -60,7 +59,7 @@ func TestExpectSuccess(t *testing.T) {
 }
 
 func TestOutputStream(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	const echoStr = "hello\nline2"
 
 	buf := bytes.Buffer{}

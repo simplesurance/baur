@@ -1,7 +1,6 @@
 package gittest
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,27 +38,27 @@ func CommitFilesToGit(t *testing.T, directory string) []string {
 	_, err = exec.Command("git", append([]string{"add"}, files...)...).
 		Directory(directory).
 		ExpectSuccess().
-		Run(context.Background())
+		Run(t.Context())
 	require.NoError(t, err)
 
 	_, err = exec.Command("git", "commit", "-a", "-m", "baur commit").
 		Directory(directory).
 		ExpectSuccess().
-		Run(context.Background())
+		Run(t.Context())
 	require.NoError(t, err)
 
 	return files
 }
 
 func Clone(t *testing.T, directory, gitURL, commit string) {
-	_, err := exec.Command("git", "clone", gitURL, directory).ExpectSuccess().Run(context.Background())
+	_, err := exec.Command("git", "clone", gitURL, directory).ExpectSuccess().Run(t.Context())
 	require.NoError(t, err)
 
 	if commit == "" {
 		return
 	}
 
-	_, err = exec.Command("git", "checkout", commit).Directory(directory).ExpectSuccess().Run(context.Background())
+	_, err = exec.Command("git", "checkout", commit).Directory(directory).ExpectSuccess().Run(t.Context())
 	require.NoError(t, err)
 }
 
@@ -67,12 +66,12 @@ func CreateRepository(t *testing.T, directory string) {
 	_, err := exec.Command("git", "init", ".").
 		Directory(directory).
 		ExpectSuccess().
-		Run(context.Background())
+		Run(t.Context())
 	require.NoError(t, err)
 	_, err = exec.Command("git", "config", "--local", "commit.gpgsign", "false").
 		Directory(directory).
 		ExpectSuccess().
-		Run(context.Background())
+		Run(t.Context())
 	require.NoError(t, err)
 
 	t.Cleanup(func() {

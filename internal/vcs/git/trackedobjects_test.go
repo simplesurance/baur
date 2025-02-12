@@ -1,7 +1,6 @@
 package git
 
 import (
-	"context"
 	"path/filepath"
 	"testing"
 
@@ -14,7 +13,7 @@ import (
 
 func TestModifiedFilesMissing(t *testing.T) {
 	const fRel = "file"
-	ctx := context.Background()
+	ctx := t.Context()
 	tempDir := t.TempDir()
 
 	gittest.CreateRepository(t, tempDir)
@@ -43,13 +42,13 @@ func TestCalculatedUntrackedAndReadTrackedFileIDsAreSame(t *testing.T) {
 	f := filepath.Join(tempDir, fRel)
 	fstest.WriteToFile(t, []byte("110"), f)
 
-	idUntracked, err := ObjectID(context.Background(), f, fRel)
+	idUntracked, err := ObjectID(t.Context(), f, fRel)
 	require.NoError(t, err)
 
 	gittest.CommitFilesToGit(t, tempDir)
 
 	calc := NewTrackedObjects(tempDir, t.Logf)
-	to, err := calc.Get(context.Background(), f)
+	to, err := calc.Get(t.Context(), f)
 	require.NoError(t, err)
 	require.NotNil(t, to)
 

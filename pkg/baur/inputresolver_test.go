@@ -278,7 +278,7 @@ func TestFilesOptional(t *testing.T) {
 
 			tc.task.Directory = tempDir
 
-			result, err := r.Resolve(context.Background(), &tc.task)
+			result, err := r.Resolve(t.Context(), &tc.task)
 			if tc.expectError {
 				require.Error(t, err)
 				require.Empty(t, result)
@@ -318,7 +318,7 @@ func TestPathsAfterMissingOptionalOneAreNotIgnored(t *testing.T) {
 
 	fstest.WriteToFile(t, []byte("123"), filepath.Join(tempDir, fname))
 
-	result, err := r.Resolve(context.Background(), &Task{
+	result, err := r.Resolve(t.Context(), &Task{
 		Directory: tempDir,
 		UnresolvedInputs: &cfg.Input{
 			Files: []cfg.FileInputs{
@@ -530,7 +530,7 @@ func TestExcludedFiles(t *testing.T) {
 			}
 
 			resolver := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, true)
-			result, err := resolver.Resolve(context.Background(), &Task{
+			result, err := resolver.Resolve(t.Context(), &Task{
 				Directory:        tempDir,
 				UnresolvedInputs: &tc.Inputs,
 			})
@@ -581,7 +581,7 @@ func TestGoResolverFilesAreExcluded(t *testing.T) {
 	resolver.goSourceResolver = &goSourceResolverMock{result: []string{f1, f2}}
 
 	result, err := resolver.Resolve(
-		context.Background(),
+		t.Context(),
 		&Task{
 			UnresolvedInputs: &cfg.Input{
 				GolangSources: []cfg.GolangSources{{}},
@@ -716,7 +716,7 @@ func TestResolveSymlink(t *testing.T) {
 			gittest.CreateRepository(t, repoDir)
 			r := NewInputResolver(git.NewRepository(repoDir), repoDir, nil, true)
 
-			result, err := r.Resolve(context.Background(), &Task{
+			result, err := r.Resolve(t.Context(), &Task{
 				Directory: filepath.Join(repoDir, tc.testdir),
 				UnresolvedInputs: &cfg.Input{Files: []cfg.FileInputs{{
 					Paths:    []string{tc.inputPath},
@@ -845,7 +845,7 @@ func resolveInputs(t *testing.T, task *Task, hashGitUntracked bool) (*Inputs, *d
 
 	resolver := NewInputResolver(git.NewRepository(task.RepositoryRoot), task.RepositoryRoot, nil, hashGitUntracked)
 	result, err := resolver.Resolve(
-		context.Background(),
+		t.Context(),
 		task,
 	)
 	require.NoError(t, err)
@@ -923,7 +923,7 @@ func TestHashGitUntrackedFilesDisabled(t *testing.T) {
 	}
 
 	r := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, false)
-	_, err := r.Resolve(context.Background(), task)
+	_, err := r.Resolve(t.Context(), task)
 	require.ErrorIs(t, err, git.ErrObjectNotFound)
 }
 
@@ -958,7 +958,7 @@ func TestFileInSymlinkDir(t *testing.T) {
 			}
 
 			r := NewInputResolver(git.NewRepository(tempDir), tempDir, nil, !hashGitUntracked)
-			inputs, err := r.Resolve(context.Background(), task)
+			inputs, err := r.Resolve(t.Context(), task)
 			require.NoError(t, err)
 			require.Len(t, inputs.Inputs(), 1)
 			inf, ok := inputs.Inputs()[0].(*InputFile)

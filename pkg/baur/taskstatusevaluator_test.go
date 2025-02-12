@@ -1,7 +1,6 @@
 package baur
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +17,7 @@ func TestStatusEvaluatorFailsWhenTaskInfoAndLookupStrIsUsed(t *testing.T) {
 		},
 	}
 
-	_, _, _, err := te.Status(context.Background(), &task)
+	_, _, _, err := te.Status(t.Context(), &task)
 	require.ErrorContains(t, err, "'--lookup-input-str' is unsupported")
 }
 

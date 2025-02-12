@@ -3,7 +3,6 @@
 package postgres
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -109,7 +108,7 @@ func tableIsEmpty(t *testing.T, clt *Client, tableName string) bool {
 	var result bool
 	q := fmt.Sprintf(`SELECT EXISTS (SELECT * FROM %s LIMIT 1)`, pgx.Identifier{tableName}.Sanitize())
 
-	err := clt.db.QueryRow(context.Background(), q).Scan(&result)
+	err := clt.db.QueryRow(t.Context(), q).Scan(&result)
 	require.NoErrorf(t, err, "checking if table is empty failed, query: %q", q)
 	return !result
 }
@@ -122,7 +121,7 @@ func allTableNames(t *testing.T, clt *Client) []string {
 	      WHERE  schemaname = 'public'
 	      `
 
-	rows, err := clt.db.Query(context.Background(), q)
+	rows, err := clt.db.Query(t.Context(), q)
 	require.NoError(t, err, "querying table names failed")
 	for rows.Next() {
 		var tableName string
