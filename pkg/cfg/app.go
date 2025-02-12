@@ -58,7 +58,7 @@ func ExampleApp(name string) *App {
 				Output: Output{
 					File: []FileOutput{
 						{
-							Path: "dist/{{ .appname }}.tar.xz",
+							Path: "dist/{{ .AppName }}.tar.xz",
 							S3Upload: []S3Upload{
 								{
 									Bucket: "go-artifacts/",
@@ -74,11 +74,11 @@ func ExampleApp(name string) *App {
 					},
 					DockerImage: []DockerImageOutput{
 						{
-							IDFile: "{{ .appname }}-container.id",
+							IDFile: "{{ .AppName }}-container.id",
 							RegistryUpload: []DockerImageRegistryUpload{
 								{
 									Repository: "my-company/{{ .AppName }}",
-									Tag:        "{{ ENV BRANCH_NAME }}-{{ gitCommit }}",
+									Tag:        "{{ env BRANCH_NAME }}-{{ gitCommit }}",
 								},
 							},
 						},
