@@ -1,3 +1,32 @@
+# v1.17.64 (2025-02-27)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.63 (2025-02-18)
+
+* **Bug Fix**: Bump go version to 1.22
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.62 (2025-02-14)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.61 (2025-02-10)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.60 (2025-02-06)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.59 (2025-02-05)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.58 (2025-02-04)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.17.57 (2025-01-31)
 
 * **Bug Fix**: Fix incorrect reference to old s3manager in comments.
