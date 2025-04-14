@@ -1,6 +1,7 @@
 module github.com/simplesurance/baur/v5
 
 go 1.24.0
+
 require (
 	github.com/docker/docker v27.1.2+incompatible // indirect
 	github.com/fatih/color v1.18.0
@@ -15,10 +16,10 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.31.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
