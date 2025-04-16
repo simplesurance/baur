@@ -9,7 +9,8 @@ import (
 
 type InputFileOpt func(*InputFile)
 
-// InputFile represent a file.
+// InputFile represents a file with it's content and executable state,
+// that is required to build the output of a task.
 type InputFile struct {
 	absPath                string
 	repoRelPath            string
@@ -44,9 +45,8 @@ func WithRealpath(repoRelRealPath string) InputFileOpt {
 }
 
 // NewInputFile creates an InputFile.
-// absPath is the absolute path to the file. It is used to create the digest.
-// relPath is a relative path to the file. It is used as part of the digest. To
-// which base path relPath is relative is arbitrary.
+// absPath is the absolute path to the file. It is used as part of it's digest.
+// relPath is a relative path to the file, it is a subset of absPath.
 func NewInputFile(absPath, relPath string, ownerHasExecutablePerm bool, opts ...InputFileOpt) *InputFile {
 	i := InputFile{
 		absPath:                absPath,
@@ -59,12 +59,14 @@ func NewInputFile(absPath, relPath string, ownerHasExecutablePerm bool, opts ...
 	return &i
 }
 
-// String returns RelPath()
+// String returns the relative path of the input.
 func (f *InputFile) String() string {
 	return f.repoRelPath
 }
 
-// RelPath returns the path of the file relative to the baur repository root.
+// RelPath returns the relative path of the file.
+// It is either relative to the baur repository directory or a special path
+// (e.g. is prefixed with $GOMODCACHE).
 func (f *InputFile) RelPath() string {
 	return f.repoRelPath
 }
@@ -76,7 +78,7 @@ func (f *InputFile) AbsPath() string {
 
 // CalcDigest calculates the digest of the file.
 // The Digest is the sha384 sum of the repoRelPath and the content of the file.
-// If neither a file hash functon nor the content digest was provided on
+// If neither a file hash function nor the content digest was provided on
 // construction of f, errors.ErrUnsupported is returned.
 func (f *InputFile) CalcDigest() (*digest.Digest, error) {
 	if f.contentDigest == nil && f.fileHasher == nil {
