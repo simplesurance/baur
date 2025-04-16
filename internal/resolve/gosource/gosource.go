@@ -268,8 +268,6 @@ func withoutStdblibAndCacheFiles(result *[]string, env *goEnv, paths []string) e
 			continue
 		}
 
-		// use HasPrefix() + Replace() to ensure we only replace the
-		// path if is the prefix
 		if strings.HasPrefix(abs, env.GoModCache) {
 			abs = strings.Replace(abs, env.GoModCache, "$GOMODCACHE", 1)
 		}
