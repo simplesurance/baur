@@ -58,8 +58,8 @@ func TestUpgrade(t *testing.T) {
 
 			repoCfgLoaded, err := cfg.RepositoryFromFile(repoCfgPath)
 			require.NoError(t, err)
-			require.EqualValues(t, repoCfg.Database, repoCfgLoaded.Database)
-			require.EqualValues(t, repoCfg.Discover, repoCfgLoaded.Discover)
+			require.Equal(t, repoCfg.Database, repoCfgLoaded.Database)
+			require.Equal(t, repoCfg.Discover, repoCfgLoaded.Discover)
 		})
 	}
 }

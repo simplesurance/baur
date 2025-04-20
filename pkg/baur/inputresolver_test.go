@@ -474,7 +474,7 @@ func TestResolveEnvVarInputs(t *testing.T) {
 				require.ErrorContains(t, err, tc.ExpectedErrStr)
 			}
 
-			require.EqualValues(t, tc.ExpectedResolvedEnvVars, resolvedEnvVars)
+			require.Equal(t, tc.ExpectedResolvedEnvVars, resolvedEnvVars)
 		})
 	}
 }
