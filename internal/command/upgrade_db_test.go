@@ -29,7 +29,7 @@ func TestUpgradeDb_DatabaseNotExist(t *testing.T) {
 	})
 
 	upgradeDbCmd := newUpgradeDatabaseCmd()
-	upgradeDbCmd.Command.Run(&upgradeDbCmd.Command, nil)
+	upgradeDbCmd.Run(&upgradeDbCmd.Command, nil)
 
 	assert.Equal(t, 1, exitCode)
 	assert.Contains(t, stderrBuf.String(), "database not found")
@@ -43,7 +43,7 @@ func TestUpgradeDb_AlreadyUptodate(t *testing.T) {
 	initDbCmd.Run(initDbCmd, nil)
 
 	upgradeDbCmd := newUpgradeDatabaseCmd()
-	upgradeDbCmd.Command.Run(&upgradeDbCmd.Command, nil)
+	upgradeDbCmd.Run(&upgradeDbCmd.Command, nil)
 
 	assert.Contains(t, stdoutBuf.String(), "already up to date")
 }
@@ -62,7 +62,7 @@ func TestUpgradeDb(t *testing.T) {
 
 	stdoutBuf, _ := interceptCmdOutput(t)
 	upgradeDbCmd := newUpgradeDatabaseCmd()
-	upgradeDbCmd.Command.Run(&upgradeDbCmd.Command, nil)
+	upgradeDbCmd.Run(&upgradeDbCmd.Command, nil)
 
 	assert.Contains(t, stdoutBuf.String(), "database schema successfully upgraded from version 1 to 5")
 }

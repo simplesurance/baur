@@ -37,7 +37,7 @@ func baurCSVLsApps(t *testing.T) [][]string {
 	lsAppsCmd := newLsAppsCmd()
 	lsAppsCmd.format.Val = flag.FormatCSV
 
-	lsAppsCmd.Command.Run(&lsAppsCmd.Command, nil)
+	lsAppsCmd.Run(&lsAppsCmd.Command, nil)
 
 	statusOut, err := csv.NewReader(stdoutBuf).ReadAll()
 	require.NoError(t, err)
@@ -55,7 +55,7 @@ func baurCSVLsInputs(t *testing.T, args ...string) []string {
 	lsInputsCmd := newLsInputsCmd()
 	lsInputsCmd.format.Val = "csv"
 
-	lsInputsCmd.Command.Run(&lsInputsCmd.Command, args)
+	lsInputsCmd.Run(&lsInputsCmd.Command, args)
 
 	return strings.Split(stdoutBuf.String(), "\n")
 }
@@ -151,7 +151,7 @@ func TestRunningPendingTasksChangesStatus(t *testing.T) {
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusExecutionPending, "")
 
 	runCmd := newRunCmd()
-	runCmd.Command.Run(&runCmd.Command, nil)
+	runCmd.Run(&runCmd.Command, nil)
 
 	statusOut = baurCSVStatus(t, nil, "")
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
@@ -177,7 +177,7 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 
 	// run 1, without input-strings
 	runCmd := newRunCmd()
-	runCmd.Command.Run(&runCmd.Command, nil)
+	runCmd.Run(&runCmd.Command, nil)
 
 	statusOut := baurCSVStatus(t, nil, "")
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
@@ -191,7 +191,7 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 	runID := "3" // 3 instead of 2 becoes the app has 2 task, we build both
 	runCmd = newRunCmd()
 	runCmd.inputStr = inputStr
-	runCmd.Command.Run(&runCmd.Command, nil)
+	runCmd.Run(&runCmd.Command, nil)
 
 	statusOut = baurCSVStatus(t, inputStr, "")
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
@@ -210,7 +210,7 @@ func TestRunningPendingTasksWithInputStringChangesStatus(t *testing.T) {
 	runID = "5"
 	runCmd = newRunCmd()
 	runCmd.inputStr = inputStr
-	runCmd.Command.Run(&runCmd.Command, nil)
+	runCmd.Run(&runCmd.Command, nil)
 
 	statusOut = baurCSVStatus(t, inputStr, "")
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, commit)
@@ -237,7 +237,7 @@ func TestLookupInputStringReturnsRunExistsStatusWhenInputStringRunExists(t *test
 
 	runCmd := newRunCmd()
 	runCmd.inputStr = []string{featureX}
-	runCmd.Command.Run(&runCmd.Command, nil)
+	runCmd.Run(&runCmd.Command, nil)
 
 	statusOut := baurCSVStatus(t, []string{featureX}, "")
 	assertStatusTasks(t, r, statusOut, baur.TaskStatusRunExist, "")
@@ -295,5 +295,5 @@ func TestVarInInclude(t *testing.T) {
 	runInitDb(t)
 
 	runCmd := newRunCmd()
-	runCmd.Command.Run(&runCmd.Command, []string{"app1", "app2"})
+	runCmd.Run(&runCmd.Command, []string{"app1", "app2"})
 }

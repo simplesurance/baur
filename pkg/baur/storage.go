@@ -32,7 +32,7 @@ func StoreRun(
 	}
 
 	var result storage.Result
-	if runResult.Result.ExitCode == 0 {
+	if runResult.ExitCode == 0 {
 		result = storage.ResultSuccess
 	} else {
 		result = storage.ResultFailure

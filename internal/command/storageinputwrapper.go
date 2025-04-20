@@ -17,7 +17,7 @@ func (i *storageInputFile) Digest() (*digest.Digest, error) {
 }
 
 func (i *storageInputFile) String() string {
-	return i.InputFile.Path
+	return i.Path
 }
 
 type storageInputString struct {
@@ -37,7 +37,7 @@ type storageInputEnvVar struct {
 }
 
 func (i *storageInputEnvVar) String() string {
-	return "$" + i.InputEnvVar.Name
+	return "$" + i.Name
 }
 
 func (i *storageInputEnvVar) Digest() (*digest.Digest, error) {

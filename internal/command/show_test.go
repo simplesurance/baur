@@ -24,12 +24,12 @@ func TestShowArgs(t *testing.T) {
 
 	t.Run("appName", func(t *testing.T) {
 		initTest(t)
-		showCmd.Command.Run(&showCmd.Command, []string{app.Name})
+		showCmd.Run(&showCmd.Command, []string{app.Name})
 	})
 
 	t.Run("taskName", func(t *testing.T) {
 		initTest(t)
-		showCmd.Command.Run(&showCmd.Command, []string{
+		showCmd.Run(&showCmd.Command, []string{
 			fmt.Sprintf("%s.%s", app.Name, app.Tasks[0].Name),
 		})
 	})
@@ -40,7 +40,7 @@ func TestShowArgs(t *testing.T) {
 		relDir, err := filepath.Rel(r.Dir, appDir)
 		require.NoError(t, err)
 
-		showCmd.Command.Run(&showCmd.Command, []string{relDir})
+		showCmd.Run(&showCmd.Command, []string{relDir})
 	})
 
 	t.Run("appCurrentDir", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestShowArgs(t *testing.T) {
 
 		t.Chdir(appDir)
 
-		showCmd.Command.Run(&showCmd.Command, []string{"."})
+		showCmd.Run(&showCmd.Command, []string{"."})
 	})
 }
 

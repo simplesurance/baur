@@ -25,7 +25,7 @@ func TestLsRunsHasInput(t *testing.T) {
 
 	runCmd := newRunCmd()
 	runCmd.inputStr = []string{"hello"}
-	runCmd.Command.Run(&runCmd.Command, []string{taskID})
+	runCmd.Run(&runCmd.Command, []string{taskID})
 
 	stdoutBuf, _ := interceptCmdOutput(t)
 	lsRunsCmd := newLsRunsCmd()
