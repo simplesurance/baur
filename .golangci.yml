@@ -1,19 +1,16 @@
+version: "2"
 run:
   build-tags:
     - dbtest
-
 linters:
-  disable-all: true
+  default: none
   enable:
     - copyloopvar
     - errcheck
     - errorlint
     - gocritic
     - godox
-    - gofumpt
-    - goimports
     - goprintffuncname
-    - gosimple
     - govet
     - ineffassign
     - misspell
@@ -25,18 +22,34 @@ linters:
     - sqlclosecheck
     - staticcheck
     - testifylint
-    - typecheck
     - unconvert
-    - usetesting
     - unused
     - usestdlibvars
+    - usetesting
+  settings:
+    godox:
+      keywords:
+        - FIXME
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - staticcheck
+        text: "^(ST1005|QF1003|QF1001):"
 
-linters-settings:
-  goimports:
-    local-prefixes: github.com/simplesurance/baur/v5
-  godox:
-    keywords:
-      - FIXME
-  gofumpt:
-    module-path: github.com/simplesurance/baur/v5
-    extra-rules: true
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      module-path: github.com/simplesurance/baur/v5
+      extra-rules: true
+    goimports:
+      local-prefixes:
+        - github.com/simplesurance/baur/v5
