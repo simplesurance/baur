@@ -64,9 +64,7 @@ func (f *InputFile) String() string {
 	return f.repoRelPath
 }
 
-// RelPath returns the relative path of the file.
-// It is either relative to the baur repository directory or a special path
-// (e.g. is prefixed with $GOMODCACHE).
+// RelPath returns the baur repository relative path of the file.
 func (f *InputFile) RelPath() string {
 	return f.repoRelPath
 }
