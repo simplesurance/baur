@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"golang.org/x/tools/go/packages"
 
 	"github.com/simplesurance/baur/v5/internal/fs"
+	"github.com/simplesurance/baur/v5/internal/set"
 )
 
 const (
@@ -191,41 +193,33 @@ func (r *Resolver) resolve(
 		return nil, err
 	}
 
-	// We can't use packages.All because
-	// we need an ordered traversal.
-	var all []*packages.Package // postorder
-	seen := make(map[*packages.Package]bool)
-	var visit func(*packages.Package)
-	visit = func(lpkg *packages.Package) {
-		if !seen[lpkg] {
-			seen[lpkg] = true
-
-			// visit imports
-			var importPaths []string
-			for path := range lpkg.Imports {
-				importPaths = append(importPaths, path)
-			}
-			for _, path := range importPaths {
-				visit(lpkg.Imports[path])
-			}
-
-			all = append(all, lpkg)
+	allPkgs := set.Set[*packages.Package]{}
+	var visitFn func(*packages.Package)
+	visitFn = func(lpkg *packages.Package) {
+		if allPkgs.Contains(lpkg) {
+			return
 		}
+
+		for path := range maps.Keys(lpkg.Imports) {
+			visitFn(lpkg.Imports[path])
+		}
+
+		allPkgs.Add(lpkg)
 	}
+
 	for _, lpkg := range lpkgs {
-		visit(lpkg)
+		visitFn(lpkg)
 	}
-	lpkgs = all
 
 	var srcFiles []string
-	for _, lpkg := range lpkgs {
-		err = sourceFiles(&srcFiles, goEnv, lpkg)
+	for pkg := range allPkgs {
+		err = sourceFiles(&srcFiles, goEnv, pkg)
 		if err != nil {
-			return nil, fmt.Errorf("resolving sourcefiles of package '%s' failed: %w", lpkg.Name, err)
+			return nil, fmt.Errorf("resolving source files of package '%s' failed: %w", pkg.Name, err)
 		}
 
-		if len(lpkg.Errors) != 0 {
-			return nil, fmt.Errorf("parsing package %s failed: %+v", lpkg.Name, lpkg.Errors)
+		if len(pkg.Errors) != 0 {
+			return nil, fmt.Errorf("resolving source files of package %s failed: %+v", pkg.Name, pkg.Errors)
 		}
 	}
 
