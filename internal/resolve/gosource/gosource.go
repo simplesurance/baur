@@ -83,9 +83,10 @@ func toAbsFilePatternPaths(workDir string, queries []string) {
 
 // Resolve returns the Go source files in the passed directories plus all
 // source files of the imported packages.
-// Testfiles and stdlib dependencies are ignored.
-func (r *Resolver) Resolve(
-	ctx context.Context,
+// Testcase files are ignored when false is passed for withTests.
+// Files in GOROOT (stdlib packages) and in the GOMODCACHE (non-vendored
+// 3. party package dependencies) are omitted from the result.
+func (r *Resolver) Resolve(ctx context.Context,
 	workdir string,
 	environment []string,
 	buildFlags []string,
@@ -226,8 +227,8 @@ func (r *Resolver) resolve(
 	return srcFiles, nil
 }
 
-// sourceFiles returns GoFiles and OtherFiles of the package that are not part
-// of the stdlib
+// sourceFiles returns GoFiles, OtherFiles and EmbedFiles of the package that
+// aren't stored in a Go Cache directory or part of the stdlib.
 func sourceFiles(result *[]string, env *goEnv, pkg *packages.Package) error {
 	err := withoutStdblibAndCacheFiles(result, env, pkg.GoFiles)
 	if err != nil {
@@ -262,10 +263,8 @@ func withoutStdblibAndCacheFiles(result *[]string, env *goEnv, paths []string) e
 			continue
 		}
 
-		// use HasPrefix() + Replace() to ensure we only replace the
-		// path if is the prefix
 		if strings.HasPrefix(abs, env.GoModCache) {
-			abs = strings.Replace(abs, env.GoModCache, "$GOMODCACHE", 1)
+			continue
 		}
 
 		*result = append(*result, abs)
