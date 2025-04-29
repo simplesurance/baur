@@ -3,9 +3,9 @@ module github.com/simplesurance/baur/v5
 go 1.24.0
 
 require (
-	github.com/docker/docker v27.1.2+incompatible // indirect
+	github.com/docker/docker v27.5.1+incompatible // indirect
 	github.com/fatih/color v1.18.0
-	github.com/fsouza/go-dockerclient v1.12.0
+	github.com/fsouza/go-dockerclient v1.12.1
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/google/uuid v1.6.0
