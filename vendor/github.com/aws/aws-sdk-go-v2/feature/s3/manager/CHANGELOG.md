@@ -1,3 +1,43 @@
+# v1.17.74 (2025-04-28)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.73 (2025-04-23)
+
+* **Bug Fix**: Abort multi part download if the object is modified during download
+
+# v1.17.72 (2025-04-10)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.71 (2025-04-03)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.70 (2025-03-31)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.69 (2025-03-27)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.68 (2025-03-25)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.67 (2025-03-24)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.66 (2025-03-11)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.65 (2025-03-04.2)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.17.64 (2025-02-27)
 
 * **Dependency Update**: Updated to the latest SDK module versions
