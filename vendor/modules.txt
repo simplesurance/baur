@@ -148,7 +148,7 @@ github.com/containerd/log
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/docker/docker v27.1.2+incompatible
+# github.com/docker/docker v27.5.1+incompatible
 ## explicit
 github.com/docker/docker/api/types/blkiodev
 github.com/docker/docker/api/types/container
@@ -178,8 +178,8 @@ github.com/docker/go-units
 # github.com/fatih/color v1.18.0
 ## explicit; go 1.17
 github.com/fatih/color
-# github.com/fsouza/go-dockerclient v1.12.0
-## explicit; go 1.22
+# github.com/fsouza/go-dockerclient v1.12.1
+## explicit; go 1.23
 github.com/fsouza/go-dockerclient
 # github.com/gogo/protobuf v1.3.2
 ## explicit; go 1.15
