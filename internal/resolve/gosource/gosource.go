@@ -7,6 +7,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -81,8 +82,9 @@ func toAbsFilePatternPaths(workDir string, queries []string) {
 	}
 }
 
-// Resolve returns the Go source files in the passed directories plus all
-// source files of the imported packages.
+// Resolve resolves queries to the go source file paths and go.mod files
+// of the packages and their recursively imported packages.
+// queries must be go-list package queries.
 // Testcase files are ignored when false is passed for withTests.
 // Files in GOROOT (stdlib packages) and in the GOMODCACHE (non-vendored
 // 3. party package dependencies) are omitted from the result.
@@ -180,8 +182,12 @@ func (r *Resolver) resolve(
 		queries, workdir, env, goEnv, withTests, buildFlags)
 
 	cfg := &packages.Config{
-		Context:    ctx,
-		Mode:       packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedEmbedFiles,
+		Context: ctx,
+		Mode: packages.NeedName |
+			packages.NeedFiles |
+			packages.NeedImports |
+			packages.NeedEmbedFiles |
+			packages.NeedModule,
 		Dir:        workdir,
 		Env:        env,
 		Logf:       r.logFn,
@@ -213,6 +219,9 @@ func (r *Resolver) resolve(
 	}
 
 	var srcFiles []string
+	// because multiple packages can be part of the same GoMod,
+	// we dedup the go.mod paths with this set:
+	gomodFiles := set.Set[string]{}
 	for pkg := range allPkgs {
 		err = sourceFiles(&srcFiles, goEnv, pkg)
 		if err != nil {
@@ -222,9 +231,18 @@ func (r *Resolver) resolve(
 		if len(pkg.Errors) != 0 {
 			return nil, fmt.Errorf("resolving source files of package %s failed: %+v", pkg.Name, pkg.Errors)
 		}
+
+		if pkg.Module != nil {
+			if pkg.Module.Error != nil {
+				return nil, fmt.Errorf("loading go module information of package %s failed: %s", pkg.Name, pkg.Module.Error.Err)
+			}
+			if pkg.Module.GoMod != "" && !isStdLibOrCacheFile(goEnv, pkg.Module.GoMod) {
+				gomodFiles.Add(pkg.Module.GoMod)
+			}
+		}
 	}
 
-	return srcFiles, nil
+	return slices.Concat(srcFiles, gomodFiles.Slice()), nil
 }
 
 // sourceFiles returns GoFiles, OtherFiles and EmbedFiles of the package that
@@ -255,20 +273,16 @@ func withoutStdblibAndCacheFiles(result *[]string, env *goEnv, paths []string) e
 			return err
 		}
 
-		if len(env.GoCache) > 0 && strings.HasPrefix(abs, env.GoCache) {
-			continue
+		if !isStdLibOrCacheFile(env, abs) {
+			*result = append(*result, abs)
 		}
-
-		if strings.HasPrefix(abs, env.GoRoot) {
-			continue
-		}
-
-		if strings.HasPrefix(abs, env.GoModCache) {
-			continue
-		}
-
-		*result = append(*result, abs)
 	}
 
 	return nil
+}
+
+func isStdLibOrCacheFile(env *goEnv, p string) bool {
+	return (len(env.GoCache) > 0 && strings.HasPrefix(p, env.GoCache)) ||
+		strings.HasPrefix(p, env.GoRoot) ||
+		strings.HasPrefix(p, env.GoModCache)
 }

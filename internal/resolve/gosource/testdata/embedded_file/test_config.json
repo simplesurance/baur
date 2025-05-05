@@ -7,11 +7,12 @@
 		"Tests": true
 	},
 	"ExpectedResults": [
-		"$TESTDIR/main.go",
-		"$TESTDIR/embed_test.go",
-		"$TESTDIR/hello.txt",
 		"$TESTDIR/data/a.txt",
 		"$TESTDIR/data/b.txt",
-		"$TESTDIR/hello_test.txt"
+		"$TESTDIR/embed_test.go",
+		"$TESTDIR/go.mod",
+		"$TESTDIR/hello.txt",
+		"$TESTDIR/hello_test.txt",
+		"$TESTDIR/main.go"
 	]
 }

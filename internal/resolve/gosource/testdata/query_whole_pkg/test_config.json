@@ -10,8 +10,9 @@
 		]
 	},
 	"ExpectedResults": [
-		"$TESTDIR/main.go",
 		"$TESTDIR/generator/generator.go",
+		"$TESTDIR/go.mod",
+		"$TESTDIR/main.go",
 		"$TESTDIR/vendor/github.com/google/uuid/dce.go",
 		"$TESTDIR/vendor/github.com/google/uuid/doc.go",
 		"$TESTDIR/vendor/github.com/google/uuid/hash.go",

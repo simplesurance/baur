@@ -10,7 +10,8 @@
 		]
 	},
 	"ExpectedResults": [
-		"$TESTDIR/main.go",
-		"$TESTDIR/generator/generator.go"
+		"$TESTDIR/generator/generator.go",
+		"$TESTDIR/go.mod",
+		"$TESTDIR/main.go"
 	]
 }
