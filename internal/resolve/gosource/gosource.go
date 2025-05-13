@@ -7,6 +7,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -214,10 +215,11 @@ func (r *Resolver) resolve(
 
 	var srcFiles []string
 	for pkg := range allPkgs {
-		err = sourceFiles(&srcFiles, goEnv, pkg)
-		if err != nil {
-			return nil, fmt.Errorf("resolving source files of package '%s' failed: %w", pkg.Name, err)
-		}
+		srcFiles = slices.Concat(srcFiles,
+			withoutStdblibAndCacheFiles(goEnv, pkg.GoFiles),
+			withoutStdblibAndCacheFiles(goEnv, pkg.OtherFiles),
+			withoutStdblibAndCacheFiles(goEnv, pkg.EmbedFiles),
+		)
 
 		if len(pkg.Errors) != 0 {
 			return nil, fmt.Errorf("resolving source files of package %s failed: %+v", pkg.Name, pkg.Errors)
@@ -227,48 +229,23 @@ func (r *Resolver) resolve(
 	return srcFiles, nil
 }
 
-// sourceFiles returns GoFiles, OtherFiles and EmbedFiles of the package that
-// aren't stored in a Go Cache directory or part of the stdlib.
-func sourceFiles(result *[]string, env *goEnv, pkg *packages.Package) error {
-	err := withoutStdblibAndCacheFiles(result, env, pkg.GoFiles)
-	if err != nil {
-		return err
-	}
-
-	err = withoutStdblibAndCacheFiles(result, env, pkg.OtherFiles)
-	if err != nil {
-		return err
-	}
-
-	err = withoutStdblibAndCacheFiles(result, env, pkg.EmbedFiles)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func withoutStdblibAndCacheFiles(result *[]string, env *goEnv, paths []string) error {
-	for _, path := range paths {
-		abs, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
-
-		if len(env.GoCache) > 0 && strings.HasPrefix(abs, env.GoCache) {
+func withoutStdblibAndCacheFiles(env *goEnv, paths []string) []string {
+	result := make([]string, 0, len(paths))
+	for _, p := range paths {
+		if len(env.GoCache) > 0 && strings.HasPrefix(p, env.GoCache) {
 			continue
 		}
 
-		if strings.HasPrefix(abs, env.GoRoot) {
+		if strings.HasPrefix(p, env.GoRoot) {
 			continue
 		}
 
-		if strings.HasPrefix(abs, env.GoModCache) {
+		if strings.HasPrefix(p, env.GoModCache) {
 			continue
 		}
 
-		*result = append(*result, abs)
+		result = append(result, p)
 	}
 
-	return nil
+	return result
 }
