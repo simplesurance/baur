@@ -82,12 +82,12 @@ func toAbsFilePatternPaths(workDir string, queries []string) {
 	}
 }
 
-// Resolve resolves queries to the go source file paths and go.mod files
+// Resolve resolves queries to Go source file paths and go.mod files
 // of the packages and their recursively imported packages.
-// queries must be go-list package queries.
+// Queries must be in go-list query format.
 // Testcase files are ignored when false is passed for withTests.
 // Files in GOROOT (stdlib packages) and in the GOMODCACHE (non-vendored
-// 3. party package dependencies) are omitted from the result.
+// third-party package dependencies) are omitted from the result.
 func (r *Resolver) Resolve(ctx context.Context,
 	workdir string,
 	environment []string,
@@ -223,10 +223,11 @@ func (r *Resolver) resolve(
 	// we dedup the go.mod paths with this set:
 	gomodFiles := set.Set[string]{}
 	for pkg := range allPkgs {
-		err = sourceFiles(&srcFiles, goEnv, pkg)
-		if err != nil {
-			return nil, fmt.Errorf("resolving source files of package '%s' failed: %w", pkg.Name, err)
-		}
+		srcFiles = slices.Concat(srcFiles,
+			withoutStdblibAndCacheFiles(goEnv, pkg.GoFiles),
+			withoutStdblibAndCacheFiles(goEnv, pkg.OtherFiles),
+			withoutStdblibAndCacheFiles(goEnv, pkg.EmbedFiles),
+		)
 
 		if len(pkg.Errors) != 0 {
 			return nil, fmt.Errorf("resolving source files of package %s failed: %+v", pkg.Name, pkg.Errors)
@@ -245,40 +246,17 @@ func (r *Resolver) resolve(
 	return slices.Concat(srcFiles, gomodFiles.Slice()), nil
 }
 
-// sourceFiles returns GoFiles, OtherFiles and EmbedFiles of the package that
-// aren't stored in a Go Cache directory or part of the stdlib.
-func sourceFiles(result *[]string, env *goEnv, pkg *packages.Package) error {
-	err := withoutStdblibAndCacheFiles(result, env, pkg.GoFiles)
-	if err != nil {
-		return err
-	}
-
-	err = withoutStdblibAndCacheFiles(result, env, pkg.OtherFiles)
-	if err != nil {
-		return err
-	}
-
-	err = withoutStdblibAndCacheFiles(result, env, pkg.EmbedFiles)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func withoutStdblibAndCacheFiles(result *[]string, env *goEnv, paths []string) error {
-	for _, path := range paths {
-		abs, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
-
-		if !isStdLibOrCacheFile(env, abs) {
-			*result = append(*result, abs)
+func withoutStdblibAndCacheFiles(env *goEnv, paths []string) []string {
+	// likely that more space than needed is allocated, number of allocs
+	// is reduced
+	result := make([]string, 0, len(paths))
+	for _, p := range paths {
+		if !isStdLibOrCacheFile(env, p) {
+			result = append(result, p)
 		}
 	}
 
-	return nil
+	return result
 }
 
 func isStdLibOrCacheFile(env *goEnv, p string) bool {
