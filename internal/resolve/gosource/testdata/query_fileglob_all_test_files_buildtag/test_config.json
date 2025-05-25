@@ -16,6 +16,7 @@
 	"ExpectedResults": [
 		"$TESTDIR/generator/generator.go",
 		"$TESTDIR/generator/generator_test.go",
+		"$TESTDIR/go.mod",
 		"$TESTDIR/vendor/github.com/google/uuid/dce.go",
 		"$TESTDIR/vendor/github.com/google/uuid/doc.go",
 		"$TESTDIR/vendor/github.com/google/uuid/hash.go",
