@@ -1,3 +1,16 @@
+# v1.31.1 (2025-07-30)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.31.0 (2025-07-28)
+
+* **Feature**: Add support for HTTP interceptors.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.30.4 (2025-07-19)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.30.3 (2025-06-17)
 
 * **Dependency Update**: Update to smithy-go v1.22.4.
