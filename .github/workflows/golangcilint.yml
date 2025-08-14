@@ -19,10 +19,11 @@ jobs:
     steps:
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
+          lint-version: "v2.4"
       - uses: actions/checkout@v4
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1
+          version: ${{ matrix.lint }}
           args: --timeout 3m
