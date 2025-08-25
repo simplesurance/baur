@@ -24,11 +24,6 @@ func (e *ErrUntrackedGitFilesExist) Error() string {
 // ErrTaskRunSkipped is returned when a task run was skipped instead of executed.
 var ErrTaskRunSkipped = errors.New("task run skipped")
 
-type TaskInfoRetriever interface {
-	Inputs(*Task) (*Inputs, error)
-	Task(id string) (*Task, error)
-}
-
 // TaskRunner executes the command of a task.
 type TaskRunner struct {
 	skipAfterError      bool
