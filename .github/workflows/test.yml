@@ -27,7 +27,7 @@ jobs:
           "$PGBIN"/psql -c "ALTER USER baurtest PASSWORD 'baurtest';" postgres
         shell: bash
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "1.25"
       - name: Checkout Git
@@ -83,7 +83,7 @@ jobs:
           - 127.0.0.1:9090:9090
     steps:
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "1.25"
       - name: Checkout Git
