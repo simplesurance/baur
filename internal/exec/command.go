@@ -70,7 +70,7 @@ func (c *Cmd) Stdout(w io.Writer) *Cmd {
 	return c
 }
 
-// Stdout streams the standard error output to w during execution.
+// Stderr streams the standard error output to w during execution.
 func (c *Cmd) Stderr(w io.Writer) *Cmd {
 	c.stderr = w
 	return c
