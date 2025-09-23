@@ -66,7 +66,7 @@ func compileSortOrder(o storage.Order, column string) (string, error) {
 
 func (q *query) compileFilterStr() (filterStr string, args []any, err error) {
 	if len(q.Filters) == 0 {
-		return
+		return filterStr, args, err
 	}
 
 	for i, f := range q.Filters {
