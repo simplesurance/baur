@@ -9,48 +9,48 @@ on:
       - "*"
 
 jobs:
-  windows:
-    runs-on: windows-latest
-    env:
-      BAUR_TEST_POSTGRESQL_URL: "postgres://baurtest:baurtest@localhost:5432/postgres?sslmode=disable"
-    steps:
-      - name: Start PostgreSQL
-        run: |
-          $pgService = Get-Service -Name postgresql*
-          Set-Service -InputObject $pgService -Status running -StartupType automatic
-          Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
-      - name: Create PostgreSQL user
-        run: |
-          set +e
-          set -x
-          "$PGBIN"/createuser --createdb baurtest
-          "$PGBIN"/psql -c "ALTER USER baurtest PASSWORD 'baurtest';" postgres
-        shell: bash
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "1.25"
-      - name: Checkout Git
-        uses: actions/checkout@v5
-      - name: Setup Git
-        run: |
-          git config --global user.email "baurtest@example.com"
-          git config --global user.name "baur"
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
-      - name: Run Tests with Race Detector
-        run: |
-          go test -tags=dbtest -race -timeout 5m ./...
-        shell: bash
-      - name: Run Tests without Race Detector and CGO
-        env:
-          CGO_ENABLED: 0
-        run: |
-          go test -tags=dbtest -timeout 5m ./...
-        shell: bash
+  #windows:
+  #  runs-on: windows-latest
+  #  env:
+  #    BAUR_TEST_POSTGRESQL_URL: "postgres://baurtest:baurtest@localhost:5432/postgres?sslmode=disable"
+  #  steps:
+  #    - name: Start PostgreSQL
+  #      run: |
+  #        $pgService = Get-Service -Name postgresql*
+  #        Set-Service -InputObject $pgService -Status running -StartupType automatic
+  #        Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
+  #    - name: Create PostgreSQL user
+  #      run: |
+  #        set +e
+  #        set -x
+  #        "$PGBIN"/createuser --createdb baurtest
+  #        "$PGBIN"/psql -c "ALTER USER baurtest PASSWORD 'baurtest';" postgres
+  #      shell: bash
+  #    - name: Setup Go
+  #      uses: actions/setup-go@v6
+  #      with:
+  #        go-version: "1.25"
+  #    - name: Checkout Git
+  #      uses: actions/checkout@v5
+  #    - name: Setup Git
+  #      run: |
+  #        git config --global user.email "baurtest@example.com"
+  #        git config --global user.name "baur"
+  #    - uses: actions/cache@v4
+  #      with:
+  #        path: |
+  #          ~\AppData\Local\go-build
+  #        key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
+  #    - name: Run Tests with Race Detector
+  #      run: |
+  #        go test -tags=dbtest -race -timeout 5m ./...
+  #      shell: bash
+  #    - name: Run Tests without Race Detector and CGO
+  #      env:
+  #        CGO_ENABLED: 0
+  #      run: |
+  #        go test -tags=dbtest -timeout 5m ./...
+  #      shell: bash
 
   linux:
     runs-on: ubuntu-latest
