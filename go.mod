@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/moby/term v0.0.0-20221120202655-abb19827d345 // indirect
 	github.com/pelletier/go-toml v1.9.5
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/mod v0.27.0 // indirect
@@ -79,7 +79,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
