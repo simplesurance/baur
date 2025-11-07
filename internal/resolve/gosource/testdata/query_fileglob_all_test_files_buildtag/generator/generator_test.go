@@ -1,4 +1,4 @@
-//+build generatortest
+//go:build generatortest
 
 package generator
 

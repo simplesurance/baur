@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v5/internal/testutils/fstest"
-	"github.com/simplesurance/baur/v5/internal/testutils/strtest"
 )
 
 func createFiles(t *testing.T, basedir string, paths []string) {
@@ -45,10 +44,9 @@ func checkFilesInResolvedFiles(t *testing.T, tempdir string, resolvedFiles []str
 			t.Errorf("getting Relpath of %q to %q failed", e, tempdir)
 		}
 
-		if !strtest.InSlice(tc.expectedMatches, relPath) {
-			t.Errorf("%q (%q) was returned but is not in expected return slice (%+v), testcase: %+v",
-				e, relPath, tc.expectedMatches, tc)
-		}
+		assert.Contains(t, tc.expectedMatches, relPath,
+			"%q (%q) was returned but is not in expected return slice (%+v), testcase: %+v",
+			e, relPath, tc.expectedMatches, tc)
 	}
 }
 
