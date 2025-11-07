@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/simplesurance/baur/v5/internal/log"
 	"github.com/simplesurance/baur/v5/internal/prettyprint"
-	"github.com/simplesurance/baur/v5/internal/testutils/strtest"
 )
 
 type testCfg struct {
@@ -79,15 +79,11 @@ func TestResolve(t *testing.T) {
 			t.Logf("gosources resolved to: %s", prettyprint.AsString(resolvedFiles))
 
 			for _, path := range resolvedFiles {
-				if !strtest.InSlice(testCfg.ExpectedResults, path) {
-					t.Errorf("resolved file contain %q but it's not part of the ExpectedResult slice: %+v", path, testCfg.ExpectedResults)
-				}
+				assert.Contains(t, testCfg.ExpectedResults, path, "unexpected file in result")
 			}
 
 			for _, path := range testCfg.ExpectedResults {
-				if !strtest.InSlice(resolvedFiles, path) {
-					t.Errorf("resolved go source is missing %q in %+v", path, resolvedFiles)
-				}
+				assert.Contains(t, resolvedFiles, path, "resolved go source is missing file")
 			}
 		})
 	}
