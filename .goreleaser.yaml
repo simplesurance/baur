@@ -29,11 +29,11 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
 
 archives:
-  - format: tar.xz
+  - formats: ['tar.xz']
     name_template: "{{ .ProjectName }}-{{ .Os }}_{{ .Arch }}-{{ .Version }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ['zip']
     files:
       # Do not include README.md and LICENCE file in archive
       # (https://goreleaser-git-revert-1958-snapshot-auto.goreleaser.vercel.app/customization/archive/#packaging-only-the-binaries):
@@ -53,7 +53,7 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 snapshot:
-  name_template: "{{ incpatch .Version }}-dev"
+  version_template: "{{ incpatch .Version }}-dev"
 
 changelog:
   sort: asc
