@@ -166,11 +166,11 @@ func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, 
 	}
 
 	auth := c.getAuth(registryAddr)
-authBytes, err := json.Marshal(auth)
-if err != nil {
-    return "", fmt.Errorf("failed to marshal auth config: %w", err)
-}
-authBase64 := base64.URLEncoding.EncodeToString(authBytes)
+	authBytes, err := json.Marshal(auth)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal auth config: %w", err)
+	}
+	authBase64 := base64.URLEncoding.EncodeToString(authBytes)
 
 	var outBuf bytes.Buffer
 	outStream := bufio.NewWriter(&outBuf)
