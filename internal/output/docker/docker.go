@@ -94,7 +94,7 @@ func hostPort(host, port string) string {
 // If server is not empty, authentication data is returned for a registry with
 // a matching address.
 func (c *Client) getAuth(server string) registry.AuthConfig {
-	if c.auths == nil || len(c.auths) == 0 {
+	if len(c.auths) == 0 {
 		return registry.AuthConfig{}
 	}
 
@@ -205,7 +205,7 @@ func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, 
 
 // SizeBytes returns the size of an image in Bytes.
 func (c *Client) SizeBytes(imageID string) (int64, error) {
-	img, _, err := c.clt.ImageInspectWithRaw(context.Background(), imageID)
+	img, _, err := c.clt.ImageInspectWithRaw(context.Background(), imageID) //nolint: staticcheck
 	if err != nil {
 		return -1, err
 	}
@@ -215,7 +215,7 @@ func (c *Client) SizeBytes(imageID string) (int64, error) {
 
 // Exists return true if the image with the given ID exist, otherwise false.
 func (c *Client) Exists(imageID string) (bool, error) {
-	_, _, err := c.clt.ImageInspectWithRaw(context.Background(), imageID)
+	_, _, err := c.clt.ImageInspectWithRaw(context.Background(), imageID) //nolint: staticcheck
 	if err != nil {
 		if client.IsErrNotFound(err) {
 			return false, nil
