@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -31,7 +31,6 @@ func cfgToFile(t *testing.T, cfg any, path string) {
 	}
 
 	encoder := toml.NewEncoder(f)
-	encoder.SetTagCommented("false")
 	err = encoder.Encode(cfg)
 	if err != nil {
 		t.Fatal(err)
