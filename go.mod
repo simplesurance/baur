@@ -13,7 +13,6 @@ require (
 	github.com/jackc/pgproto3/v2 v2.3.3 // indirect
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/moby/term v0.0.0-20221120202655-abb19827d345 // indirect
-	github.com/pelletier/go-toml v1.9.5
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.45.0 // indirect
@@ -31,6 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.90.0
 	github.com/aws/smithy-go v1.23.2
 	github.com/bmatcuk/doublestar/v4 v4.9.1
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/simplesurance/baur/v2 v2.2.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 )

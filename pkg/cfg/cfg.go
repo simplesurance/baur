@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type toFileOpts struct {
@@ -43,8 +43,7 @@ func toFile(data any, filepath string, opts ...toFileOpt) error {
 	}
 
 	encoder := toml.NewEncoder(&buf)
-	encoder.ArraysWithOneElementPerLine(true)
-	encoder.Order(toml.OrderPreserve)
+	encoder.SetArraysMultiline(true)
 
 	err := encoder.Encode(data)
 	if err != nil {
