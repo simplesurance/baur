@@ -1,22 +1,14 @@
 package docker
 
 import (
-	"bytes"
-	"encoding/base64"
 	"fmt"
 	"net"
 	"testing"
 
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func base64EncUserPasswd(user, password string) string {
-	return base64.StdEncoding.EncodeToString([]byte(
-		fmt.Sprintf("%s:%s", user, password),
-	))
-}
 
 func TestGetAuth(t *testing.T) {
 	const defRegistryUser = "guest"
@@ -33,35 +25,26 @@ func TestGetAuth(t *testing.T) {
 	const myRegistryUser = "hugo"
 	const myRegistryPasswd = "hello"
 
-	jsonAuthcfg := fmt.Sprintf(`{
-	"auths": {
-		"%s": {
-			"auth": "%s"
+	auths := map[string]registry.AuthConfig{
+		DefaultRegistry: {
+			Username:      defRegistryUser,
+			Password:      defRegistryPasswd,
+			ServerAddress: DefaultRegistry,
 		},
-		"%s": {
-			"auth": "%s"
+		exampleURL: {
+			Username:      exampleUser,
+			Password:      examplePasswd,
+			ServerAddress: exampleURL,
 		},
-		"%s": {
-			"auth": "%s"
-		}
+		myRegistryURL: {
+			Username:      myRegistryUser,
+			Password:      myRegistryPasswd,
+			ServerAddress: myRegistryURL,
+		},
 	}
-}`,
-		DefaultRegistry,
-		base64EncUserPasswd(defRegistryUser, defRegistryPasswd),
-
-		exampleURL,
-		base64EncUserPasswd(exampleUser, examplePasswd),
-
-		myRegistryURL,
-		base64EncUserPasswd(myRegistryUser, myRegistryPasswd),
-	)
-
-	reader := bytes.NewBufferString(jsonAuthcfg)
-	authCfg, err := docker.NewAuthConfigurations(reader)
-	require.NoError(t, err)
 
 	client := &Client{
-		auths: authCfg,
+		auths: auths,
 	}
 
 	t.Run("default-url", func(t *testing.T) {
