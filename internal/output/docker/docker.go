@@ -3,12 +3,18 @@ package docker
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/url"
 
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/docker/cli/cli/config"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/registry"
+	"github.com/docker/docker/client"
 )
 
 // DefaultRegistry is the registry for that authentication data is used
@@ -19,8 +25,8 @@ const (
 
 // Client is a docker client
 type Client struct {
-	clt        *docker.Client
-	auths      *docker.AuthConfigurations
+	clt        *client.Client
+	auths      map[string]registry.AuthConfig
 	debugLogFn func(string, ...any)
 }
 
@@ -47,15 +53,26 @@ func NewClient(debugLogFn func(string, ...any)) (*Client, error) {
 		logFn = debugLogFn
 	}
 
-	dockerClt, err := docker.NewClientFromEnv()
+	dockerClt, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
 
-	auths, err := docker.NewAuthConfigurationsFromDockerCfg()
+	auths := make(map[string]registry.AuthConfig)
+	cfg, err := config.Load("")
 	if err != nil {
 		debugLogFn("docker: reading auth data from user's config.json failed: %s", err)
-		auths = nil
+	} else {
+		for reg, auth := range cfg.AuthConfigs {
+			auths[reg] = registry.AuthConfig{
+				Username:      auth.Username,
+				Password:      auth.Password,
+				Auth:          auth.Auth,
+				ServerAddress: auth.ServerAddress,
+				IdentityToken: auth.IdentityToken,
+				RegistryToken: auth.RegistryToken,
+			}
+		}
 	}
 
 	return &Client{
@@ -76,9 +93,9 @@ func hostPort(host, port string) string {
 // AuthConfiguration is returned.
 // If server is not empty, authentication data is returned for a registry with
 // a matching address.
-func (c *Client) getAuth(server string) docker.AuthConfiguration {
-	if c.auths == nil || len(c.auths.Configs) == 0 {
-		return docker.AuthConfiguration{}
+func (c *Client) getAuth(server string) registry.AuthConfig {
+	if len(c.auths) == 0 {
+		return registry.AuthConfig{}
 	}
 
 	if server == "" {
@@ -86,7 +103,7 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 	}
 
 	if len(server) == 0 {
-		for registry, auth := range c.auths.Configs {
+		for registry, auth := range c.auths {
 			if registry == DefaultRegistry {
 				c.debugLogFn("docker: no registry specified, using auth data for default registry %q", registry)
 				return auth
@@ -94,22 +111,22 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 		}
 	}
 
-	for _, cfg := range c.auths.Configs {
-		c.debugLogFn("docker: found credentials for registry %q, searching %q credentials", cfg.ServerAddress, server)
+	for reg, cfg := range c.auths {
+		c.debugLogFn("docker: found credentials for registry %q, searching %q credentials", reg, server)
 
-		if cfg.ServerAddress == server {
-			c.debugLogFn("docker: using auth data for registry '%s'", cfg.ServerAddress)
+		if reg == server {
+			c.debugLogFn("docker: using auth data for registry '%s'", reg)
 			return cfg
 		}
 
-		url, err := url.Parse(cfg.ServerAddress)
+		url, err := url.Parse(reg)
 		if err != nil || url.Hostname() == "" {
 			continue
 		}
 
 		if url.Port() == "" {
 			if url.Hostname() == server || hostPort(url.Hostname(), dockerRegistryDefaultPort) == server {
-				c.debugLogFn("docker: using auth data for registry '%s'", cfg.ServerAddress)
+				c.debugLogFn("docker: using auth data for registry '%s'", reg)
 				return cfg
 			}
 
@@ -118,20 +135,20 @@ func (c *Client) getAuth(server string) docker.AuthConfiguration {
 
 		registryHostPort := hostPort(url.Hostname(), url.Port())
 		if registryHostPort == server || registryHostPort == hostPort(server, dockerRegistryDefaultPort) {
-			c.debugLogFn("docker: using auth data for registry '%s'", cfg.ServerAddress)
+			c.debugLogFn("docker: using auth data for registry '%s'", reg)
 			return cfg
 		}
 	}
 
 	c.debugLogFn("docker: no auth configuration for registry %q found", server)
 
-	return docker.AuthConfiguration{ServerAddress: server}
+	return registry.AuthConfig{ServerAddress: server}
 }
 
 // Upload tags and uploads an image to a docker registry repository.
 // On success it returns the path  to the uploaded docker image, in the format:
 // [registry]:/repository/tag
-func (c *Client) Upload(image, registryAddr, repository, tag string) (string, error) {
+func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, error) {
 	var addrRepo string
 	var destURI string
 
@@ -142,26 +159,35 @@ func (c *Client) Upload(image, registryAddr, repository, tag string) (string, er
 	addrRepo = registryAddr + "/" + repository
 	destURI = registryAddr + "/" + repository + ":" + tag
 
-	c.debugLogFn("docker: creating tag, repo: %q, tag: %q referring to image %q", addrRepo, tag, image)
-	err := c.clt.TagImage(image, docker.TagImageOptions{
-		Repo: addrRepo,
-		Tag:  tag,
-	})
+	c.debugLogFn("docker: creating tag, repo: %q, tag: %q referring to image %q", addrRepo, tag, imageID)
+	err := c.clt.ImageTag(context.Background(), imageID, addrRepo+":"+tag)
 	if err != nil {
 		return "", fmt.Errorf("tagging image failed: %w", err)
 	}
 
 	auth := c.getAuth(registryAddr)
+	authBytes, err := json.Marshal(auth)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal auth config: %w", err)
+	}
+	authBase64 := base64.URLEncoding.EncodeToString(authBytes)
 
 	var outBuf bytes.Buffer
 	outStream := bufio.NewWriter(&outBuf)
 
 	c.debugLogFn("docker: pushing image, name: %q, tag: %q", addrRepo, tag)
-	err = c.clt.PushImage(docker.PushImageOptions{
-		Name:         addrRepo,
-		Tag:          tag,
-		OutputStream: outStream,
-	}, auth)
+	resp, err := c.clt.ImagePush(context.Background(), addrRepo+":"+tag, image.PushOptions{
+		RegistryAuth: authBase64,
+	})
+	if err != nil {
+		return "", err
+	}
+	defer resp.Close()
+
+	_, err = io.Copy(outStream, resp)
+	if err != nil {
+		return "", err
+	}
 
 	for {
 		outStream.Flush()
@@ -182,19 +208,19 @@ func (c *Client) Upload(image, registryAddr, repository, tag string) (string, er
 
 // SizeBytes returns the size of an image in Bytes.
 func (c *Client) SizeBytes(imageID string) (int64, error) {
-	img, err := c.clt.InspectImage(imageID)
+	img, _, err := c.clt.ImageInspectWithRaw(context.Background(), imageID) //nolint: staticcheck
 	if err != nil {
 		return -1, err
 	}
 
-	return img.VirtualSize, nil
+	return img.Size, nil
 }
 
 // Exists return true if the image with the given ID exist, otherwise false.
 func (c *Client) Exists(imageID string) (bool, error) {
-	_, err := c.clt.InspectImage(imageID)
+	_, _, err := c.clt.ImageInspectWithRaw(context.Background(), imageID) //nolint: staticcheck
 	if err != nil {
-		if errors.Is(err, docker.ErrNoSuchImage) {
+		if client.IsErrNotFound(err) {
 			return false, nil
 		}
 		return false, err
