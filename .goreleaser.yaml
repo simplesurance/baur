@@ -52,6 +52,8 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
+    stdin: '{{ .Env.GPG_PASSWORD }}'
+
 snapshot:
   version_template: "{{ incpatch .Version }}-dev"
 
