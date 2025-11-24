@@ -31,7 +31,7 @@ jobs:
   #      with:
   #        go-version: "1.25"
   #    - name: Checkout Git
-  #      uses: actions/checkout@v5
+  #      uses: actions/checkout@v6
   #    - name: Setup Git
   #      run: |
   #        git config --global user.email "baurtest@example.com"
@@ -87,7 +87,7 @@ jobs:
         with:
           go-version: "1.25"
       - name: Checkout Git
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Setup Git
         run: |
           git config --global user.email "baurtest@example.com"
