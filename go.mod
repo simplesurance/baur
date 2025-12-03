@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.1
 	github.com/aws/smithy-go v1.23.2
 	github.com/bmatcuk/doublestar/v4 v4.9.1
-	github.com/docker/cli v29.0.2+incompatible
+	github.com/docker/cli v29.1.2+incompatible
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/simplesurance/baur/v2 v2.2.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
