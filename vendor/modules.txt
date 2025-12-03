@@ -144,6 +144,13 @@ github.com/aws/smithy-go/waiter
 # github.com/bmatcuk/doublestar/v4 v4.9.1
 ## explicit; go 1.16
 github.com/bmatcuk/doublestar/v4
+# github.com/containerd/errdefs v1.0.0
+## explicit; go 1.20
+github.com/containerd/errdefs
+# github.com/containerd/errdefs/pkg v0.3.0
+## explicit; go 1.22
+github.com/containerd/errdefs/pkg/errhttp
+github.com/containerd/errdefs/pkg/internal/cause
 # github.com/containerd/log v0.1.0
 ## explicit; go 1.20
 # github.com/davecgh/go-spew v1.1.1
@@ -159,11 +166,12 @@ github.com/docker/cli/cli/config/configfile
 github.com/docker/cli/cli/config/credentials
 github.com/docker/cli/cli/config/memorystore
 github.com/docker/cli/cli/config/types
-# github.com/docker/docker v28.0.1+incompatible
+# github.com/docker/docker v28.5.2+incompatible
 ## explicit
 github.com/docker/docker/api
 github.com/docker/docker/api/types
 github.com/docker/docker/api/types/blkiodev
+github.com/docker/docker/api/types/build
 github.com/docker/docker/api/types/checkpoint
 github.com/docker/docker/api/types/common
 github.com/docker/docker/api/types/container
@@ -183,8 +191,6 @@ github.com/docker/docker/api/types/versions
 github.com/docker/docker/api/types/volume
 github.com/docker/docker/client
 github.com/docker/docker/errdefs
-github.com/docker/docker/internal/lazyregexp
-github.com/docker/docker/internal/multierror
 # github.com/docker/docker-credential-helpers v0.9.4
 ## explicit; go 1.21
 github.com/docker/docker-credential-helpers/client
@@ -210,9 +216,6 @@ github.com/go-logr/logr/funcr
 # github.com/go-logr/stdr v1.2.2
 ## explicit; go 1.16
 github.com/go-logr/stdr
-# github.com/gogo/protobuf v1.3.2
-## explicit; go 1.15
-github.com/gogo/protobuf/proto
 # github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 ## explicit
 github.com/golang/groupcache/lru
@@ -262,6 +265,8 @@ github.com/mattn/go-isatty
 # github.com/moby/docker-image-spec v1.3.1
 ## explicit; go 1.18
 github.com/moby/docker-image-spec/specs-go/v1
+# github.com/moby/sys/atomicwriter v0.1.0
+## explicit; go 1.18
 # github.com/moby/term v0.0.0-20221120202655-abb19827d345
 ## explicit; go 1.18
 # github.com/opencontainers/go-digest v1.0.0

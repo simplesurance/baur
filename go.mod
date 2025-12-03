@@ -3,9 +3,8 @@ module github.com/simplesurance/baur/v5
 go 1.25.5
 
 require (
-	github.com/docker/docker v28.0.1+incompatible
+	github.com/docker/docker v28.5.2+incompatible
 	github.com/fatih/color v1.18.0
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgconn v1.14.3
@@ -29,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.1
 	github.com/aws/smithy-go v1.23.2
 	github.com/bmatcuk/doublestar/v4 v4.9.1
+	github.com/containerd/errdefs v1.0.0
 	github.com/docker/cli v29.1.2+incompatible
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/simplesurance/baur/v2 v2.2.0
@@ -52,6 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.2 // indirect
+	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -71,6 +72,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
+	github.com/moby/sys/atomicwriter v0.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
 	github.com/pkg/errors v0.9.1 // indirect
