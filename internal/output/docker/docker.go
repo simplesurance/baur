@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/url"
 
+	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
@@ -220,7 +221,7 @@ func (c *Client) SizeBytes(imageID string) (int64, error) {
 func (c *Client) Exists(imageID string) (bool, error) {
 	_, _, err := c.clt.ImageInspectWithRaw(context.Background(), imageID) //nolint: staticcheck
 	if err != nil {
-		if client.IsErrNotFound(err) {
+		if cerrdefs.IsNotFound(err) {
 			return false, nil
 		}
 		return false, err

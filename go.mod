@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.1
 	github.com/aws/smithy-go v1.23.2
 	github.com/bmatcuk/doublestar/v4 v4.9.1
+	github.com/containerd/errdefs v1.0.0
 	github.com/docker/cli v29.1.2+incompatible
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/simplesurance/baur/v2 v2.2.0
@@ -51,7 +52,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.2 // indirect
-	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
