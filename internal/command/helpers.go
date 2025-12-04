@@ -9,7 +9,7 @@ import (
 	"github.com/simplesurance/baur/v5/internal/command/flag"
 	"github.com/simplesurance/baur/v5/internal/command/term"
 	"github.com/simplesurance/baur/v5/internal/format/csv"
-	"github.com/simplesurance/baur/v5/internal/format/json"
+	"github.com/simplesurance/baur/v5/internal/format/jsonformat"
 	"github.com/simplesurance/baur/v5/internal/format/table"
 	"github.com/simplesurance/baur/v5/internal/log"
 	"github.com/simplesurance/baur/v5/internal/prettyprint"
@@ -356,7 +356,7 @@ func mustNewFormatter(formatterName string, hdrs []string) Formatter {
 	case flag.FormatPlain:
 		return table.New(hdrs, stdout)
 	case flag.FormatJSON:
-		return json.New(hdrs, stdout)
+		return jsonformat.New(hdrs, stdout)
 	default:
 		panic(fmt.Sprintf("BUG: newFormatter: unsupported formatter name: %q", formatterName))
 	}
