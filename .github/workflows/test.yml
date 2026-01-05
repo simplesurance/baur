@@ -37,7 +37,7 @@ jobs:
   #      run: |
   #        git config --global user.email "baurtest@example.com"
   #        git config --global user.name "baur"
-  #    - uses: actions/cache@v4
+  #    - uses: actions/cache@v5
   #      with:
   #        path: |
   #          ~\AppData\Local\go-build
@@ -94,7 +94,7 @@ jobs:
         run: |
           git config --global user.email "baurtest@example.com"
           git config --global user.name "baur"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
