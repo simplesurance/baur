@@ -230,7 +230,11 @@ type Repo struct {
 
 // TaskIDs returns the tasks ids (<AppName>.<TaskName>) of all tasks in the AppCfgs slice
 func (r *Repo) TaskIDs() []string {
-	var result []string
+	totalTasks := 0
+	for _, appCfg := range r.AppCfgs {
+		totalTasks += len(appCfg.Tasks)
+	}
+	result := make([]string, 0, totalTasks)
 
 	for _, appCfg := range r.AppCfgs {
 		for _, task := range appCfg.Tasks {

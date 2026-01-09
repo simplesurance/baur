@@ -62,8 +62,6 @@ func NewLoader(repoCfg *cfg.Repository, gitCommitIDFunc func() (string, error), 
 // If no specifier is passed all tasks of all apps are returned.
 // If multiple specifiers match the same task, it's only returned 1x in the returned slice.
 func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
-	var result []*Task
-
 	specs, err := parseSpecs(specifier)
 	if err != nil {
 		return nil, err
@@ -80,7 +78,7 @@ func (a *Loader) LoadTasks(specifier ...string) ([]*Task, error) {
 		return a.allTasks(apps)
 	}
 
-	result, err = a.allTasks(apps)
+	result, err := a.allTasks(apps)
 	if err != nil {
 		return nil, err
 	}
