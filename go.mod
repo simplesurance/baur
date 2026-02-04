@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0
 	github.com/aws/smithy-go v1.24.0
-	github.com/bmatcuk/doublestar/v4 v4.9.1
+	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/containerd/errdefs v1.0.0
 	github.com/docker/cli v29.1.3+incompatible
 	github.com/pelletier/go-toml/v2 v2.2.4
