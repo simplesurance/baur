@@ -1,3 +1,50 @@
+# v1.22.10 (2026-03-26)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.9 (2026-03-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.8 (2026-03-13)
+
+* **Bug Fix**: Replace usages of the old ioutil/ package throughout the SDK.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.7 (2026-03-12)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.6 (2026-03-05)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.5 (2026-03-03)
+
+* **Bug Fix**: Modernize non codegen files with go fix
+* **Dependency Update**: Bump minimum Go version to 1.24
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.4 (2026-02-26)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.3 (2026-02-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.2 (2026-02-18)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.1 (2026-02-17)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.0 (2026-02-05)
+
+* **Feature**: Deprecate feature/s3/manager, superceded by feature/s3/transfermanager. See https://github.com/aws/aws-sdk-go-v2/discussions/3306
+
 # v1.21.1 (2026-01-28)
 
 * **Dependency Update**: Updated to the latest SDK module versions
