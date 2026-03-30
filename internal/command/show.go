@@ -80,7 +80,7 @@ func (c *showCmd) run(_ *cobra.Command, args []string) {
 }
 
 func copyAppendSlice(slice []any, elems ...any) []any {
-	res := make([]any, len(slice))
+	res := make([]any, len(slice), len(slice)+len(elems))
 	copy(res, slice)
 	return append(res, elems...)
 }
@@ -88,7 +88,7 @@ func copyAppendSlice(slice []any, elems ...any) []any {
 func mustWriteStringSliceRows(fmt Formatter, header string, indentlvl int, sl []string) {
 	defRowArgs := make([]any, 0, indentlvl+1+1)
 
-	for i := 0; i < indentlvl; i++ {
+	for range indentlvl {
 		defRowArgs = append(defRowArgs, "")
 	}
 
@@ -114,7 +114,7 @@ func (*showCmd) strCmd(cmd []string) string {
 	var result strings.Builder
 
 	for i, e := range cmd {
-		result.WriteString(fmt.Sprintf("'%s'", e))
+		fmt.Fprintf(&result, "'%s'", e)
 		if i < len(cmd)+1 {
 			result.WriteRune(' ')
 		}
