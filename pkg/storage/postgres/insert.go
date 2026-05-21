@@ -113,6 +113,22 @@ func scanIDs(rows pgx.Rows, res *[]int) error {
 	return rows.Err()
 }
 
+func scanInt64IDs(rows pgx.Rows, res *[]int64) error {
+	for rows.Next() {
+		var id int64
+
+		err := rows.Scan(&id)
+		if err != nil {
+			rows.Close()
+			return err
+		}
+
+		*res = append(*res, id)
+	}
+
+	return rows.Err()
+}
+
 func insertAppIfNotExist(ctx context.Context, db dbConn, appName string) (int, error) {
 	const query = `
 	   INSERT INTO application (name)
@@ -219,7 +235,7 @@ func clonedSortedInputTasks(result []*storage.InputTaskInfo) []*storage.InputTas
 	return result
 }
 
-func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputFile) ([]int, error) {
+func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storage.InputFile) ([]int64, error) {
 	const stmt1 = `
            INSERT INTO input_file (path, digest)
 	   VALUES
@@ -249,8 +265,8 @@ func insertInputFilesIfNotExist(ctx context.Context, db dbConn, inputs []*storag
 		return nil, newQueryError(query, err, queryArgs...)
 	}
 
-	ids := make([]int, 0, len(inputs))
-	if err := scanIDs(rows, &ids); err != nil {
+	ids := make([]int64, 0, len(inputs))
+	if err := scanInt64IDs(rows, &ids); err != nil {
 		return nil, newQueryError(query, err, queryArgs...)
 	}
 

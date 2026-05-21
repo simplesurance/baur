@@ -91,3 +91,47 @@ func TestSaveTaskRun(t *testing.T) {
 		})
 	}
 }
+
+func TestSaveTaskRunWithBigIntInputFileID(t *testing.T) {
+	client, cleanupFn := newTestClient(t)
+	defer cleanupFn()
+
+	require.NoError(t, client.Init(ctx))
+	const maxBigInt int64 = 1<<63 - 1
+	_, err := client.db.Exec(ctx, "SELECT setval('input_file_id_seq', $1, true)", maxBigInt-1)
+	require.NoError(t, err)
+
+	_, err = client.SaveTaskRun(ctx, &storage.TaskRunFull{
+		TaskRun: storage.TaskRun{
+			ApplicationName:  "baurHimself",
+			TaskName:         "build",
+			VCSRevision:      "1",
+			VCSIsDirty:       false,
+			StartTimestamp:   time.Now(),
+			StopTimestamp:    time.Now().Add(5 * time.Minute),
+			Result:           storage.ResultSuccess,
+			TotalInputDigest: "1234567890",
+		},
+		Inputs: storage.Inputs{
+			Files: []*storage.InputFile{
+				{
+					Path:   "main.go",
+					Digest: "45",
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	var inputFileID, inputFileFK int64
+	err = client.db.QueryRow(ctx, `
+		SELECT input_file.id, task_run_file_input.input_file_id
+		  FROM input_file
+		  JOIN task_run_file_input ON input_file.id = task_run_file_input.input_file_id
+		 WHERE input_file.path = 'main.go'
+		   AND input_file.digest = '45'
+	`).Scan(&inputFileID, &inputFileFK)
+	require.NoError(t, err)
+	require.Equal(t, maxBigInt, inputFileID)
+	require.Equal(t, maxBigInt, inputFileFK)
+}
