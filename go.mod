@@ -2,6 +2,8 @@ module github.com/simplesurance/baur/v5
 
 go 1.25.6
 
+retract v5.4.3 // Mislabeled version; use v5.4.4 instead.
+
 require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/fatih/color v1.18.0
