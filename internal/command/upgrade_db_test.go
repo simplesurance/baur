@@ -64,5 +64,5 @@ func TestUpgradeDb(t *testing.T) {
 	upgradeDbCmd := newUpgradeDatabaseCmd()
 	upgradeDbCmd.Run(&upgradeDbCmd.Command, nil)
 
-	assert.Contains(t, stdoutBuf.String(), "database schema successfully upgraded from version 1 to 5")
+	assert.Contains(t, stdoutBuf.String(), "database schema successfully upgraded from version 1 to 6")
 }

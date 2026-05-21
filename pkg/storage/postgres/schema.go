@@ -20,7 +20,7 @@ const (
 	// minSchemaVer is the minimum required database schema version
 	minSchemaVer int32 = 4
 	// maxSchemaVer is the highest database schema version that is compatible
-	maxSchemaVer int32 = 5
+	maxSchemaVer int32 = 6
 )
 
 // migration represents a database schema migration.
