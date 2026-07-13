@@ -136,7 +136,8 @@ func newRunCmd() *runCmd {
 		"if a run can not be found, try to find a run with this value as input-string")
 	cmd.Flags().UintVarP(&cmd.taskRunnerGoRoutines, "parallel-runs", "p", 1,
 		"specifies the max. number of tasks to run in parallel")
-	cmd.Flags().BoolVarP(&cmd.showOutput, "show-task-output", "o", false,
+	cmd.Flags().BoolVarP(
+		&cmd.showOutput, "show-task-output", "o", false,
 		"show the output of tasks, if disabled the output is only shown "+
 			"when task execution fails",
 	)
@@ -287,7 +288,8 @@ func (c *runCmd) run(_ *cobra.Command, args []string) {
 	}
 
 	stdout.PrintSep()
-	stdout.Printf("finished in: %s\n",
+	stdout.Printf(
+		"finished in: %s\n",
 		term.FormatDuration(
 			time.Since(startTime),
 		),
@@ -303,7 +305,8 @@ func (c *runCmd) skipAllScheduledTaskRuns() {
 		c.taskRunner.SkipRuns(true)
 		c.errorHappened = true
 		if c.failFast {
-			stderr.Printf("%s, %s execution of queued task runs\n",
+			stderr.Printf(
+				"%s, %s execution of queued task runs\n",
 				term.RedHighlight("terminating"),
 				term.YellowHighlight("skipping"),
 			)
@@ -320,7 +323,8 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 	}
 
 	if err == nil {
-		stdout.TaskPrintf(task, "execution %s (%s)\n",
+		stdout.TaskPrintf(
+			task, "execution %s (%s)\n",
 			statusStrSuccess,
 			term.FormatDuration(
 				result.StopTime.Sub(result.StartTime),
@@ -331,7 +335,8 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 	}
 
 	if errors.Is(err, baur.ErrTaskRunSkipped) {
-		stderr.Printf("%s: execution %s\n",
+		stderr.Printf(
+			"%s: execution %s\n",
 			term.Highlight(task),
 			statusStrSkipped,
 		)
@@ -340,7 +345,8 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 
 	var ee *exec.ExitCodeError
 	if errors.As(err, &ee) {
-		stderr.Printf("%s: %s\n",
+		stderr.Printf(
+			"%s: %s\n",
 			term.Highlight(task),
 			ee.ColoredError(term.Highlight, term.RedHighlight, !c.showOutput && !verboseFlag),
 		)
@@ -353,7 +359,8 @@ func (c *runCmd) runTask(task *baur.Task) (*baur.RunResult, error) {
 		return nil, err
 	}
 
-	stderr.Printf("%s: executing command %s: %s\n",
+	stderr.Printf(
+		"%s: executing command %s: %s\n",
 		term.Highlight(task),
 		statusStrFailed,
 		err,
@@ -374,6 +381,7 @@ func (c *runCmd) uploadAndRecord(
 
 	for _, output := range outputs {
 		err := c.uploader.Upload(
+			ctx,
 			output,
 			func(_ baur.Output, info baur.UploadInfo) {
 				log.Debugf("%s: uploading output %s to %s\n",
@@ -389,7 +397,8 @@ func (c *runCmd) uploadAndRecord(
 
 				bps := uint64(math.Round(float64(size) / result.Stop.Sub(result.Start).Seconds()))
 
-				stdout.TaskPrintf(task, "%s uploaded to %s (%s/s)\n",
+				stdout.TaskPrintf(
+					task, "%s uploaded to %s (%s/s)\n",
 					output, result.URL,
 					term.FormatSize(bps),
 				)
@@ -398,7 +407,8 @@ func (c *runCmd) uploadAndRecord(
 			},
 		)
 		if err != nil {
-			stderr.Printf("%s: %s: upload %s, %s\n",
+			stderr.Printf(
+				"%s: %s: upload %s, %s\n",
 				term.Highlight(task),
 				output,
 				statusStrFailed,
@@ -410,7 +420,8 @@ func (c *runCmd) uploadAndRecord(
 
 	id, err := baur.StoreRun(ctx, c.storage, c.gitRepo, task, inputs, runResult, uploadResults)
 	if err != nil {
-		stderr.Printf("%s: recording build result in database %s, %s\n",
+		stderr.Printf(
+			"%s: recording build result in database %s, %s\n",
 			term.Highlight(task),
 			statusStrFailed,
 			err,

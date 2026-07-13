@@ -60,7 +60,7 @@ func NewClient(ctx context.Context, logger Logger) (*Client, error) {
 
 // Upload uploads a file to an s3 bucket, on success it returns the s3:// URL
 // of the object.
-func (c *Client) Upload(filepath, bucket, key string) (string, error) {
+func (c *Client) Upload(ctx context.Context, filepath, bucket, key string) (string, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return "", err
@@ -68,7 +68,7 @@ func (c *Client) Upload(filepath, bucket, key string) (string, error) {
 	defer f.Close()
 
 	_, err = c.tm.UploadObject(
-		context.TODO(),
+		ctx,
 		&transfermanager.UploadObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
