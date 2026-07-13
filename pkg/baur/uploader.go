@@ -1,6 +1,7 @@
 package baur
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 
 // S3Uploader is an interface for uploading files to AWS S3 buckets.
 type S3Uploader interface {
-	Upload(filepath, bucket, key string) (string, error)
+	Upload(ctx context.Context, filepath, bucket, key string) (string, error)
 }
 
 // DockerImgUploader is an interface for uploading docker images to a docker registry.
@@ -58,7 +59,7 @@ type UploadResultFn func(Output, *UploadResult)
 // Output must be a *OutputDockerImage or *OutputFile type storing or more upload locations.
 // Immediately before the upload starts uploadStartCb is called, when the
 // upload finished resultCb is called.
-func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb UploadResultFn) error {
+func (u *Uploader) Upload(ctx context.Context, output Output, uploadStartCb UploadStartFn, resultCb UploadResultFn) error {
 	switch o := output.(type) {
 	case *OutputDockerImage:
 		if o.UploadDestinations == nil {
@@ -91,7 +92,7 @@ func (u *Uploader) Upload(output Output, uploadStartCb UploadStartFn, resultCb U
 		for _, dest := range o.UploadsS3 {
 			uploadStartCb(o, dest)
 
-			result, err := u.s3(o, dest)
+			result, err := u.s3(ctx, o, dest)
 			if err != nil {
 				return fmt.Errorf("s3 upload failed: %w", err)
 			}
@@ -147,10 +148,10 @@ func (u *Uploader) fileCopy(o *OutputFile, dest *UploadInfoFileCopy) (*UploadRes
 	}, nil
 }
 
-func (u *Uploader) s3(o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
+func (u *Uploader) s3(ctx context.Context, o *OutputFile, dest *UploadInfoS3) (*UploadResult, error) {
 	startTime := time.Now()
 
-	url, err := u.s3client.Upload(o.AbsPath(), dest.Bucket, dest.Key)
+	url, err := u.s3client.Upload(ctx, o.AbsPath(), dest.Bucket, dest.Key)
 	if err != nil {
 		return nil, err
 	}

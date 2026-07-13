@@ -4,8 +4,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
-	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	s3cust "github.com/aws/aws-sdk-go-v2/service/s3/internal/customizations"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -234,11 +232,15 @@ type CreateSessionInput struct {
 	ServerSideEncryption types.ServerSideEncryption
 
 	// Specifies the mode of the session that will be created, either ReadWrite or
-	// ReadOnly . By default, a ReadWrite session is created. A ReadWrite session is
-	// capable of executing all the Zonal endpoint API operations on a directory
-	// bucket. A ReadOnly session is constrained to execute the following Zonal
-	// endpoint API operations: GetObject , HeadObject , ListObjectsV2 ,
-	// GetObjectAttributes , ListParts , and ListMultipartUploads .
+	// ReadOnly . If no session mode is specified, the default behavior attempts to
+	// create a session with the maximum allowable privilege. It will first attempt to
+	// create a ReadWrite session, and if that is not allowed by permissions, it will
+	// attempt to create a ReadOnly session. If neither session type is allowed, the
+	// request will return an Access Denied error. A ReadWrite session is capable of
+	// executing all the Zonal endpoint API operations on a directory bucket. A
+	// ReadOnly session is constrained to execute the following Zonal endpoint API
+	// operations: GetObject , HeadObject , ListObjectsV2 , GetObjectAttributes ,
+	// ListParts , and ListMultipartUploads .
 	SessionMode types.SessionMode
 
 	noSmithyDocumentSerde
@@ -287,9 +289,6 @@ type CreateSessionOutput struct {
 }
 
 func (c *Client) addOperationCreateSessionMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
-		return err
-	}
 	err = stack.Serialize.Add(&awsRestxml_serializeOpCreateSession{}, middleware.After)
 	if err != nil {
 		return err
@@ -298,17 +297,8 @@ func (c *Client) addOperationCreateSessionMiddlewares(stack *middleware.Stack, o
 	if err != nil {
 		return err
 	}
-	if err := addProtocolFinalizerMiddlewares(stack, options, "CreateSession"); err != nil {
-		return fmt.Errorf("add protocol finalizers: %v", err)
-	}
 
 	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addSetLoggerMiddleware(stack, options); err != nil {
-		return err
-	}
-	if err = addClientRequestID(stack); err != nil {
 		return err
 	}
 	if err = addComputeContentLength(stack); err != nil {
@@ -320,19 +310,7 @@ func (c *Client) addOperationCreateSessionMiddlewares(stack *middleware.Stack, o
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
-		return err
-	}
-	if err = addRawResponseToMetadata(stack); err != nil {
-		return err
-	}
 	if err = addRecordResponseTiming(stack); err != nil {
-		return err
-	}
-	if err = addSpanRetryLoop(stack, options); err != nil {
-		return err
-	}
-	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
@@ -341,16 +319,7 @@ func (c *Client) addOperationCreateSessionMiddlewares(stack *middleware.Stack, o
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addPutBucketContextMiddleware(stack); err != nil {
-		return err
-	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
-		return err
-	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
 	if err = addIsExpressUserAgent(stack); err != nil {
@@ -362,13 +331,10 @@ func (c *Client) addOperationCreateSessionMiddlewares(stack *middleware.Stack, o
 	if err = addOpCreateSessionValidationMiddleware(stack); err != nil {
 		return err
 	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCreateSession(options.Region), middleware.Before); err != nil {
+	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "CreateSession"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addMetadataRetrieverMiddleware(stack); err != nil {
-		return err
-	}
-	if err = addRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addCreateSessionUpdateEndpoint(stack, options); err != nil {
@@ -392,12 +358,6 @@ func (c *Client) addOperationCreateSessionMiddlewares(stack *middleware.Stack, o
 	if err = addSerializeImmutableHostnameBucketMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptAttempt(stack, options); err != nil {
-		return err
-	}
 	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
@@ -409,14 +369,6 @@ func (v *CreateSessionInput) bucket() (string, bool) {
 		return "", false
 	}
 	return *v.Bucket, true
-}
-
-func newServiceMetadataMiddleware_opCreateSession(region string) *awsmiddleware.RegisterServiceMetadata {
-	return &awsmiddleware.RegisterServiceMetadata{
-		Region:        region,
-		ServiceID:     ServiceID,
-		OperationName: "CreateSession",
-	}
 }
 
 // getCreateSessionBucketMember returns a pointer to string denoting a provided

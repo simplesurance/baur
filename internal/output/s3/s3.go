@@ -10,14 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 // Client downloads and uploads objects from/to S3.
 type Client struct {
-	uploader   *manager.Uploader
-	downloader *manager.Downloader
+	tm *transfermanager.Client
 }
 
 // Logger defines the interface for an S3 logger
@@ -35,7 +34,8 @@ const DefaultRetries = 3
 func NewClient(ctx context.Context, logger Logger) (*Client, error) {
 	s3Logger := &s3Logger{logger: logger}
 
-	cfg, err := config.LoadDefaultConfig(ctx,
+	cfg, err := config.LoadDefaultConfig(
+		ctx,
 		config.WithRetryMaxAttempts(DefaultRetries),
 		config.WithLogger(s3Logger),
 		config.WithLogConfigurationWarnings(true),
@@ -54,22 +54,22 @@ func NewClient(ctx context.Context, logger Logger) (*Client, error) {
 	)
 
 	return &Client{
-		uploader:   manager.NewUploader(clt),
-		downloader: manager.NewDownloader(clt),
+		tm: transfermanager.New(clt),
 	}, nil
 }
 
 // Upload uploads a file to an s3 bucket, on success it returns the s3:// URL
 // of the object.
-func (c *Client) Upload(filepath, bucket, key string) (string, error) {
+func (c *Client) Upload(ctx context.Context, filepath, bucket, key string) (string, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
 
-	res, err := c.uploader.Upload(context.TODO(),
-		&s3.PutObjectInput{
+	_, err = c.tm.UploadObject(
+		ctx,
+		&transfermanager.UploadObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Body:   f,
@@ -82,7 +82,7 @@ func (c *Client) Upload(filepath, bucket, key string) (string, error) {
 	url := url.URL{
 		Scheme: "s3",
 		Host:   bucket,
-		Path:   *res.Key,
+		Path:   key,
 	}
 
 	return url.String(), err
@@ -94,9 +94,10 @@ func (c *Client) Download(ctx context.Context, bucket, key, filepath string) err
 		return err
 	}
 
-	_, err = c.downloader.Download(ctx, f, &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+	_, err = c.tm.DownloadObject(ctx, &transfermanager.DownloadObjectInput{
+		Bucket:   aws.String(bucket),
+		Key:      aws.String(key),
+		WriterAt: f,
 	})
 	if err != nil {
 		return err
