@@ -32,7 +32,7 @@ jobs:
   #        go-version: "1.25"
   #        check-latest: true
   #    - name: Checkout Git
-  #      uses: actions/checkout@v6
+  #      uses: actions/checkout@v7
   #    - name: Setup Git
   #      run: |
   #        git config --global user.email "baurtest@example.com"
@@ -89,7 +89,7 @@ jobs:
           go-version: "1.25"
           check-latest: true
       - name: Checkout Git
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Git
         run: |
           git config --global user.email "baurtest@example.com"
