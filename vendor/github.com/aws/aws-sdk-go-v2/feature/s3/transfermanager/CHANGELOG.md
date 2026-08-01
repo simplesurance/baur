@@ -1,3 +1,26 @@
+# v0.3.6 (2026-07-28)
+
+* **Bug Fix**: Fix flaky test from feature/s3/transfermanager upload retry
+* **Bug Fix**: Forward SSE-C, VersionId, RequestPayer and other fields to HeadObject call when using transfer manager
+* **Dependency Update**: Update to smithy-go v1.27.5.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v0.3.5 (2026-07-21)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v0.3.4 (2026-07-17)
+
+* No change notes available for this release.
+
+# v0.3.3 (2026-07-16)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v0.3.2 (2026-07-13)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v0.3.1 (2026-07-08.2)
 
 * **Dependency Update**: Updated to the latest SDK module versions
