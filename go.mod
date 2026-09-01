@@ -31,7 +31,7 @@ require (
 	github.com/aws/smithy-go v1.27.5
 	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/containerd/errdefs v1.0.0
-	github.com/docker/cli v29.3.1+incompatible
+	github.com/docker/cli v29.7.2+incompatible
 	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/simplesurance/baur/v2 v2.2.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
