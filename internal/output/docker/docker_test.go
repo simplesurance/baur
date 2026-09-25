@@ -5,7 +5,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/docker/docker/api/types/registry"
+	"github.com/docker/cli/cli/config/configfile"
+	"github.com/docker/cli/cli/config/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,12 +21,13 @@ func TestGetAuth(t *testing.T) {
 	const examplePasswd = "abc"
 
 	const myRegistryHostname = "myregistry.com"
-	const myRegistryPort = dockerRegistryDefaultPort
+	const myRegistryPort = "5000"
 	myRegistryURL := fmt.Sprintf("https://%s", net.JoinHostPort(myRegistryHostname, myRegistryPort))
 	const myRegistryUser = "hugo"
 	const myRegistryPasswd = "hello"
 
-	auths := map[string]registry.AuthConfig{
+	cfg := configfile.New("")
+	cfg.AuthConfigs = map[string]types.AuthConfig{
 		DefaultRegistry: {
 			Username:      defRegistryUser,
 			Password:      defRegistryPasswd,
@@ -44,7 +46,7 @@ func TestGetAuth(t *testing.T) {
 	}
 
 	client := &Client{
-		auths: auths,
+		cfg: cfg,
 	}
 
 	t.Run("default-url", func(t *testing.T) {
@@ -87,15 +89,22 @@ func TestGetAuth(t *testing.T) {
 		require.Panics(t, func() { client.getAuth("") })
 	})
 
-	t.Run("myregistry-host", func(t *testing.T) {
+	// docker's own credential lookup (credentials.fileStore.Get(),
+	// vendored from docker/cli) only matches a stored key's hostname
+	// including its port - a bare hostname doesn't match a stored
+	// "host:port" entry. Unlike the bespoke matching this package used to
+	// do itself, this is exactly the same behavior the docker CLI and
+	// credsStore-based lookups have, which is the point of delegating to
+	// cfg.GetAuthConfig() instead of reimplementing it.
+	t.Run("myregistry-host-without-port-not-found", func(t *testing.T) {
 		client.debugLogFn = t.Logf
 
 		auth := client.getAuth(myRegistryHostname)
 		require.NotNil(t, auth)
 
-		assert.Equal(t, myRegistryURL, auth.ServerAddress)
-		assert.Equal(t, myRegistryPasswd, auth.Password)
-		assert.Equal(t, myRegistryUser, auth.Username)
+		assert.Equal(t, myRegistryHostname, auth.ServerAddress)
+		assert.Empty(t, auth.Username)
+		assert.Empty(t, auth.Password)
 	})
 
 	t.Run("myregistry-hostport", func(t *testing.T) {
@@ -118,5 +127,30 @@ func TestGetAuth(t *testing.T) {
 		assert.Equal(t, myRegistryURL, auth.ServerAddress)
 		assert.Equal(t, myRegistryPasswd, auth.Password)
 		assert.Equal(t, myRegistryUser, auth.Username)
+	})
+}
+
+func TestPushStreamLineError(t *testing.T) {
+	t.Run("progress-message", func(t *testing.T) {
+		err := pushStreamLineError(`{"status":"Preparing","progressDetail":{},"id":"63ca1fbb43ae"}`)
+		assert.NoError(t, err)
+	})
+
+	// captured live from a real `docker push` to ECR without valid
+	// credentials - the exact shape baur silently ignored before.
+	t.Run("registry-error", func(t *testing.T) {
+		err := pushStreamLineError(`{"error":"no basic auth credentials","errorDetail":{"message":"no basic auth credentials"}}`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no basic auth credentials")
+	})
+
+	t.Run("blank-line", func(t *testing.T) {
+		err := pushStreamLineError("\n")
+		assert.NoError(t, err)
+	})
+
+	t.Run("not-json", func(t *testing.T) {
+		err := pushStreamLineError("not json at all")
+		assert.NoError(t, err)
 	})
 }
