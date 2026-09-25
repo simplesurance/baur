@@ -80,7 +80,7 @@ func UntrackedFiles(dir string) ([]string, error) {
 
 	cmdResult, err := exec.
 		Command("git", "status", "--porcelain", "--untracked-files=all", "--ignored").
-		Directory(dir).ExpectSuccess().RunCombinedOut((context.TODO()))
+		Directory(dir).ExpectSuccess().RunCombinedOut(context.TODO())
 	if err != nil {
 		return nil, err
 	}

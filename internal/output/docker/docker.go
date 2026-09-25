@@ -9,25 +9,23 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/cli/cli/config"
+	"github.com/docker/cli/cli/config/configfile"
+	"github.com/docker/cli/cli/config/types"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 )
 
 // DefaultRegistry is the registry for that authentication data is used
-const (
-	DefaultRegistry           = "https://index.docker.io/v1/"
-	dockerRegistryDefaultPort = "5000"
-)
+const DefaultRegistry = "https://index.docker.io/v1/"
 
 // Client is a docker client
 type Client struct {
 	clt        *client.Client
-	auths      map[string]registry.AuthConfig
+	cfg        *configfile.ConfigFile
 	debugLogFn func(string, ...any)
 }
 
@@ -40,7 +38,9 @@ var defLogFn = func(string, ...any) {}
 // DOCKER_HOST to set the url to the docker server.
 // DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
 // The Auth configuration is read from the user's config.json file for an
-// Upload() operation.
+// Upload() operation, including credentials resolved dynamically via a
+// configured credsStore/credHelpers (e.g. amazon-ecr-credential-helper),
+// not just literal auths entries.
 // The following files are checked in the order listed:
 // - $DOCKER_CONFIG/config.json if DOCKER_CONFIG set in the environment,
 // - $HOME/.docker/config.json
@@ -59,91 +59,53 @@ func NewClient(debugLogFn func(string, ...any)) (*Client, error) {
 		return nil, err
 	}
 
-	auths := make(map[string]registry.AuthConfig)
 	cfg, err := config.Load("")
 	if err != nil {
 		debugLogFn("docker: reading auth data from user's config.json failed: %s", err)
-	} else {
-		for reg, auth := range cfg.AuthConfigs {
-			auths[reg] = registry.AuthConfig{
-				Username:      auth.Username,
-				Password:      auth.Password,
-				Auth:          auth.Auth,
-				ServerAddress: auth.ServerAddress,
-				IdentityToken: auth.IdentityToken,
-				RegistryToken: auth.RegistryToken,
-			}
-		}
+		cfg = configfile.New("")
 	}
 
 	return &Client{
 		clt:        dockerClt,
-		auths:      auths,
+		cfg:        cfg,
 		debugLogFn: logFn,
 	}, nil
 }
 
-func hostPort(host, port string) string {
-	return fmt.Sprintf("%s:%s", host, port)
-}
-
-// getAuth returns authentication date for the given server, server can be a
+// getAuth returns authentication data for the given server, server can be a
 // hostname or URL.
 // if server is empty, the function panics.
-// if the client has no authentication data (c.auths is empty), an empty
-// AuthConfiguration is returned.
-// If server is not empty, authentication data is returned for a registry with
-// a matching address.
-func (c *Client) getAuth(server string) registry.AuthConfig {
-	if len(c.auths) == 0 {
-		return registry.AuthConfig{}
-	}
-
+// Credentials are resolved the same way the docker CLI does: a literal
+// auths entry in config.json if present, otherwise dynamically via the
+// configured credsStore/credHelpers (e.g. amazon-ecr-credential-helper).
+// If no credentials are found, an AuthConfig with only ServerAddress set is
+// returned.
+// An error is returned if resolving the credentials failed, e.g. because a
+// configured credential helper failed.
+func (c *Client) getAuth(server string) (registry.AuthConfig, error) {
 	if server == "" {
 		panic("server is empty")
 	}
 
-	if len(server) == 0 {
-		for registry, auth := range c.auths {
-			if registry == DefaultRegistry {
-				c.debugLogFn("docker: no registry specified, using auth data for default registry %q", registry)
-				return auth
-			}
-		}
+	auth, err := c.cfg.GetAuthConfig(server)
+	if err != nil {
+		return registry.AuthConfig{}, fmt.Errorf("resolving credentials for registry %q failed: %w", server, err)
 	}
 
-	for reg, cfg := range c.auths {
-		c.debugLogFn("docker: found credentials for registry %q, searching %q credentials", reg, server)
-
-		if reg == server {
-			c.debugLogFn("docker: using auth data for registry '%s'", reg)
-			return cfg
-		}
-
-		url, err := url.Parse(reg)
-		if err != nil || url.Hostname() == "" {
-			continue
-		}
-
-		if url.Port() == "" {
-			if url.Hostname() == server || hostPort(url.Hostname(), dockerRegistryDefaultPort) == server {
-				c.debugLogFn("docker: using auth data for registry '%s'", reg)
-				return cfg
-			}
-
-			continue
-		}
-
-		registryHostPort := hostPort(url.Hostname(), url.Port())
-		if registryHostPort == server || registryHostPort == hostPort(server, dockerRegistryDefaultPort) {
-			c.debugLogFn("docker: using auth data for registry '%s'", reg)
-			return cfg
-		}
+	if auth == (types.AuthConfig{}) {
+		c.debugLogFn("docker: no auth configuration for registry %q found", server)
+		return registry.AuthConfig{ServerAddress: server}, nil
 	}
 
-	c.debugLogFn("docker: no auth configuration for registry %q found", server)
-
-	return registry.AuthConfig{ServerAddress: server}
+	c.debugLogFn("docker: using resolved credentials for registry %q", server)
+	return registry.AuthConfig{
+		Username:      auth.Username,
+		Password:      auth.Password,
+		Auth:          auth.Auth,
+		ServerAddress: auth.ServerAddress,
+		IdentityToken: auth.IdentityToken,
+		RegistryToken: auth.RegistryToken,
+	}, nil
 }
 
 // Upload tags and uploads an image to a docker registry repository.
@@ -166,7 +128,10 @@ func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, 
 		return "", fmt.Errorf("tagging image failed: %w", err)
 	}
 
-	auth := c.getAuth(registryAddr)
+	auth, err := c.getAuth(registryAddr)
+	if err != nil {
+		return "", err
+	}
 	authBytes, err := json.Marshal(auth)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal auth config: %w", err)
@@ -190,6 +155,12 @@ func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, 
 		return "", err
 	}
 
+	// Docker's push API reports registry-level failures (auth denied,
+	// permission errors, etc.) as an "error" field inside this JSON stream,
+	// not as a Go error from ImagePush()/io.Copy() above - both of those
+	// only fail on transport-level problems. Without checking for it here,
+	// a denied push is silently treated as a success.
+	var pushErr error
 	for {
 		outStream.Flush()
 		line, err := outBuf.ReadString('\n')
@@ -198,13 +169,46 @@ func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, 
 		}
 
 		c.debugLogFn("docker: " + line)
+
+		if lineErr := pushStreamLineError(line); lineErr != nil {
+			pushErr = lineErr
+		}
 	}
 
-	if err != nil {
-		return "", err
+	if pushErr != nil {
+		return "", pushErr
 	}
 
 	return destURI, nil
+}
+
+// pushStreamLineError returns a non-nil error if line, a single line of
+// Docker's push progress stream, is a JSON message reporting a
+// registry-level failure. It returns nil for progress messages and for
+// lines that aren't valid JSON.
+func pushStreamLineError(line string) error {
+	var msg struct {
+		Error       string `json:"error"`
+		ErrorDetail struct {
+			Message string `json:"message"`
+		} `json:"errorDetail"`
+	}
+
+	if err := json.Unmarshal([]byte(line), &msg); err != nil {
+		return nil
+	}
+
+	// "error" is deprecated in the Docker API and newer API types only
+	// define "errorDetail", prefer it and fall back to "error".
+	errMsg := msg.ErrorDetail.Message
+	if errMsg == "" {
+		errMsg = msg.Error
+	}
+	if errMsg == "" {
+		return nil
+	}
+
+	return fmt.Errorf("push failed: %s", errMsg)
 }
 
 // SizeBytes returns the size of an image in Bytes.

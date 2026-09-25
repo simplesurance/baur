@@ -32,7 +32,8 @@ var statusLongHelp = fmt.Sprintf(
 
 Arguments:
 %s`,
-	targetHelp)
+	targetHelp,
+)
 
 func init() {
 	rootCmd.AddCommand(&newStatusCmd().Command)
