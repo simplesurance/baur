@@ -3,6 +3,9 @@ package docker
 import (
 	"fmt"
 	"net"
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/docker/cli/cli/config/configfile"
@@ -52,8 +55,8 @@ func TestGetAuth(t *testing.T) {
 	t.Run("default-url", func(t *testing.T) {
 		client.debugLogFn = t.Logf
 
-		auth := client.getAuth(DefaultRegistry)
-		require.NotNil(t, auth)
+		auth, err := client.getAuth(DefaultRegistry)
+		require.NoError(t, err)
 
 		assert.Equal(t, DefaultRegistry, auth.ServerAddress)
 		assert.Equal(t, defRegistryPasswd, auth.Password)
@@ -63,8 +66,8 @@ func TestGetAuth(t *testing.T) {
 	t.Run("example-url", func(t *testing.T) {
 		client.debugLogFn = t.Logf
 
-		auth := client.getAuth(exampleURL)
-		require.NotNil(t, auth)
+		auth, err := client.getAuth(exampleURL)
+		require.NoError(t, err)
 
 		assert.Equal(t, exampleURL, auth.ServerAddress)
 		assert.Equal(t, examplePasswd, auth.Password)
@@ -76,8 +79,8 @@ func TestGetAuth(t *testing.T) {
 	t.Run("example-hostname", func(t *testing.T) {
 		client.debugLogFn = t.Logf
 
-		auth := client.getAuth(exampleHostname)
-		require.NotNil(t, auth)
+		auth, err := client.getAuth(exampleHostname)
+		require.NoError(t, err)
 
 		assert.Equal(t, exampleURL, auth.ServerAddress)
 		assert.Equal(t, examplePasswd, auth.Password)
@@ -86,7 +89,7 @@ func TestGetAuth(t *testing.T) {
 
 	t.Run("no-server-panic", func(t *testing.T) {
 		client.debugLogFn = t.Logf
-		require.Panics(t, func() { client.getAuth("") })
+		require.Panics(t, func() { _, _ = client.getAuth("") })
 	})
 
 	// docker's own credential lookup (credentials.fileStore.Get(),
@@ -99,8 +102,8 @@ func TestGetAuth(t *testing.T) {
 	t.Run("myregistry-host-without-port-not-found", func(t *testing.T) {
 		client.debugLogFn = t.Logf
 
-		auth := client.getAuth(myRegistryHostname)
-		require.NotNil(t, auth)
+		auth, err := client.getAuth(myRegistryHostname)
+		require.NoError(t, err)
 
 		assert.Equal(t, myRegistryHostname, auth.ServerAddress)
 		assert.Empty(t, auth.Username)
@@ -110,8 +113,8 @@ func TestGetAuth(t *testing.T) {
 	t.Run("myregistry-hostport", func(t *testing.T) {
 		client.debugLogFn = t.Logf
 
-		auth := client.getAuth(fmt.Sprintf("%s:%s", myRegistryHostname, myRegistryPort))
-		require.NotNil(t, auth)
+		auth, err := client.getAuth(fmt.Sprintf("%s:%s", myRegistryHostname, myRegistryPort))
+		require.NoError(t, err)
 
 		assert.Equal(t, myRegistryURL, auth.ServerAddress)
 		assert.Equal(t, myRegistryPasswd, auth.Password)
@@ -121,13 +124,35 @@ func TestGetAuth(t *testing.T) {
 	t.Run("myregistry-url", func(t *testing.T) {
 		client.debugLogFn = t.Logf
 
-		auth := client.getAuth(myRegistryURL)
-		require.NotNil(t, auth)
+		auth, err := client.getAuth(myRegistryURL)
+		require.NoError(t, err)
 
 		assert.Equal(t, myRegistryURL, auth.ServerAddress)
 		assert.Equal(t, myRegistryPasswd, auth.Password)
 		assert.Equal(t, myRegistryUser, auth.Username)
 	})
+}
+
+func TestGetAuthCredentialHelperFails(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("fake credential helper is a shell script")
+	}
+
+	const helperErr = "helper exploded"
+
+	helperDir := t.TempDir()
+	helper := "#!/bin/sh\necho '" + helperErr + "'\nexit 1\n"
+	err := os.WriteFile(filepath.Join(helperDir, "docker-credential-baurtest"), []byte(helper), 0o755)
+	require.NoError(t, err)
+	t.Setenv("PATH", helperDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	cfg := configfile.New("")
+	cfg.CredentialsStore = "baurtest"
+	client := &Client{cfg: cfg, debugLogFn: t.Logf}
+
+	_, err = client.getAuth("myregistry.com")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), helperErr)
 }
 
 func TestPushStreamLineError(t *testing.T) {
@@ -142,6 +167,13 @@ func TestPushStreamLineError(t *testing.T) {
 		err := pushStreamLineError(`{"error":"no basic auth credentials","errorDetail":{"message":"no basic auth credentials"}}`)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no basic auth credentials")
+	})
+
+	// newer Docker API types only define "errorDetail", "error" is deprecated
+	t.Run("registry-error-detail-only", func(t *testing.T) {
+		err := pushStreamLineError(`{"errorDetail":{"message":"denied: requested access to the resource is denied"}}`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "denied: requested access to the resource is denied")
 	})
 
 	t.Run("blank-line", func(t *testing.T) {

@@ -80,20 +80,21 @@ func NewClient(debugLogFn func(string, ...any)) (*Client, error) {
 // configured credsStore/credHelpers (e.g. amazon-ecr-credential-helper).
 // If no credentials are found, an AuthConfig with only ServerAddress set is
 // returned.
-func (c *Client) getAuth(server string) registry.AuthConfig {
+// An error is returned if resolving the credentials failed, e.g. because a
+// configured credential helper failed.
+func (c *Client) getAuth(server string) (registry.AuthConfig, error) {
 	if server == "" {
 		panic("server is empty")
 	}
 
 	auth, err := c.cfg.GetAuthConfig(server)
 	if err != nil {
-		c.debugLogFn("docker: resolving credentials for registry %q failed: %s", server, err)
-		return registry.AuthConfig{ServerAddress: server}
+		return registry.AuthConfig{}, fmt.Errorf("resolving credentials for registry %q failed: %w", server, err)
 	}
 
 	if auth == (types.AuthConfig{}) {
 		c.debugLogFn("docker: no auth configuration for registry %q found", server)
-		return registry.AuthConfig{ServerAddress: server}
+		return registry.AuthConfig{ServerAddress: server}, nil
 	}
 
 	c.debugLogFn("docker: using resolved credentials for registry %q", server)
@@ -104,7 +105,7 @@ func (c *Client) getAuth(server string) registry.AuthConfig {
 		ServerAddress: auth.ServerAddress,
 		IdentityToken: auth.IdentityToken,
 		RegistryToken: auth.RegistryToken,
-	}
+	}, nil
 }
 
 // Upload tags and uploads an image to a docker registry repository.
@@ -127,7 +128,10 @@ func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, 
 		return "", fmt.Errorf("tagging image failed: %w", err)
 	}
 
-	auth := c.getAuth(registryAddr)
+	auth, err := c.getAuth(registryAddr)
+	if err != nil {
+		return "", err
+	}
 	authBytes, err := json.Marshal(auth)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal auth config: %w", err)
@@ -190,11 +194,21 @@ func pushStreamLineError(line string) error {
 		} `json:"errorDetail"`
 	}
 
-	if err := json.Unmarshal([]byte(line), &msg); err != nil || msg.Error == "" {
+	if err := json.Unmarshal([]byte(line), &msg); err != nil {
 		return nil
 	}
 
-	return fmt.Errorf("push failed: %s", msg.Error)
+	// "error" is deprecated in the Docker API and newer API types only
+	// define "errorDetail", prefer it and fall back to "error".
+	errMsg := msg.ErrorDetail.Message
+	if errMsg == "" {
+		errMsg = msg.Error
+	}
+	if errMsg == "" {
+		return nil
+	}
+
+	return fmt.Errorf("push failed: %s", errMsg)
 }
 
 // SizeBytes returns the size of an image in Bytes.
