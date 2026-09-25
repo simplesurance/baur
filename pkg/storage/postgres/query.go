@@ -403,7 +403,8 @@ func (c *Client) TaskRuns(
 		replacer = strings.NewReplacer(
 			"{distinct_on}", "task_run.id",
 			"{fields}", "",
-			"{joins}", "")
+			"{joins}", "",
+		)
 	}
 	queryStr := replacer.Replace(queryTemplate)
 
