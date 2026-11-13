@@ -41,6 +41,11 @@ func TestGetAuth(t *testing.T) {
 			Password:      myRegistryPasswd,
 			ServerAddress: myRegistryURL,
 		},
+		"auth.example.com": {
+			Username:      "authuser",
+			Password:      "authpass",
+			ServerAddress: "auth.example.com",
+		},
 	}
 
 	client := &Client{
@@ -118,5 +123,15 @@ func TestGetAuth(t *testing.T) {
 		assert.Equal(t, myRegistryURL, auth.ServerAddress)
 		assert.Equal(t, myRegistryPasswd, auth.Password)
 		assert.Equal(t, myRegistryUser, auth.Username)
+	})
+
+	t.Run("registry-with-auth", func(t *testing.T) {
+		client.debugLogFn = t.Logf
+
+		// Test that registries requiring authentication are handled correctly
+		// When auth is configured for a registry, getAuth should return the credentials
+		auth := client.getAuth("auth.example.com")
+		require.NotNil(t, auth)
+		assert.Equal(t, "auth.example.com", auth.ServerAddress)
 	})
 }
