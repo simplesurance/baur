@@ -421,7 +421,8 @@ func (*showCmd) showBuild(taskRunID int) {
 				term.Highlight(
 					term.FormatDuration(
 						upload.UploadStopTimestamp.Sub(
-							upload.UploadStartTimestamp),
+							upload.UploadStartTimestamp,
+						),
 					),
 				),
 			)

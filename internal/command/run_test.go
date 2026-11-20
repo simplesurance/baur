@@ -128,7 +128,8 @@ func TestRunShowOutput(t *testing.T) {
 		scriptPath, []byte(`#/usr/bin/env bash
 echo "greetings from script.sh"
 	`),
-		0o755)
+		0o755,
+	)
 	require.NoError(t, err)
 
 	appCfg := cfg.App{
@@ -170,7 +171,8 @@ func TestRunShowOutputOnErrorOutputIsPrintedOnce(t *testing.T) {
 echo "I will fail!"
 exit 1
 	`),
-		0o755)
+		0o755,
+	)
 	require.NoError(t, err)
 
 	appCfg := cfg.App{
@@ -218,7 +220,8 @@ func createEnvVarTestApp(t *testing.T, appName, taskName string, envVarsCfg []cf
 		scriptPath, []byte(`#/usr/bin/env bash
 exit 0
 	`),
-		0o755)
+		0o755,
+	)
 	require.NoError(t, err)
 	doInitDb(t)
 

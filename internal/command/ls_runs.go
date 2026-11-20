@@ -106,7 +106,8 @@ func newLsRunsCmd() *lsRunsCmd {
 			"only show runs that have the given input,\n"+
 				"file inputs are specified by their repository relative path,\n"+
 				"string inputs are specified with a '%s' prefix (e.g. string:my_input_str.)",
-			term.Highlight("string:")),
+			term.Highlight("string:"),
+		),
 	)
 
 	return &cmd

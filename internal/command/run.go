@@ -380,6 +380,9 @@ func (c *runCmd) uploadAndRecord(
 	inputs := pt.inputs
 
 	for _, output := range outputs {
+		// sizeErr stops the run record: without the size the upload
+		// result is not stored, the run must not be stored without it.
+		var sizeErr error
 		err := c.uploader.Upload(
 			ctx,
 			output,
@@ -390,8 +393,7 @@ func (c *runCmd) uploadAndRecord(
 			func(o baur.Output, result *baur.UploadResult) {
 				size, err := o.SizeBytes()
 				if err != nil {
-					stderr.ErrPrintf(err, "%s: %s", task, output)
-					c.skipAllScheduledTaskRuns()
+					sizeErr = errors.Join(sizeErr, fmt.Errorf("getting size of uploaded %s failed: %w", o, err))
 					return
 				}
 
@@ -406,6 +408,7 @@ func (c *runCmd) uploadAndRecord(
 				uploadResults = append(uploadResults, result)
 			},
 		)
+		err = errors.Join(err, sizeErr)
 		if err != nil {
 			stderr.Printf(
 				"%s: %s: upload %s, %s\n",

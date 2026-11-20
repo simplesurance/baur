@@ -18,7 +18,8 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf(
 			" could not get absolute path of testfile (%s): %s",
-			testfile, err))
+			testfile, err,
+		))
 	}
 	testdataDir = filepath.Join(filepath.Dir(absPath), "testdata")
 }

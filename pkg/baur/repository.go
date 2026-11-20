@@ -34,13 +34,15 @@ func NewRepository(cfgPath string) (*Repository, error) {
 	repoCfg, err := cfg.RepositoryFromFile(realCfgPath)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"reading repository config %q failed: %w", realCfgPath, err)
+			"reading repository config %q failed: %w", realCfgPath, err,
+		)
 	}
 
 	err = repoCfg.Validate()
 	if err != nil {
 		return nil, fmt.Errorf(
-			"validating repository config %q failed: %w", realCfgPath, err)
+			"validating repository config %q failed: %w", realCfgPath, err,
+		)
 	}
 	repoPath := filepath.Dir(realCfgPath)
 

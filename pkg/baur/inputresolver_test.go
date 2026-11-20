@@ -788,7 +788,8 @@ func TestFileContentChanges(t *testing.T) {
 
 				_, after := resolveInputs(t, &task, !tc.AddToGitAfterChange)
 				require.NotEqual(t, before.String(), after.String())
-			})
+			},
+		)
 	}
 }
 
@@ -902,7 +903,8 @@ func TestSymlinkTargetFileContentChanges(t *testing.T) {
 				require.True(t, ok)
 				assert.Equal(t, info.SymlinkPath, inf.absPath)
 				assert.Equal(t, info.SymlinkTargetFileRelPath, inf.repoRelRealPath, "unexpected symlink rel path")
-			})
+			},
+		)
 	}
 }
 
