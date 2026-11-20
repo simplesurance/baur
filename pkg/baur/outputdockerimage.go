@@ -77,7 +77,7 @@ func (d *OutputDockerImage) Digest() (*digest.Digest, error) {
 func (d *OutputDockerImage) SizeBytes() (uint64, error) {
 	size, err := d.dockerClient.SizeBytes(d.ImageID)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return uint64(size), nil

@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"bufio"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -10,7 +9,6 @@ import (
 	"io"
 	"net"
 	"net/url"
-	"strings"
 
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/cli/cli/config"
@@ -29,8 +27,11 @@ const (
 
 // Client is a docker client
 type Client struct {
-	clt        *client.Client
-	cfg        *configfile.ConfigFile
+	clt *client.Client
+	cfg *configfile.ConfigFile
+	// cfgErr is the error that happened when loading cfg, it is added to
+	// Upload() errors to explain them.
+	cfgErr     error
 	debugLogFn func(string, ...any)
 }
 
@@ -52,7 +53,8 @@ var defLogFn = func(string, ...any) {}
 // - $HOME/.dockercfg
 // If reading auth data from the config fails, a message is logged via the
 // debugLogFn function but no error is returned. An Upload() operation would be
-// done without authentication.
+// done without authentication, if it fails the error also contains the
+// reason why the config could not be read.
 // DOCKER_AUTH_CONFIG is respected like by the docker CLI: if set, its auths
 // entries (same format as in config.json, "auth" field required) are used
 // before the ones from config.json. If it can not be parsed, docker's
@@ -68,15 +70,17 @@ func NewClient(debugLogFn func(string, ...any)) (*Client, error) {
 		return nil, err
 	}
 
-	cfg, err := config.Load("")
-	if err != nil {
-		debugLogFn("docker: reading auth data from user's config.json failed: %s", err)
+	cfg, cfgErr := config.Load("")
+	if cfgErr != nil {
+		cfgErr = fmt.Errorf("reading auth data from user's config.json failed: %w", cfgErr)
+		logFn("docker: %s", cfgErr)
 		cfg = configfile.New("")
 	}
 
 	return &Client{
 		clt:        dockerClt,
 		cfg:        cfg,
+		cfgErr:     cfgErr,
 		debugLogFn: logFn,
 	}, nil
 }
@@ -202,72 +206,83 @@ func (c *Client) Upload(imageID, registryAddr, repository, tag string) (string, 
 		RegistryAuth: authBase64,
 	})
 	if err != nil {
-		return "", errors.Join(err, credErr)
+		return "", errors.Join(err, credErr, c.cfgErr)
 	}
 	defer resp.Close()
 
 	if err := pushStreamError(resp, c.debugLogFn); err != nil {
-		return "", errors.Join(err, credErr)
+		return "", errors.Join(err, credErr, c.cfgErr)
+	}
+
+	// The push response only reports failures, a response without an
+	// error message (e.g. an empty one) does not prove that the image is
+	// in the registry. Request it from the registry to confirm it.
+	c.debugLogFn("docker: verifying that %q exists in the registry", destURI)
+	_, err = c.clt.DistributionInspect(context.Background(), destURI, authBase64)
+	if err != nil {
+		return "", errors.Join(
+			fmt.Errorf("verifying that the pushed image %q exists in the registry failed: %w", destURI, err),
+			credErr,
+			c.cfgErr,
+		)
 	}
 
 	return destURI, nil
 }
 
 // pushStreamError reads Docker's push progress stream until EOF and logs
-// every line via logFn.
+// every message via logFn.
 // Docker's push API reports registry-level failures (auth denied,
 // permission errors, etc.) as an "error" field inside this JSON stream,
 // not as a Go error from ImagePush() - that only fails on transport-level
 // problems. Without checking the stream, a denied push is silently treated
 // as a success.
-// It returns the last error reported in the stream, or an error if reading
-// the stream failed.
+// The stream is a sequence of JSON messages, like the docker CLI does,
+// they are decoded independent of line breaks.
+// It returns the last error reported in the stream, or an error if the
+// stream could not be read or decoded.
 func pushStreamError(stream io.Reader, logFn func(string, ...any)) error {
 	var pushErr error
 
-	r := bufio.NewReader(stream)
+	dec := json.NewDecoder(stream)
 	for {
-		line, err := r.ReadString('\n')
-		// The last line can end without '\n', it is then returned
-		// together with io.EOF.
-		if line != "" {
-			logFn("docker: %s", strings.TrimRight(line, "\r\n"))
-
-			if lineErr := pushStreamLineError(line); lineErr != nil {
-				pushErr = lineErr
-			}
-		}
-
+		var msg json.RawMessage
+		err := dec.Decode(&msg)
 		if errors.Is(err, io.EOF) {
 			return pushErr
 		}
 		if err != nil {
 			return fmt.Errorf("reading push response failed: %w", err)
 		}
+
+		logFn("docker: %s", msg)
+
+		if msgErr := pushMessageError(msg); msgErr != nil {
+			pushErr = msgErr
+		}
 	}
 }
 
-// pushStreamLineError returns a non-nil error if line, a single line of
-// Docker's push progress stream, is a JSON message reporting a
-// registry-level failure. It returns nil for progress messages and for
-// lines that aren't valid JSON.
-func pushStreamLineError(line string) error {
-	var msg struct {
+// pushMessageError returns a non-nil error if msg, a single JSON message
+// of Docker's push progress stream, reports a registry-level failure or is
+// not a message object. It returns nil for progress messages.
+func pushMessageError(msg []byte) error {
+	var m struct {
 		Error       string `json:"error"`
 		ErrorDetail struct {
 			Message string `json:"message"`
 		} `json:"errorDetail"`
 	}
 
-	if err := json.Unmarshal([]byte(line), &msg); err != nil {
-		return nil
+	if err := json.Unmarshal(msg, &m); err != nil {
+		return fmt.Errorf("push response contains an invalid message %q: %w", msg, err)
 	}
 
 	// "error" is deprecated in the Docker API and newer API types only
 	// define "errorDetail", prefer it and fall back to "error".
-	errMsg := msg.ErrorDetail.Message
+	errMsg := m.ErrorDetail.Message
 	if errMsg == "" {
-		errMsg = msg.Error
+		errMsg = m.Error
 	}
 	if errMsg == "" {
 		return nil
