@@ -35,6 +35,8 @@ func (f Field) String() string {
 		return "FieldID"
 	case FieldInputString:
 		return "FieldInputString"
+	case FieldInputFilePath:
+		return "FieldInputFilePath"
 	default:
 		return "FieldUndefined"
 	}
@@ -68,6 +70,10 @@ func (o Op) String() string {
 		return "OpEQ"
 	case OpGT:
 		return "OpGT"
+	case OpLT:
+		return "OpLT"
+	case OpIN:
+		return "OpIN"
 	default:
 		return "OpUndefined"
 	}

@@ -79,7 +79,7 @@ func (m *ReleaseManager) DownloadOutputs(
 		if tr.OutputName == "" {
 			m.logger.Debugf(
 				"%s: skipping task run, it did not produce any outputs\n",
-				tid, storage.UploadMethodS3,
+				tid,
 			)
 			continue
 		}

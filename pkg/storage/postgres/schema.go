@@ -221,7 +221,7 @@ func (c *Client) schemaVersion(ctx context.Context) (int32, error) {
 func (c *Client) ensureSchemaIsCompatible(ctx context.Context) error {
 	ver, err := c.schemaVersion(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if ver < minSchemaVer || ver > maxSchemaVer {

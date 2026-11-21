@@ -128,7 +128,7 @@ func (q *query) compileLimitStr() string {
 
 // Compile creates the SQL query string and returns it with the arguments for the query
 func (q *query) Compile() (query string, args []any, err error) {
-	if len(q.Filters) == 0 && len(q.Sorters) == 0 {
+	if len(q.Filters) == 0 && len(q.Sorters) == 0 && q.Limit == storage.NoLimit {
 		return q.BaseQuery, nil, nil
 	}
 

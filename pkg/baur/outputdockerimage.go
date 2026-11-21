@@ -2,6 +2,7 @@ package baur
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/simplesurance/baur/v5/internal/digest"
 	"github.com/simplesurance/baur/v5/internal/fs"
@@ -38,6 +39,8 @@ func NewOutputDockerImageFromIIDFile(
 	if err != nil {
 		return nil, fmt.Errorf("reading %s failed: %w", iidfile, err)
 	}
+
+	id = strings.TrimSpace(id)
 
 	digest, err := digest.FromString(id)
 	if err != nil {

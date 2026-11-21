@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	includeSpecRegex    = regexp.MustCompile(`(?m)[^` + includeIDSep + `]+[^` + includeIDSep + `#]+`)
+	includeSpecRegex    = regexp.MustCompile(`^[^` + includeIDSep + `]+` + includeIDSep + `[^` + includeIDSep + `]+$`)
 	whitespaceOnlyRegex = regexp.MustCompile(`^\s+$`)
 )
 
@@ -89,7 +89,7 @@ func (incl *Include) validateUniqIncludeIDs() error {
 		if _, exist := uniqIncludeIDs[out.IncludeID]; exist {
 			return newFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", out.IncludeID),
-				"Input", "include_id",
+				"Output", "include_id",
 			)
 		}
 
@@ -100,7 +100,7 @@ func (incl *Include) validateUniqIncludeIDs() error {
 		if _, exist := uniqIncludeIDs[task.IncludeID]; exist {
 			return newFieldError(
 				fmt.Sprintf("contains multiple includes with the includeID %q, includeIDs must be unique in a file", task.IncludeID),
-				"Input", "include_id",
+				"Task", "include_id",
 			)
 		}
 

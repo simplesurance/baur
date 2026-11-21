@@ -102,7 +102,7 @@ func FindFileInParentDirs(startPath, filename string) (string, error) {
 // If it reaches the root directory without finding the directory it returns
 // os.ErrNotExist.
 func FindDirInParentDirs(startPath, dirname string) (string, error) {
-	return findInParentDirs(startPath, dirname, false)
+	return findInParentDirs(startPath, dirname, true)
 }
 
 func findInParentDirs(startPath, name string, isDir bool) (string, error) {
@@ -124,7 +124,8 @@ func findInParentDirs(startPath, name string, isDir bool) (string, error) {
 			return abs, nil
 		}
 
-		if !os.IsNotExist(err) {
+		// an entry with the wrong type is not a match, the search continues
+		if err != nil && !os.IsNotExist(err) {
 			return "", err
 		}
 
