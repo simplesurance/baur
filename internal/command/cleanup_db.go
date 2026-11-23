@@ -76,7 +76,7 @@ func newCleanupDbCmd() *cleanupDbCmd {
 
 	cmd.Flags().BoolVarP(&cmd.force, "force", "f", false,
 		fmt.Sprintf(
-			"do not wait %s seconds before starting deletion, delete immediately",
+			"do not wait %s before starting deletion, delete immediately",
 			cleanupDbGracetime,
 		),
 	)
@@ -129,7 +129,7 @@ func (c *cleanupDbCmd) run(cmd *cobra.Command, args []string) {
 	}
 
 	if !c.force {
-		stdout.Printf("starting in %s seconds, press %s to abort\n",
+		stdout.Printf("starting in %s, press %s to abort\n",
 			term.Highlight(cleanupDbGracetime), term.Highlight("CTRL+C"))
 		time.Sleep(cleanupDbGracetime)
 		stdout.Println("starting deleting...")

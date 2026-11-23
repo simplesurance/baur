@@ -2,11 +2,9 @@
 package git
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	stdexec "os/exec"
 	"path/filepath"
@@ -26,17 +24,20 @@ func CommandIsInstalled() bool {
 
 // IsGitDir checks if the passed directory is part of a git repository.
 // It returns true if dir or any of its parent directory containing a directory
-// named ".git".
+// or file named ".git". In git worktrees and submodules ".git" is a file.
 func IsGitDir(dir string) (bool, error) {
-	_, err := fs.FindDirInParentDirs(dir, ".git")
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return false, nil
+	for _, find := range []func(string, string) (string, error){fs.FindDirInParentDirs, fs.FindFileInParentDirs} {
+		_, err := find(dir, ".git")
+		if err == nil {
+			return true, nil
 		}
-		return false, err
+
+		if !errors.Is(err, os.ErrNotExist) {
+			return false, err
+		}
 	}
 
-	return true, nil
+	return false, nil
 }
 
 // CommitID return the commit id of HEAD by running git rev-parse in the passed
@@ -73,40 +74,45 @@ func WorktreeIsDirty(dir string) (bool, error) {
 // UntrackedFiles returns a list of untracked and modified files in the git repository.
 // Files that exist and are in a .gitignore file are included.
 func UntrackedFiles(dir string) ([]string, error) {
-	const untrackedFilePrefix = "?? "
-	const ignoredFilePrefix = "!! "
+	const untrackedFileStatus = "??"
+	const ignoredFileStatus = "!!"
 
 	var res []string
+	var stdout bytes.Buffer
 
-	cmdResult, err := exec.
-		Command("git", "status", "--porcelain", "--untracked-files=all", "--ignored").
-		Directory(dir).ExpectSuccess().RunCombinedOut(context.TODO())
+	// -z: records are terminated by NUL and paths are not quoted, without
+	// it git quotes paths containing e.g. spaces or non-ASCII characters.
+	// Only stdout is parsed, warnings on stderr must not be part of a record.
+	_, err := exec.
+		Command("git", "status", "--porcelain", "-z", "--untracked-files=all", "--ignored").
+		Stdout(&stdout).
+		Directory(dir).ExpectSuccess().Run(context.TODO())
 	if err != nil {
 		return nil, err
 	}
 
-	scanner := bufio.NewScanner(bytes.NewReader(cmdResult.CombinedOutput))
-	for scanner.Scan() {
-		var relPath string
-
-		line := scanner.Text()
-		//nolint:gocritic // ifElseChain: rewrite if-else to switch statement
-		if strings.HasPrefix(line, untrackedFilePrefix) {
-			relPath = strings.TrimPrefix(line, untrackedFilePrefix)
-		} else if strings.HasPrefix(line, ignoredFilePrefix) {
-			relPath = strings.TrimPrefix(line, ignoredFilePrefix)
-		} else {
+	records := strings.Split(stdout.String(), "\x00")
+	for i := 0; i < len(records); i++ {
+		// a record has the format "XY PATH"
+		rec := records[i]
+		if len(rec) < len("XY P") {
 			continue
 		}
 
-		// on Windows git prints paths with forward slashes as
-		// separator, convert them to windows backslash seperators via
-		// filepath.FromSlash()
-		res = append(res, filepath.FromSlash(relPath))
-	}
+		status, relPath := rec[:2], rec[3:]
 
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("scanning git status output failed: %w", err)
+		switch {
+		case status == untrackedFileStatus || status == ignoredFileStatus:
+			// on Windows git prints paths with forward slashes as
+			// separator, convert them to windows backslash seperators via
+			// filepath.FromSlash()
+			res = append(res, filepath.FromSlash(relPath))
+
+		case strings.ContainsAny(status, "RC"):
+			// renamed and copied entries are followed by a record
+			// containing the original path
+			i++
+		}
 	}
 
 	return res, nil

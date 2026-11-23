@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -259,6 +260,20 @@ func (c *Cmd) Run(ctx context.Context) (*Result, error) {
 	return &result, nil
 }
 
+// lockedWriter serializes Write calls, stdout and stderr of a process are copied
+// by separate goroutines.
+type lockedWriter struct {
+	mu sync.Mutex
+	w  io.Writer
+}
+
+func (l *lockedWriter) Write(p []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	return l.w.Write(p)
+}
+
 // RunCombinedOut executes the command and stores the combined stdout and
 // stderr output of the process in ResultOut.CombinedOutput.
 func (c *Cmd) RunCombinedOut(ctx context.Context) (*ResultOut, error) {
@@ -271,7 +286,7 @@ func (c *Cmd) RunCombinedOut(ctx context.Context) (*ResultOut, error) {
 		return nil, errors.New("Cmd.stderr must be nil")
 	}
 
-	c.stdout = &buf
+	c.stdout = &lockedWriter{w: &buf}
 	c.stderr = c.stdout
 
 	result, err := c.Run(ctx)

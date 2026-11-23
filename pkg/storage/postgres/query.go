@@ -263,7 +263,8 @@ func (c *Client) Inputs(ctx context.Context, taskRunID int) (*storage.Inputs, er
 		return nil, err
 	}
 
-	if len(result.Files) == 0 && len(result.Strings) == 0 && len(result.EnvironmentVariables) == 0 {
+	if len(result.Files) == 0 && len(result.Strings) == 0 && len(result.EnvironmentVariables) == 0 &&
+		len(result.TaskInfo) == 0 {
 		return nil, storage.ErrNotExist
 	}
 
@@ -540,7 +541,7 @@ func (c *Client) ReleaseTaskRuns(ctx context.Context, releaseName string) ([]*st
 		result = append(result, &r)
 	}
 
-	if rows.Err() != nil {
+	if err := rows.Err(); err != nil {
 		return nil, newQueryError(query, err, releaseName)
 	}
 

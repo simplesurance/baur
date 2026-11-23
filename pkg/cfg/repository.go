@@ -108,7 +108,7 @@ func (d *Discover) validate() error {
 	}
 
 	if d.SearchDepth < minSearchDepth || d.SearchDepth > maxSearchDepth {
-		return newFieldError(fmt.Sprintf("search_depth parameter must be in range (%d, %d]",
+		return newFieldError(fmt.Sprintf("search_depth parameter must be in range [%d, %d]",
 			minSearchDepth, maxSearchDepth),
 			"search_depth",
 		)

@@ -114,6 +114,9 @@ func inputsToStorageInputs(inputs *Inputs) (*storage.Inputs, error) {
 
 func toStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) {
 	resultMap := make(map[Output]*storage.Output)
+	// result keeps the order in which the outputs appear first, ranging over
+	// the map would return them in random order.
+	result := make([]*storage.Output, 0, len(uploadResults))
 
 	for _, uploadResult := range uploadResults {
 		output, exist := resultMap[uploadResult.Output]
@@ -146,6 +149,7 @@ func toStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) 
 			}
 
 			resultMap[uploadResult.Output] = output
+			result = append(result, output)
 		}
 
 		var method storage.UploadMethod
@@ -167,15 +171,5 @@ func toStorageOutputs(uploadResults []*UploadResult) ([]*storage.Output, error) 
 			})
 	}
 
-	return outputMapToSlice(resultMap), nil
-}
-
-func outputMapToSlice(m map[Output]*storage.Output) []*storage.Output {
-	result := make([]*storage.Output, 0, len(m))
-
-	for _, v := range m {
-		result = append(result, v)
-	}
-
-	return result
+	return result, nil
 }

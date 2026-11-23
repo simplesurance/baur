@@ -47,6 +47,7 @@ func (f *Formatter) Flush() error {
 		return err
 	}
 
-	clear(f.data)
+	f.data = nil
+
 	return nil
 }
